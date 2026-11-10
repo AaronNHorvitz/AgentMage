@@ -540,9 +540,51 @@ function logicalCommitPlanSemanticErrors(data) {
   return errors;
 }
 
+// Structural history checks grant no native provenance or mutation authority.
+function writeHistorySemanticErrors(changeSet) {
+  if (changeSet.write_history === undefined) return [];
+  const history = changeSet.write_history;
+  if (!Array.isArray(history) || history.length < 2 || history.length > 64) {
+    return ["write history must contain two to sixty-four original transactions"];
+  }
+  const errors = [];
+  const paths = new Map();
+  const identities = new Set();
+  let bytes = 0;
+  for (const transaction of history) {
+    if (!transaction || transaction.write_history !== undefined ||
+        !Array.isArray(transaction.files) || transaction.scope !== changeSet.scope ||
+        identities.has(transaction.change_set_sha256)) {
+      errors.push("write history must be flat, distinct and consistently classified");
+      continue;
+    }
+    identities.add(transaction.change_set_sha256);
+    for (const file of transaction.files) {
+      bytes += Buffer.byteLength(file.complete_diff ?? "", "utf8");
+      const prior = paths.get(file.path);
+      if (prior && (prior.postimage_sha256 !== file.preimage_sha256 ||
+          prior.artifact_class !== file.artifact_class || prior.generated !== file.generated ||
+          prior.purpose !== file.purpose)) {
+        errors.push("write history has a missing or incompatible per-path link");
+      }
+      paths.set(file.path, {...file, preimage_sha256: prior?.preimage_sha256 ?? file.preimage_sha256});
+    }
+  }
+  if (bytes > 8388608) errors.push("complete write history exceeds its byte bound");
+  const final = [...paths.values()].sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
+  if (final.length !== (changeSet.files ?? []).length || final.some((file, i) => {
+    const net = changeSet.files[i];
+    return !net || net.operation_id !== `history-${i}` ||
+      ["path", "preimage_sha256", "postimage_sha256", "artifact_class", "generated", "purpose"]
+        .some((key) => net[key] !== file[key]);
+  })) errors.push("write history must cover every complete net endpoint");
+  return errors;
+}
+
 function localReviewPacketSemanticErrors(data) {
   const errors = [];
   const changeSet = data.change_set ?? {};
+  errors.push(...writeHistorySemanticErrors(changeSet));
   const files = changeSet.files ?? [];
   if (
     !isStrictlySortedBy(changeSet.review_hooks ?? [], (hook) =>

@@ -911,7 +911,9 @@ fn runtime_native_review_does_not_aggregate_approval_across_sequential_transacti
         let lease = runtime_lease(owner);
         runtime_edit_at(&f, &lease, path, "second native change\n", true);
         let owner = recover_lease(lease);
-        assert!(owner.applied_write.is_none());
+        assert!(owner.applied_write.is_some());
+        // Empty purpose coverage still refuses; the valid projection below
+        // retains both original transactions without an aggregate approval.
         assert_eq!(
             owner
                 .capture_applied_write_review(vec![])
@@ -919,6 +921,21 @@ fn runtime_native_review_does_not_aggregate_approval_across_sequential_transacti
                 .code(),
             "code.commit.write-provenance"
         );
+        let projection = owner
+            .capture_applied_write_review(
+                (0..if path == "one.py" { 1 } else { 2 })
+                    .map(|i| ChangePurposeAssignment {
+                        operation_id: format!("history-{i}"),
+                        purpose: CommitChangePurpose::Behavior,
+                    })
+                    .collect(),
+            )
+            .unwrap();
+        let value = serde_json::to_value(&projection).unwrap();
+        assert!(value.get("write_approval_receipt_sha256").is_none());
+        assert!(value.get("write_application_receipt_sha256").is_none());
+        assert_eq!(value["write_history"].as_array().unwrap().len(), 2);
+        assert_eq!(projection.files()[0].preimage_sha256, hash(b"first\n"));
         assert_eq!(
             fs::read(f.0.join("owned/worktree").join(path)).unwrap(),
             b"second native change\n"
@@ -927,6 +944,160 @@ fn runtime_native_review_does_not_aggregate_approval_across_sequential_transacti
         assert_eq!(fs::read(f.0.join("original/two.py")).unwrap(), b"second\n");
         f.assert_preserved();
     }
+}
+
+fn history_purposes(
+    count: usize,
+) -> Vec<agentmage_kernel_engine::review_packet::ChangePurposeAssignment> {
+    use agentmage_kernel_engine::review_packet::{ChangePurposeAssignment, CommitChangePurpose};
+    (0..count)
+        .map(|i| ChangePurposeAssignment {
+            operation_id: format!("history-{i}"),
+            purpose: CommitChangePurpose::Behavior,
+        })
+        .collect()
+}
+
+#[test]
+fn write_history_preserves_manual_runtime_and_manual_retry_original_receipts() {
+    let started = Instant::now();
+    let f = Fixture::new();
+    let mut owner = f.owner();
+    f.edit(&mut owner, "one.py", "manual first\n");
+    let first = owner.inspect_edit().unwrap()["latest"]["write_result"].clone();
+    let lease = runtime_lease(owner);
+    runtime_edit(&f, &lease, "runtime retry\n", true);
+    runtime_edit_at(&f, &lease, "two.py", "runtime other\n", true);
+    let mut owner = recover_lease(lease);
+    f.edit(&mut owner, "one.py", "manual final\n");
+    let last = owner.inspect_edit().unwrap()["latest"]["write_result"].clone();
+    let projection = owner
+        .capture_applied_write_review(history_purposes(2))
+        .unwrap();
+    let value = serde_json::to_value(&projection).unwrap();
+    let transactions = value["write_history"].as_array().unwrap();
+    assert_eq!(transactions.len(), 4);
+    assert!(value.get("write_approval_receipt_sha256").is_none());
+    assert!(value.get("write_application_receipt_sha256").is_none());
+    for (index, result) in [(0, first), (3, last)] {
+        assert_eq!(
+            transactions[index]["write_application_receipt_sha256"],
+            result["receipts"].as_array().unwrap().last().unwrap()["receipt_sha256"]
+        );
+    }
+    let approvals = transactions
+        .iter()
+        .map(|t| t["write_approval_receipt_sha256"].as_str().unwrap())
+        .collect::<BTreeSet<_>>();
+    assert_eq!(approvals.len(), 4);
+    assert_eq!(projection.files()[0].preimage_sha256, hash(b"first\n"));
+    assert_eq!(
+        projection.files()[0].postimage_sha256,
+        hash(b"manual final\n")
+    );
+    assert_eq!(projection.files()[1].preimage_sha256, hash(b"second\n"));
+    assert_eq!(
+        projection.files()[1].postimage_sha256,
+        hash(b"runtime other\n")
+    );
+    assert!(
+        projection.files()[0]
+            .complete_diff
+            .contains("-\"first\\n\"\n+\"manual final\\n\"")
+    );
+    assert_eq!(
+        owner
+            .capture_applied_write_review(history_purposes(2))
+            .unwrap(),
+        projection
+    );
+    fs::write(f.0.join("owned/worktree/one.py"), b"foreign final\n").unwrap();
+    assert!(
+        owner
+            .capture_applied_write_review(history_purposes(2))
+            .is_err()
+    );
+    assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+    assert_eq!(fs::read(f.0.join("original/two.py")).unwrap(), b"second\n");
+    f.assert_preserved();
+    println!(
+        "native_write_history_component_us={}",
+        started.elapsed().as_micros()
+    );
+}
+
+#[test]
+fn write_history_unpublished_retry_cannot_restore_prior_or_partial_review() {
+    for publish in [false, true] {
+        let f = Fixture::new();
+        let mut owner = f.owner();
+        f.edit(&mut owner, "one.py", "manual first\n");
+        let lease = runtime_lease(owner);
+        runtime_edit(&f, &lease, "runtime retry\n", true);
+        runtime_edit_at(&f, &lease, "two.py", "last transaction\n", publish);
+        let mut owner = recover_lease(lease);
+        if publish {
+            owner
+                .capture_applied_write_review(history_purposes(2))
+                .unwrap();
+            // Losing original private proof is not repaired by a subsequent
+            // checked write. The first preimage remains in edit lineage only.
+            owner.applied_write = None;
+            f.edit(&mut owner, "one.py", "later transaction\n");
+            assert!(
+                owner
+                    .capture_applied_write_review(vec![
+                agentmage_kernel_engine::review_packet::ChangePurposeAssignment {
+                    operation_id: "edit-0".into(),
+                    purpose: agentmage_kernel_engine::review_packet::CommitChangePurpose::Behavior,
+                }
+            ])
+                    .is_err()
+            );
+        } else {
+            assert!(owner.applied_write.is_none());
+            assert!(
+                owner
+                    .capture_applied_write_review(history_purposes(2))
+                    .is_err()
+            );
+        }
+        assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+        assert_eq!(fs::read(f.0.join("original/two.py")).unwrap(), b"second\n");
+        f.assert_preserved();
+    }
+}
+
+#[test]
+fn write_history_retention_limit_never_truncates_original_native_proof() {
+    let f = Fixture::new();
+    let mut owner = f.owner();
+    for i in 0..64 {
+        f.edit(&mut owner, "one.py", &format!("approved version {i}\n"));
+    }
+    let projection = owner
+        .capture_applied_write_review(history_purposes(1))
+        .unwrap();
+    let value = serde_json::to_value(&projection).unwrap();
+    assert_eq!(value["write_history"].as_array().unwrap().len(), 64);
+    assert_eq!(projection.files()[0].preimage_sha256, hash(b"first\n"));
+    assert_eq!(
+        projection.files()[0].postimage_sha256,
+        hash(b"approved version 63\n")
+    );
+    f.edit(&mut owner, "one.py", "approved version 64\n");
+    assert!(owner.applied_write.is_none());
+    assert!(
+        owner
+            .capture_applied_write_review(history_purposes(1))
+            .is_err()
+    );
+    assert_eq!(
+        fs::read(f.0.join("owned/worktree/one.py")).unwrap(),
+        b"approved version 64\n"
+    );
+    assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+    f.assert_preserved();
 }
 
 #[test]
@@ -952,8 +1123,21 @@ fn runtime_handoff_retains_manual_review_proof_until_native_runtime_edit_dispatc
         let lease = runtime_lease(owner);
         runtime_edit(&f, &lease, "runtime change\n", publish);
         let owner = recover_lease(lease);
-        assert!(owner.applied_write.is_none());
+        assert_eq!(owner.applied_write.is_some(), publish);
         assert!(owner.capture_applied_write_review(purposes()).is_err());
+        if publish {
+            let projection = owner
+                .capture_applied_write_review(vec![ChangePurposeAssignment {
+                    operation_id: "history-0".into(),
+                    purpose: CommitChangePurpose::Behavior,
+                }])
+                .unwrap();
+            assert_eq!(projection.files()[0].preimage_sha256, hash(b"first\n"));
+            assert_eq!(
+                projection.files()[0].postimage_sha256,
+                hash(b"runtime change\n")
+            );
+        }
         assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
         f.assert_preserved();
     }

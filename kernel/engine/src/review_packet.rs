@@ -15,7 +15,7 @@ use crate::write_approval::{
     ShadowChangeSet, WriteArtifactClass, WriteChangeScope, WriteReviewHook,
 };
 
-const REVIEW_PACKET_SCHEMA_VERSION: u16 = 1;
+const REVIEW_PACKET_SCHEMA_VERSION: u16 = 2;
 const LOGICAL_COMMIT_PLAN_SCHEMA_VERSION: u16 = 1;
 const MAX_CHANGED_FILES: usize = 128;
 const MAX_UNRELATED_FILES: usize = 4_096;
@@ -147,10 +147,15 @@ pub struct ReviewableChangeSet {
     intent_sha256: String,
     /// Exact implementation-plan digest.
     plan_sha256: String,
-    /// Exact write-approval receipt identity.
-    write_approval_receipt_sha256: String,
-    /// Exact successful write-application receipt identity.
-    write_application_receipt_sha256: String,
+    /// Exact original approval for a single transaction; absent for a history.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    write_approval_receipt_sha256: Option<String>,
+    /// Exact original application for a single transaction; absent for a history.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    write_application_receipt_sha256: Option<String>,
+    /// Ordered original transactions, never an aggregate approval.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    write_history: Vec<ReviewableChangeSet>,
     /// Closed reviewed breadth.
     scope: WriteChangeScope,
     /// Required review hooks.
@@ -248,8 +253,9 @@ pub fn capture_reviewable_change_set(
         change_set_sha256: change_set.change_set_sha256().to_owned(),
         intent_sha256: change_set.intent_sha256().to_owned(),
         plan_sha256: change_set.plan_sha256().to_owned(),
-        write_approval_receipt_sha256,
-        write_application_receipt_sha256,
+        write_approval_receipt_sha256: Some(write_approval_receipt_sha256),
+        write_application_receipt_sha256: Some(write_application_receipt_sha256),
+        write_history: Vec::new(),
         scope: change_set.scope(),
         review_hooks: change_set.review_hooks().to_vec(),
         files_sha256: sha256_json(&files)?,
@@ -864,7 +870,19 @@ pub fn verify_review_packet(packet: &LocalReviewPacket) -> bool {
         && review_packet_digest(packet).as_ref() == Ok(&packet.packet_sha256)
 }
 
+#[path = "review_packet_history.rs"]
+mod history;
+pub use history::capture_reviewable_write_history;
+
 fn verify_reviewable_change_set(change_set: &ReviewableChangeSet) -> bool {
+    if !change_set.write_history.is_empty() {
+        return capture_reviewable_write_history(change_set.write_history.clone()).as_ref()
+            == Ok(change_set);
+    }
+    verify_single_change_set(change_set)
+}
+
+fn verify_single_change_set(change_set: &ReviewableChangeSet) -> bool {
     let operation_count = change_set
         .files
         .iter()
@@ -879,8 +897,14 @@ fn verify_reviewable_change_set(change_set: &ReviewableChangeSet) -> bool {
         && is_sha256(&change_set.change_set_sha256)
         && is_sha256(&change_set.intent_sha256)
         && is_sha256(&change_set.plan_sha256)
-        && is_sha256(&change_set.write_approval_receipt_sha256)
-        && is_sha256(&change_set.write_application_receipt_sha256)
+        && change_set
+            .write_approval_receipt_sha256
+            .as_deref()
+            .is_some_and(is_sha256)
+        && change_set
+            .write_application_receipt_sha256
+            .as_deref()
+            .is_some_and(is_sha256)
         && change_set
             .review_hooks
             .windows(2)
@@ -1197,8 +1221,9 @@ mod tests {
             change_set_sha256: hash('b'),
             intent_sha256: hash('c'),
             plan_sha256: hash('d'),
-            write_approval_receipt_sha256: hash('e'),
-            write_application_receipt_sha256: hash('f'),
+            write_approval_receipt_sha256: Some(hash('e')),
+            write_application_receipt_sha256: Some(hash('f')),
+            write_history: Vec::new(),
             scope: WriteChangeScope::Minimal,
             review_hooks: vec![WriteReviewHook::Security],
             files_sha256: sha256_json(&files).expect("files digest"),

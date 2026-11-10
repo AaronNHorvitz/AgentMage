@@ -649,6 +649,39 @@ test("local review packets reject false review, validation, and change accountin
   }
 });
 
+test("local review histories retain separate receipts and reject incomplete chains", () => {
+  const source = JSON.parse(fs.readFileSync(path.join(ROOT,
+    "schemas/runtime/examples/local-review-packet.valid.json"), "utf8"));
+  const first = structuredClone(source.change_set);
+  const second = structuredClone(first);
+  second.change_set_id = "second-change";
+  second.change_set_sha256 = "2".repeat(64);
+  second.files[0].preimage_sha256 = first.files[0].postimage_sha256;
+  second.files[0].postimage_sha256 = "3".repeat(64);
+  source.change_set.write_history = [first, second];
+  delete source.change_set.write_approval_receipt_sha256;
+  delete source.change_set.write_application_receipt_sha256;
+  source.change_set.files[0].operation_id = "history-0";
+  source.change_set.files[0].postimage_sha256 = second.files[0].postimage_sha256;
+  source.commit_plan.groups[0].operation_ids = ["history-0"];
+  assert.equal(validateRuntimeRecord("local-review-packet", source, runtimeValidators).valid, true);
+  for (const mutation of ["version", "singular", "short", "long", "nested", "duplicate", "order", "gap", "scope", "endpoint"]) {
+    const changed = structuredClone(source);
+    const history = changed.change_set.write_history;
+    if (mutation === "version") changed.schema_version = 1;
+    if (mutation === "singular") changed.change_set.write_approval_receipt_sha256 = "1".repeat(64);
+    if (mutation === "short") history.pop();
+    if (mutation === "long") history.push(...Array(63).fill(second));
+    if (mutation === "nested") history[0].write_history = [first, second];
+    if (mutation === "duplicate") history[1].change_set_sha256 = history[0].change_set_sha256;
+    if (mutation === "order") history.reverse();
+    if (mutation === "gap") history[1].files[0].preimage_sha256 = "9".repeat(64);
+    if (mutation === "scope") history[1].scope = "refactor";
+    if (mutation === "endpoint") changed.change_set.files[0].postimage_sha256 = "8".repeat(64);
+    assert.equal(validateRuntimeRecord("local-review-packet", changed, runtimeValidators).valid, false, mutation);
+  }
+});
+
 test("local commit records reject signer, approval, index, publication, and signature drift", () => {
   const load = (recordType) =>
     JSON.parse(

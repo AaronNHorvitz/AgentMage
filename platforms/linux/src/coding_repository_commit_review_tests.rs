@@ -45,6 +45,13 @@ fn packet(
                 .collect(),
         )
         .unwrap();
+    packet_from_projection(owner, change_set)
+}
+
+fn packet_from_projection(
+    owner: &LinuxCodingRepository,
+    change_set: ReviewableChangeSet,
+) -> LocalReviewPacket {
     let evidence = owner.completion_validation_evidence().unwrap();
     let last = evidence.attempts().last().unwrap();
     let validation = bind_validation_evidence(
@@ -573,8 +580,11 @@ fn applied_review_requires_same_owner_not_copied_records_or_missing_proof() {
 }
 
 #[test]
-fn applied_review_refuses_later_transaction_without_complete_original_preimage() {
+fn applied_review_refuses_later_transaction_without_retained_original_proof() {
     let (f, mut owner, _) = command::tests::candidate_review_fixture();
+    // Losing the original process-only proof cannot be repaired by the next
+    // transaction, even when the aggregate edit lineage remains in memory.
+    owner.applied_write = None;
     let scope = owner.select_created_sources(&["sentinel".into()]).unwrap();
     let p = owner
         .prepare_edit(
@@ -681,4 +691,67 @@ fn applied_review_rechecks_current_bytes_and_all_held_roots() {
             "{which}"
         );
     }
+}
+
+#[test]
+fn write_history_candidate_plan_uses_complete_original_chain_and_fresh_validation() {
+    let (f, owner, _) =
+        command::tests::candidate_review_fixture_before_validation(0o644, |owner| {
+            assert!(owner.check_completion_validation().is_err());
+            let scope = owner.select_created_sources(&["sentinel".into()]).unwrap();
+            let preview = owner
+                .prepare_edit(
+                    scope,
+                    &[crate::LinuxCodingReplacement {
+                        path: "sentinel",
+                        before_sha256: &hash(b"reviewed change"),
+                        content: "reviewed retry",
+                    }],
+                    "second approved native edit",
+                    1000,
+                )
+                .unwrap();
+            assert_eq!(
+                owner
+                    .decide_edit(preview["preview_sha256"].as_str().unwrap(), true, 1000)
+                    .unwrap()["outcome"],
+                "committed"
+            );
+            assert!(owner.check_completion_validation().is_err());
+        });
+    let projection = owner
+        .capture_applied_write_review(vec![ChangePurposeAssignment {
+            operation_id: "history-0".into(),
+            purpose: CommitChangePurpose::Behavior,
+        }])
+        .unwrap();
+    owner.check_completion_validation().unwrap();
+    let p = packet_from_projection(&owner, projection);
+    assert_eq!(p.schema_version, 2);
+    assert!(verify_review_packet(&p));
+    println!(
+        "write_history_packet_json={}",
+        serde_json::to_string(&p).unwrap()
+    );
+    let calls = Cell::new(0);
+    let result = plan(&owner, &p, || {
+        calls.set(calls.get() + 1);
+        Ok(observation(&owner))
+    })
+    .unwrap();
+    assert_eq!(calls.get(), 2);
+    assert_eq!(result.files.len(), 1);
+    assert_eq!(
+        p.change_set.files()[0].preimage_sha256,
+        hash(b"preserve human work")
+    );
+    assert_eq!(
+        p.change_set.files()[0].postimage_sha256,
+        hash(b"reviewed retry")
+    );
+    assert_eq!(
+        fs::read(f.root.join("repo/sentinel")).unwrap(),
+        b"preserve human work"
+    );
+    assert!(!f.root.join("owned/candidate-index-review-build").exists());
 }

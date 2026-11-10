@@ -5,12 +5,17 @@ use super::*;
 use agentmage_kernel_contracts::to_canonical_json;
 use agentmage_kernel_engine::review_packet::{
     ChangePurposeAssignment, ReviewableChangeSet, capture_reviewable_change_set,
+    capture_reviewable_write_history,
 };
 use agentmage_kernel_engine::write_transaction::{WriteOperationStatus, verify_write_receipts};
 
 // No Clone, Serialize, Deserialize or public constructor. Even a valid external
 // receipt chain is not a substitute for the original native execution boundary.
 pub(crate) struct LinuxCodingAppliedWrite {
+    writes: Vec<NativeWrite>,
+}
+
+struct NativeWrite {
     root_sha256: String,
     changes: ShadowChangeSet,
     approval_sha256: String,
@@ -85,24 +90,100 @@ impl LinuxCodingAppliedWrite {
             return Err(Transaction);
         }
         Ok(Self {
-            root_sha256: root_sha256.into(),
-            changes,
-            approval_sha256: approval.binding_sha256.clone(),
-            // The last digest binds the entire checked application receipt chain.
-            application_sha256: result
-                .receipts
-                .last()
-                .ok_or(Transaction)?
-                .receipt_sha256
-                .clone(),
+            writes: vec![NativeWrite {
+                root_sha256: root_sha256.into(),
+                changes,
+                approval_sha256: approval.binding_sha256.clone(),
+                // The last digest binds the entire checked application receipt chain.
+                application_sha256: result
+                    .receipts
+                    .last()
+                    .ok_or(Transaction)?
+                    .receipt_sha256
+                    .clone(),
+            }],
         })
     }
 
+    /// Appends original proofs only. A bound or root mismatch retires history;
+    /// it never rewrites an approval or restores earlier execution authority.
+    pub(crate) fn append(mut self, mut next: Self) -> Option<Self> {
+        if self.writes.len() + next.writes.len() > 64 || self.root_sha256() != next.root_sha256() {
+            return None;
+        }
+        let bytes = self
+            .writes
+            .iter()
+            .chain(&next.writes)
+            .flat_map(|write| write.changes.operations())
+            .try_fold(0_usize, |total, op| {
+                total.checked_add(op.complete_diff().len())
+            })?;
+        if bytes > 8 * 1024 * 1024 {
+            return None;
+        }
+        self.writes.append(&mut next.writes);
+        Some(self)
+    }
+
     pub(crate) fn root_sha256(&self) -> &str {
-        &self.root_sha256
+        &self.writes[0].root_sha256
     }
 
     pub(crate) fn project(
+        &self,
+        purposes: Vec<ChangePurposeAssignment>,
+    ) -> Result<ReviewableChangeSet, LinuxCodingWriteError> {
+        if self.writes.len() == 1 {
+            return self.writes[0].project(purposes);
+        }
+        let paths = self
+            .writes
+            .iter()
+            .flat_map(|w| w.changes.operations())
+            .map(|op| op.path())
+            .collect::<BTreeSet<_>>();
+        let by_id = purposes
+            .iter()
+            .map(|p| (p.operation_id.as_str(), p.purpose))
+            .collect::<std::collections::BTreeMap<_, _>>();
+        if by_id.len() != purposes.len() || purposes.len() != paths.len() {
+            return Err(LinuxCodingWriteError::Input);
+        }
+        let by_path = paths
+            .into_iter()
+            .enumerate()
+            .map(|(i, path)| {
+                by_id
+                    .get(format!("history-{i}").as_str())
+                    .copied()
+                    .map(|purpose| (path, purpose))
+                    .ok_or(LinuxCodingWriteError::Input)
+            })
+            .collect::<Result<std::collections::BTreeMap<_, _>, _>>()?;
+        let history = self
+            .writes
+            .iter()
+            .map(|write| {
+                write.project(
+                    write
+                        .changes
+                        .operations()
+                        .iter()
+                        .map(|op| ChangePurposeAssignment {
+                            operation_id: op.operation_id().into(),
+                            purpose: by_path[op.path()],
+                        })
+                        .collect(),
+                )
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        capture_reviewable_write_history(history).map_err(|_| LinuxCodingWriteError::Input)
+    }
+}
+
+impl NativeWrite {
+    fn project(
         &self,
         purposes: Vec<ChangePurposeAssignment>,
     ) -> Result<ReviewableChangeSet, LinuxCodingWriteError> {

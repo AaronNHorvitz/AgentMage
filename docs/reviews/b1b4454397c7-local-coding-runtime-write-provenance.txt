@@ -1,0 +1,154 @@
+Commit: b1b4454397c73f019be9c3655f51c5b65cab15f2
+Scope: local-coding-runtime-write-provenance
+
+# Independent core review: native runtime write approval provenance
+
+Reviewer: independent session (Claude Opus 5.5, extra-high effort), read-only, pinned checkout
+`/lane/review-checkout`. Tier: core. Rows: T-303 / T-306, non-closing increment. Both parents
+remain OPEN; this report closes no row.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = `b1b4454397c73f019be9c3655f51c5b65cab15f2` in the pinned
+  checkout. The diff against immutable base `9d6d453aa97195ec9a3d5d6b49cbb9d7079afa73` is exactly
+  11 files (+627/-18).
+- Read IP-POLICY.md, Decision 0184, the new evidence note, the TASKS.md head change and the guide
+  change. Read every bundle runner (README.md, run.py, focused.py, check.py, parse_gate.py,
+  light.py) before running them. They are benign: fresh output directories, no deletion and no
+  outer build-slot wrapping, and Cargo goes through `/tools/build-slot` inside the gate script.
+- Reviewed the full source diff line by line: `kernel/engine/src/write_transaction.rs`,
+  `platforms/linux/src/coding_repository_runtime.rs`, `coding_workspace_write_proof.rs`,
+  `coding_workspace_write.rs`, `coding_repository_commit_review.rs` and the new tests in
+  `coding_repository_apply_tests.rs`. I traced the production caller in
+  `shells/host/src/linux_coding_runtime.rs` (`write_driver` at line 2749, `complete` after
+  `finish_specialized_effect_event` at lines 2895 and 3120) and the local-api reachability
+  (`platforms/local-api/src/coding_owned_api.rs:246`, `attach_owned_worktree`).
+- Reasoned through adversarial cases against the code (below). None needs a new filesystem
+  escape attempt: this increment adds no write path, sandbox or network surface. Writes still go
+  through the unchanged `LinuxAtomicWriteDriver` behind the kernel's consumed-grant authorization.
+
+## Exact commands and results (all from /lane/review-checkout)
+
+```text
+sha256sum --quiet -c /lane/state/tmp/t306-runtime-write-proof/review-inputs.sha256      -> exit 0
+CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py \
+    /lane/state/tmp/review-runtime-write-provenance-b1b4454397c7                        -> exit 1 (EXPECTED 1)
+  {"exit": 1, "source_unchanged": true, "seconds_including_reservations": 698.73,
+   "raw_log_sha256": "aa71be16008146cfa595964e8a8eabd9e1cbd9c2dfe1e7014c9d7ad7f3c9e4c9"}
+  fmt/clippy/etc. exit 0; final cargo test exit 101 (438.66 s); "FAST GATE: FAIL"
+python3 -B .../check.py /lane/state/tmp/review-runtime-write-provenance-b1b4454397c7    -> exit 0
+  46 targets; totals 2925 passed / 72 failed / 72 ignored / 0 measured / 0 filtered;
+  72 inherited failure identities, 0 new; all 5 new methods "ok"; 6 source files unchanged;
+  20 extra kernel targets all pass (kernel lib 1568 pass / 8 existing ignores);
+  "DATA COMPARISON ONLY: FULL GATE REMAINS FAIL"
+CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../focused.py \
+    /lane/state/tmp/review-runtime-write-focused-b1b4454397c7                            -> exit 0
+  linux lib runtime_native_review: 4 passed, 0 failed, 420 filtered (1.12 s body; 735.0 s cmd)
+    native_runtime_write_review_component_us=510895
+  kernel lib write_transaction::tests: 11 passed, 0 failed, 1565 filtered (0.03 s body; 35.1 s cmd)
+python3 -B .../light.py                                                                 -> exit 0
+  diff --check, --lint-untracked, --lint-reviews (retained base review), markdownlint: 0 issues
+cmp .../validation-1/source-freeze.json .../review-...-b1b4454397c7/source-freeze.json   -> identical
+git diff --check 9d6d453aa97195ec9a3d5d6b49cbb9d7079afa73 --                             -> clean
+git status --short                                                                      -> empty
+```
+
+My reproduction matches the builder's claims: the same 46 targets, the same 2925/72/72 totals,
+the same inherited failure and ignore identities with exactly four new Linux passes, and the same
+five new methods. Timings and the raw log hash differ, as expected; the builder's raw-log hash
+`9ae43ea2…` is not re-derivable, and only the counts and identities are. I sampled the inherited
+failures. The 42 `linux_coding_runtime::tests` failures panic at
+`shells/host/src/linux_coding_runtime.rs:11307` with `test sandbox manifest: LinuxSandboxError
+{ kind: InvalidManifest }`, the lane's native-executable trust refusal. That is unrelated to this
+diff (no `shells/host` file changed), and the failures are counted, not dropped.
+
+## Verification of the claimed design
+
+- **Borrow only after consumption and checkpoint.** `WriteApplyAuthorization` is constructed at
+  exactly one site (`kernel/engine/src/write_transaction.rs:382`), after
+  `revalidate_before_apply`, `consume_for_execution` and `checkpoint(issuer)`. It carries a
+  borrowed `&WriteApprovalReceipt`, the same argument the kernel validated. Fields stay private
+  and there is no external constructor. The new kernel regression asserts `std::ptr::eq` with the
+  original receipt, that the checkpoint ran first, and that the grant is `Consumed` at checkpoint
+  time. The receipt grants nothing new: the grant is already consumed, and the caller of
+  `execute_write_transaction` already holds the receipt.
+- **Capture before dispatch.** `Attempt` clones the authorization's change set and approval
+  before calling `native.apply` (`coding_repository_runtime.rs:374-381`). Prior proof is retired
+  (`applied_write = None`, line 400) only after candidate shape and lineage checks pass. When the
+  candidate check fails, nothing is written, so the old proof still describes on-disk bytes; the
+  capture path re-reads them anyway.
+- **Correlation at completion.** `complete()` requires `successful_apply` (exact applied index
+  set, no failure or uncertainty, reset by `restore`). It also requires the transaction id from
+  the authorization, the consumed grant digest, `verify_write_receipts`, verified-op equality
+  with the approved change set, and per-receipt transaction and grant ids. It then calls
+  `from_native_result`, which checks issued-grant digest and revision, revision+1 consumption, the
+  recomputed binding digest (same formula as `write_approval.rs:914`), receipts and outcome. A
+  caller-forged `WriteTransactionResult` can at most restate the actually applied, approved
+  operations. Proof construction failure leaves the attempted paths removed from lineage, which
+  fails closed.
+- **Complete coverage only.** Retention requires `ops.len() == created.edits.len()` and, for each
+  op, `created_mode.is_none()`, `before == op.preimage` and `after == op.postimage`. Reasoned
+  cases: a retry on the same file (A→B, then B→C) gives `before=A ≠ B`, so no proof. A second
+  file gives a length mismatch, so no proof. A prior manual creation keeps `created_mode`, so no
+  proof. The kernel `ShadowChangeSet` has no creation form, so runtime writes cannot create new
+  files. A→B→A then A→C retains proof for A→C, which correctly describes the actual first
+  preimage and current postimage. `capture_applied_write_review` independently re-checks the
+  same conditions, plus held-root identity and fresh source bytes.
+- **Driver reuse and replay.** A second `apply` before `complete` refuses (`write-repeated`). A
+  second `complete` with a Committed result and no attempt errors. Dropping without `complete`
+  retains nothing and leaves the attempted paths ineligible.
+- **Poisoned recovery.** `try_into_repository` now clears `applied_write`. The existing poisoned
+  regression creates a manual-edit proof first (`f.edit` sets `applied_write`, and
+  `prepare_current_apply` does not clear it), so the new `is_none()` assertion is meaningful.
+- **Manual path unchanged.** It still passes `transaction-<change_set_id>`, so the prepared-edit
+  binding is unchanged. Relaxing `from_native_result` to accept a caller-provided id is safe
+  because the runtime path's id comes from the kernel authorization, not the caller.
+- **Reachability.** The production host path constructs the owned driver from the attached lease
+  and calls `complete` only after `finish_specialized_effect_event`. The existing local-api owned
+  session attaches the lease. `capture_applied_write_review` remains an internal composition
+  with no HTTP or terminal route, as disclosed.
+- **Honest labelling.** The decision, evidence, TASKS and guide text state synthetic creation
+  provenance, a test-controlled publication choice, a memory driver in the kernel test, and no
+  actual terminal publication, native Git, model, grade or score. The gate is reported as FAIL,
+  the comparison is called non-gate, and the retained base review is byte-identical (verified by
+  check.py and light.py).
+- **Hygiene and IP.** Added lines contain no private host path, username, hostname, credential,
+  personal data, private sibling project name, product comparison or trademark branding. No
+  dependency, licence, SBOM, prompt, held-out task, scorer, threshold, status or scoreboard file
+  changed. The base commit is not rewritten and no row or sub-row is added or closed.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L-A (low, test coverage).** `shells/host/src/linux_coding_runtime.rs:2895` and `:3120`
+  (production `complete` callers), versus `platforms/linux/src/coding_workspace_write.rs:448`
+  (the `#[cfg(test)]` harness the new tests use). The four Linux regressions drive the owned
+  runtime driver through the in-memory `GrantIssuer` and `execute_write_transaction`, with a
+  boolean standing in for terminal publication. No regression drives an attached owned lease
+  through the host's durable authority (`begin_controlled_write_with_runtime_event` /
+  `execute_controlled_write`) and `finish_specialized_effect_event` into `complete()` and then
+  `capture_applied_write_review`. The new `from_native_result` error path in `complete()` maps to
+  `RuntimePortFailure::Uncertain` after a committed, published write. By code reading, the durable
+  path uses the same kernel consumption and binding formulas, so I found no mismatch. But a
+  divergence would surface only in production. In this lane, all 42 host
+  `linux_coding_runtime` tests already fail on the inherited sandbox-manifest refusal, so even a
+  host test would not run here. The claims are scoped honestly, so this is backlog, not
+  blocking. Fix: when the host sandbox manifest is available, add a host regression that
+  attaches an owned lease, performs one structured runtime write through the durable authority,
+  and asserts that the captured projection's `write_approval_receipt_sha256` equals the issued
+  approval's `binding_sha256`. Add a companion where publication fails before `complete`, asserting
+  that no proof is retained and the paths are ineligible.
+- Builder-listed same-row backlog (prior L1 precheck ordering, the second gap of prior L3 on
+  manual post-commit refusal coverage, older lows) remains open. I did not re-review it.
+
+## Per-row result
+
+- T-303 / T-306 increment `local-coding-runtime-write-provenance` at
+  `b1b4454397c73f019be9c3655f51c5b65cab15f2`: accepted as a non-closing increment. There is no
+  open high or medium finding. Low L-A goes to same-row backlog, and prior low L2 (poison
+  cleanup) and the first gap of prior L3 (two-file runtime projection) are addressed. Both
+  parents remain OPEN. The complete affected fast gate remains FAIL on 72 inherited failures, and
+  nothing here is a gate pass or parent acceptance.
+
+Verdict: PASS

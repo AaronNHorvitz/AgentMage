@@ -2035,6 +2035,19 @@ pub(in crate::coding_repository) fn candidate_review_fixture_with_mode(
     LinuxCodingRepository,
     agentmage_kernel_engine::write_approval::ShadowChangeSet,
 ) {
+    candidate_review_fixture_before_validation(mode, |_| {})
+}
+
+// Extra actual edits precede the FIRST synthetic validation result. This cannot
+// reset a production validation series or authorize reruns after a full pass.
+pub(in crate::coding_repository) fn candidate_review_fixture_before_validation(
+    mode: u32,
+    edit: impl FnOnce(&mut LinuxCodingRepository),
+) -> (
+    crate::coding_repository::tests::Fixture,
+    LinuxCodingRepository,
+    agentmage_kernel_engine::write_approval::ShadowChangeSet,
+) {
     let f = crate::coding_repository::tests::Fixture::new();
     let mut owner = crate::coding_repository::tests::owner_with_synthetic_git_observations(&f);
     let common = f.root.join("repo/.git");
@@ -2091,7 +2104,14 @@ pub(in crate::coding_repository) fn candidate_review_fixture_with_mode(
             .unwrap()["outcome"],
         "committed"
     );
-    let digest = validation_pending(&mut owner, None).unwrap();
+    edit(&mut owner);
+    candidate_review_validate(&mut owner);
+    (f, owner, change_set)
+}
+
+// Original sealed input, explicitly synthetic command/process observation.
+fn candidate_review_validate(owner: &mut LinuxCodingRepository) {
+    let digest = validation_pending(owner, None).unwrap();
     let pending = owner.take_command(&digest, true, NOW).unwrap().unwrap();
     owner
         .run_command(
@@ -2111,7 +2131,6 @@ pub(in crate::coding_repository) fn candidate_review_fixture_with_mode(
         )
         .unwrap();
     owner.check_completion_validation().unwrap();
-    (f, owner, change_set)
 }
 impl BoundedCommandExecutor for SealedEnvelope {
     type WorkingDirectory = LinuxAuthorizedWorkspace;

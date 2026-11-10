@@ -272,13 +272,31 @@ approval from that authorization, performs the existing native transaction and
 retains proof only after terminal publication and exact completion checks.
 Caller receipt arguments cannot replace the original approval.
 
-Only one committed transaction is retained, within the existing sixteen-file and
-source-byte limits. Its preimages and postimages must cover every current
-transferable edit from its original preimage. Incomplete cumulative coverage and
-new files refuse candidate review. Runtime completion retains no proof for a
-partial retry history. A write, creation or original-apply dispatch retires earlier
-proof, including on uncertain results; declining a preview preserves historical
-proof. Idle handoff and return keep the same live proof. Saved JSON, copied receipt
-chains and a reopened store cannot restore it.
+The same owner retains up to sixty-four original transactions and eight MiB of
+complete diff text, within the existing sixteen-path limit. Each retains its
+original shadow change set, approval binding and checked application-chain
+digest. `capture_applied_write_review()` composes first preimages and final
+postimages only when every per-path step connects and the complete current
+lineage matches fresh source bytes. For multiple transactions, purpose identities
+are `history-0`, `history-1`, and so on in sorted path order. A single transaction
+keeps its original operation identities.
+
+Review packets use schema version 2. A composite contains an ordered
+`write_history` of original transaction projections and omits the singular
+`write_approval_receipt_sha256` and `write_application_receipt_sha256` fields.
+Its change-set digest identifies the whole history and grants no new approval.
+Each original projection retains those original receipt digests separately.
+Single-transaction projections keep the existing serialized field shape.
+
+Missing or reordered links, duplicate transactions, nested histories, inconsistent
+breadth or file classification, net-zero paths and new-file lineage refuse.
+Exceeding a retention bound loses the review proof rather than dropping earlier
+transactions. Dispatch removes previous proof from the owner; only a checked
+successful write (and terminal publication for runtime writes) returns it with
+the next original proof. Uncertain, failed or unpublished dispatch cannot return
+history. Creation, original-apply dispatch and poisoned recovery retire it.
+Declining a preview preserves historical proof. Idle handoff and return keep
+the same live proof. Saved JSON, copied receipt chains and a reopened store cannot
+restore it. Old version 1 packets must be rebuilt from live proof.
 This establishes original write provenance, not independent review or permission
 to construct a tree, commit or push.

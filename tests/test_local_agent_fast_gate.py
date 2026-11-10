@@ -89,6 +89,19 @@ class FastGateTests(unittest.TestCase):
         clippy = next(c for c in commands if c[:2] == ["cargo", "clippy"])
         self.assertEqual(clippy[-3:], ["--", "-D", "warnings"])
 
+    def test_builds_and_complete_suites_take_exactly_one_reservation(self):
+        with patch.object(gate.Path, "is_file", return_value=True):
+            for command in (["cargo", "test"], ["cargo", "fmt"],
+                            ["node", "--test", "tests/test_planning_schemas.mjs"],
+                            [sys.executable, "-m", "unittest", "tests.test_local_agent_fast_gate"]):
+                self.assertEqual(gate.reserved_command(command), ["bash", "/tools/build-slot", *command])
+            for command in (["node", "node_modules/.bin/markdownlint-cli2", "docs/mission.md"],
+                            [sys.executable, "scripts/local_agent_fast_gate.py", "--lint-untracked"],
+                            ["bash", "/tools/build-slot", "cargo", "test"]):
+                self.assertEqual(gate.reserved_command(command), command)
+        with patch.object(gate.Path, "is_file", return_value=False):
+            self.assertEqual(gate.reserved_command(["cargo", "test"]), ["cargo", "test"])
+
     def test_document_only_change_has_no_build_or_evidence_generator(self):
         self.write("docs/mission.md")
         commands = gate.plan(self.root, ["docs/mission.md"], self.metadata)

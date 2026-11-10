@@ -26,10 +26,11 @@ impl LinuxCodingRepository {
     /// receipt into an authority-free review change set. Call only after source
     /// read consent. Purposes are caller review labels, never approval evidence.
     ///
-    /// The retained single native transaction must cover the complete current
-    /// existing-file lineage from its first preimage to its final postimage.
-    /// Multiple transactions with incomplete cumulative coverage and new files
-    /// refuse. No receipt/path/JSON can restore this process-only proof.
+    /// Retained original native transactions must cover the complete current
+    /// existing-file lineage from first preimage to final postimage. Histories
+    /// retain each approval separately and use path-ordered `history-N` purpose
+    /// identities. New files and incomplete chains refuse. No receipt/path/JSON
+    /// can restore this process-only proof.
     pub fn capture_applied_write_review(
         &self,
         purposes: Vec<ChangePurposeAssignment>,
@@ -82,7 +83,7 @@ impl LinuxCodingRepository {
     /// method checks current content/lineage, original held validation evidence
     /// and fresh Git observations. It does not authenticate caller-supplied
     /// review findings or evidence artifacts. Write-approval and application
-    /// identities must match the retained original native transaction exactly.
+    /// identities must match the retained original native transactions exactly.
     /// The returned plan grants no candidate build, commit or publication. Any
     /// future executor still needs complete provenance and separate authority.
     /// Source and Git checks are bounded observations, not an atomic lease.

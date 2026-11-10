@@ -202,6 +202,7 @@ struct Attempt {
     operations: BTreeMap<String, (String, String)>,
     changes: ShadowChangeSet,
     approval: WriteApprovalReceipt,
+    previous_write: Option<LinuxCodingAppliedWrite>,
 }
 
 /// Native writer with optional live creation provenance. It cannot issue an
@@ -287,20 +288,10 @@ impl<'a> LinuxCodingRuntimeWriteDriver<'a> {
             .as_mut()
             .ok_or(err("code.runtime.worktree-required"))?;
         created.edits.extend(attempt.edits.clone());
-        // A single transaction is reviewable only if it covers the complete
-        // first-preimage/current-postimage lineage. Never invent an approval
-        // spanning earlier retries or edits on other paths.
-        if attempt.changes.operations().len() == created.edits.len()
-            && attempt.changes.operations().iter().all(|op| {
-                created.edits.get(op.path()).is_some_and(|edit| {
-                    edit.created_mode.is_none()
-                        && edit.before_sha256 == op.preimage_sha256()
-                        && edit.after_sha256 == op.expected_postimage_sha256()
-                })
-            })
-        {
-            owner.applied_write = Some(proof);
-        }
+        owner.applied_write = match attempt.previous_write {
+            Some(previous) => previous.append(proof),
+            None => Some(proof),
+        };
         self.successful_apply = false;
         Ok(())
     }
@@ -378,9 +369,10 @@ impl AtomicWriteDriver for LinuxCodingRuntimeWriteDriver<'_> {
                     operations,
                     changes: authorization.change_set().clone(),
                     approval: authorization.approval().clone(),
+                    previous_write: None,
                 })
             })();
-            let attempt = match candidate {
+            let mut attempt = match candidate {
                 Ok(attempt) => attempt,
                 Err(error) => {
                     return WriteApplyReport {
@@ -395,9 +387,9 @@ impl AtomicWriteDriver for LinuxCodingRuntimeWriteDriver<'_> {
             owner.command = None;
             owner.edit = None;
             owner.apply = None;
-            // Historical proof is retired before dispatch. Only this actual
-            // native transaction plus terminal publication can replace it.
-            owner.applied_write = None;
+            // Remove history from the owner before dispatch. Only matching
+            // native completion after publication can return it with a new proof.
+            attempt.previous_write = owner.applied_write.take();
             let created = owner.created.as_mut().expect("verified created worktree");
             for path in attempt.edits.keys() {
                 created.edits.remove(path);

@@ -165,7 +165,7 @@ impl LinuxCodingRepository {
             Some(json!({"preview_sha256":digest,"outcome":"dispatching","effect":"unknown"}));
         self.command = None;
         self.apply = None;
-        self.applied_write = None;
+        let previous_write = self.applied_write.take();
         // Uncertain writes must never leave an older transferable postimage.
         if let Some(created) = &mut self.created {
             for path in pending.edits.keys() {
@@ -212,7 +212,11 @@ impl LinuxCodingRepository {
                 .ok_or(err("code.edit.uncertain"))?
                 .edits
                 .extend(pending.edits);
-            self.applied_write = proof;
+            self.applied_write = match (previous_write, proof) {
+                (Some(previous), Some(next)) => previous.append(next),
+                (None, proof) => proof,
+                (_, None) => None,
+            };
         }
         self.edit_result = Some(value.clone());
         Ok(value)

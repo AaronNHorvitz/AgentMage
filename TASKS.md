@@ -2,6 +2,24 @@
 
 ## Active queue: local agent mission
 
+The [original write-history increment](docs/evidence/t306-write-history-2026-11-09.md)
+retains separate checked native approval/application identities across existing-file
+retries and composes their complete net diff for the same candidate planner.
+Histories are bounded and cannot invent an aggregate approval. The complete
+affected gate remains **FAIL**: 2,932 passed, the same 72 inherited failures and
+72 existing ignores across 46 unfiltered targets. All seven new Rust methods,
+80 schema tests, 28 fast-gate tests, formatting and Clippy pass; fifteen source
+hashes remain fixed. T-303/T-306 remain open; no row or sub-row is added or closed.
+Independent core review is required. New-file review,
+reviewer/artifact provenance, candidate execution, approved Git, native/model
+measurements and durable recovery remain open.
+
+The [base runtime-provenance independent core report](docs/reviews/b1b4454397c7-local-coding-runtime-write-provenance.txt)
+has **Verdict: PASS** for exact commit
+`b1b4454397c73f019be9c3655f51c5b65cab15f2`, with no high or medium finding.
+Its low L-A durable host/publication coverage finding remains same-row backlog
+with the earlier lows. This review closes no row.
+
 The [runtime write-provenance increment](docs/evidence/t306-runtime-write-provenance-2026-11-09.md)
 retains the original runtime approval from the kernel's opaque consumed write
 authorization through native completion and the existing terminal publication

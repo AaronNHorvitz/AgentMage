@@ -26,6 +26,9 @@ VALIDATION_SCHEMA_INPUTS = {
     "schemas/runtime/validation-receipt.schema.json",
     "schemas/runtime/command-receipt.schema.json",
     "tests/test_planning_schemas.mjs",
+    "schemas/runtime/local-review-packet.schema.json",
+    "schemas/runtime/examples/local-review-packet.valid.json",
+    "scripts/validate_planning_schemas.mjs",
 }
 RUNTIME_PRODUCER_FIXTURE_INPUTS = {
     "fixtures/runtime-producer/v5/" + name for name in (
@@ -295,6 +298,15 @@ def execute(root: Path, commands: list[list[str]], timeout: int) -> int:
             signal.signal(signum, handler)
 
 
+def reserved_command(command: list[str]) -> list[str]:
+    """Reserve builds and complete suites once, preserving lightweight checks."""
+    suite = ((command[0] == "node" and "--test" in command)
+             or (command[0] == sys.executable and command[1:3] == ["-m", "unittest"]))
+    if (command[0] == "cargo" or suite) and Path("/tools/build-slot").is_file():
+        return ["bash", "/tools/build-slot", *command]
+    return command
+
+
 def execute_checks(root: Path, commands: list[list[str]], timeout: int, stopping) -> int:
     environment = os.environ.copy()
     environment.update(CARGO_BUILD_JOBS="2", RUST_TEST_THREADS="4")
@@ -302,9 +314,7 @@ def execute_checks(root: Path, commands: list[list[str]], timeout: int, stopping
     for command in commands:
         if stopping():
             return 1
-        actual = command
-        if command[0] == "cargo" and Path("/tools/build-slot").is_file():
-            actual = ["bash", "/tools/build-slot", *command]
+        actual = reserved_command(command)
         print("RUN " + json.dumps(command), flush=True)
         started = time.monotonic()
         read_end, write_end = os.pipe()
