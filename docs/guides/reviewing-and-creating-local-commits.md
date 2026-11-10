@@ -114,7 +114,13 @@ and a new private candidate directory writable. Other owned worktrees and scratc
 siblings are not projected. Its temporary-index identity names `index` inside
 `candidate-index-<build-id>`; stale flat-index plans and occupied directories refuse.
 Postimages are sealed memory input, and each resulting blob must match those
-exact bytes. A single thirty-second deadline covers the candidate sequence.
+exact bytes. A single thirty-second deadline starts at the builder's entry and
+covers initial preservation, postimage checks, scratch setup, all Git steps,
+cleanup and final preservation. Collections and workers inherit that same
+absolute deadline; their shorter limits still apply. Cancellation and expiry
+are checked between phases and sixty-four-KiB postimage hashing chunks.
+Late success refuses. Cleanup still runs after stopped work; individual
+blocking operations and mandatory cleanup can outlast the cooperative deadline.
 
 Setup opens the candidate directory relative to the held parent, without
 following symlinks, before capturing the worker scope. The captured directory

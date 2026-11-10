@@ -1,0 +1,183 @@
+Commit: dcd7411ce51c73e190b8232315a30e6355252577
+Scope: local-coding-terminal-watch
+
+# Independent review: bounded terminal run observation (T-303 / T-306, core, non-closing)
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate read-only session. This is a same-model review.
+Pinned checkout: /lane/review-checkout. `git rev-parse HEAD` gives
+dcd7411ce51c73e190b8232315a30e6355252577. `git status --short` is clean before and after the review.
+Parent: a3dbc1851196caac7533b1937f7bf6c0ef058869.
+
+## Methods
+
+- Before running anything I read IP-POLICY.md, Decision 0200, the Decision 0199 wording change,
+  docs/evidence/t303-terminal-watch-2026-11-10.md, the guide section and the TASKS.md addition. I also
+  read the full parent diff (11 files, including all 4 Rust inputs), the retained parent report and
+  the bundle README.md, run.py, check.py and light.py.
+  - The scripts are benign. run.py only calls the committed scripts/local_agent_fast_gate.py, which
+    reserves cargo through /tools/build-slot internally (lines 208-209 and 305-306).
+  - run.py was not outer-wrapped. No script changes source files.
+- I read the new code and every server-side and kernel dependency it relies on:
+  - coding_cli_watch.rs (all of it).
+  - In coding_cli.rs: `call_policy`, `observation_page`, `receive_before_policy`, `read_until` and `safe`.
+  - In coding_cli_endpoint.rs: `binding`, `selected`, `checked_selection` and `checked_event_page`.
+  - coding_cli_driver.rs `Signals`.
+  - In lib.rs: `read_api_token`, `protected_directory`, `serve_connections`, `write` and `error`.
+  - The coding_endpoint_api.rs observation-delegation gate (:472-480) and the events and release
+    route (:543-631).
+  - The kernel `RuntimeEventSequence::push` and `admit_first` (kernel/engine/src/runtime_event.rs:351-431).
+- Ran the 8 requested commands from the pinned checkout. All four of steps 2-4 used the fresh suffix
+  `r1794350694`.
+- Ran my own adversarial probes. They are 2 extra tests in a scratch `git archive` copy of the pinned
+  commit, outside the repository, with a separate target directory, run through /tools/build-slot.
+  Nothing in the repository was modified.
+
+## Commands and results
+
+1. `sha256sum --quiet -c /lane/state/tmp/t303-terminal-watch/review-inputs.sha256`: exit 0.
+   - The manifest's own SHA-256 is bdf75492680f581155c619d8e028aed0ba6c6019c9f2b11f59c8c3a6d2a32a9d,
+     which matches the request. It has 15 lines.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py /lane/state/tmp/review-terminal-watch-r1794350694`:
+   exit 0.
+   - `FAST GATE: PASS`, `source_unchanged: true`.
+   - 537.54 s including reservations. Formatting reports 412.66 s, which is mostly time waiting for a
+     shared build slot. Clippy took 32.26 s and the tests 91.09 s.
+   - Fresh raw log SHA-256: 8842d7b86bbec6b67052dd21db9398418026ae8cf0a33bf0af1fbe391e35d2a8.
+     It differs from the builder's 1e7d00ec… as expected, because timings differ.
+3. `check.py` on the same output directory: exit 0.
+   - `gate PASS`, 11 targets, totals [266, 0, 0, 0, 0], all 5 new methods, 4 source files unchanged,
+     and every one of the 7 commands exited 0.
+   - Independently, I grepped the raw log and found 11 `test result: ok` lines.
+   - Each of the 5 `endpoint_mcp::endpoint_watch_*` methods prints `... ok`.
+   - The log contains no skip or allowlist text.
+4. `cmp validation-1/source-freeze.json <fresh>/source-freeze.json`: exit 0, so the 4 Rust hashes are identical.
+5. `light.py`: exit 0.
+   - `git diff --check`, `--lint-untracked`, `--lint-reviews` and markdownlint all pass, with 0 issues in 6 files.
+6. `cmp docs/reviews/a3dbc1851196-local-coding-launch-observations.txt /lane/reviews/a3dbc1851196-local-coding-launch-observations.md`:
+   exit 0, so the retained report is byte-identical.
+7. `git diff --check a3dbc1851196caac7533b1937f7bf6c0ef058869 --`: exit 0.
+8. `git status --short`: empty.
+- Node: /lane/state/tmp/t306-confined-candidate/node/bin/node reports v24.15.0. Its SHA-256 is
+  d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c, which matches.
+- Builder evidence: validation-1/result.json reports 55.19302790999791 s, fmt 0.30, clippy 1.90 and
+  tests 51.47.
+  - Its fast.log SHA-256 is 1e7d00ecc57618c02a74331bfa31ddd7d760f6fe2d53aa0b4a79693357681df0.
+  - focused.log is 97c820b0…, matching the evidence.
+  - 44 methods in coding_endpoint_http, minus the 5 new ones, gives 39, which matches the
+    "39 filtered" claim for the preliminary run.
+
+### Reviewer probes
+
+The probes used the real `agentmage-code` binary.
+
+**Fake loopback peer.** It serves a valid sealed selection, asserts the client bearer token and the
+fixed routes, and counts requests (log SHA-256 d35f428f…, ndjson re-run debc5dc6…).
+
+| Peer behaviour | Exit | Stdout | Requests and time |
+| --- | --- | --- | --- |
+| Endless framed 409 `api.busy`, 2 s budget | 1 | empty | 20 event polls in 2024 ms: a 100 ms wait, no spin, stops at the deadline |
+| Endless empty prefix (`total == after == 0`), 2 s budget | 1 | empty | 20 polls in 2025 ms |
+| Endless busy, then SIGINT at 700 ms | 1 | empty | stopped at 710 ms after 7 polls |
+| 409 `api.busy` as `application/x-ndjson` | 1 | empty | 1 request, no wait |
+| 409 `api.busy` with a 5000-byte body (over the 4096 refusal limit) | 1 | empty | 1 request, no wait |
+| HTTP 500 with `{"error":"api.busy"}` | 1 | empty | 1 request; only a 409 qualifies |
+| 409 `api.busy` followed by trailing JSON | 1 | empty | 1 request; framing is exact |
+| Empty events with `total > after` | 1 | empty | 1 request, refused |
+| 409 `api.busy` on the GET request route | 1 | empty | 0 event polls; the busy policy applies only to the events route |
+
+**Real delegated service with no events.** I made control-credential event reads in a loop for 5
+seconds while a watcher was running.
+- Before the watcher started: 0 of 1000 reads returned busy.
+- While it ran: 4 of 2376 (about 0.17%) returned framed 409 `api.busy`.
+- This shows that the watcher's polling briefly holds the same session lock as control
+  `advance`/`release` (see L1).
+- No model connection was made and no execution occurred.
+
+**Code reasoning.** I confirmed the following from the code:
+- `call_policy` refuses `allow_observation_busy` for anything except the exact combination of
+  `POST /v1/code/endpoint/events` with `control == false`.
+- `observation_page` is the only caller that enables the policy.
+- `call` and `receive_before`, which every effect caller uses, map `ObservationBusy` to `Err`.
+  Effect callers therefore keep their no-retry behaviour.
+- The 409 exception is evaluated only after the full refusal checks: Content-Length required, no
+  streaming, at most 4096 bytes and an exact decode.
+- HTTP 200 bodies are returned as `Values` and then fail the typed page checks.
+
+## Confinement and safety assessment
+
+- **Credential.** The watcher calls `token(false)` only, through `protected_directory` and then
+  `read_api_token` (O_NOFOLLOW, mode 0600, nlink 1, owner uid). The test replaces `control.token`
+  with an invalid symlink, so a control load would fail. The watcher still succeeds, which shows it
+  never opens the control credential.
+- **Authority.** The server answers 403 to the client credential unless the service started with
+  `DelegateObservations`. That check (coding_endpoint_api.rs:472-480) covers only the request and
+  events routes. The watcher has no means of enabling delegation.
+- **Pinning.** Before any event poll, `checked_selection` requires the exact run id and request
+  digest, plus a verified sealed request. Each event poll is checked for:
+  - one event per page, with `next`, `total` and retention consistent;
+  - matching run, session, task and policy identities;
+  - `sequence == after`;
+  - a first event that is `RunStarted` with the exact request digest;
+  - acceptance by the full kernel `RuntimeEventSequence` (contiguous hashes, unique ids, causation,
+    monotonic time and legal transitions);
+  - no shrinking total, and no total above min(4096, `max_events`);
+  - a terminal event only when `after == total`.
+- **Effects.** The watcher has no confirm call, no advance, cancel or release, and no file writes.
+  Output goes through `safe()`, which keeps only escaped ASCII with no ESC or DEL, and is
+  byte-counted against 4 MiB including the newline. That check happens before each write.
+- **Bounds.**
+  - The original monotonic `Signals` deadline of 1-3600 s is enforced in `check_running`,
+    `call_policy` (the time remaining when connecting) and `read_until`.
+  - The loop is capped at 40,096 polls.
+  - SIGINT, SIGTERM and SIGHUP set the latch, and the actual signal tests exit 1 with the run held and
+    no events.
+  - Blocking stdout is outside preemption, which the guide and decision document.
+- **Prompt injection.** Event content is only rendered. Nothing in it is parsed into actions, URLs
+  or routes.
+- **Supply chain and evaluation integrity.** The commit has no Cargo.toml or Cargo.lock change and no
+  new dependency. It touches no evaluation, held-out, hidden-test, threshold, scoreboard or prompt
+  files (11 paths, all listed in the plan).
+- **Privacy.** In the added lines there are no `/home`, `/var/home` or `/Users` paths, no username,
+  hostname, email or credential, and no third-party product branding. Lane paths appear only inside
+  the byte-identical retained review. The TASKS.md table rows are unchanged, as check.py confirms,
+  and the IN-FLIGHT entries and history are preserved.
+- **Honest claims.** The guide and evidence say plainly that the watcher's verification is service
+  self-consistency only, and that a cancelled or failed terminal state exits 0 without any task
+  acceptance. No native, model or task-grade claim is made.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, availability and documentation).** The watcher's 10 Hz polling can briefly hold the
+  service session lock.
+  - Location: coding_cli_watch.rs:42-49 against coding_endpoint_api.rs:569-573, where the events
+    route takes `session.try_lock` and writes the reply while holding it, and :513-517, where
+    `advance` and `release` use the same lock.
+  - Effect: a concurrent control `advance`, `endpoint-run` step or `release` can get a pre-dispatch
+    409 `api.busy`. The probe measured this for 4 of 2376 control reads.
+  - Control callers correctly never retry, so the guided flow stops and leaves the run held. The
+    user must re-run, or use `endpoint-approve` for a pending challenge.
+  - This is safe because it fails closed before dispatch. However, the guide's statement that
+    "Original controls remain available in the other terminal" does not mention it.
+  - Fix: either document in docs/guides/coding-mcp.md that controls may see a transient `api.busy`
+    while a watcher polls, and that it is safe to repeat because it precedes dispatch, or serve
+    observation pages from a snapshot that does not hold the coordinator lock while writing the reply.
+- **L2 (low, test coverage).** The real-service test covers growth only from total 0 to N, because
+  the whole chain appears after one advance. Growth of the total in the middle of a chain
+  (`after > 0`) is allowed by the code (`count < total` refuses only shrinkage) but no test exercises
+  it.
+  - Fix: add a fake-peer case whose total increases between non-empty pages. This can go in the
+    existing test; no new sub-row is needed.
+- Carried same-row backlog from the parent review is unchanged: native launch-to-service forwarding
+  coverage.
+
+## Per-row result
+
+- T-303: this same-row, non-closing batch passes. The row stays open: native or model coding, the
+  independent candidate checker, complete original-owner commit approval, approved push and durable
+  execution recovery are still open.
+- T-306: this same-row, non-closing batch passes. The row stays open.
+- No rows or sub-rows were added or closed. L1 and L2 go to the same-row backlog.
+
+Verdict: PASS

@@ -101,23 +101,59 @@ impl Drop for CandidateClaim<'_> {
 }
 
 impl CandidateSession {
+    #[cfg(test)]
     pub(crate) fn new(
         scope: &LinuxRepositoryScope,
         plan: &CandidateTreePlan,
     ) -> Result<Self, LinuxRepositoryError> {
-        Self::new_with(scope, plan, |scratch| {
+        Self::new_until(scope, plan, &test_token(), Instant::now() + PROCESS_TIMEOUT)
+    }
+
+    pub(crate) fn new_until(
+        scope: &LinuxRepositoryScope,
+        plan: &CandidateTreePlan,
+        cancellation: &CancellationToken,
+        deadline: Instant,
+    ) -> Result<Self, LinuxRepositoryError> {
+        Self::new_with_until(scope, plan, cancellation, deadline, |scratch| {
             let worker_scope =
                 LinuxRepositoryScope::verify(&scope.checkout_root, &scope.git_directory, scratch)?;
             LinuxRepositoryMutationScope::capture(&worker_scope)
         })
     }
 
-    // Private setup seam; production always verifies and captures above.
+    #[cfg(test)]
     fn new_with(
         scope: &LinuxRepositoryScope,
         plan: &CandidateTreePlan,
         capture: impl FnOnce(&Path) -> Result<LinuxRepositoryMutationScope, LinuxRepositoryError>,
     ) -> Result<Self, LinuxRepositoryError> {
+        Self::new_with_until(
+            scope,
+            plan,
+            &test_token(),
+            Instant::now() + PROCESS_TIMEOUT,
+            capture,
+        )
+    }
+
+    // Private setup seam; product callers retain their original outer budget.
+    fn new_with_until(
+        scope: &LinuxRepositoryScope,
+        plan: &CandidateTreePlan,
+        cancellation: &CancellationToken,
+        deadline: Instant,
+        capture: impl FnOnce(&Path) -> Result<LinuxRepositoryMutationScope, LinuxRepositoryError>,
+    ) -> Result<Self, LinuxRepositoryError> {
+        let deadline = deadline.min(Instant::now() + PROCESS_TIMEOUT);
+        let check = || {
+            if cancellation.is_cancelled() || Instant::now() >= deadline {
+                Err(denied())
+            } else {
+                Ok(())
+            }
+        };
+        check()?;
         verify_candidate_tree_plan(plan).map_err(|_| denied())?;
         let index = index_path(scope, &plan.candidate_build_id).ok_or_else(denied)?;
         if hash(index.as_os_str().as_bytes()) != plan.temporary_index_path_sha256
@@ -127,6 +163,7 @@ impl CandidateSession {
         }
         let original = LinuxRepositoryMutationScope::capture(scope)?;
         let directory = format!("candidate-index-{}", plan.candidate_build_id);
+        check()?;
         // Atomic exclusive directory claim, relative to the HELD parent. Existing
         // directories, symlinks (including dangling ones) and reused IDs refuse.
         mkdirat(
@@ -153,9 +190,11 @@ impl CandidateSession {
         claim.revalidate()?;
         let scratch = index.parent().ok_or_else(denied)?;
         let worker = Arc::new(capture(scratch)?);
+        check()?;
         claim.matches(&worker.roots[2])?;
         claim.revalidate()?;
         worker.revalidate()?;
+        check()?;
         claim.armed = false;
         drop(claim);
         Ok(Self {
@@ -168,7 +207,7 @@ impl CandidateSession {
             blob: None,
             terminal: false,
             cleanup_allowed: true,
-            deadline: Instant::now() + PROCESS_TIMEOUT,
+            deadline,
         })
     }
 
@@ -468,3 +507,12 @@ pub(super) fn candidate_environment() -> BTreeMap<String, String> {
 #[cfg(test)]
 #[path = "repository_candidate_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+fn test_token() -> CancellationToken {
+    CancellationToken::root(
+        agentmage_kernel_contracts::BoundaryKind::Kernel,
+        agentmage_kernel_contracts::TaskId::from_raw("candidate-setup-test"),
+        agentmage_kernel_contracts::CorrelationId::from_raw("candidate-setup-test"),
+    )
+}

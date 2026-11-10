@@ -695,3 +695,87 @@ fn candidate_worker_refuses_index_aliases_before_dispatch_and_cancellation_after
     assert!(s.cleanup());
     f.unchanged();
 }
+
+#[test]
+fn candidate_setup_inherits_outer_deadline_and_expired_or_cancelled_entry_creates_nothing() {
+    let f = Fixture::new(40);
+    let deadline = Instant::now() + Duration::from_secs(300);
+    let token = token();
+    let mut session = CandidateSession::new_until(&f.scope, &f.plan, &token, deadline).unwrap();
+    assert!(session.deadline < deadline); // Existing thirty-second cap still applies.
+    assert!(session.cleanup());
+    let expired = Instant::now();
+    assert!(CandidateSession::new_until(&f.scope, &f.plan, &token, expired).is_err());
+    assert!(fs::read_dir(&f.scope.owned_root).unwrap().next().is_none());
+    let deadline = Instant::now() + Duration::from_secs(20);
+    let mut session = CandidateSession::new_until(&f.scope, &f.plan, &token, deadline).unwrap();
+    assert_eq!(session.deadline, deadline);
+    // Native worker forwarding checks this identical deadline before and after
+    // every step; no short real-time completion window is needed in this test.
+    session
+        .step_with(Step::ReadTree, &token, |_, _, _, _, observed| {
+            assert_eq!(observed, deadline);
+            Ok(result(&[]))
+        })
+        .unwrap();
+    assert!(session.cleanup());
+    token
+        .cancel(agentmage_kernel_contracts::CancellationSignal {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            cancellation_id: agentmage_kernel_contracts::CancellationId::from_raw("setup-cancel"),
+            task_id: TaskId::from_raw("candidate-test"),
+            correlation_id: CorrelationId::from_raw("candidate-test"),
+            requested_by: BoundaryKind::Shell,
+            reason: agentmage_kernel_contracts::CancellationReason::UserRequested,
+        })
+        .unwrap();
+    assert!(CandidateSession::new_until(&f.scope, &f.plan, &token, deadline).is_err());
+    assert!(fs::read_dir(&f.scope.owned_root).unwrap().next().is_none());
+    f.unchanged();
+}
+
+#[test]
+fn candidate_setup_cancellation_during_capture_rolls_back_only_its_empty_claim() {
+    for occupied in [false, true] {
+        let f = Fixture::new(40);
+        let token = token();
+        let deadline = Instant::now() + Duration::from_secs(300);
+        assert!(
+            CandidateSession::new_with_until(&f.scope, &f.plan, &token, deadline, |scratch| {
+                let scope = LinuxRepositoryScope::verify(
+                    &f.scope.checkout_root,
+                    &f.scope.git_directory,
+                    scratch,
+                )?;
+                let worker = LinuxRepositoryMutationScope::capture(&scope)?;
+                if occupied {
+                    fs::write(scratch.join("unattributed"), b"preserve").unwrap();
+                }
+                token
+                    .cancel(agentmage_kernel_contracts::CancellationSignal {
+                        schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                        cancellation_id: agentmage_kernel_contracts::CancellationId::from_raw(
+                            "capture-cancel",
+                        ),
+                        task_id: TaskId::from_raw("candidate-test"),
+                        correlation_id: CorrelationId::from_raw("candidate-test"),
+                        requested_by: BoundaryKind::Shell,
+                        reason: agentmage_kernel_contracts::CancellationReason::UserRequested,
+                    })
+                    .unwrap();
+                Ok(worker)
+            })
+            .is_err()
+        );
+        let scratch = index_path(&f.scope, &f.plan.candidate_build_id)
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_owned();
+        assert_eq!(scratch.exists(), occupied);
+        if occupied {
+            assert_eq!(fs::read(scratch.join("unattributed")).unwrap(), b"preserve");
+        }
+        f.unchanged();
+    }
+}

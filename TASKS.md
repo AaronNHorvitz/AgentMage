@@ -2,6 +2,23 @@
 
 ## Active queue: local agent mission
 
+The retained [terminal observation review](docs/reviews/dcd7411ce51c-local-coding-terminal-watch.txt)
+has **Verdict: PASS** for exact commit
+`dcd7411ce51c73e190b8232315a30e6355252577`, with no high or medium finding.
+Its low L1 control-contention wording is clarified in the guide in this batch;
+low L2 coverage for growth between nonempty pages remains same-row backlog,
+alongside native launch forwarding. Neither T-303 nor T-306 closes.
+
+The [complete candidate-build deadline batch](docs/evidence/t306-candidate-build-deadline-2026-11-10.md)
+shares one monotonic thirty-second budget across preservation checks, postimage
+hashing, scratch setup and all offline Git workers. Late success refuses;
+identity-bound cleanup still runs after cancellation or expiry. The complete
+affected fast gate remains **FAIL**: 1,476 passes, the exact inherited 72 failures
+and 64 ignores across 26 unfiltered targets. All six new methods, formatting,
+Clippy and final light checks pass; five Rust source hashes remain fixed.
+Native admission and complete coding remain unverified. Independent core review is required;
+T-303/T-306 remain open without new rows or sub-rows.
+
 The retained [launch observation-sharing review](docs/reviews/a3dbc1851196-local-coding-launch-observations.txt)
 has **Verdict: PASS** for exact commit
 `a3dbc1851196caac7533b1937f7bf6c0ef058869`, with no high or medium finding.

@@ -191,8 +191,13 @@ An empty active prefix or a fully framed `api.busy` HTTP 409 waits 100
 milliseconds before polling the same index. Other HTTP errors, transport errors
 and malformed data stop with a nonzero exit; no effect is retried. The watcher
 also stops on its time limit, SIGINT, SIGTERM or SIGHUP. None of these stops
-cancels, advances or releases the run. Original controls remain available in the
-other terminal. Events are observable between coordinator advances; the service
+cancels, advances or releases the run. Original controls remain in the other
+terminal. Polling briefly shares the service session lock with those controls,
+so a concurrent advance or release may receive an explicit HTTP 409 `api.busy`
+before dispatch. The controlling client stops and leaves the run held. Inspect
+its state and make a fresh explicit decision; no automatic retry occurs. A lost
+reply or another refusal does not establish that dispatch never began.
+Events are observable between coordinator advances; the service
 may report busy during a model or tool call.
 
 The additional ceilings are 4,096 events, 40,096 page requests and four MiB of

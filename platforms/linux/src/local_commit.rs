@@ -46,6 +46,9 @@ pub(crate) mod packet;
 #[path = "local_commit_execution.rs"]
 mod execution;
 
+#[path = "local_commit_candidate_build.rs"]
+mod candidate_build;
+
 /// Stable Linux local-commit adapter failure class.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LinuxLocalCommitErrorKind {
@@ -194,95 +197,15 @@ impl LinuxCandidateTreeBuilder {
         postimages: Vec<LinuxApprovedPostimage>,
         cancellation: &CancellationToken,
     ) -> Result<CandidateTreePlatformResult, LinuxLocalCommitError> {
-        if cancellation.is_cancelled() {
-            return Err(error(LinuxLocalCommitErrorKind::ExecutionFailed));
-        }
-        verify_candidate_tree_plan(plan)
-            .map_err(|_| error(LinuxLocalCommitErrorKind::PlanDenied))?;
-        let before = self
-            .collector
-            .collect_cancellable(&self.scope, cancellation)
-            .map_err(|_| error(LinuxLocalCommitErrorKind::PlanDenied))?;
-        let temporary_index_sha256 =
-            linux_candidate_index_path_sha256(&self.scope, &plan.candidate_build_id)?;
-        if before.manifest_sha256 != plan.preservation_manifest_sha256
-            || before.repository_sha256 != plan.repository_sha256
-            || before.index_sha256 != plan.user_index_sha256
-            || plan.temporary_index_path_sha256 != temporary_index_sha256
-        {
-            return Err(error(LinuxLocalCommitErrorKind::PlanDenied));
-        }
-        let count = postimages.len();
-        let postimages = postimages
-            .into_iter()
-            .map(|postimage| (postimage.operation_id, postimage.bytes))
-            .collect::<BTreeMap<_, _>>();
-        if count != postimages.len()
-            || postimages.len() != plan.files.len()
-            || postimages
-                .values()
-                .try_fold(0_usize, |total, bytes| total.checked_add(bytes.len()))
-                .is_none_or(|total| total > MAX_TOTAL_POSTIMAGE_BYTES)
-        {
-            return Err(error(LinuxLocalCommitErrorKind::PlanDenied));
-        }
-        for file in &plan.files {
-            let bytes = postimages
-                .get(&file.operation_id)
-                .ok_or_else(|| error(LinuxLocalCommitErrorKind::PlanDenied))?;
-            if hash(bytes) != file.postimage_sha256 {
-                return Err(error(LinuxLocalCommitErrorKind::PlanDenied));
-            }
-        }
-
-        let mut session = crate::repository_safety::CandidateSession::new(&self.scope, plan)
-            .map_err(|_| error(LinuxLocalCommitErrorKind::ScopeDenied))?;
-        let operation = (|| {
-            session.read_tree(self.collector.git(), cancellation)?;
-            let mut blobs = Vec::with_capacity(plan.files.len());
-            for file in &plan.files {
-                let bytes = &postimages[&file.operation_id];
-                let blob = session.add_postimage(
-                    self.collector.git(),
-                    &file.operation_id,
-                    bytes,
-                    cancellation,
-                )?;
-                blobs.push(CandidateTreeBlob {
-                    operation_id: file.operation_id.clone(),
-                    postimage_sha256: file.postimage_sha256.clone(),
-                    blob_object: blob,
-                });
-            }
-            blobs.sort();
-            let tree = session.write_tree(self.collector.git(), cancellation)?;
-            Ok::<_, crate::repository_safety::LinuxRepositoryError>((tree, blobs))
-        })()
-        .map_err(|_| error(LinuxLocalCommitErrorKind::ExecutionFailed));
-        let cleanup_verified = session.cleanup();
-        let after = self
-            .collector
-            .collect_cancellable(&self.scope, cancellation)
-            .map_err(|_| error(LinuxLocalCommitErrorKind::ExecutionFailed))?;
-        let (candidate_tree, blobs) = operation?;
-        if !cleanup_verified {
-            return Err(error(LinuxLocalCommitErrorKind::ExecutionFailed));
-        }
-        Ok(CandidateTreePlatformResult {
-            before,
-            after: after.clone(),
-            outcome: OperationOutcome::Succeeded,
-            candidate_tree: Some(candidate_tree),
-            blobs,
-            user_index_after_sha256: after.index_sha256,
-            owned_temporary_index: true,
-            cleanup_verified,
-            hooks_executed: false,
-            filters_executed: false,
-            repository_selected_program_used: false,
-            network_used: false,
-            platform_code: "linux.git.candidate.succeeded".to_owned(),
-        })
+        // Entry time covers preflight, postimage checks, scratch setup, all
+        // workers, cleanup and final preservation. No phase renews the budget.
+        candidate_build::run(
+            self,
+            plan,
+            postimages,
+            cancellation,
+            Instant::now() + Duration::from_secs(30),
+        )
     }
 }
 
