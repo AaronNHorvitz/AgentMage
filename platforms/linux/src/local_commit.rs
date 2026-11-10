@@ -43,6 +43,9 @@ pub(crate) mod signing;
 #[path = "local_commit_packet.rs"]
 pub(crate) mod packet;
 
+#[path = "local_commit_execution.rs"]
+mod execution;
+
 /// Stable Linux local-commit adapter failure class.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LinuxLocalCommitErrorKind {
@@ -461,67 +464,13 @@ impl LinuxLocalCommitExecutor {
         let Ok(mut io) = crate::repository_safety::CommitIoSession::new(&self.scope, plan) else {
             return failed_commit_result(&before, "linux.git.commit.plan_denied");
         };
-        if io
-            .branch_before(self.collector.git(), cancellation)
-            .is_err()
-        {
-            return uncertain_commit_result(&before, "linux.git.commit.branch_stale");
-        }
-        // Still dormant at the product boundary. Only a live kernel permit
-        // reaches execute_plan; plan hashes cannot restore approval authority.
-        let signed = match packet::sign_commit(&self.signer, plan, cancellation, io.deadline()) {
-            Ok(commit) => commit,
-            Err(failure) => {
-                return failed_signer_result(&before, failure, "linux.git.commit.creation_failed");
-            }
-        };
-        let commit_object = match io.write_commit(self.collector.git(), &signed, cancellation) {
-            Ok(object) => object,
-            Err(_) => return uncertain_commit_result(&before, "linux.git.commit.storage_failed"),
-        };
-        let Ok(raw) = io.read_commit(self.collector.git(), &commit_object, cancellation) else {
-            return uncertain_commit_result(&before, "linux.git.commit.verification_failed");
-        };
-        if !verify_raw_commit(&raw, plan) {
-            return uncertain_commit_result(&before, "linux.git.commit.verification_failed");
-        }
-        if let Err(failure) =
-            verification::verify(&self.signer, &raw, plan, cancellation, io.deadline())
-        {
-            return failed_signer_result(&before, failure, "linux.git.commit.verification_failed");
-        }
-        if io
-            .update_task_branch(self.collector.git(), cancellation)
-            .is_err()
-        {
-            return uncertain_commit_result(&before, "linux.git.commit.compare_and_swap_failed");
-        }
-        let after = match self.collector.collect(&self.scope) {
-            Ok(value) => value,
-            Err(_) => return uncertain_commit_result(&before, "linux.git.commit.postflight"),
-        };
-        LocalCommitPlatformResult {
-            outcome: OperationOutcome::Succeeded,
+        // Only the kernel-permitted entry above can construct a native session.
+        // The private execution seam admits no caller-supplied backend or bytes.
+        execution::run(
+            plan,
             before,
-            after: after.clone(),
-            commit_object: Some(commit_object.clone()),
-            observed_parent: Some(plan.parent_object.clone()),
-            observed_tree: Some(plan.candidate_tree.clone()),
-            observed_message_sha256: Some(plan.message_sha256.clone()),
-            observed_identity_sha256: Some(plan.identity_sha256.clone()),
-            observed_signer_fingerprint: Some(plan.signer.key_fingerprint.clone()),
-            signature_verified: true,
-            task_branch_before: Some(plan.parent_object.clone()),
-            task_branch_after: Some(commit_object),
-            user_index_after_sha256: after.index_sha256,
-            remotes_after_sha256: after.remotes_sha256,
-            hooks_executed: false,
-            filters_executed: false,
-            repository_selected_program_used: false,
-            network_used: false,
-            cleanup_verified: true,
-            platform_code: "linux.git.commit.succeeded".to_owned(),
-        }
+            &mut execution::NativeSession::new(self, &mut io, plan, cancellation),
+        )
     }
 }
 

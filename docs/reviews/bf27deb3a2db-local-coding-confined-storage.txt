@@ -1,0 +1,212 @@
+Commit: bf27deb3a2dbfb97e6a374132041990caf022aec
+Scope: local-coding-confined-storage
+
+# Independent review: confined signed-commit storage and M-1/L-3 repair (T-303 / T-306)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only, pinned checkout
+`/lane/review-checkout`. This is a same-model review; a cross-model review must still precede any
+public release. No certification, compliance or legal clearance is claimed.
+
+## Commit and scope
+
+- `git rev-parse HEAD` and `git rev-parse bf27deb3a2dbfb97e6a374132041990caf022aec` both give
+  `bf27deb3a2dbfb97e6a374132041990caf022aec`. `HEAD^` is `5d2184140fa2b378584a2e327e4311129ce709ae`,
+  so the immutable base is a direct ancestor and the history was not rewritten. One commit is under review.
+- Diff 5d218414..HEAD: TASKS.md (one prose paragraph), Decision 0196 (new), the new evidence file,
+  a correction to `t306-commit-packet-2026-11-10.md`, the guide, the retained review `.txt`, and
+  seven Rust sources: `local_commit.rs`, `local_commit_inspection_tests.rs`, `local_commit_packet.rs`,
+  `local_commit_packet_tests.rs`, `repository_commit_io.rs`, `repository_commit_io_tests.rs` and
+  `sandbox_supervision.rs`.
+- No evaluation, frozen, hidden or held-out input, scorer, prompt, threshold, dependency
+  (Cargo.toml/Cargo.lock), SBOM, lifecycle, scoreboard, release or owner-readiness file changed. No row
+  or sub-row was added or ticked: I read the TASKS.md diff, and check.py's unchanged-row assertion passed.
+  `sha1` is an existing workspace dependency (`platforms/linux/Cargo.toml:28`, already used in `lib.rs:173`).
+
+## Methods
+
+I read IP-POLICY.md, Decision 0196, the new evidence file, the correction to the previous evidence,
+the retained 5d218414 report, the guide diff and every changed source and test. I also read
+`verify_local_commit_plan`, `valid_identity` and `canonical_sha256` (kernel), `run_worker` and
+`LinuxRepositoryMutationScope` (`repository_execution.rs`), `sealed_payload`, `write_all_projection`
+and `seal_projection` (`sandbox.rs`), and `failed_signer_result`, `uncertain_commit_result` and
+`failed_commit_result` (`local_commit.rs`). From the bundle I read README.md, run.py, check.py,
+parse_gate.py and light.py, plus the result files and failure excerpts of validations 1, 2 and 3.
+
+Independent experiments, with disposable material in `/tmp` only and no host keys:
+
+1. **Minimal-MPI verification (M-1).** I created a disposable GNUPGHOME and an rsa2048 key, and ran
+   `gpg --detach-sign --digest-algo SHA256` over random data until a signature packet carried an
+   MPI of 2,040 bits or fewer. That happened on the 37th signature: a minimal 2,040-bit MPI whose
+   integer has a zero leading octet at modulus width. `gpg --verify` reported GOODSIG and VALIDSIG.
+   So a stripped minimal MPI from a zero-led modulus-width value is the form GnuPG itself emits and
+   verifies. Together with the deterministic equivalence test (padded expression gives a
+   byte-identical packet), this means a naturally zero-led agent value now gives a verifiable packet.
+   I then stopped the agent with `gpgconf --kill gpg-agent`.
+2. **Git identity acceptance (L-3).** I ran `git hash-object -w -t commit --no-filters --stdin` in a
+   disposable bare repository.
+   - Accepted: `A. <a@b.c>`, `Ünïcødé  Name <ü@b.c>`, `N <"q\\x"@b.c>`, `N <a@b.c>`, ` N <a@b.c>`,
+     `N  <a@b.c>` and `N <a b@c.d>`.
+   - Refused: `A> <a@b.c>` (badName) and `N <a>x@b.c>` (missingSpaceBeforeDate).
+   - Every identity Git refuses contains an angle bracket, and the new check in `Prepared::new`
+     refuses those. The whitespace refusals are stricter than Git, which avoids normalization
+     mismatches with commit-tree. Together with the kernel's control-character, non-empty-name and
+     domain-charset rules, no accepted identity is one that Git refuses.
+3. **L-3 test is not vacuous.** The test recomputes `identity_sha256` as
+   `sha256(serde_json::to_vec(&(author, committer)))`. This equals the kernel's `canonical_sha256`
+   (`kernel/engine/src/local_commit.rs:1337`), and `reseal` uses the kernel's `ZERO_SHA256` for the
+   plan hash. `valid_identity` accepts every mutated value (`<bad`, `bad>`, ` leading`, `trailing `,
+   a trailing NBSP), so the refusal is produced by the new check. The signer closure panics, so
+   refusal before signing is proven.
+4. **Test-only direct creation.** `LOCAL_COMMIT_CHILD`, `LocalCommitCapture`,
+   `capture_local_commit_process(_in)`, `finish_local_commit_capture`, `SignedGitRunner`,
+   `object_output`, `signed_commit_arguments` and `format_git_date` are now `#[cfg(test)]`. The
+   module-level `#![allow(dead_code)]` in `local_commit_packet.rs` was removed. The diff adds no
+   `allow` or `#[ignore`. Clippy `--all-targets -D warnings` compiles the non-test library, so no
+   production code can reference the direct capture path. The remaining callers
+   (`local_commit_signing.rs:495`, `local_commit_verification.rs:409`, `local_commit.rs:617,819`) are
+   test fixtures.
+5. **Isolation repair.** `signer_inspection_installed_gpg_reads_sealed_public_identity_without_an_agent`
+   calls `capture_local_commit_process` directly (`local_commit_inspection_tests.rs:747`). It was the
+   only caller without the `DIRECT_CAPTURE_TEST` guard, and every other user (`local_commit.rs:1332,
+   1535, 2025`, `local_commit_signing_tests.rs:413`, `local_commit_packet_tests.rs:468`) holds it.
+   The repair only adds the lock. No assertion, timeout, thread count or production refusal changed.
+   The validation-2 failure log shows the direct-capture caller control failing, which fits the race
+   with this unguarded user. That failure is retained.
+
+## Commands and results (from /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-confined-storage/review-inputs.sha256` gave exit 0.
+   The manifest hashes to `499b3846ef2b149171df24b4bbde6b0ab5ede3211844b6614fc4736125295d60`
+   (as requested).
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-confined-storage/run.py /lane/state/tmp/review-confined-storage-full-bf27deb3a2db`
+   gave **exit 1**, as expected, and was not outer-wrapped. The result was
+   `source_unchanged: true`, 907.06 s including reservation waits, raw log SHA-256
+   `3f2a7068ccb8329d31b013696d16bd425abc290d0d662b6cf2aaf0c0b2db7da9`. The command results were:
+   diff-check 0, lint-untracked 0, lint-reviews 0, markdownlint 0, fmt 0 (614.23 s, mostly
+   reservation wait), Clippy `--all-targets -D warnings` 0 (37.08 s) and cargo test 101 (254.03 s).
+   The log ends `FAST GATE: FAIL`.
+3. `python3 -B /lane/state/tmp/t306-confined-storage/check.py /lane/state/tmp/review-confined-storage-full-bf27deb3a2db`
+   gave exit 0:
+   - 26 targets, totals `[1405, 72, 64, 0, 0]`, 7 source files unchanged.
+   - 51 affected methods (6 new and 45 controls) each `... ok`.
+   - `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL`.
+   - Every per-target pass, fail and ignore identity equals the frozen baseline, plus six passes in
+     the Linux library.
+4. `cmp /lane/state/tmp/t306-confined-storage/validation-3/source-freeze.json /lane/state/tmp/review-confined-storage-full-bf27deb3a2db/source-freeze.json`
+   gave exit 0.
+5. `python3 -B /lane/state/tmp/t306-confined-storage/light.py` gave exit 0 (all four light commands
+   0; markdownlint 0 issues in 5 files).
+6. `git diff --check 5d2184140fa2b378584a2e327e4311129ce709ae --` gave exit 0.
+7. `cmp docs/reviews/5d2184140fa2-local-coding-commit-packet.txt /lane/reviews/5d2184140fa2-local-coding-commit-packet.md`
+   gave exit 0. The retained report is byte-identical.
+8. `git status --short` gave empty output.
+
+My counts match the builder's validation 3 exactly. Only the elapsed times differ, because of
+reservation waiting. The gate is a FAIL, as the builder states, with the inherited 72 failures and
+64 ignores unchanged. The inherited failures include `native_signed_commit_verifies_exact_content_and_only_updates_task_branch`.
+It panics at signer inspection (`ArtifactDenied`) in both the baseline and this run, so it never
+reaches `run_plan`.
+
+## What holds
+
+- **M-1 repaired.** `rsa_scalar` (`local_commit_packet.rs:174-199`) keeps the single fixed prefix,
+  the decimal length without leading zeros (at most 4 digits, 1..=1024) and the exact `)))`
+  terminator with no trailing data. It then strips leading zero octets and returns `None` for an
+  empty or all-zero value (`position(..)?`). The MPI bit count is computed from the stripped first
+  octet (`:137`).
+  - Tests: `commit_packet_zero_led_rsa_values_form_the_same_minimal_packet` covers padding of 1, 2
+    and 8 octets and up to the 1,024-octet bound, with byte-identical packets, and refuses all-zero
+    values of 1, 2 and 1,024 octets.
+  - Real signatures: the disposable RSA test injects a zero-led form of each actual captured
+    primary and subkey signature in both formats. It gets bytes identical to the stored commit and
+    verifies them through the public-only verifier with `verify_signature_status` for the exact
+    fingerprint.
+  - The code comment is corrected. The previous evidence file now opens with an explicit
+    correction, and its historical counts and failures are unchanged.
+- **L-3 repaired.** `Prepared::new` (`:73-83`) refuses `<`/`>` in names and emails,
+  leading/trailing (Unicode) whitespace in names and emails, and any whitespace in emails. It does
+  this before any signer call. Accepted bytes are inserted verbatim. Installed Git stores and reads
+  back the accepted fixture bytes exactly (`local_commit_packet_tests.rs:587-633`) and moves no ref
+  (`for-each-ref` is empty).
+- **Verified value.**
+  - `VerifiedCommit` has private fields, no derive except a redacting manual `Debug`, no
+    `Clone`/`Serialize`/`Deserialize`, and no mutating method.
+  - It can only be constructed inside the `packet` module, by `sign_commit_with` after
+    `split_signed_commit` content equality and the injected verifier. Production `sign_commit`
+    passes the real public-only `verification::verify`. `sign_commit_with` is private, and
+    `fixture_verified` is inside `#[cfg(test)]`.
+  - `for_plan` re-runs `verify_local_commit_plan`, which recomputes the canonical hash of the
+    complete plan, and requires an equal `plan_sha256`.
+  - `object_id` frames `commit <len>\0` and hashes with SHA-1 or SHA-256 by object width. The
+    installed-Git test confirms the identifier for both formats.
+- **Closed session** (`repository_commit_io.rs`).
+  - The stages run strictly Branch → Write → Commit{object, raw} → Update → Terminal.
+  - Write re-binds the verified value to the session's plan, refuses an empty or oversized value,
+    and passes only a sealed memfd (`sealed_payload` seeks to 0 and seals). The argv is fixed to
+    `hash-object -w -t commit --no-filters --stdin`.
+  - The output must be exactly `<object>\n`. The read stage accepts only that exact object and
+    requires byte-for-byte readback. Update keeps the original `update-ref --no-deref <branch>
+    <object> <parent>` CAS.
+  - Every stage checks cancellation and the single deadline before and after dispatch, revalidates
+    the held roots on both sides, and requires complete output, success outcome and status, byte
+    totals equal to retained lengths, and stdout/stderr SHA-256 equal to the retained bytes.
+  - Any error sets `Stage::Terminal` (`step_with`), so nothing is retried. The four new storage tests
+    cover each of these, in both widths where relevant: skipped stages, foreign plans (message,
+    transaction, repository, signer), wrong/uppercase/zero/extra-newline identifiers, truncated,
+    extended or flipped readback, 14 failure cases at each of three stages, root replacement before
+    and during dispatch with the replacement retained, and an expired deadline.
+- **Executor composition** (`local_commit.rs:438-526`, by reading).
+  - The kernel launch permit still gates `execute_plan`. Exact preflight equality with the approved
+    manifest, signer revalidation and the signer pin come before the session is created.
+  - The order is branch-before → `packet::sign_commit` (socket-free signer, assembler, public-only
+    verification) → `write_commit` → `read_commit` → `verify_raw_commit` → a second public-only
+    `verification::verify` on the readback → CAS → postflight collection for the kernel's final
+    reconciliation.
+  - Every post-dispatch failure, including the new `linux.git.commit.storage_failed`, reports
+    `Failed` with `cleanup_verified: false`, no commit object and no signature claim. No direct
+    runner is reachable from production.
+- **Labelling.** Decision 0196, the evidence and the guide say plainly that a stored object may stay
+  unreachable after a failure, and they claim no rollback and no successful receipt. Synthetic
+  supervisor outcomes are described as control flow only. Native admission, provenance, durable
+  recovery, measurements and push remain open. No product route, CLI, HTTP or MCP command is added.
+  The Git worker gets no keyring, credential, socket or network projection: the test asserts the
+  candidate environment and the absence of `GNUPGHOME`.
+- **Public content and IP.** The added lines contain no private host path, username, hostname,
+  credential or trademark branding. The `/lane/...` paths are lab bundle paths, as accepted before.
+  The RFC citation names the public specification only.
+
+## Findings
+
+No critical, high or medium findings.
+
+### L-4 (low, test coverage, same-row backlog): executor composition is unexercised in this lane
+
+- **Location:** `platforms/linux/src/local_commit.rs:469-500`. The only executor-level test,
+  `native_signed_commit_verifies_exact_content_and_only_updates_task_branch`
+  (`local_commit.rs:2022`), is an inherited failure at `generate_signer` (`:1946`, `ArtifactDenied`).
+- **Reasoning:** the session state machine enforces Branch → Write → Commit → Update. It does not
+  enforce that the executor runs the second public-only verification between readback and CAS. It
+  also does not enforce that a verification failure after storage maps to an uncertain result
+  rather than proceeding. Both hold by reading (`:486-497`), but no runnable test would catch a
+  later reordering or deletion. The same is true of the new `storage_failed` mapping.
+- **Fix:** add a deterministic seam for `run_plan`, like `step_with`, with a synthetic
+  signer/verifier/dispatch. Assert the call order, that a verification failure after readback never
+  dispatches `update-ref`, and that each post-dispatch failure yields `Failed` with
+  `cleanup_verified: false`.
+
+The earlier same-row backlog (L-1, L-2 and older lows) remains open, as the request states.
+
+## Per-row result
+
+- **T-303 / T-306 (same-row, non-closing batch):**
+  - M-1 (medium) from the 5d218414 review is **resolved**, and L-3 (low) is **resolved**.
+  - The confined storage composition meets the requested contract: verified value bound to the
+    plan, local framed identity in both formats, exact ID and readback before CAS, second
+    verification, fatal transitions, single deadline, held roots, digested complete streams, no
+    fallback, honest uncertainty, and direct creation test-only without warning suppression.
+  - The required runs reproduce the builder's validation 3 exactly, and the gate is honestly
+    reported as FAIL.
+  - Neither parent closes. None was claimed, and native admission, provenance, recovery,
+    measurements and approved push remain open. L-4 goes to backlog.
+
+Verdict: PASS

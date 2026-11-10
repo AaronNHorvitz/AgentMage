@@ -1,0 +1,131 @@
+Commit: 5d94bca8901722d69a6f61c0fc4a6153ced38815
+Scope: local-coding-signing-escapes
+
+# Independent review: strict signing escapes and valid selection fixture (T-303 / T-306)
+
+Reviewer: Claude Opus 5.5, separate read-only session, pinned checkout `/lane/review-checkout`.
+Rows: T-303 / T-306, same-row repair that does not close either row. It addresses lows L-1 and L-2 from the
+retained `907724989c81-local-coding-private-signing` review (Verdict: PASS).
+
+## Methods
+
+- `git rev-parse HEAD` gives `5d94bca8901722d69a6f61c0fc4a6153ced38815`; its parent is
+  `bf27deb3a2dbfb97e6a374132041990caf022aec`.
+- I read IP-POLICY.md, Decision 0194, the retained 907724989c81 review (L-1 and L-2), the new evidence
+  file, the correction in `t306-private-signing-2026-11-10.md`, the guide addition, the TASKS.md
+  paragraph, and the full source and test diff.
+- I read the bundle README, run.py, check.py, parse_gate.py, light.py, validation-1 metadata,
+  focused.log and native-artifact-observation.json before running anything.
+- Diff against the parent covers 6 files:
+  - TASKS.md (+12, a prose paragraph only; no `| [` row line changes, which check.py also asserts);
+  - two evidence docs and one guide;
+  - `local_commit_signing.rs` (+5/-1);
+  - `local_commit_signing_tests.rs` (+71/-1).
+- There is no dependency, lockfile, SBOM, evaluation, hidden/held-out, scorer, prompt, threshold,
+  scoreboard or lifecycle change.
+- I extracted `parse_response` verbatim from the pinned source, and separately from bf27deb3, into
+  standalone rustc programs under /tmp (outside the repository) and probed them myself.
+
+## Commands and results (fresh output, run in the pinned checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-signing-escapes/review-inputs.sha256`: exit 0. The manifest
+   SHA-256 is `96e4d53f6ae78c566b29c2dfc4b23fa5590c888c298747868671ecf682a32ee5`, which matches the request.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py /lane/state/tmp/review-signing-escapes-full-5d94bca89017`
+   (not wrapped; run.py reserves internally): exit 1, as expected.
+   - `source_unchanged: true`, 1546.07 s including reservations, raw log SHA-256
+     `e4a9d874349cf5c129b0a2cb07795eeca4c453a0aa8b638513cedd4fcf708b5e`.
+   - The exits were diff-check 0, lint-untracked 0, markdownlint 0, fmt 0, Clippy 0 and cargo test 101,
+     ending in `FAST GATE: FAIL`.
+   - Wall times were fmt 1217.47 s, Clippy 45.26 s and tests 281.40 s. They include waiting for the shared
+     build-slot reservation, so they are longer than the builder's 33.49/9.82/233.04 s. No timeout.
+3. `python3 -B .../check.py <out>`: exit 0. This is a per-target data comparison only, not a gate PASS.
+   - 26 targets; totals 1406 passed, 72 failed, 64 ignored, 0 measured, 0 filtered.
+   - Every per-target failure and ignore identity equals the bf27deb3 baseline. The only change is +1 pass
+     in the `agentmage_platform_linux` lib target.
+   - All 52 named methods (the new one plus 51 controls) report `ok`.
+   - The 72 inherited failures are in linux_coding_runtime (42), repository_safety (13), linux_read (10),
+     secret_service (2), local_commit (2 native tests), command_runner (2) and linux_repository_map (1).
+     They match the baseline and none of them is a signing test.
+4. `cmp validation-1/source-freeze.json <out>/source-freeze.json`: exit 0. The two source hashes are
+   identical to the builder's.
+5. `python3 -B .../light.py`: exit 0. Diff-check, lint-untracked and markdownlint all pass, with 0 issues
+   in 4 files.
+6. `git diff --check bf27deb3a2dbfb97e6a374132041990caf022aec --`: exit 0.
+7. `cmp docs/reviews/907724989c81-local-coding-private-signing.txt /lane/reviews/907724989c81-local-coding-private-signing.md`:
+   exit 0.
+8. `git status --short`: empty.
+
+The new method, the protocol method and the selection method each pass in my run.
+
+## Independent probes
+
+- Predecessor bf27deb3 `parse_response(b"OK\nOK\nOK\nOK\nD (7:sig-val(1:x1:%+1))\nOK\nOK\n")` returns
+  `Some(..0x01..)`, which reproduces L-1.
+- The pinned commit returns `None` for that input.
+- The pinned decoder also refuses each of these: `%+1`, `%-1`, `% 1`, `%1 `, `%+f`, `%0x`, full-width
+  digits, `%%25`, a trailing `%2`, a raw CR, an escape split across records (`%2\nD 5`), and a D record
+  outside phase 4.
+- It decodes `%41` to 0x41 and `%4a%4A` to 0x4a 0x4a.
+- Over all 65,536 `%XY` pairs, it accepts exactly 484 (22 × 22). Each accepted pair has two ASCII hex
+  digits, and the other 65,052 are refused, matching the claim.
+- The fix (`local_commit_signing.rs:295-299`) checks `is_ascii_hexdigit` on both bytes before
+  `from_str_radix`, so the parser's optional sign can no longer be reached. The remaining `from_utf8` is
+  now redundant but harmless.
+- The added protocol case `text.replace("(1:r1:a)", "(1:r1:%+1)")` really substitutes, because
+  `response()` contains `(1:r1:a)`; if it did not, the `is_none` assertion would fail on a valid
+  response. The `%+1` therefore sits inside otherwise valid signature data, so refusal does not depend
+  on the outer prefix.
+- L-2 check (`local_commit_signing_tests.rs:562-599`):
+  - The signer now uses a real 0700 fixture directory with a 0600 selected key file.
+  - A positive `PrivateKey::capture` reads back the exact bytes.
+  - `verify_private_keyring` returns the same path, `pinned.verify()` succeeds and the public-key digest
+    matches.
+  - `check_control` (`local_commit_signing.rs:169`) passes with a fresh token and a 5 s deadline.
+  - The executable path is not consulted before the keygrip filter at lines 175-179.
+  - So the only remaining cause of refusal is keygrip validity, and the test now pins the kind to
+    `ArtifactDenied` for both `None` and `"A\nPKSIGN"`. The evidence correctly says this is not a
+    successful native `sign_hash` call.
+- Confinement: no capture, projection, socket, resource limit, output bound, deadline, cleanup or
+  approval code changed. The only production edit makes untrusted-byte parsing stricter. The decoded
+  bytes stay unverified until packet assembly and independent verification, as before.
+
+## Honesty, public content and policy
+
+- The historical evidence gains an explicit correction of its over-broad "malformed escapes refuse"
+  claim. Its historical counts are untouched.
+- The new evidence numbers (1406/72/64/26, 277.83 s, the raw SHA-256 and the focused 9/531/18 run) match
+  the builder's bundle files.
+- The native-artifact observation (UID 65534 for all six tools, UID 0 required, no trust exception) is
+  labelled as filesystem metadata only.
+- No new committed private host path, username, hostname, credential, personal data, private sibling
+  project name, trademark branding, or comparison with other agent products. `/lane/state/tmp` bundle
+  references follow the existing committed convention and contain no user identity.
+- I read no other product's code or documentation and searched no patents.
+- No row is ticked and no sub-row is added; splitting is not excessive. The predecessor bf27deb3 now
+  has its own retained review (`bf27deb3a2db-local-coding-confined-storage.md`, Verdict: PASS). That
+  review is outside this scope.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L-1 (low, backlog, test strength, pre-existing).** In `platforms/linux/src/local_commit_signing_tests.rs:600-601`,
+  the cancelled-token and expired-deadline assertions in
+  `private_signing_refuses_invalid_selection_before_capture_and_control_changes_after_dispatch`
+  still run with `keygrip = Some("A\nPKSIGN")` and assert only `is_err()`.
+  - They would still pass if the leading `check_control` in `sign_hash` (`local_commit_signing.rs:169`)
+    were removed.
+  - The production order is correct by inspection.
+  - Fix: before those two assertions, restore `signer.keygrip = Some(valid_grip.clone())`, and assert
+    the specific cancellation or deadline error kind. This line was not changed in this commit.
+
+## Per-row result
+
+- T-303 / T-306 (same-row non-closing repair): L-1 and L-2 from the retained 907724989c81 review are
+  repaired as claimed and verified by my own run and probes. The full affected gate remains FAIL with
+  exactly the inherited failures, as disclosed.
+- Neither row closes. Native execution, reviewer and artifact provenance, approved commit/push,
+  durable recovery and model acceptance remain open, as the evidence states. The new low goes to
+  backlog.
+
+Verdict: PASS

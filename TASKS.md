@@ -2,6 +2,23 @@
 
 ## Active queue: local agent mission
 
+The retained [storage review](docs/reviews/bf27deb3a2db-local-coding-confined-storage.txt)
+has **Verdict: PASS** for exact commit
+`bf27deb3a2dbfb97e6a374132041990caf022aec`, with no high or medium finding.
+The [executor sequencing coverage](docs/evidence/t306-executor-sequence-2026-11-10.md)
+addresses its low L-4 in the existing T-303/T-306 rows. A private seam exercises
+the actual post-preflight sequence, mandatory readback verification before the
+task-branch update, fatal failures and uncertainty. The complete affected gate
+remains **FAIL**: 1,410 passes, the exact inherited 72 failures and 64 ignores
+over 26 unfiltered targets. All four new methods, 52 controls, formatting and
+Clippy pass; all three source hashes stay fixed. Synthetic outcomes are not
+native execution, approval or reviewer provenance. Independent core review is
+required; neither parent closes and no row or sub-row is added.
+The retained [escape repair review](docs/reviews/5d94bca89017-local-coding-signing-escapes.txt)
+has **Verdict: PASS** for exact commit
+`5d94bca8901722d69a6f61c0fc4a6153ced38815`, with no high or medium finding.
+Its low L-1 cancellation/deadline fixture strength remains same-row backlog.
+
 The [signer escape repair](docs/evidence/t306-signing-escapes-2026-11-10.md)
 addresses the retained private-signing review's low L-1 and L-2 in the existing
 T-303/T-306 rows. Percent escapes require two hexadecimal digits; signed,

@@ -297,3 +297,15 @@ is inferred from a partial effect. This is internal library composition without
 an HTTP, CLI or MCP commit command. Native artifact admission, complete product
 approval/reviewer/artifact provenance, durable recovery and measured coding
 acceptance remain open, as do T-303/T-306 and approved push.
+
+## Executor sequence coverage
+
+A private execution seam now exercises the dormant adapter's shared sequence:
+branch observation, independently verified signing, sealed object write, exact
+readback, content and signature verification, task-branch compare-and-swap and
+postflight observation. Every failed stage stops without retry; no failure
+returns a commit identity or verified cleanup. The native wrapper still uses
+the original kernel permit, preflight checks, closed I/O owner and one deadline.
+Only module-private tests can supply synthetic outcomes. These tests do not
+establish native admission, authenticated reviewer or artifact provenance,
+product approval composition, durable recovery, model scores or approved push.
