@@ -1969,3 +1969,31 @@ fn candidate_checker_distinguishes_existing_empty_base_source_from_absence() {
         assert!(!f.root.join(format!("owned/candidate-index-{id}")).exists());
     }
 }
+
+#[test]
+fn candidate_native_observation_precancel_refuses_before_opening_displaced_roots() {
+    let (f, owner, changes) = command::tests::candidate_review_fixture();
+    let packet = packet(&owner, &changes);
+    let token = review_token();
+    cancel_review(&token);
+    // Call the real native observation wrapper, not the outer review seam.
+    // Precancellation must beat held-root and installed-artifact admission.
+    fs::rename(f.root.join("repo"), f.root.join("saved-repo")).unwrap();
+    assert_eq!(
+        owner
+            .observe_commit_git(&packet, Some(&token))
+            .err()
+            .unwrap()
+            .code(),
+        "code.commit.review-cancelled"
+    );
+    assert!(owner.observe_commit_git(&packet, None).is_err());
+    assert_eq!(
+        fs::read(f.root.join("saved-repo/sentinel")).unwrap(),
+        b"preserve human work"
+    );
+    assert_eq!(
+        fs::read(f.root.join("owned/worktree/sentinel")).unwrap(),
+        b"reviewed change"
+    );
+}

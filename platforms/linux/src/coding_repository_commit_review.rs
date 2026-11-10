@@ -200,7 +200,7 @@ impl<'owner> LinuxCodingCommitReview<'owner> {
             candidate_build_id,
             reviewer,
             cancellation,
-            || self.owner.observe_commit_git(packet),
+            || self.owner.observe_commit_git(packet, Some(cancellation)),
         )
     }
 
@@ -488,11 +488,18 @@ impl LinuxCodingRepository {
         candidate_build_id: &str,
     ) -> Result<CandidateTreePlan> {
         self.plan_reviewed_candidate_tree_with(packet, group_id, candidate_build_id, || {
-            self.observe_commit_git(packet)
+            self.observe_commit_git(packet, None)
         })
     }
 
-    fn observe_commit_git(&self, packet: &LocalReviewPacket) -> Result<GitObservation> {
+    fn observe_commit_git(
+        &self,
+        packet: &LocalReviewPacket,
+        cancellation: Option<&CancellationToken>,
+    ) -> Result<GitObservation> {
+        if cancellation.is_some_and(CancellationToken::is_cancelled) {
+            return Err(err("code.commit.review-cancelled"));
+        }
         let created = self.verify_apply_roots()?;
         let scope = LinuxRepositoryScope::verify(
             &created.original_path,
@@ -510,12 +517,16 @@ impl LinuxCodingRepository {
         let collector = LinuxRepositoryCollector::new(
             LinuxGitArtifact::verify("/usr/bin/git").map_err(|e| err(e.kind().code()))?,
         );
-        let original = collector
-            .collect(&scope)
-            .map_err(|e| err(e.kind().code()))?;
-        let task = collector
-            .collect_inventory(&task_scope)
-            .map_err(|e| err(e.kind().code()))?;
+        let original = match cancellation {
+            Some(token) => collector.collect_cancellable(&scope, token),
+            None => collector.collect(&scope),
+        }
+        .map_err(|e| err(e.kind().code()))?;
+        let task = match cancellation {
+            Some(token) => collector.collect_inventory_cancellable(&task_scope, token),
+            None => collector.collect_inventory(&task_scope),
+        }
+        .map_err(|e| err(e.kind().code()))?;
         let paths = packet
             .change_set
             .files()
@@ -527,9 +538,13 @@ impl LinuxCodingRepository {
                 &task_scope,
                 self.created_git_identity()?.base_object(),
                 &paths,
+                cancellation,
             )
             .map_err(|_| err("code.commit.base-preimage"))?;
         linked.revalidate().map_err(|e| err(e.kind().code()))?;
+        if cancellation.is_some_and(CancellationToken::is_cancelled) {
+            return Err(err("code.commit.review-cancelled"));
+        }
         if task.repository_sha256 != created.held.root_path_sha256() {
             return Err(err("code.commit.git-state"));
         }

@@ -4,6 +4,7 @@
 use std::collections::BTreeMap;
 
 use agentmage_kernel_engine::local_commit::CommitFileMode;
+use agentmage_kernel_engine::propagation::CancellationToken;
 use sha2::{Digest, Sha256};
 
 use crate::repository_safety::{
@@ -51,11 +52,41 @@ impl LinuxRepositoryCollector {
         scope: &LinuxRepositoryScope,
         base: &str,
         paths: &[String],
+        cancellation: Option<&CancellationToken>,
     ) -> Result<BTreeMap<String, Option<BaseFilePreimage>>, LinuxRepositoryError> {
-        collect_with(base, paths, |arguments, limit| {
-            self.observe_inventory(scope, arguments, limit, None)
+        collect_cancellable_with(base, paths, cancellation, |arguments, limit, token| {
+            self.observe_inventory(scope, arguments, limit, token)
         })
     }
+}
+
+// Retain one cancellation scope across type/tree/blob reads, even when a
+// worker returns success concurrently with cancellation. No later blob reads
+// or partial preimage map may escape after that stop.
+fn collect_cancellable_with(
+    base: &str,
+    paths: &[String],
+    cancellation: Option<&CancellationToken>,
+    mut execute: impl FnMut(
+        &[&str],
+        usize,
+        Option<&CancellationToken>,
+    ) -> Result<Vec<u8>, LinuxRepositoryError>,
+) -> Result<BTreeMap<String, Option<BaseFilePreimage>>, LinuxRepositoryError> {
+    let output = collect_with(base, paths, |arguments, limit| {
+        if cancellation.is_some_and(CancellationToken::is_cancelled) {
+            return Err(failed());
+        }
+        let output = execute(arguments, limit, cancellation)?;
+        if cancellation.is_some_and(CancellationToken::is_cancelled) {
+            return Err(failed());
+        }
+        Ok(output)
+    })?;
+    if cancellation.is_some_and(CancellationToken::is_cancelled) {
+        return Err(failed());
+    }
+    Ok(output)
 }
 
 // The observation seam is private to this module. Tests can exercise malformed

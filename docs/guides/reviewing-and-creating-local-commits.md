@@ -334,8 +334,12 @@ The dormant executor checks cancellation before and after preservation preflight
 It checks the original token and commit I/O deadline between every subsequent
 stage and after postflight. A stop prevents the next stage or successful receipt,
 including when the task branch has already changed. It does not imply rollback.
-Preservation collection retains its existing bounded workers; these checkpoints
-do not interrupt an individual collection or impose the I/O deadline within it.
+Preservation collection now propagates the original cancellation token to every
+existing confined Git worker. Cancellation before or during a worker prevents
+later reads and accepted preservation evidence. Checkpoints also surround local
+filesystem phases; they do not preempt an individual filesystem operation or
+scan. Collection retains its existing per-worker deadlines; the commit I/O
+deadline is not imposed inside a collection.
 
 A private execution seam now exercises the dormant adapter's shared sequence:
 branch observation, independently verified signing, sealed object write, exact
@@ -534,3 +538,22 @@ This depends on retaining that canonical store. A separate or replaced store,
 approval provenance, repository recovery and complete product composition still
 need their own controls. No product commit route, native admission or model
 measurement follows from this component evidence. T-303/T-306 remain open.
+
+## Cancel the original review reads
+
+The original-owner checker path carries its caller's token through preservation,
+linked inventory and immutable-base type, tree and blob reads. Cancellation
+concurrent with a successful worker result still refuses the observation. No
+partial base-source map or preservation manifest is accepted after an observed
+stop, and no later Git read is started. The explanatory synchronous planner
+retains its existing no-token interface.
+
+Candidate construction and signed-commit preflight/postflight use the same
+cancellable preservation collector. Candidate scratch cleanup still runs before
+postflight. Cancellation after an effect cannot establish rollback, unchanged
+state or verified cleanup; existing uncertain-result handling remains required.
+The original complete manifest fields, source/index hashing, trusted executable
+admission, offline supervisor, output bounds and descendant cleanup remain.
+These changes add no product commit route or independent checker and establish
+no native coding or model result. Local scans and an installed blocking checker
+remain outside preemptive cancellation.

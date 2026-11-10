@@ -302,3 +302,53 @@ fn linked_observations_keep_existing_worker_metadata_selection_and_rechecks() {
     );
     f.unchanged();
 }
+
+#[test]
+fn supplied_cancellation_reaches_the_worker_and_rejects_concurrent_success() {
+    use agentmage_kernel_contracts::{
+        CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason, CancellationSignal,
+    };
+    let f = Fixture::new();
+    let token = CancellationToken::root(
+        BoundaryKind::Shell,
+        TaskId::from_raw("external-stop"),
+        CorrelationId::from_raw("external-stop"),
+    );
+    let external = token.clone();
+    let output = observe_with(
+        &f.scope,
+        &["rev-parse", "HEAD"],
+        1024,
+        Some(&token),
+        |_, worker_token| {
+            assert!(!worker_token.is_cancelled());
+            // A different caller thread cancels the original token while its
+            // synthetic worker is running. No timer or polling timing assumption.
+            std::thread::spawn(move || {
+                external
+                    .cancel(CancellationSignal {
+                        schema_version: CONTRACT_SCHEMA_VERSION,
+                        cancellation_id: CancellationId::from_raw("external-stop"),
+                        correlation_id: CorrelationId::from_raw("external-stop"),
+                        task_id: TaskId::from_raw("external-stop"),
+                        reason: CancellationReason::UserRequested,
+                        requested_by: BoundaryKind::Shell,
+                    })
+                    .unwrap()
+            })
+            .join()
+            .unwrap();
+            assert!(
+                worker_token.is_cancelled(),
+                "worker must observe the original scope"
+            );
+            Ok(result(0))
+        },
+    );
+    assert!(token.is_cancelled());
+    assert_eq!(
+        output.unwrap_err().kind(),
+        LinuxRepositoryErrorKind::ObservationFailed
+    );
+    f.unchanged();
+}

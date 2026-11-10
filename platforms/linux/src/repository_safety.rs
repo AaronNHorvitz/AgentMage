@@ -51,6 +51,9 @@ const GUEST_GIT_EXECUTABLE: &str = "/app/git";
 #[path = "repository_observation.rs"]
 mod observation;
 
+#[path = "repository_preservation.rs"]
+mod preservation;
+
 #[path = "repository_execution.rs"]
 mod execution;
 pub(crate) use execution::{
@@ -327,201 +330,34 @@ impl LinuxRepositoryCollector {
         &self,
         scope: &LinuxRepositoryScope,
     ) -> Result<RepositoryPreservationManifest, LinuxRepositoryError> {
-        // Full preservation manifests belong to the ordinary mutating owner.
-        // The linked development extension admits inventory/inspection only.
+        self.collect_inner(scope, None)
+    }
+
+    /// Collects the same complete manifest with the caller's cancellation token
+    /// propagated to every confined Git read. Local file scans have checkpoints
+    /// around bounded phases; individual filesystem operations are not preempted.
+    pub fn collect_cancellable(
+        &self,
+        scope: &LinuxRepositoryScope,
+        cancellation: &CancellationToken,
+    ) -> Result<RepositoryPreservationManifest, LinuxRepositoryError> {
+        self.collect_inner(scope, Some(cancellation))
+    }
+
+    fn collect_inner(
+        &self,
+        scope: &LinuxRepositoryScope,
+        cancellation: Option<&CancellationToken>,
+    ) -> Result<RepositoryPreservationManifest, LinuxRepositoryError> {
+        preservation::check(cancellation)?;
+        // Full manifests still belong only to the ordinary mutating owner.
         if scope.linked_read_only.is_some() {
             return Err(error(LinuxRepositoryErrorKind::PlanDenied));
         }
         revalidate_git_artifact(&self.git)?;
-        let object_format =
-            text_required(self.observe(scope, &["rev-parse", "--show-object-format"])?)?;
-        let head_object = self
-            .observe_optional(scope, &["rev-parse", "--verify", "HEAD"])?
-            .map(text_required)
-            .transpose()?;
-        let symbolic_head = self
-            .observe_optional(scope, &["symbolic-ref", "--quiet", "HEAD"])?
-            .map(text_required)
-            .transpose()?;
-        let detached = symbolic_head.is_none();
-        let upstream = if let Some(branch) = &symbolic_head {
-            self.observe_optional(
-                scope,
-                &["for-each-ref", "--format=%(upstream)", "--count=1", branch],
-            )?
-            .map(text_required)
-            .transpose()?
-            .filter(|value| !value.is_empty())
-        } else {
-            None
-        };
-
-        let index_paths = self.observe(scope, &["ls-files", "--stage", "-z"])?;
-        let worktree_state = hash_worktree_tree(&scope.checkout_root)?;
-        let untracked_paths =
-            self.observe(scope, &["ls-files", "--others", "--exclude-standard", "-z"])?;
-        let ignored_paths = self.observe(
-            scope,
-            &[
-                "ls-files",
-                "--others",
-                "--ignored",
-                "--exclude-standard",
-                "-z",
-            ],
-        )?;
-        let untracked_count = nul_record_count(&untracked_paths)?;
-        let ignored_count = nul_record_count(&ignored_paths)?;
-        let path_dispositions = framed_observations(&[
-            ("index", &index_paths),
-            ("worktree", &worktree_state),
-            ("untracked", &untracked_paths),
-            ("ignored", &ignored_paths),
-        ])?;
-        let config = self.observe(
-            scope,
-            &["config", "--local", "--no-includes", "--null", "--list"],
-        )?;
-        let config_lower = config
-            .iter()
-            .map(u8::to_ascii_lowercase)
-            .collect::<Vec<_>>();
-
-        let local_branches = self.observe(
-            scope,
-            &[
-                "for-each-ref",
-                "--format=%(refname)%00%(objectname)%00",
-                "--exclude=refs/heads/agentmage/**",
-                "refs/heads",
-            ],
-        )?;
-        let agent_branches = self.observe(
-            scope,
-            &[
-                "for-each-ref",
-                "--format=%(refname)%00%(objectname)%00",
-                "refs/heads/agentmage",
-                "refs/agentmage",
-            ],
-        )?;
-        let remote_refs = self.ref_observation(scope, "refs/remotes")?;
-        let tags = self.ref_observation(scope, "refs/tags")?;
-        let notes = self.ref_observation(scope, "refs/notes")?;
-        let stash = self.ref_observation(scope, "refs/stash")?;
-        let replacements = self.ref_observation(scope, "refs/replace")?;
-        let worktrees = self.observe(scope, &["worktree", "list", "--porcelain", "-z"])?;
-        let objects = self.observe(scope, &["count-objects", "-v"])?;
-
-        let index_sha256 = hash_optional_file(&scope.git_directory.join("index"))?;
-        let gitmodules = hash_optional_file(&scope.checkout_root.join(".gitmodules"))?;
-        let attributes_path = scope.checkout_root.join(".gitattributes");
-        let attributes = read_optional_bounded(&attributes_path)?;
-        let hooks = hash_metadata_tree(&scope.git_directory.join("hooks"), false)?;
-        let user_reflogs = hash_reflog_tree(&scope.git_directory.join("logs"), true)?;
-        let agent_reflogs = hash_reflog_tree(
-            &scope.git_directory.join("logs/refs/heads/agentmage"),
-            false,
-        )?;
-        let operations = operation_metadata(&scope.git_directory)?;
-        let alternates = scope.git_directory.join("objects/info/alternates").exists();
-        let shallow = scope.git_directory.join("shallow").exists();
-        let partial = contains_any(
-            &config_lower,
-            &[
-                b"extensions.partialclone",
-                b"promisor=true",
-                b"promisor\ntrue",
-            ],
-        );
-        let executable_config = hazardous_config(&config_lower);
-        let executable_attributes = attributes.as_deref().is_some_and(hazardous_attributes);
-        let hook_present = directory_has_active_hooks(&scope.git_directory.join("hooks"))?;
-        let hazardous_configuration = executable_config
-            || executable_attributes
-            || hook_present
-            || alternates
-            || !replacements.is_empty();
-
-        let mut agent_state = agent_branches;
-        agent_state.extend(agent_reflogs);
-        RepositoryPreservationManifest::seal(RepositoryPreservationManifest {
-            schema_version: 0,
-            repository_sha256: scope.repository_path_sha256.clone(),
-            common_directory_sha256: path_identity(&scope.git_directory)?,
-            object_format,
-            safe_ownership: true,
-            head_object,
-            current_branch: symbolic_head,
-            upstream,
-            detached,
-            index_sha256,
-            path_dispositions_sha256: hash(&path_dispositions),
-            untracked_count,
-            ignored_count,
-            local_branches_sha256: hash(&local_branches),
-            remote_tracking_refs_sha256: hash(&remote_refs),
-            tags_sha256: hash(&tags),
-            notes_sha256: hash(&notes),
-            stash_sha256: hash(&stash),
-            replacement_refs_sha256: hash(&replacements),
-            reflogs_sha256: hash(&user_reflogs),
-            agentmage_refs_sha256: hash(&agent_state),
-            worktrees_sha256: hash(&worktrees),
-            submodules_sha256: gitmodules,
-            lfs_sha256: hash(attributes.as_deref().unwrap_or_default()),
-            object_database_sha256: hash(&objects),
-            configuration_sha256: hash(&config),
-            hooks_sha256: hash(&hooks),
-            content_drivers_sha256: hash(attributes.as_deref().unwrap_or_default()),
-            remotes_sha256: hash(&config),
-            operations_sha256: hash(&operations),
-            shallow,
-            partial,
-            hazardous_configuration,
-            manifest_sha256: String::new(),
+        preservation::collect_with(scope, cancellation, |arguments, token| {
+            self.observe_inventory_optional(scope, arguments, MAX_OBSERVATION_BYTES, token)
         })
-        .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))
-    }
-
-    fn ref_observation(
-        &self,
-        scope: &LinuxRepositoryScope,
-        reference: &str,
-    ) -> Result<Vec<u8>, LinuxRepositoryError> {
-        self.observe(
-            scope,
-            &[
-                "for-each-ref",
-                "--format=%(refname)%00%(objectname)%00",
-                reference,
-            ],
-        )
-    }
-
-    fn observe(
-        &self,
-        scope: &LinuxRepositoryScope,
-        arguments: &[&str],
-    ) -> Result<Vec<u8>, LinuxRepositoryError> {
-        self.observe_status(scope, arguments)?
-            .ok_or_else(|| error(LinuxRepositoryErrorKind::ObservationFailed))
-    }
-
-    fn observe_optional(
-        &self,
-        scope: &LinuxRepositoryScope,
-        arguments: &[&str],
-    ) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
-        self.observe_status(scope, arguments)
-    }
-
-    fn observe_status(
-        &self,
-        scope: &LinuxRepositoryScope,
-        arguments: &[&str],
-    ) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
-        self.observe_inventory_optional(scope, arguments, MAX_OBSERVATION_BYTES, None)
     }
 
     pub(crate) fn observe_inventory(

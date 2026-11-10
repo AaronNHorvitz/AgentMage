@@ -366,3 +366,65 @@ fn base_preimages_real_git_protocol_fixture_keeps_base_independent_of_worktree_a
         b"untracked initial content\n"
     );
 }
+
+#[test]
+fn base_cancellation_reaches_type_tree_and_each_blob_and_never_returns_partial_sources() {
+    use agentmage_kernel_contracts::{
+        BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason,
+        CancellationSignal, CorrelationId, TaskId,
+    };
+    let base = "a".repeat(40);
+    let blob = crate::linux_git_blob_object_id("sha1", b"base").unwrap();
+    let raw = [
+        tree("100644", "blob", &blob, "first"),
+        tree("100644", "blob", &blob, "second"),
+    ]
+    .concat();
+    for stop in 0..=4 {
+        let token = CancellationToken::root(
+            BoundaryKind::Shell,
+            TaskId::from_raw("base"),
+            CorrelationId::from_raw("base"),
+        );
+        let cancel = |token: &CancellationToken| {
+            token
+                .cancel(CancellationSignal {
+                    schema_version: CONTRACT_SCHEMA_VERSION,
+                    cancellation_id: CancellationId::from_raw("base-stop"),
+                    correlation_id: CorrelationId::from_raw("base"),
+                    task_id: TaskId::from_raw("base"),
+                    reason: CancellationReason::UserRequested,
+                    requested_by: BoundaryKind::Shell,
+                })
+                .unwrap()
+        };
+        if stop == 0 {
+            cancel(&token);
+        }
+        let mut calls = 0;
+        let output = collect_cancellable_with(
+            &base,
+            &["first".into(), "second".into()],
+            Some(&token),
+            |args, _, forwarded| {
+                let forwarded = forwarded.expect("caller token must reach every base worker");
+                calls += 1;
+                if calls == stop {
+                    cancel(forwarded);
+                    assert!(token.is_cancelled());
+                }
+                Ok(match args {
+                    ["--no-replace-objects", "cat-file", "-t", _] => b"commit\n".to_vec(),
+                    ["--no-replace-objects", "ls-tree", ..] => raw.clone(),
+                    ["--no-replace-objects", "cat-file", "blob", _] => b"base".to_vec(),
+                    _ => panic!("unexpected base read"),
+                })
+            },
+        );
+        assert_eq!(calls, stop);
+        assert_eq!(
+            output.unwrap_err().kind(),
+            LinuxRepositoryErrorKind::ObservationFailed
+        );
+    }
+}

@@ -85,7 +85,7 @@ impl Session for NativeSession<'_> {
     fn postflight(&mut self) -> Result<RepositoryPreservationManifest, ()> {
         self.executor
             .collector
-            .collect(&self.executor.scope)
+            .collect_cancellable(&self.executor.scope, self.cancellation)
             .map_err(|_| ())
     }
 }
@@ -94,8 +94,8 @@ fn control_active(cancellation: &CancellationToken, deadline: Instant) -> bool {
     !cancellation.is_cancelled() && Instant::now() < deadline
 }
 
-// Collection still has its own bounded workers. These checkpoints do not make
-// a running preservation read interruptible or give it the commit I/O deadline.
+// Collection propagates this token to its bounded workers. Local filesystem
+// phases are not preempted, and collection retains its own worker deadlines.
 pub(super) fn preflight(
     cancellation: &CancellationToken,
     collect: impl FnOnce() -> Result<

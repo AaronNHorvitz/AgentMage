@@ -201,7 +201,7 @@ impl LinuxCandidateTreeBuilder {
             .map_err(|_| error(LinuxLocalCommitErrorKind::PlanDenied))?;
         let before = self
             .collector
-            .collect(&self.scope)
+            .collect_cancellable(&self.scope, cancellation)
             .map_err(|_| error(LinuxLocalCommitErrorKind::PlanDenied))?;
         let temporary_index_sha256 =
             linux_candidate_index_path_sha256(&self.scope, &plan.candidate_build_id)?;
@@ -262,7 +262,7 @@ impl LinuxCandidateTreeBuilder {
         let cleanup_verified = session.cleanup();
         let after = self
             .collector
-            .collect(&self.scope)
+            .collect_cancellable(&self.scope, cancellation)
             .map_err(|_| error(LinuxLocalCommitErrorKind::ExecutionFailed))?;
         let (candidate_tree, blobs) = operation?;
         if !cleanup_verified {
@@ -452,7 +452,8 @@ impl LinuxLocalCommitExecutor {
         cancellation: &CancellationToken,
     ) -> LocalCommitPlatformResult {
         let before = match execution::preflight(cancellation, || {
-            self.collector.collect(&self.scope)
+            self.collector
+                .collect_cancellable(&self.scope, cancellation)
         }) {
             Ok(value) => value,
             Err(_) => return failed_commit_result(approved_before, "linux.git.commit.preflight"),

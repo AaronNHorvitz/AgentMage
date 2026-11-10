@@ -1,0 +1,215 @@
+Commit: e8edde37790ca3853f8226b6a0593c7d0fd1b44b
+Scope: local-coding-reconciliation-uncertainty
+
+# Independent review: local commit post-executor reconciliation uncertainty (T-303 / T-306)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only on the repository.
+Review tree: pinned checkout `/lane/review-checkout`. `git rev-parse HEAD` and
+`git rev-parse e8edde37790ca3853f8226b6a0593c7d0fd1b44b` both returned
+`e8edde37790ca3853f8226b6a0593c7d0fd1b44b`. The working tree was clean before and after the review.
+Ancestry: e8edde37 (review retention and docs) → 223d03d6 (source) → d46e86f0 (parent).
+
+This increment does not close a row and claims no closure. T-303 and T-306 remain open.
+
+## Methods
+
+- Read IP-POLICY.md, the new TASKS.md head paragraphs, the new evidence file
+  `docs/evidence/t306-reconciliation-uncertainty-2026-11-10.md`, the clarified
+  `docs/evidence/t306-single-use-2026-11-10.md`, the changed guide section and the retained parent
+  report `docs/reviews/d46e86f0993e-local-coding-transaction-replay.txt`.
+- Read the full diff against d46e86f0 for all eight paths, including all three changed Rust sources.
+- Read the surrounding production code:
+  - `LocalCommitEffectDriver::execute` (`kernel/engine/src/local_commit.rs:1296-1357`);
+  - `reconcile_local_commit` (`local_commit.rs:999-1078`);
+  - `LocalCommitError::code` (`local_commit.rs:49-59`);
+  - `EffectLaunch` / `EffectResult` (`kernel/engine/src/authority_transaction.rs:370-440`);
+  - coordinator launch, reconcile and recovery (`authority_transaction.rs:740-925`);
+  - `reconcile_results` and `outcome_code` (`authority_transaction.rs:1139-1160` and `1344-1357`).
+- Read every bundle script before execution: `run.py`, `check.py`, `parse_gate.py`, `light.py`,
+  `mutations.py`, `stage_check.py` and `finalize_docs.py`. I also read the in-tree
+  `scripts/local_agent_fast_gate.py` plan logic.
+- I did not execute `mutations.py`: it edits source. I read its retained log instead and ran my own
+  mutants on a separate extracted copy (below).
+- Searched the tree for non-test callers of `LocalCommitEffectDriver`. There are none, so the driver
+  stays dormant and no product route is added.
+
+## Exact commands and results (all run in /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-reconciliation-uncertainty/review-inputs.sha256` → exit 0
+   (all eight paths match).
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-reconciliation-uncertainty/run.py /lane/state/tmp/review-reconciliation-uncertainty-full-r1`
+   → exit 1, as expected for the inherited-failure gate.
+   - `source_unchanged: true`; 426.04 s including reservations.
+   - Raw log SHA-256 `d90bf97717d21d9c74b663989051cfa8a7686add618740f571efb8e05f798b50`.
+   - Per-command exits: 0 for the four light commands; fmt 0 (2.25 s); Clippy `-D warnings` 0 (46.17 s);
+     cargo test 101 (376.04 s). `FAST GATE: FAIL`.
+   - New method `local_commit_reconciliation_failure_stays_uncertain_through_encrypted_restart ... ok`.
+   - Strengthened `commit_driver_is_single_use_after_success_uncertainty_and_prelaunch_refusal ... ok`.
+3. `python3 -B /lane/state/tmp/t306-reconciliation-uncertainty/check.py /lane/state/tmp/review-reconciliation-uncertainty-full-r1`
+   → exit 0. This is a data comparison only, not a gate pass.
+   - 46 targets; totals [3091, 72, 72, 0, 0]; 3 source files; 45 affected methods all `ok`.
+   - Every target's counts and exact failed/ignored identities equal the parent baseline, plus one kernel
+     pass.
+   - The retained parent review is byte-identical to `/lane/reviews/d46e86f0993e-local-coding-transaction-replay.md`
+     (I also confirmed this with `cmp`).
+   - TASKS row lines are unchanged.
+4. `cmp .../validation-1/source-freeze.json .../review-reconciliation-uncertainty-full-r1/source-freeze.json` → exit 0.
+5. `python3 -B /lane/state/tmp/t306-reconciliation-uncertainty/light.py` → exit 0. The four light commands
+   exit 0: diff check, untracked lint, review-text lint, and markdownlint with 0 issues in 4 files.
+6. `git diff --check d46e86f0993e9e1f7b7a35d3bf6f7a83a0433dbb --` → exit 0.
+7. `git status --short` → empty.
+
+Inherited failures by module (identical to the parent baseline): `linux_coding_runtime` 42, `repository_safety` 13,
+`linux_read` 10, `command_runner` 2, `local_commit` 2, `secret_service` 2, `linux_repository_map` 1.
+- The two `local_commit::tests` failures are Linux-platform native tests in an unchanged file
+  (`platforms/linux/src/local_commit.rs:1965,1977`: `ArtifactDenied` / `InvalidGitArtifact` from fixture
+  Git/signer inspection in this environment).
+- They are not in the changed engine sources.
+
+The builder's numbers are consistent with mine: their retained `validation-1` shows 465.71 s and raw SHA
+`02a4c39a…caac`. The run time differs by reservation wait only; counts and identities are identical.
+
+### Independent mutation runs (scratch extraction, never the review tree)
+
+Method:
+- `git archive e8edde37… | tar -x` into five copies under `/lane/state/tmp/review-e8ed-mut/`.
+- A small script applied one mutant to each copy.
+- Each copy was run with `touch kernel/engine/src/local_commit.rs` then
+  `CARGO_TARGET_DIR=/lane/state/tmp/review-e8ed-mut/target bash /tools/build-slot cargo test --locked --offline -p agentmage-kernel-engine --lib -- local_commit_reconciliation_failure_stays_uncertain commit_driver_is_single_use_after`.
+- A first attempt without `touch` reused one compiled mutant across copies, because the archive mtimes were
+  identical. I discarded it and reran with an unmutated control and a confirmed `Compiling` line per copy.
+
+| Mutant | Change | Single-use method | New durable method |
+| --- | --- | --- | --- |
+| m0 | none (control) | ok | ok |
+| m1 | post-executor error → `EffectLaunch::failed()` | FAILED (`uncertain`: Failed≠Uncertain) | FAILED (`cleanup`: Failed≠Uncertain) |
+| m2 | post-executor outcome `Failed`, state change `Uncertain` | FAILED | FAILED |
+| m3 | pre-executor cancellation → completed Uncertain | FAILED (`cancelled`: Uncertain≠Failed) | ok |
+| m4 | post-executor outcome `Uncertain`, state change `Changed` | ok | ok (survives; see L-1) |
+
+Log SHA-256s:
+- m0 `03a5d520…3318`
+- m1 `449cac9b…e3c9`
+- m2 `98309e4a…cbc0`
+- m3 `4f6b2b73…556d`
+- m4 `9e7867ec…d3ef`
+
+The scratch copies and target were deleted afterwards; the logs remain in `/lane/state/tmp/review-e8ed-mut/`.
+
+The builder's retained `mutant-launch-failed.log` agrees with my m1. It shows 20 pass / 2 fail, and the two
+FAILED methods are exactly the strengthened and new methods. Its other panic lines (770, 818) belong to
+caught synthetic-unwind tests that pass.
+
+## Analysis
+
+### Production change (`local_commit.rs:1345-1354`)
+
+Only the `Err` arm after `executor.execute` changes.
+- Every refusal before the executor still returns `EffectLaunch::failed()` with an uncrossed boundary:
+  reentry latch, clock failure, grant/operation/transaction/held-scope/arguments/packet checks, and
+  cancellation.
+- I confirmed with m3 that the single-use test now pins this.
+
+The post-executor arm records the original error and returns
+`completed(from_redacted_material(Uncertain, error.code(), StateChange::Uncertain))`.
+- `error.code()` is a closed set of static strings (`local_commit.rs:49-59`). No executor output, path,
+  object id or message reaches the digest, so the material is content-free.
+- `reconcile_local_commit` only returns `Ok` when `result.outcome == Succeeded`
+  (`local_commit.rs:1023`), so there is no new success path.
+- A failure of the `prepared.verify_at` re-check inside reconciliation is now also uncertain. That is
+  correct, because the executor has already run.
+
+Coordinator handling (`authority_transaction.rs:791-829`):
+- `uncertain` is the OR of state-change and outcome.
+- A `Reconciling` checkpoint records the uncertain flag. The grant goes through `mark_execution_uncertain`,
+  and the terminal code is `authority.transaction.effect_uncertain`.
+
+Recovery:
+- A `WorkerReturned` crash leaves the transaction in `LaunchCommitted`. Recovery marks it
+  `recovered_uncertain`.
+- A `ResultReconciled` crash leaves `Reconciling` with `uncertain_effect = true`, and recovery preserves it
+  (`authority_transaction.rs:893-914`).
+- Under the old `failed()` behaviour, the normal and `ResultReconciled` paths both produced a non-uncertain
+  `Failed`/`launch_failed` receipt. The new test kills that mutant on the normal path, as m1 confirms.
+
+No panic handler, rollback, retry, authority change or ownership bypass is introduced. The reentry latch
+is unchanged, so a second dispatch through the same driver returns `failed()` without a second launch.
+
+### New durable method (`authority_transaction.rs:2704-2915`)
+
+The method runs seven synthetic result failures × three paths = 21 iterations, each in a fresh store
+directory. Each iteration exercises the actual commit driver, policy, grant issuance and consumption,
+coordinator checkpointing and the encrypted `OperationalStore` / `DurableAuthorityRuntime`.
+- Every case asserts that the synthetic ref moved (`task_branch_after != task_branch_before`), so each one
+  really is an "effect may have happened" situation.
+- The original store, coordinator and issuer are dropped before reopen.
+- After reopen the method asserts:
+  - one receipt, with outcome `Uncertain` and the original transaction and attempt ids;
+  - the transaction is `uncertain_effect` and the grant is `Uncertain`;
+  - on the normal path, the recovered receipt equals the original receipt;
+  - a replay through a fresh driver is refused with `InvalidIdentity` and zero launches;
+  - a second reopen holds exactly the same receipt, grant and transaction state.
+- On the normal path it also asserts no local success receipt, the retained error `ResultDenied` and
+  exactly one launch.
+
+Everything is synthetic: Git effects, approval, clocks and held objects. The evidence says so plainly.
+
+### Confinement and security boundary
+
+This change narrows rather than widens behaviour: it adds uncertainty and no permission. The driver has
+no non-test caller, so no workspace, sandbox or network surface changes.
+- Recovery after reconciliation failure is now fail-closed. The grant is marked uncertain and replay is
+  refused, so a crash or failed reconciliation cannot be turned into a silent retry.
+- No path traversal, symlink, environment or prompt-injection surface is touched.
+
+### Evidence and documentation
+
+- The guide paragraph (`docs/guides/reviewing-and-creating-local-commits.md:482-490`) is accurate against
+  the code.
+- The TASKS and evidence counts (3,091 / 72 / 72, 46 targets, 45 methods, three hashes) match my
+  independent run.
+- The L-2 wording clarification in the single-use evidence answers the prior review's L-2 exactly.
+- The retained parent report is byte-identical to the reviewer's original.
+- No evaluator, hidden or held-out task, scorer, prompt, threshold, dependency, SBOM or scoreboard path is
+  in the diff.
+- Added lines contain no home paths, usernames, hostnames, credentials, personal data, product
+  comparisons or trademark branding. The only paths are `/lane/...` lane-tool paths in evidence and the
+  retained review, as in prior accepted retentions.
+- No rows or sub-rows are added, and the TASKS row lines are byte-identical to the parent.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L-1 (low, test coverage, same-row backlog):** `kernel/engine/src/local_commit.rs:1350-1354`;
+  `docs/guides/reviewing-and-creating-local-commits.md:482-485`.
+  - The guide says that after the executor returns, "both outcome and state-change [are] classified as
+    uncertain". It also says the bounded result contains only the digest of the content-free error.
+  - My mutant m4 (`StateChange::Uncertain` → `StateChange::Changed`) survives both methods. No test
+    asserts the driver's state-change classification or the result digest
+    (`sha256(error.code())`) directly.
+  - Behaviour is equivalent today, because the coordinator ORs outcome and state change
+    (`authority_transaction.rs:791-792`). It would not be equivalent if a future coordinator or audit
+    consumer keyed on `state_change` alone.
+  - Fix: in a driver-level test, assert `EffectResult::state_change() == StateChange::Uncertain` and
+    `result_sha256() == sha256_hex(LocalCommitError::ResultDenied.code())` for one post-executor failure,
+    for example by calling `execute` through `dispatch_commit_fixture_as` and inspecting the coordinator
+    record's `result_sha256`.
+- **Carried lows:** the earlier same-row lows remain backlog as stated, including the prepared-reconciliation
+  and complete-packet lows and the native signing reconciliation coverage. This commit does not change them.
+  The prior single-use and transaction-binding L-1 (post-executor `failed()`) is fixed by this commit, and
+  m1 confirms the fix. The prior single-use L-2 wording is clarified.
+
+## Per-row result
+
+- **T-303 / T-306 (this increment, local-coding-reconciliation-uncertainty):** PASS for the increment.
+  - The post-executor reconciliation error is now a durable uncertain effect, with no success receipt and
+    no replay. Pre-executor refusals remain uncrossed failures.
+  - The claims are supported by my independent full gate (identical inherited failures, +1 kernel pass,
+    fmt and Clippy pass) and my mutation runs.
+  - No row closes. T-303 and T-306 remain OPEN for the items the builder lists: trusted checker/artifact
+    integration, full original-owner approval composition, native admission, repository/signer recovery,
+    model measurements and approved push.
+  - This increment PASS is not row closure.
+
+Verdict: PASS
