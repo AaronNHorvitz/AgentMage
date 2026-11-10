@@ -353,9 +353,19 @@ impl LinuxRepositoryCollector {
         scope: &LinuxRepositoryScope,
         cancellation: Option<&CancellationToken>,
     ) -> Result<RepositoryPreservationManifest, LinuxRepositoryError> {
+        self.collect_until(scope, cancellation, Instant::now() + PROCESS_TIMEOUT)
+    }
+
+    // A containing review may shorten, never renew, the collection budget.
+    pub(crate) fn collect_until(
+        &self,
+        scope: &LinuxRepositoryScope,
+        cancellation: Option<&CancellationToken>,
+        deadline: Instant,
+    ) -> Result<RepositoryPreservationManifest, LinuxRepositoryError> {
         // One collection budget, including admission, local scans and all Git
         // reads. Individual syscalls and mandatory cleanup are not preempted.
-        let deadline = Instant::now() + PROCESS_TIMEOUT;
+        let deadline = deadline.min(Instant::now() + PROCESS_TIMEOUT);
         preservation::check_until(cancellation, deadline)?;
         // Full manifests still belong only to the ordinary mutating owner.
         if scope.linked_read_only.is_some() {
@@ -376,27 +386,6 @@ impl LinuxRepositoryCollector {
                 )
             },
         )
-    }
-
-    pub(crate) fn observe_inventory(
-        &self,
-        scope: &LinuxRepositoryScope,
-        arguments: &[&str],
-        maximum_bytes: usize,
-        cancellation: Option<&CancellationToken>,
-    ) -> Result<Vec<u8>, LinuxRepositoryError> {
-        self.observe_inventory_optional(scope, arguments, maximum_bytes, cancellation)?
-            .ok_or_else(|| error(LinuxRepositoryErrorKind::ObservationFailed))
-    }
-
-    pub(crate) fn observe_inventory_optional(
-        &self,
-        scope: &LinuxRepositoryScope,
-        arguments: &[&str],
-        maximum_bytes: usize,
-        cancellation: Option<&CancellationToken>,
-    ) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
-        self.observe_confined_inventory(scope, arguments, maximum_bytes, cancellation)
     }
 }
 

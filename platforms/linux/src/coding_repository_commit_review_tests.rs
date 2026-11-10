@@ -1484,6 +1484,162 @@ fn selected_review(owner: &LinuxCodingRepository) -> LinuxCodingCommitReview<'_>
 }
 
 #[test]
+fn candidate_checker_shares_one_deadline_across_all_observations_and_checker() {
+    let (_f, owner, changes) = command::tests::candidate_review_fixture();
+    let p = packet(&owner, &changes);
+    let token = review_token();
+    let deadline = Instant::now() + REVIEW_TIMEOUT;
+    let calls = Cell::new(0);
+    let checked = Cell::new(0);
+    let mut checker = CandidateChecker(|input: LinuxCodingCandidateReviewEvidence<'_>| {
+        assert_eq!(calls.get(), 2);
+        assert_eq!(input.deadline(), deadline);
+        assert_eq!(
+            input.cancellation() as *const _ as *const (),
+            &token as *const _ as *const ()
+        );
+        assert_eq!(input.cancellation().observe_effect_cancellation(), Ok(None));
+        checked.set(checked.get() + 1);
+        Ok(())
+    });
+    let result = selected_review(&owner)
+        .verify_candidate_tree_until(
+            &p,
+            &p.commit_plan.groups[0].group_id,
+            "review-deadline",
+            &mut checker,
+            &token,
+            deadline,
+            |until| {
+                assert_eq!(until, deadline);
+                calls.set(calls.get() + 1);
+                Ok(observation(&owner))
+            },
+        )
+        .unwrap();
+    assert_eq!((calls.get(), checked.get()), (4, 1));
+    assert_eq!(result.packet().packet_sha256, p.packet_sha256);
+    assert!(!token.is_cancelled());
+}
+
+fn wait_for_review_deadline(deadline: Instant) {
+    while let Some(remaining) = deadline.checked_duration_since(Instant::now()) {
+        std::thread::sleep(remaining);
+    }
+}
+
+#[test]
+fn candidate_checker_expiry_never_releases_late_success_or_runs_later_observations() {
+    for (stage, outcome, expected_code) in [
+        (0, Ok(()), "code.commit.review-expired"),
+        (1, Ok(()), "code.commit.review-expired"),
+        (2, Ok(()), "code.commit.review-expired"),
+        (3, Ok(()), "code.commit.review-expired"),
+        (4, Ok(()), "code.commit.review-expired"),
+        (5, Ok(()), "code.commit.review-expired"),
+        (
+            3,
+            Err(LinuxCodingCandidateReviewFailure::Rejected),
+            "code.commit.review-rejected",
+        ),
+        (
+            3,
+            Err(LinuxCodingCandidateReviewFailure::Unavailable),
+            "code.commit.review-unavailable",
+        ),
+    ] {
+        let (f, owner, changes) = command::tests::candidate_review_fixture();
+        let p = packet(&owner, &changes);
+        let review = selected_review(&owner);
+        let token = review_token();
+        let before = owner.inspect().unwrap();
+        let validation = owner.inspect_validation().unwrap();
+        let calls = Cell::new(0);
+        let checked = Cell::new(0);
+        let deadline = if stage == 0 {
+            Instant::now()
+        } else {
+            Instant::now() + Duration::from_millis(250)
+        };
+        let mut checker = CandidateChecker(|input: LinuxCodingCandidateReviewEvidence<'_>| {
+            checked.set(checked.get() + 1);
+            assert_eq!(input.deadline(), deadline);
+            if stage == 3 {
+                // A worker may poll the deadline without obtaining a token or
+                // changing the caller's cancellation state.
+                let until = input.deadline();
+                let cancellation = input.cancellation();
+                std::thread::scope(|scope| {
+                    scope
+                        .spawn(|| {
+                            wait_for_review_deadline(until);
+                            assert_eq!(cancellation.observe_effect_cancellation(), Ok(None));
+                        })
+                        .join()
+                        .unwrap()
+                });
+            }
+            outcome
+        });
+        let result = review.verify_candidate_tree_until(
+            &p,
+            &p.commit_plan.groups[0].group_id,
+            "expired-review",
+            &mut checker,
+            &token,
+            deadline,
+            |until| {
+                calls.set(calls.get() + 1);
+                assert_eq!(until, deadline);
+                let boundary = if calls.get() <= 2 {
+                    calls.get()
+                } else {
+                    calls.get() + 1
+                };
+                if stage == boundary {
+                    wait_for_review_deadline(until);
+                }
+                Ok(observation(&owner))
+            },
+        );
+        assert_eq!(result.err().unwrap().code(), expected_code, "stage {stage}");
+        let expected = match stage {
+            0 => (0, 0),
+            1 => (1, 0),
+            2 => (2, 0),
+            3 => (2, 1),
+            4 => (3, 1),
+            5 => (4, 1),
+            _ => unreachable!(),
+        };
+        assert_eq!((calls.get(), checked.get()), expected, "stage {stage}");
+        assert_eq!(owner.inspect().unwrap(), before);
+        assert_eq!(owner.inspect_validation().unwrap(), validation);
+        assert!(!token.is_cancelled());
+        assert_eq!(
+            fs::read(f.root.join("repo/sentinel")).unwrap(),
+            b"preserve human work"
+        );
+        assert_eq!(
+            fs::read(f.root.join("owned/worktree/sentinel")).unwrap(),
+            b"reviewed change"
+        );
+        assert!(!f.root.join("owned/candidate-index-expired-review").exists());
+    }
+}
+
+#[test]
+fn candidate_git_review_expired_preflight_precedes_root_or_artifact_admission() {
+    let (f, owner, changes) = command::tests::candidate_review_fixture();
+    let p = packet(&owner, &changes);
+    let token = review_token();
+    fs::rename(f.root.join("repo"), f.root.join("moved-repo")).unwrap();
+    let result = owner.observe_commit_git_until(&p, Some(&token), Some(Instant::now()));
+    assert_eq!(result.err().unwrap().code(), "code.commit.review-expired");
+    assert!(!token.is_cancelled());
+}
+
+#[test]
 fn candidate_checker_receives_original_records_and_releases_only_rechecked_inert_plan() {
     let (f, owner, changes) = command::tests::candidate_review_fixture();
     let p = packet(&owner, &changes);

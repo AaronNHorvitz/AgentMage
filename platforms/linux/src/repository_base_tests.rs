@@ -428,3 +428,73 @@ fn base_cancellation_reaches_type_tree_and_each_blob_and_never_returns_partial_s
         );
     }
 }
+
+#[test]
+fn base_deadline_reaches_every_worker_and_rejects_late_success_without_partial_sources() {
+    use std::time::Duration;
+    let base = "a".repeat(40);
+    let blob = crate::linux_git_blob_object_id("sha1", b"base").unwrap();
+    let raw = [
+        tree("100644", "blob", &blob, "first"),
+        tree("100644", "blob", &blob, "second"),
+    ]
+    .concat();
+    // None is the normal successful case; the other cases expire before
+    // dispatch, after type, after tree or after either blob observation.
+    for stop in [None, Some(0), Some(1), Some(2), Some(3), Some(4)] {
+        for with_token in [false, true] {
+            let token = agentmage_kernel_engine::propagation::CancellationToken::root(
+                agentmage_kernel_contracts::BoundaryKind::Shell,
+                agentmage_kernel_contracts::TaskId::from_raw("base-deadline"),
+                agentmage_kernel_contracts::CorrelationId::from_raw("base-deadline"),
+            );
+            let cancellation = with_token.then_some(&token);
+            let deadline = Instant::now()
+                + if stop == Some(0) {
+                    Duration::ZERO
+                } else {
+                    Duration::from_millis(100)
+                };
+            let mut calls = 0;
+            let result = collect_until_with(
+                &base,
+                &["first".into(), "second".into()],
+                cancellation,
+                Some(deadline),
+                |args, _, forwarded, until| {
+                    calls += 1;
+                    assert_eq!(
+                        forwarded.map(|t| t as *const _),
+                        cancellation.map(|t| t as *const _)
+                    );
+                    assert_eq!(until, Some(deadline));
+                    if stop == Some(calls) {
+                        while let Some(remaining) = deadline.checked_duration_since(Instant::now())
+                        {
+                            std::thread::sleep(remaining);
+                        }
+                    }
+                    Ok(match args {
+                        ["--no-replace-objects", "cat-file", "-t", _] => b"commit\n".to_vec(),
+                        ["--no-replace-objects", "ls-tree", ..] => raw.clone(),
+                        ["--no-replace-objects", "cat-file", "blob", _] => b"base".to_vec(),
+                        _ => panic!("unexpected base read"),
+                    })
+                },
+            );
+            assert_eq!(calls, stop.unwrap_or(4));
+            if stop.is_some() {
+                assert_eq!(
+                    result.unwrap_err().kind(),
+                    LinuxRepositoryErrorKind::ObservationFailed
+                );
+            } else {
+                let result = result.unwrap();
+                assert_eq!(result.len(), 2);
+                assert_eq!(result["first"], preimage(b"base", CommitFileMode::Regular));
+                assert_eq!(result["second"], result["first"]);
+            }
+            assert!(!token.is_cancelled());
+        }
+    }
+}

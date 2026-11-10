@@ -14,6 +14,9 @@ use agentmage_kernel_engine::review_packet::{
 };
 use std::cell::RefCell;
 
+// One cooperative budget covers precheck, installed checker and postcheck.
+const REVIEW_TIMEOUT: Duration = Duration::from_secs(120);
+
 #[derive(Clone, PartialEq, Eq)]
 struct GitObservation {
     original: RepositoryPreservationManifest,
@@ -43,6 +46,7 @@ pub struct LinuxCodingCandidateReviewEvidence<'a> {
     validation: LinuxCodingValidationEvidence<'a>,
     sources: &'a [LinuxCodingReviewSource],
     cancellation: &'a dyn EffectCancellationObservation,
+    deadline: Instant,
 }
 
 /// Exact bounded source pair captured under the original two-root read scope.
@@ -128,6 +132,14 @@ impl LinuxCodingCandidateReviewEvidence<'_> {
     pub fn cancellation(&self) -> &dyn EffectCancellationObservation {
         self.cancellation
     }
+
+    /// Absolute monotonic deadline shared with pre/post observations. A checker
+    /// must bound its workers to this deadline and refuse late results. This is
+    /// independent of cancellation and never cancels the original caller token.
+    #[must_use]
+    pub const fn deadline(&self) -> Instant {
+        self.deadline
+    }
 }
 
 /// Content-free outcome from an explicitly installed trusted reviewer.
@@ -156,7 +168,8 @@ pub trait LinuxCodingCandidateReviewPort {
     /// This grants no extra reads, commands, disclosure or effect permission.
     /// Observe `evidence.cancellation()` during work; observation failure must
     /// stop as unavailable. The host remains responsible for worker authority,
-    /// cleanup and deadlines. This synchronous call is not forcibly preempted.
+    /// cleanup and honoring `evidence.deadline()`. This synchronous call is not
+    /// forcibly preempted; a late success is rejected by the original owner.
     fn verify_candidate(
         &mut self,
         evidence: LinuxCodingCandidateReviewEvidence<'_>,
@@ -193,6 +206,8 @@ impl LinuxCodingCheckedCandidate<'_> {
 impl<'owner> LinuxCodingCommitReview<'owner> {
     /// Invoke an explicitly installed checker on original evidence, then repeat
     /// the complete live-owner plan checks before returning its inert result.
+    /// One monotonic 120-second deadline covers the complete sequence, including
+    /// the installed checker. Existing shorter collection/worker caps remain.
     /// Cancellation checkpoints cannot interrupt a blocking checker or an
     /// individual filesystem operation. A checker failure stops immediately;
     /// success cannot skip the post-check or authorize any subsequent effect.
@@ -207,18 +222,23 @@ impl<'owner> LinuxCodingCommitReview<'owner> {
     where
         'owner: 'a,
     {
-        self.verify_candidate_tree_with(
+        self.verify_candidate_tree_until(
             packet,
             group_id,
             candidate_build_id,
             reviewer,
             cancellation,
-            || self.owner.observe_commit_git(packet, Some(cancellation)),
+            Instant::now() + REVIEW_TIMEOUT,
+            |deadline| {
+                self.owner
+                    .observe_commit_git_until(packet, Some(cancellation), Some(deadline))
+            },
         )
     }
 
     // Observation substitution is private and available only to this module's
     // synthetic tests. Public callers cannot replace native Git collection.
+    #[cfg(test)]
     fn verify_candidate_tree_with<'a>(
         &self,
         packet: &'a LocalReviewPacket,
@@ -231,22 +251,52 @@ impl<'owner> LinuxCodingCommitReview<'owner> {
     where
         'owner: 'a,
     {
-        let check_cancelled = || {
+        self.verify_candidate_tree_until(
+            packet,
+            group_id,
+            candidate_build_id,
+            reviewer,
+            cancellation,
+            Instant::now() + REVIEW_TIMEOUT,
+            |_| observe(),
+        )
+    }
+
+    #[allow(
+        clippy::too_many_arguments,
+        reason = "private review context carries one immutable deadline"
+    )]
+    fn verify_candidate_tree_until<'a>(
+        &self,
+        packet: &'a LocalReviewPacket,
+        group_id: &str,
+        candidate_build_id: &str,
+        reviewer: &mut impl LinuxCodingCandidateReviewPort,
+        cancellation: &CancellationToken,
+        deadline: Instant,
+        mut observe: impl FnMut(Instant) -> Result<GitObservation>,
+    ) -> Result<LinuxCodingCheckedCandidate<'a>>
+    where
+        'owner: 'a,
+    {
+        let check_budget = || {
             if cancellation.is_cancelled() {
                 Err(err("code.commit.review-cancelled"))
+            } else if Instant::now() >= deadline {
+                Err(err("code.commit.review-expired"))
             } else {
                 Ok(())
             }
         };
-        check_cancelled()?;
+        check_budget()?;
         // Candidate plans omit some inventory/link observations. Compare the
         // complete private observation across ALL pre/post samples as well;
         // equal plan hashes alone cannot hide drift across the checker call.
         let baseline = RefCell::new(None);
         let mut stable_observe = || {
-            check_cancelled()?;
-            let observed = observe()?;
-            check_cancelled()?;
+            check_budget()?;
+            let observed = observe(deadline)?;
+            check_budget()?;
             let mut baseline = baseline.borrow_mut();
             if baseline.as_ref().is_some_and(|first| first != &observed) {
                 return Err(err("code.commit.review-drift"));
@@ -260,7 +310,7 @@ impl<'owner> LinuxCodingCommitReview<'owner> {
             candidate_build_id,
             &mut stable_observe,
         )?;
-        check_cancelled()?;
+        check_budget()?;
         let sources = self.owner.capture_candidate_review_sources(
             packet,
             baseline
@@ -268,29 +318,32 @@ impl<'owner> LinuxCodingCommitReview<'owner> {
                 .as_ref()
                 .ok_or(err("code.commit.review-source"))?,
         )?;
-        check_cancelled()?;
-        let outcome = reviewer.verify_candidate(LinuxCodingCandidateReviewEvidence {
+        check_budget()?;
+        let evidence = LinuxCodingCandidateReviewEvidence {
             packet,
             candidate: &before,
             creation: self.owner.created_git_identity()?,
             validation: self.owner.completion_validation_evidence()?,
             sources: &sources,
             cancellation,
-        });
+            deadline,
+        };
+        check_budget()?;
+        let outcome = reviewer.verify_candidate(evidence);
         outcome.map_err(|failure| {
             err(match failure {
                 LinuxCodingCandidateReviewFailure::Rejected => "code.commit.review-rejected",
                 LinuxCodingCandidateReviewFailure::Unavailable => "code.commit.review-unavailable",
             })
         })?;
-        check_cancelled()?;
+        check_budget()?;
         let after = self.owner.plan_reviewed_candidate_tree_with(
             packet,
             group_id,
             candidate_build_id,
             &mut stable_observe,
         )?;
-        check_cancelled()?;
+        check_budget()?;
         if before != after {
             return Err(err("code.commit.review-drift"));
         }
@@ -511,6 +564,18 @@ impl LinuxCodingRepository {
         packet: &LocalReviewPacket,
         cancellation: Option<&CancellationToken>,
     ) -> Result<GitObservation> {
+        self.observe_commit_git_until(packet, cancellation, None)
+    }
+
+    fn observe_commit_git_until(
+        &self,
+        packet: &LocalReviewPacket,
+        cancellation: Option<&CancellationToken>,
+        deadline: Option<Instant>,
+    ) -> Result<GitObservation> {
+        if deadline.is_some_and(|until| Instant::now() >= until) {
+            return Err(err("code.commit.review-expired"));
+        }
         if cancellation.is_some_and(CancellationToken::is_cancelled) {
             return Err(err("code.commit.review-cancelled"));
         }
@@ -531,16 +596,16 @@ impl LinuxCodingRepository {
         let collector = LinuxRepositoryCollector::new(
             LinuxGitArtifact::verify("/usr/bin/git").map_err(|e| err(e.kind().code()))?,
         );
-        let original = match cancellation {
-            Some(token) => collector.collect_cancellable(&scope, token),
-            None => collector.collect(&scope),
-        }
-        .map_err(|e| err(e.kind().code()))?;
-        let task = match cancellation {
-            Some(token) => collector.collect_inventory_cancellable(&task_scope, token),
-            None => collector.collect_inventory(&task_scope),
-        }
-        .map_err(|e| err(e.kind().code()))?;
+        let original = collector
+            .collect_until(
+                &scope,
+                cancellation,
+                deadline.unwrap_or_else(|| Instant::now() + REVIEW_TIMEOUT),
+            )
+            .map_err(|e| err(e.kind().code()))?;
+        let task = collector
+            .collect_inventory_until(&task_scope, cancellation, deadline)
+            .map_err(|e| err(e.kind().code()))?;
         let paths = packet
             .change_set
             .files()
@@ -548,16 +613,20 @@ impl LinuxCodingRepository {
             .map(|f| f.path.clone())
             .collect::<Vec<_>>();
         let base_preimages = collector
-            .collect_base_preimages(
+            .collect_base_preimages_until(
                 &task_scope,
                 self.created_git_identity()?.base_object(),
                 &paths,
                 cancellation,
+                deadline,
             )
             .map_err(|_| err("code.commit.base-preimage"))?;
         linked.revalidate().map_err(|e| err(e.kind().code()))?;
         if cancellation.is_some_and(CancellationToken::is_cancelled) {
             return Err(err("code.commit.review-cancelled"));
+        }
+        if deadline.is_some_and(|until| Instant::now() >= until) {
+            return Err(err("code.commit.review-expired"));
         }
         if task.repository_sha256 != created.held.root_path_sha256() {
             return Err(err("code.commit.git-state"));

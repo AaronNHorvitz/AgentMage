@@ -1,0 +1,182 @@
+Commit: 4c8c2dd416b5356fb0c66c6265603203f42d226a
+Scope: local-coding-preservation-budget
+
+# Independent review: preservation traversal resource budgets (T-303 / T-306)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only access to the pinned
+checkout `/lane/review-checkout`. Builds used `CARGO_TARGET_DIR=/lane/state/review-target`. Heavy
+commands were reserved inside `run.py`; the runner was not outer-wrapped. My scratch cargo runs
+went through `/tools/build-slot`. I did not use the GPU and modified nothing in the repository.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = `4c8c2dd416b5356fb0c66c6265603203f42d226a`. Parent is
+  `62fe004514d20a346ce877bbbf7b397ff5127a1c`. The tree was clean before and after the review.
+- Read IP-POLICY.md, the evidence note `docs/evidence/t306-preservation-budget-2026-11-10.md`, the
+  complete diff against the parent (6 files, +440/-10), all of
+  `platforms/linux/src/repository_preservation_fs.rs`, the changed test file and its fixture
+  helpers, the production caller `platforms/linux/src/repository_preservation.rs:82-133`, the
+  constants at `platforms/linux/src/repository_safety.rs:43-44`, the guide and TASKS changes, and
+  the retained parent report.
+- Read the bundle's README.md, run.py, check.py, parse_gate.py and light.py before running anything.
+  They run the repository fast gate and compare it with a hash-bound parent log. They do not modify
+  the source.
+- Ran the fresh full gate, the comparison, the light checks and the retention and hygiene commands
+  (listed below).
+- Ran my own checks on a `git archive` export of the commit in a scratch directory outside the
+  repository, deleted afterwards. These reviewer checks are listed below and are not builder
+  evidence or a mutation claim:
+  - a real nested-name boundary test with no precharged budget;
+  - two single-line reversions to check that the new tests catch the regressions.
+
+## Commands and results
+
+FRESH directory: `/lane/state/tmp/review-preservation-budget-full-FRESH-r4c8c`; commands 2-4 used
+it.
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-preservation-budget/review-inputs.sha256`: exit 0.
+   All 11 inputs match (6 committed paths, 5 private bundle files).
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B .../run.py <FRESH>`: exit 1, as expected.
+   The output was `FAST GATE: FAIL` with `source_unchanged: true`. Elapsed time was 278.62 s
+   including reservations. Raw log SHA-256 is
+   `7beddcbe3b94acded77638201ef0348152b84459d6d5a35d847ffedf26a1f46f`; a different hash is expected
+   for a fresh run. There were 7 commands, as stated:
+   - git diff --check: 0
+   - lint-untracked: 0
+   - lint-reviews: 0
+   - markdownlint: 0
+   - cargo fmt: 0 (1.36 s)
+   - Clippy with warnings denied: 0 (36.13 s)
+   - cargo test: 101 (239.56 s)
+
+   Only the `agentmage-host` and `agentmage-platform-linux` lib targets fail, as in the inherited
+   baseline. No timeout occurred.
+3. `check.py <FRESH>`: exit 0. This is a data comparison only, not a passing gate. Results:
+   - 26 unfiltered targets;
+   - totals `[1450, 72, 64, 0, 0]` (pass/fail/ignore/measured/filtered);
+   - per-target failed and ignored identities equal the hash-verified parent log
+     (`b896fa57...`), with +4 passes in `agentmage_platform_linux` lib;
+   - all 4 new methods pass, and all 11 methods in the changed sources pass (11 ok, 0 FAILED,
+     0 ignored);
+   - the file set is exactly the 6 listed paths, TASKS table rows are unchanged, and no `#[ignore`
+     lines were added.
+4. `cmp` of the builder's and the fresh `source-freeze.json`: exit 0. Both Rust source hashes were
+   identical before and after the run.
+5. `light.py`: exit 0. git diff --check, lint-untracked, lint-reviews and markdownlint all pass
+   (0 issues in 3 files).
+6. `cmp docs/reviews/62fe004514d2-local-coding-preservation-files.txt /lane/reviews/62fe004514d2-local-coding-preservation-files.md`:
+   exit 0, so the file is retained byte-for-byte. The report begins with the exact parent commit
+   and scope and ends `Verdict: PASS` with no high or medium finding.
+7. `git diff --check 62fe004514d20a346ce877bbbf7b397ff5127a1c --`: exit 0.
+8. `git status --short`: empty, exit 0.
+
+Comparison with the builder's run: the builder's `validation-1/fast.log` hashes to
+`9d954137c4727b767cbe5d0733534c09ba4d6baef6f6518a3439057dc78dc1aa`, and its `result.json` records
+283.7045297310033 s. Both match the evidence note. The cargo commands in the builder's plan and in
+mine are identical (3 cargo commands). The only command added in my run is the lint-reviews
+command for the retained report, as stated.
+
+Reviewer scratch checks (export of the same commit; `cargo test --locked --offline -p
+agentmage-platform-linux --lib preservation_fs` via build-slot):
+
+- **Real path boundary, no precharge.** I built a chain of directories with 255-byte names under
+  `.git/logs` using `mkdirat`/`openat`. The summed relative-path bytes are
+  `128*d*(d+1) - d`:
+  - At depth 723 (67,001,133 bytes, at most 64 MiB), the `reflogs` and `metadata` traversals
+    succeed.
+  - At depth 724 (67,186,476 bytes, over 64 MiB), `reflogs(.., false)`, `reflogs(.., true)` and
+    `metadata` all refuse with `ObservationFailed`.
+  - This uses only 724 entries, far under the 16,384-entry limit. Before this commit nothing bounded
+    the path sum, so this checks the new limit directly.
+  - Result: 12 passed, 0 failed (11 committed methods plus my test).
+- **Reversion R1** (aggregate content charged for the worktree only, which is the parent's
+  behaviour): `preservation_fs_reflogs_obey_aggregate_content_limit_with_unchanged_hashes` FAILS.
+  The other 11 pass.
+- **Reversion R2** (entry and path charge moved after the `.git`/`agentmage` exclusion):
+  `preservation_fs_path_budget_charges_exclusions_before_opening_them` FAILS. The other 11 pass.
+
+## Review notes
+
+- **Correctness of the bound.** In `TraversalBudget::entry` (`repository_preservation_fs.rs:29-39`):
+  - It uses checked adds, then compares against 16,384 entries and 64 MiB of path bytes.
+  - The charge runs at line 211, before the exclusion test at 212-216 and before the `O_PATH` open
+    at 217.
+  - Every name later retained as a record or pending `PathBuf` was charged first. The temporary
+    `child` exists only once its parent's name has already been charged.
+
+  In `content` (lines 41-48):
+  - `i64 -> u64` conversion refuses negative sizes, and the checked add refuses overflow before the
+    ≤ 64 MiB filter.
+  - It is charged at line 239 for every regular file in both the worktree and reflog modes, before
+    `read_regular` opens or allocates.
+  - `read_regular` re-verifies the fd's snapshot, so the charged `st_size` is the exact number of
+    bytes read.
+
+  Metadata mode never reaches the content branch (line 235).
+- **No encoding change.** The record construction at lines 223-259 is untouched. The diff only
+  replaces the two local counters with the budget struct. Sorting and concatenation are unchanged.
+  Within the limits the output bytes are identical, and the "exact limit" test asserts equality with
+  the production `tree()` result in all three modes.
+- **Injection surface.** `TraversalBudget`, its fields and `tree_with_budget` are private to
+  `repository_preservation_fs`. Only the child `tests` module can construct a seeded budget. All
+  four production traversals go through `tree()`, which starts from `TraversalBudget::default()`:
+  - worktree;
+  - `metadata("hooks")`;
+  - user reflogs;
+  - agent reflogs.
+
+  The parent module `repository_preservation` cannot reach these items.
+- **Confinement.** No descriptor, no-follow, same-device, snapshot, cancellation or hash check was
+  removed. The excluded agent-owned symlink pointing outside is charged but never opened. The fresh
+  traversal returns empty, and the outside sentinel stays unchanged. Refusals return `Err` with no
+  partial records.
+- **Documentation accuracy:**
+  - The guide and evidence describe per-traversal limits and explicitly disclaim a whole-collection
+    time bound and atomic snapshot.
+  - The `.git` statement ("one of the 16,384 entries and its four relative-name bytes, leaving at
+    most 16,383 other listed entries") matches lines 211-212. This resolves the parent's low L-2
+    documentation point.
+  - The evidence numbers (1,450/72/64, 26 targets, 0 measured or filtered, 283.70 s, fmt 38.50 /
+    Clippy 12.93 / Rust 230.59, raw SHA) all trace to the builder's hash-bound log.
+  - The 572-filtered focused selection matches my filtered runs.
+- **Observation, not a finding.** Each pending directory is reopened component by component from
+  the root (line 199), which is pre-existing. The new path budget caps the depth this can reach:
+  about 724 levels with 255-byte names, or about 8,192 with 1-byte names. Cancellation is still
+  checked on every pop and entry, and no time bound is claimed.
+- **Scope, integrity and hygiene:**
+  - Changed files are exactly TASKS.md, the evidence note, the guide, the retained report and the
+    two Rust sources.
+  - No evaluator, hidden or held-out task, prompt, threshold, dependency, lockfile, SBOM,
+    scoreboard, lifecycle or GPU change.
+  - No new rows or sub-rows: TASKS table lines are identical to the parent's.
+  - Added lines have no private host path, username, hostname, credential, personal data,
+    private sibling-project name or trademark branding. The only absolute path in the retained
+    report is the generic `/lane/review-checkout`.
+  - No product comparison. The new tests use only existing `rustix`/std APIs. IP policy: I read and
+    cited no third-party material.
+- **Honest labelling.** The tests are described as local filesystem component measurements. The
+  evidence makes no native Git, approval, model, coding-quality or mutation claim, and makes no
+  release or readiness claim.
+
+## Findings
+
+No critical, high or medium findings in this batch.
+
+Carried backlog, unchanged and not addressed by this batch:
+
+- the parent's Low L-1, privileged device-node substitution between the `O_PATH` observation and
+  the content open (`repository_preservation_fs.rs:468`);
+- the earlier carried same-row lows.
+
+The parent's Low L-2 (documentation of the counted top-level `.git` entry) is resolved by the guide
+text at `docs/guides/reviewing-and-creating-local-commits.md:604-606`.
+
+## Per-row result
+
+- **T-303:** increment PASS for this scope. The row stays open: native Git admission, trusted
+  checker/artifact integration, complete original-owner approval composition, recovery, model
+  measurements and approved push remain open.
+- **T-306:** increment PASS for this scope. The row stays open for the same reasons. This batch
+  claims no closure and adds no rows or sub-rows.
+
+Verdict: PASS

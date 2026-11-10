@@ -623,7 +623,33 @@ content/path/entry limits remain unchanged.
 This is a cooperative observation budget, not a hard return-time guarantee:
 individual admission or filesystem calls are not preempted, and mandatory
 supervisor cleanup can finish after the observation deadline. A complete
-original-owner review performs multiple collections and has no shared review
-deadline yet. Installed checker time remains the host's responsibility. An
-expired post-effect collection establishes no rollback or safe automatic retry;
+original-owner review performs multiple collections, now bounded as described
+below. An expired post-effect collection establishes no rollback or safe automatic retry;
 the existing uncertain-effect handling still applies.
+
+## Complete original-owner review deadline
+
+`verify_candidate_tree` starts one absolute monotonic 120-second deadline before
+its first precheck. All four complete Git observation samples, local source
+capture, the installed checker and the postcheck share this deadline. Every
+original preservation collection keeps the earlier of its existing 30-second
+cap and that deadline. Linked inventory and immutable-base workers receive the
+same review deadline, with the existing 15-second per-worker cap retained.
+Ordinary inventory and separately approved inspections retain their prior limits.
+
+The checker receives `LinuxCodingCandidateReviewEvidence::deadline()` together
+with the caller's unchanged passive cancellation observation. It must bound its
+own work and workers to the remaining time. Expiry is separate from cancellation:
+it never signals or replaces the caller's token. A late checker success refuses
+before further Git observations or release of a checked candidate. Checker
+rejection and unavailable errors still stop immediately. Expiry at any Git
+observation stops before the next read, and no partial inventory or immutable-base
+map is accepted. Complete packet, source, validation and preservation checks stay
+required.
+
+This is a cooperative budget. Bounded source capture is checked on either side;
+it does not poll the deadline inside each source read. A blocking installed
+checker or individual filesystem/admission operation is not forcibly interrupted,
+and mandatory worker cleanup can outlast expiry. Callers must still provide an independently installed
+checker, trusted artifact provenance and separate effect approvals. The returned
+checked candidate remains inert; no build, commit or push route is enabled.

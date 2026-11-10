@@ -2,6 +2,7 @@
 //! Bounded immutable-base reads for the existing coding candidate planner.
 
 use std::collections::BTreeMap;
+use std::time::Instant;
 
 use agentmage_kernel_engine::local_commit::CommitFileMode;
 use agentmage_kernel_engine::propagation::CancellationToken;
@@ -47,22 +48,31 @@ impl LinuxRepositoryCollector {
     // the existing offline worker. No index, worktree bytes or mutable ref is
     // used as a substitute for the exact creation base. Replacement refs are
     // disabled on every base read, even before preservation rejects them.
-    pub(crate) fn collect_base_preimages(
+    pub(crate) fn collect_base_preimages_until(
         &self,
         scope: &LinuxRepositoryScope,
         base: &str,
         paths: &[String],
         cancellation: Option<&CancellationToken>,
+        deadline: Option<Instant>,
     ) -> Result<BTreeMap<String, Option<BaseFilePreimage>>, LinuxRepositoryError> {
-        collect_cancellable_with(base, paths, cancellation, |arguments, limit, token| {
-            self.observe_inventory(scope, arguments, limit, token)
-        })
+        collect_until_with(
+            base,
+            paths,
+            cancellation,
+            deadline,
+            |arguments, limit, token, until| {
+                self.observe_confined_inventory_until(scope, arguments, limit, token, until)?
+                    .ok_or_else(failed)
+            },
+        )
     }
 }
 
 // Retain one cancellation scope across type/tree/blob reads, even when a
 // worker returns success concurrently with cancellation. No later blob reads
 // or partial preimage map may escape after that stop.
+#[cfg(test)]
 fn collect_cancellable_with(
     base: &str,
     paths: &[String],
@@ -73,19 +83,40 @@ fn collect_cancellable_with(
         Option<&CancellationToken>,
     ) -> Result<Vec<u8>, LinuxRepositoryError>,
 ) -> Result<BTreeMap<String, Option<BaseFilePreimage>>, LinuxRepositoryError> {
+    collect_until_with(base, paths, cancellation, None, |args, limit, token, _| {
+        execute(args, limit, token)
+    })
+}
+
+fn collect_until_with(
+    base: &str,
+    paths: &[String],
+    cancellation: Option<&CancellationToken>,
+    deadline: Option<Instant>,
+    mut execute: impl FnMut(
+        &[&str],
+        usize,
+        Option<&CancellationToken>,
+        Option<Instant>,
+    ) -> Result<Vec<u8>, LinuxRepositoryError>,
+) -> Result<BTreeMap<String, Option<BaseFilePreimage>>, LinuxRepositoryError> {
+    let check = || {
+        if cancellation.is_some_and(CancellationToken::is_cancelled)
+            || deadline.is_some_and(|until| Instant::now() >= until)
+        {
+            Err(failed())
+        } else {
+            Ok(())
+        }
+    };
+    check()?;
     let output = collect_with(base, paths, |arguments, limit| {
-        if cancellation.is_some_and(CancellationToken::is_cancelled) {
-            return Err(failed());
-        }
-        let output = execute(arguments, limit, cancellation)?;
-        if cancellation.is_some_and(CancellationToken::is_cancelled) {
-            return Err(failed());
-        }
+        check()?;
+        let output = execute(arguments, limit, cancellation, deadline)?;
+        check()?;
         Ok(output)
     })?;
-    if cancellation.is_some_and(CancellationToken::is_cancelled) {
-        return Err(failed());
-    }
+    check()?;
     Ok(output)
 }
 

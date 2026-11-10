@@ -1,0 +1,133 @@
+Commit: 5d47bea006c79c25c64e1fd54f964d14e965f41d
+Scope: local-coding-preservation-deadline
+
+# Independent review: one preservation collection deadline (T-303 / T-306)
+
+Reviewer: Claude Opus 5.5, separate read-only session, at extra-high effort. Same-model review,
+which is accepted for now. This review covers only the pinned commit, checked out at
+/lane/review-checkout. Requested tier: core. This is a same-row batch that closes nothing.
+Neither row closes, and I did not judge the parent commit 4c8c2dd4 as part of this review.
+
+## Methods
+
+- Confirmed the commit: `git rev-parse HEAD` and `git rev-parse 5d47bea0...` both print
+  5d47bea006c79c25c64e1fd54f964d14e965f41d. The working tree was clean.
+- Read IP-POLICY.md, docs/evidence/t306-preservation-deadline-2026-11-10.md, the guide section
+  and the TASKS.md paragraph, plus the complete diff against 4c8c2dd4: 10 files, +441/-16, seven
+  of them Rust sources.
+- Read the bundle README.md, run.py, check.py, parse_gate.py and light.py before running anything.
+  run.py takes its reservations internally, and I did not wrap it in anything. check.py's Markdown
+  exception applies only to the builder's exact raw log hash
+  908a7402..., so a fresh log cannot inherit it.
+- Traced the call path by reading the code:
+  - `collect_inner` sets one `Instant::now() + PROCESS_TIMEOUT` (30 s) at repository_safety.rs:358.
+    It does this before the read-only refusal, before artifact revalidation and before any
+    admission.
+  - That deadline goes to `preservation::collect_until`, where `Observer` passes the same
+    `Instant` to every one of the 17 calls.
+  - Each call reaches `observe_confined_inventory_until`, then `observe_until_with`. That function
+    checks the deadline on entry, immediately before execute and immediately after execute, at
+    repository_observation.rs:101, :168 and :170. Because of the after-execute check, a late
+    exit 0, 1 or 128 is refused.
+  - `run_read_only(..., Some(deadline))` then calls `inspection_deadline`
+    (repository_safety.rs:542). It takes the minimum of started+15 s and the collection deadline,
+    and refuses before `admission_snapshot` when that limit is `<= started`.
+  - The result goes into `Launch.deadline` (repository_safety.rs:683).
+  - `run_owned` refuses before spawning when `now >= deadline` (sandbox_supervision.rs:1075). It
+    returns TimedOut, which `observe_until_with` rejects because only Exited is accepted.
+- Other paths:
+  - Ordinary inspection still passes `None` (repository_safety.rs:528), so it keeps the 15 s
+    per-worker limit.
+  - The removed `observe_inventory_optional` call was a plain passthrough to
+    `observe_confined_inventory`, so there is no behavioural difference.
+  - `preservation::collect_with` and `Files::new` are now `#[cfg(test)]`. Clippy builds all
+    targets with them gated, so no production caller is left on the unbounded path.
+  - Local scans: `Files::check` now uses `check_until`, so every point that was covered for
+    cancellation (reviewed PASS at 62fe0045) now also covers the deadline. The last
+    `observe.check()` runs after `files.revalidate()` and before `Ok(manifest)`.
+  - The deadline check never calls `cancel()` on the caller's token, so the caller's token is
+    left unchanged.
+- Post-effect expiry: a commit `postflight` error maps to `uncertain_commit_result`
+  (local_commit_execution.rs:175). The candidate-tree `after` error maps to ExecutionFailed.
+  Expiry therefore never reports a rollback or a safe retry, as the evidence and guide claim.
+- The complete manifest is unchanged: the field set, hash inputs, encodings and limits are
+  untouched in the diff. The new test compares the full manifest from `collect_with` with the one
+  from `collect_until` and requires them to be equal.
+- Privacy and branding: I grepped the added lines for private paths, the username, an email
+  address and credential strings, and found nothing. check.py's private-path checks also pass.
+  No other product is named. No dependency, Cargo.lock or SBOM file changed.
+- Evaluation integrity: no evaluation input, hidden test, held-out task, prompt, threshold or
+  scoreboard file is in the diff, and check.py asserts that the TASKS row table is unchanged.
+
+## Commands and results (all run from /lane/review-checkout)
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-preservation-deadline/review-inputs.sha256`
+   - exit 0.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-preservation-deadline/run.py /lane/state/tmp/review-preservation-deadline-full-R5d47a`
+   - exit 1, as expected, because the gate is FAIL.
+   - `source_unchanged: true`, 280.12 s including reservations.
+   - Raw log SHA-256: 0ffc9a6c707d50a0ffc242a06920e3f9f43652c561ef8c8b65c514be6cc91111.
+   - Every check before the tests passed in this fresh run: `git diff --check` 0, lint-untracked
+     0 (0.10 s each), markdownlint 0 (1.15 s), cargo fmt 0 (1.35 s), Clippy `-D warnings` 0 (35.81 s).
+     Then `cargo test` returned 101 (241.55 s), and the gate printed FAST GATE: FAIL.
+3. `python3 -B /lane/state/tmp/t306-preservation-deadline/check.py /lane/state/tmp/review-preservation-deadline-full-R5d47a`
+   - exit 0. This is a data comparison only, not a passing gate.
+   - 26 unfiltered targets. Totals: 1455 passed / 72 failed / 64 ignored / 0 measured /
+     0 filtered.
+   - The failed and ignored identities match the hash-verified parent baseline exactly, per
+     target.
+   - All 5 new methods report `ok`.
+   - Of the 44 methods in the changed sources, 31 pass and 13 fail; the 13 failures are inherited.
+   - Command exits: [0,0,0,0,0,101]. The fresh log did not need the builder's Markdown exception.
+4. `cmp .../validation-1/source-freeze.json .../review-preservation-deadline-full-R5d47a/source-freeze.json`
+   - exit 0, so the seven Rust source hashes are identical to the builder's.
+5. `python3 -B /lane/state/tmp/t306-preservation-deadline/light.py`
+   - Every LIGHT_EXIT is 0, and markdownlint reports 0 issues in 3 files.
+6. `git diff --check 4c8c2dd416b5356fb0c66c6265603203f42d226a --`
+   - exit 0, no output.
+7. `git status --short`
+   - Clean, no output.
+
+The full affected gate is FAIL. These numbers reproduce the builder's counts and identities. They
+do not show a green gate, and none is claimed. I did not build or run anything natively, did not
+run mutation scripts, did not use the GPU, and did not modify the repository.
+
+## Findings
+
+No critical, high or medium findings.
+
+- LOW (test robustness): two new tests give themselves only 1 second of real time.
+  - Where: repository_preservation_tests.rs:283 and repository_preservation_fs_tests.rs:317.
+  - Problem: before the intended stop point, these tests do real work: up to 16 synthetic worker
+    calls plus local scans, or a `Files` setup plus one 64 KiB chunk. On a heavily loaded host
+    that work can take longer than 1 s. The test then fails falsely with `calls < stop` or
+    `checks < 3`. It cannot produce a false pass.
+  - Fix: use a larger budget, such as 10 s, so the sleep-to-deadline still expires at the
+    intended point, or add a test-only clock seam.
+- LOW (stale comment): local_commit_execution.rs:98 still says "collection retains its own worker
+  deadlines". Collections now share one 30 s budget, capped at 15 s per worker. Fix: update the
+  comment.
+- LOW (coverage, acknowledged): no test runs `run_read_only` to show that `collection_deadline`
+  reaches `Launch.deadline`.
+  - Why: native worker execution is blocked in this lane by executable ownership.
+  - What is covered: the calculation (`inspection_deadline`) and the forwarding of
+    `request.deadline` are tested directly. I verified the two-line wiring by reading it
+    (repository_safety.rs:542, :683).
+  - Backlog: add a seam test, or a native run once ownership is mapped.
+
+The evidence states its limits honestly. It makes no hard return-time claim, says syscalls and
+cleanup are not preempted, gives no review-wide deadline and makes no native or model claim, and
+these all match the code.
+
+## Per-row result
+
+- T-303: the batch is acceptable. It adds no new rows or sub-rows, and the row stays open, as
+  requested. The three lows are same-row backlog.
+- T-306: the batch is acceptable. The row stays open, as requested. The confinement boundary does
+  not change: the worker manifest, sandbox arguments and network denial are untouched, and only the
+  deadline is tighter. The three lows are same-row backlog.
+
+The full affected gate remains FAIL with inherited failures, and the evidence labels it that way.
+This verdict covers the batch at this exact commit only; it closes no row.
+
+Verdict: PASS

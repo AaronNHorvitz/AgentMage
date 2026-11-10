@@ -16,17 +16,7 @@ struct InventoryRequest {
 }
 
 impl LinuxRepositoryCollector {
-    pub(super) fn observe_confined_inventory(
-        &self,
-        scope: &LinuxRepositoryScope,
-        arguments: &[&str],
-        maximum_bytes: usize,
-        cancellation: Option<&CancellationToken>,
-    ) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
-        self.observe_confined_inventory_until(scope, arguments, maximum_bytes, cancellation, None)
-    }
-
-    pub(super) fn observe_confined_inventory_until(
+    pub(crate) fn observe_confined_inventory_until(
         &self,
         scope: &LinuxRepositoryScope,
         arguments: &[&str],

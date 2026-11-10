@@ -2,6 +2,32 @@
 
 ## Active queue: local agent mission
 
+The [complete original-owner review deadline batch](docs/evidence/t306-review-deadline-2026-11-10.md)
+shares one monotonic 120-second deadline across precheck, installed checker and
+postcheck. Original collection and worker caps remain shorter where applicable;
+linked inventory and immutable-base reads inherit the deadline. Late results
+refuse without cancelling the caller token. Individual blocking calls and cleanup
+remain outside preemption. The full affected gate remains **FAIL**: 1,460 passes,
+the exact inherited 72 failures and 64 ignores over 26 unfiltered targets. All
+five new methods, formatting and Clippy pass; eight Rust source hashes remain
+fixed. Independent core review is required. T-303/T-306 remain open without new
+rows or sub-rows.
+
+The retained [preservation collection deadline review](docs/reviews/5d47bea006c7-local-coding-preservation-deadline.txt)
+has **Verdict: PASS** for exact commit
+`5d47bea006c79c25c64e1fd54f964d14e965f41d`, with no high or medium finding.
+Its low findings on real-time test robustness, a stale execution comment and
+native deadline-forwarding coverage join same-row backlog. The current tests'
+short real-time budgets also carry a false-failure risk under heavy scheduling
+contention. Neither T-303 nor T-306 closes.
+
+The retained [preservation traversal budget review](docs/reviews/4c8c2dd416b5-local-coding-preservation-budget.txt)
+has **Verdict: PASS** for exact commit
+`4c8c2dd416b5356fb0c66c6265603203f42d226a`, with no high or medium finding.
+It confirms the skipped top-level `.git` counting documentation. Privileged
+device-node substitution and earlier lows remain same-row backlog. Neither
+T-303 nor T-306 closes.
+
 The [preservation collection deadline batch](docs/evidence/t306-preservation-deadline-2026-11-10.md)
 shares one 30-second observation budget across executable admission, all Git
 reads and local scans in each complete collection. Workers keep their existing

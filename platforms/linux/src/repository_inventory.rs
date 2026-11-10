@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
+use std::time::Instant;
 
 use agentmage_kernel_engine::propagation::CancellationToken;
 use sha2::{Digest, Sha256};
@@ -87,7 +88,7 @@ impl LinuxRepositoryCollector {
         &self,
         scope: &LinuxRepositoryScope,
     ) -> Result<LinuxRepositoryInventory, LinuxRepositoryError> {
-        self.collect_inventory_inner(scope, None)
+        self.collect_inventory_until(scope, None, None)
     }
 
     /// Collects the same inventory while honoring one propagated cancellation token.
@@ -96,112 +97,132 @@ impl LinuxRepositoryCollector {
         scope: &LinuxRepositoryScope,
         cancellation: &CancellationToken,
     ) -> Result<LinuxRepositoryInventory, LinuxRepositoryError> {
-        self.collect_inventory_inner(scope, Some(cancellation))
+        self.collect_inventory_until(scope, Some(cancellation), None)
     }
 
-    fn collect_inventory_inner(
+    pub(crate) fn collect_inventory_until(
         &self,
         scope: &LinuxRepositoryScope,
         cancellation: Option<&CancellationToken>,
+        deadline: Option<Instant>,
     ) -> Result<LinuxRepositoryInventory, LinuxRepositoryError> {
-        let object_format = required_text(self.observe_inventory(
-            scope,
-            &["rev-parse", "--show-object-format"],
-            1_024,
+        collect_inventory_with(
+            scope.repository_path_sha256(),
             cancellation,
-        )?)?;
-        if !matches!(object_format.as_str(), "sha1" | "sha256") {
-            return Err(failed());
-        }
-        let commit_id = required_text(self.observe_inventory(
-            scope,
-            &["rev-parse", "--verify", "HEAD"],
-            1_024,
-            cancellation,
-        )?)?;
-        let expected_object_bytes = if object_format == "sha1" { 40 } else { 64 };
-        if commit_id.len() != expected_object_bytes
-            || !commit_id.bytes().all(|byte| byte.is_ascii_hexdigit())
-        {
-            return Err(failed());
-        }
-        let branch = self
-            .observe_inventory_optional(
-                scope,
-                &["symbolic-ref", "--quiet", "HEAD"],
-                1_024,
-                cancellation,
-            )?
-            .map(required_text)
-            .transpose()?;
-        let index = self.observe_inventory(
-            scope,
-            &["ls-files", "--stage", "-z"],
-            MAX_INVENTORY_BYTES,
-            cancellation,
-        )?;
-        let head = self.observe_inventory(
-            scope,
-            &["ls-tree", "-r", "-z", "--full-tree", "HEAD"],
-            MAX_INVENTORY_BYTES,
-            cancellation,
-        )?;
-        let untracked = self.observe_inventory(
-            scope,
-            &["ls-files", "--others", "--exclude-standard", "-z"],
-            MAX_INVENTORY_BYTES,
-            cancellation,
-        )?;
-        let ignored = self.observe_inventory(
-            scope,
-            &[
-                "ls-files",
-                "--others",
-                "--ignored",
-                "--exclude-standard",
-                "-z",
-            ],
-            MAX_INVENTORY_BYTES,
-            cancellation,
-        )?;
-
-        let head_records = parse_head_records(&head, expected_object_bytes)?;
-        let mut entries = parse_index_records(&index, &head_records, expected_object_bytes)?;
-        append_worktree_records(
-            &mut entries,
-            &untracked,
-            LinuxRepositoryInventoryState::Untracked,
-        )?;
-        append_worktree_records(
-            &mut entries,
-            &ignored,
-            LinuxRepositoryInventoryState::Ignored,
-        )?;
-        entries.sort_by(|left, right| left.path.cmp(&right.path));
-        if entries.len() > MAX_INVENTORY_ENTRIES
-            || entries.windows(2).any(|pair| pair[0].path == pair[1].path)
-        {
-            return Err(failed());
-        }
-
-        let git_evidence_sha256 = framed_digest(&[
-            object_format.as_bytes(),
-            commit_id.as_bytes(),
-            branch.as_deref().unwrap_or("detached").as_bytes(),
-            &index,
-            &head,
-            &untracked,
-            &ignored,
-        ])?;
-        Ok(LinuxRepositoryInventory {
-            repository_sha256: scope.repository_path_sha256().to_owned(),
-            object_format,
-            branch,
-            commit_id,
-            entries,
-            git_evidence_sha256,
-        })
+            deadline,
+            |args, limit, token, until| {
+                self.observe_confined_inventory_until(scope, args, limit, token, until)
+            },
+        )
     }
+}
+
+// Private seam: production always uses the closed confined collector above.
+fn collect_inventory_with(
+    repository_sha256: &str,
+    cancellation: Option<&CancellationToken>,
+    deadline: Option<Instant>,
+    mut execute: impl FnMut(
+        &[&str],
+        usize,
+        Option<&CancellationToken>,
+        Option<Instant>,
+    ) -> Result<Option<Vec<u8>>, LinuxRepositoryError>,
+) -> Result<LinuxRepositoryInventory, LinuxRepositoryError> {
+    let check = || {
+        if cancellation.is_some_and(CancellationToken::is_cancelled)
+            || deadline.is_some_and(|until| Instant::now() >= until)
+        {
+            Err(failed())
+        } else {
+            Ok(())
+        }
+    };
+    check()?;
+    let mut optional = |args: &[&str], limit| {
+        check()?;
+        let output = execute(args, limit, cancellation, deadline)?;
+        check()?;
+        Ok(output)
+    };
+    let object_format = required_text(
+        optional(&["rev-parse", "--show-object-format"], 1_024)?.ok_or_else(failed)?,
+    )?;
+    if !matches!(object_format.as_str(), "sha1" | "sha256") {
+        return Err(failed());
+    }
+    let commit_id =
+        required_text(optional(&["rev-parse", "--verify", "HEAD"], 1_024)?.ok_or_else(failed)?)?;
+    let expected_object_bytes = if object_format == "sha1" { 40 } else { 64 };
+    if commit_id.len() != expected_object_bytes
+        || !commit_id.bytes().all(|byte| byte.is_ascii_hexdigit())
+    {
+        return Err(failed());
+    }
+    let branch = optional(&["symbolic-ref", "--quiet", "HEAD"], 1_024)?
+        .map(required_text)
+        .transpose()?;
+    let index =
+        optional(&["ls-files", "--stage", "-z"], MAX_INVENTORY_BYTES)?.ok_or_else(failed)?;
+    let head = optional(
+        &["ls-tree", "-r", "-z", "--full-tree", "HEAD"],
+        MAX_INVENTORY_BYTES,
+    )?
+    .ok_or_else(failed)?;
+    let untracked = optional(
+        &["ls-files", "--others", "--exclude-standard", "-z"],
+        MAX_INVENTORY_BYTES,
+    )?
+    .ok_or_else(failed)?;
+    let ignored = optional(
+        &[
+            "ls-files",
+            "--others",
+            "--ignored",
+            "--exclude-standard",
+            "-z",
+        ],
+        MAX_INVENTORY_BYTES,
+    )?
+    .ok_or_else(failed)?;
+
+    let head_records = parse_head_records(&head, expected_object_bytes)?;
+    let mut entries = parse_index_records(&index, &head_records, expected_object_bytes)?;
+    append_worktree_records(
+        &mut entries,
+        &untracked,
+        LinuxRepositoryInventoryState::Untracked,
+    )?;
+    append_worktree_records(
+        &mut entries,
+        &ignored,
+        LinuxRepositoryInventoryState::Ignored,
+    )?;
+    entries.sort_by(|left, right| left.path.cmp(&right.path));
+    if entries.len() > MAX_INVENTORY_ENTRIES
+        || entries.windows(2).any(|pair| pair[0].path == pair[1].path)
+    {
+        return Err(failed());
+    }
+
+    let git_evidence_sha256 = framed_digest(&[
+        object_format.as_bytes(),
+        commit_id.as_bytes(),
+        branch.as_deref().unwrap_or("detached").as_bytes(),
+        &index,
+        &head,
+        &untracked,
+        &ignored,
+    ])?;
+    check()?;
+    Ok(LinuxRepositoryInventory {
+        repository_sha256: repository_sha256.to_owned(),
+        object_format,
+        branch,
+        commit_id,
+        entries,
+        git_evidence_sha256,
+    })
 }
 
 fn parse_index_records(
@@ -442,3 +463,7 @@ mod tests {
         assert!(nul_records(b"unterminated").is_err());
     }
 }
+
+#[cfg(test)]
+#[path = "repository_inventory_deadline_tests.rs"]
+mod deadline_tests;
