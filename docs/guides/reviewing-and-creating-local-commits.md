@@ -460,3 +460,29 @@ authority before sending them to any model or service; the two-root read selecti
 does not grant disclosure. This supplies review material, not an independent
 checker implementation, artifact/scanner provenance, person approval or a Git
 effect. The checked result remains inert, and T-303/T-306 remain open.
+
+## Packet-bound result reconciliation
+
+`reconcile_local_commit` takes `PreparedLocalCommit`, retaining the complete
+packet and exact manual receipt through result reconciliation. The former raw
+plan-and-approval signature is removed. It rechecks packet integrity, exhaustive
+finding severity admission, exact packet/plan bindings and approval at the
+checked launch time before inspecting the result. Adding a severity requires an
+explicit admission decision at compilation. Existing postcondition checks still
+require exact signed content, task-branch compare-and-swap, unchanged user index
+and remotes, preservation, disabled repository execution surfaces and cleanup.
+
+The dormant driver supplies its own prepared value and checked launch time. It
+returns no success receipt for an unproved platform result. A post-effect check
+does not renew authority or authorize retry. Public callers still supply their
+own process observations; this function cannot authenticate a checker, signer,
+executor, artifact scanner or approval channel. A serialized receipt and its
+public fields do not establish those provenances or grant effect authority.
+
+The Linux component tests now pass complete synthetic packet input through this
+same interface. Their synthetic packet, creation, validation, consent and process
+observations remain component fixtures. Empty-base source coverage separately
+asserts an existing empty file is `Some(&[])`, and refuses an absent base before
+calling the checker. Its internal held-target fixture does not admit empty files
+through the ordinary source selector, which still refuses empty content. Neither
+observation establishes native admission or a real model coding result. T-303/T-306 remain open.

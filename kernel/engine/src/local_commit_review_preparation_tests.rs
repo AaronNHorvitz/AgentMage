@@ -376,7 +376,7 @@ impl BoundedLocalCommitExecutor for SyntheticExecutor {
     }
 }
 
-fn prepared_fixture() -> (PreparedLocalCommit, RepositoryPreservationManifest) {
+pub(super) fn prepared_fixture() -> (PreparedLocalCommit, RepositoryPreservationManifest) {
     let packet = packet(None, 0, false);
     let (plan, before) = inputs(&packet);
     let approval = record_reviewed_manual_commit_approval(&plan, &packet, decision()).unwrap();
@@ -560,4 +560,172 @@ fn commit_driver_refuses_unavailable_construction_clock() {
         .unwrap_err(),
         LocalCommitError::ApprovalDenied
     );
+}
+
+#[test]
+fn reconciliation_requires_retained_packet_bindings_findings_and_approval() {
+    for field in ["integrity", "material", "binding", "approval", "expiry"] {
+        let (mut prepared, before) = prepared_fixture();
+        let result = SyntheticExecutor::default().execute(
+            LocalCommitLaunchPermit {
+                plan: &prepared.plan,
+                before: &before,
+            },
+            &cancellation(),
+        );
+        match field {
+            "integrity" => prepared.packet.objective.push_str(" unsealed"),
+            "material" => {
+                prepared.packet = packet(Some(FindingSeverity::Medium), 0, false);
+                prepared
+                    .plan
+                    .review_packet_sha256
+                    .clone_from(&prepared.packet.packet_sha256);
+                reseal(&mut prepared.plan);
+                prepared.approval =
+                    record_manual_commit_approval(&prepared.plan, decision()).unwrap();
+            }
+            "binding" => {
+                prepared.plan.review_packet_sha256 = "e".repeat(64);
+                reseal(&mut prepared.plan);
+                prepared.approval =
+                    record_manual_commit_approval(&prepared.plan, decision()).unwrap();
+            }
+            "approval" => prepared.approval.receipt_sha256 = "e".repeat(64),
+            "expiry" => (),
+            _ => unreachable!(),
+        }
+        let now = if field == "expiry" { 20_000 } else { 15_000 };
+        assert_eq!(
+            reconcile_local_commit(
+                &prepared,
+                result,
+                "authority-fixture",
+                "attempt-fixture",
+                now
+            ),
+            Err(if matches!(field, "approval" | "expiry") {
+                LocalCommitError::ApprovalDenied
+            } else {
+                LocalCommitError::ReviewMismatch
+            }),
+            "{field}"
+        );
+    }
+}
+
+#[test]
+fn commit_dispatch_never_emits_success_receipt_for_unproved_platform_result() {
+    use crate::authority_transaction::tests::{commit_held_fixture, dispatch_commit_fixture};
+    struct ResultExecutor {
+        field: &'static str,
+        launches: usize,
+    }
+    impl BoundedLocalCommitExecutor for ResultExecutor {
+        fn execute(
+            &mut self,
+            permit: LocalCommitLaunchPermit<'_>,
+            token: &CancellationToken,
+        ) -> LocalCommitPlatformResult {
+            self.launches += 1;
+            let mut result = SyntheticExecutor::default().execute(permit, token);
+            match self.field {
+                "valid" => (),
+                "failed" => result.outcome = OperationOutcome::Failed,
+                "cancelled" => result.outcome = OperationOutcome::Cancelled,
+                "before" => result.before.manifest_sha256 = "e".repeat(64),
+                "after" => result.after.manifest_sha256 = "e".repeat(64),
+                "preservation" => {
+                    result.after.local_branches_sha256 = "e".repeat(64);
+                    result.after = RepositoryPreservationManifest::seal(result.after).unwrap();
+                }
+                "object" => result.commit_object = None,
+                "parent" => result.observed_parent = None,
+                "tree" => result.observed_tree = None,
+                "message" => result.observed_message_sha256 = None,
+                "identity" => result.observed_identity_sha256 = None,
+                "signer" => result.observed_signer_fingerprint = None,
+                "signature" => result.signature_verified = false,
+                "branch-before" => result.task_branch_before = None,
+                "branch-after" => result.task_branch_after = None,
+                "index" => result.user_index_after_sha256 = "e".repeat(64),
+                "remotes" => result.remotes_after_sha256 = "e".repeat(64),
+                "hooks" => result.hooks_executed = true,
+                "filters" => result.filters_executed = true,
+                "program" => result.repository_selected_program_used = true,
+                "network" => result.network_used = true,
+                "cleanup" => result.cleanup_verified = false,
+                "code" => result.platform_code = "untrusted output with spaces".into(),
+                _ => unreachable!(),
+            }
+            result
+        }
+    }
+    for field in [
+        "valid",
+        "failed",
+        "cancelled",
+        "before",
+        "after",
+        "preservation",
+        "object",
+        "parent",
+        "tree",
+        "message",
+        "identity",
+        "signer",
+        "signature",
+        "branch-before",
+        "branch-after",
+        "index",
+        "remotes",
+        "hooks",
+        "filters",
+        "program",
+        "network",
+        "cleanup",
+        "code",
+    ] {
+        let (prepared, before) = prepared_fixture();
+        let arguments = prepared.request_bytes().to_vec();
+        let mut driver = LocalCommitEffectDriver::new(
+            ResultExecutor { field, launches: 0 },
+            commit_held_fixture(),
+            prepared,
+            before,
+            cancellation(),
+            SequenceClock([Ok(15_000), Ok(15_001)].into()),
+        )
+        .unwrap();
+        let authority = dispatch_commit_fixture(&arguments, &mut driver);
+        let valid = field == "valid";
+        assert_eq!(
+            authority.outcome == OperationOutcome::Succeeded,
+            valid,
+            "{field}"
+        );
+        let receipt = driver.take_receipt();
+        assert_eq!(receipt.is_some(), valid, "{field}");
+        if let Some(receipt) = receipt {
+            assert_eq!(
+                receipt.authority_transaction_id,
+                authority.authority_transaction_id.as_str()
+            );
+            assert_eq!(
+                receipt.operation_attempt_id,
+                authority.operation_attempt_id.as_str()
+            );
+        }
+        assert!(driver.take_receipt().is_none());
+        assert_eq!(
+            driver.take_error(),
+            if valid {
+                None
+            } else {
+                Some(LocalCommitError::ResultDenied)
+            },
+            "{field}"
+        );
+        assert_eq!(driver.into_executor().launches, 1, "{field}");
+    }
 }

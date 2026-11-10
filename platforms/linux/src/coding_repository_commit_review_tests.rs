@@ -1916,3 +1916,56 @@ fn candidate_review_source_capture_refuses_changed_postimage_and_missing_base() 
         );
     }
 }
+
+#[test]
+fn candidate_checker_distinguishes_existing_empty_base_source_from_absence() {
+    let (f, owner, changes) =
+        command::tests::candidate_review_fixture_from_base(0o644, b"", |owner| owner);
+    let packet = packet(&owner, &changes);
+    assert_eq!(packet.change_set.files()[0].preimage_sha256, hash(b""));
+    let calls = Cell::new(0);
+    let mut checker = CandidateChecker(|input: LinuxCodingCandidateReviewEvidence<'_>| {
+        calls.set(calls.get() + 1);
+        let sources = input.sources();
+        assert_eq!(sources.len(), 1);
+        assert_eq!(sources[0].path(), "sentinel");
+        assert_eq!(sources[0].preimage(), Some(b"".as_slice()));
+        assert_eq!(sources[0].postimage(), b"reviewed change");
+        assert_eq!(sources[0].mode(), CommitFileMode::Regular);
+        Ok(())
+    });
+    let review = selected_review(&owner);
+    review
+        .verify_candidate_tree_with(
+            &packet,
+            &packet.commit_plan.groups[0].group_id,
+            "empty-base-review",
+            &mut checker,
+            &review_token(),
+            || Ok(observation(&owner)),
+        )
+        .unwrap();
+    assert_eq!(calls.get(), 1);
+    let result = review.verify_candidate_tree_with(
+        &packet,
+        &packet.commit_plan.groups[0].group_id,
+        "absent-base-review",
+        &mut checker,
+        &review_token(),
+        || {
+            let mut observed = observation(&owner);
+            observed.base_preimages.insert("sentinel".into(), None);
+            Ok(observed)
+        },
+    );
+    assert!(result.is_err());
+    assert_eq!(calls.get(), 1, "an absent base cannot reach the checker");
+    assert_eq!(fs::read(f.root.join("repo/sentinel")).unwrap(), b"");
+    assert_eq!(
+        fs::read(f.root.join("owned/worktree/sentinel")).unwrap(),
+        b"reviewed change"
+    );
+    for id in ["empty-base-review", "absent-base-review"] {
+        assert!(!f.root.join(format!("owned/candidate-index-{id}")).exists());
+    }
+}

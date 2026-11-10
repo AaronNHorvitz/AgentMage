@@ -2070,7 +2070,22 @@ pub(in crate::coding_repository) fn candidate_review_fixture_transform_before_va
     LinuxCodingRepository,
     agentmage_kernel_engine::write_approval::ShadowChangeSet,
 ) {
+    candidate_review_fixture_from_base(mode, b"preserve human work", edit)
+}
+
+// Explicit immutable-base bytes, set before the original synthetic creation.
+// Filesystem edits and validation capture still use their actual native paths.
+pub(in crate::coding_repository) fn candidate_review_fixture_from_base(
+    mode: u32,
+    base: &[u8],
+    edit: impl FnOnce(LinuxCodingRepository) -> LinuxCodingRepository,
+) -> (
+    crate::coding_repository::tests::Fixture,
+    LinuxCodingRepository,
+    agentmage_kernel_engine::write_approval::ShadowChangeSet,
+) {
     let f = crate::coding_repository::tests::Fixture::new();
+    fs::write(f.root.join("repo/sentinel"), base).unwrap();
     let mut owner = crate::coding_repository::tests::owner_with_synthetic_git_observations(&f);
     let common = f.root.join("repo/.git");
     let git = common.join("worktrees/worktree");
@@ -2091,23 +2106,35 @@ pub(in crate::coding_repository) fn candidate_review_fixture_transform_before_va
         "ref: refs/heads/agentmage/tasks/component\n",
     )
     .unwrap();
-    fs::write(
-        f.root.join("owned/worktree/sentinel"),
-        b"preserve human work",
-    )
-    .unwrap();
+    fs::write(f.root.join("owned/worktree/sentinel"), base).unwrap();
     fs::set_permissions(
         f.root.join("owned/worktree/sentinel"),
         fs::Permissions::from_mode(mode),
     )
     .unwrap();
-    let scope = owner.select_created_sources(&["sentinel".into()]).unwrap();
+    let scope = if base.is_empty() {
+        // The public selector still refuses empty content. This component
+        // fixture selects an internal held target to exercise existing native
+        // write/projection behavior, not an admitted public empty-file workflow.
+        assert_eq!(
+            owner
+                .select_created_sources(&["sentinel".into()])
+                .err()
+                .unwrap()
+                .code(),
+            "code.workspace.content"
+        );
+        LinuxCodingReadScope::select_targets(&f.root.join("owned/worktree"), &["sentinel".into()])
+            .unwrap()
+    } else {
+        owner.select_created_sources(&["sentinel".into()]).unwrap()
+    };
     let preview = owner
         .prepare_edit(
             scope,
             &[crate::LinuxCodingReplacement {
                 path: "sentinel",
-                before_sha256: &hash(b"preserve human work"),
+                before_sha256: &hash(base),
                 content: "reviewed change",
             }],
             "synthetic review fixture",

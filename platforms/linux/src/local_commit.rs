@@ -953,7 +953,8 @@ pub(crate) mod tests {
     use agentmage_kernel_contracts::{BoundaryKind, CorrelationId, TaskId};
     use agentmage_kernel_engine::local_commit::{
         CommitFileMode, CommitIdentity, LocalCommitPlan, ManualCommitApprovalDecision,
-        reconcile_candidate_tree, reconcile_local_commit, record_manual_commit_approval,
+        PreparedLocalCommit, reconcile_candidate_tree, reconcile_local_commit,
+        record_manual_commit_approval,
     };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
@@ -1059,6 +1060,84 @@ pub(crate) mod tests {
         plan.plan_sha256 = hash(&serde_json::to_vec(&plan).unwrap());
         agentmage_kernel_engine::local_commit::verify_local_commit_plan(&plan).unwrap();
         plan
+    }
+
+    // Synthetic complete-packet input for result reconciliation only. Like
+    // synthetic_plan, this establishes no source, reviewer or consent provenance.
+    fn prepare_reconciliation_fixture(plan: &mut LocalCommitPlan) -> PreparedLocalCommit {
+        use agentmage_kernel_engine::review_packet::{
+            ChangePurposeAssignment, CommitChangePurpose, ReviewMode, ReviewPacketInput,
+            build_logical_commit_plan, build_review_packet, capture_reviewable_change_set,
+            normalize_review_findings,
+        };
+        let fixture = Fixture::new();
+        let scope =
+            crate::LinuxCodingReadScope::select_targets(&fixture.checkout, &["src/lib.rs".into()])
+                .unwrap();
+        let pending = scope
+            .prepare_write(
+                &[crate::LinuxCodingReplacement {
+                    path: "src/lib.rs",
+                    before_sha256: &hash(b"old\n"),
+                    content: "signed new value\n",
+                }],
+                "Synthetic packet for result reconciliation",
+                10_000,
+            )
+            .unwrap();
+        let changes = pending.change_set_for_review_test();
+        let change_set = capture_reviewable_change_set(
+            changes,
+            changes
+                .operations()
+                .iter()
+                .map(|operation| ChangePurposeAssignment {
+                    operation_id: operation.operation_id().into(),
+                    purpose: CommitChangePurpose::Behavior,
+                })
+                .collect(),
+            hash(b"synthetic write approval"),
+            hash(b"synthetic write application"),
+        )
+        .unwrap();
+        let commit_plan = build_logical_commit_plan(&change_set, vec![]).unwrap();
+        let packet = build_review_packet(ReviewPacketInput {
+            packet_id: "packet-reconciliation-fixture".into(),
+            repository_sha256: plan.repository_sha256.clone(),
+            base_object: plan.parent_object.clone(),
+            candidate_snapshot_sha256: hash(b"synthetic candidate snapshot"),
+            preservation_manifest_sha256: plan.preservation_manifest_sha256.clone(),
+            objective: "Reconcile synthetic commit result".into(),
+            behavior_delta: "Replace the fixture value".into(),
+            change_set,
+            validations: vec![],
+            checks_not_run: vec![],
+            review_results: normalize_review_findings(vec![ReviewMode::Correctness], vec![])
+                .unwrap(),
+            evidence_artifacts: vec![],
+            commit_plan,
+            rollback: "A separately approved reverse edit is required".into(),
+        })
+        .unwrap();
+        let group = &packet.commit_plan.groups[0];
+        plan.review_packet_sha256.clone_from(&packet.packet_sha256);
+        plan.commit_group_sha256.clone_from(&group.group_sha256);
+        plan.message.clone_from(&group.proposed_message);
+        plan.message_sha256 = hash(plan.message.as_bytes());
+        plan.plan_sha256 = "0".repeat(64);
+        plan.plan_sha256 = hash(&serde_json::to_vec(plan).unwrap());
+        let approval = record_manual_commit_approval(
+            plan,
+            ManualCommitApprovalDecision {
+                approval_id: "approval-reconciliation-fixture".into(),
+                approval_channel_sha256: hash(b"synthetic approval channel"),
+                approved_at_epoch_ms: 10_000,
+                expires_at_epoch_ms: 20_000,
+                human_confirmed: true,
+            },
+        )
+        .unwrap();
+        PreparedLocalCommit::new(plan.clone(), packet, approval, 15_000).unwrap()
     }
 
     fn raw_commit(plan: &LocalCommitPlan) -> Vec<u8> {
@@ -1683,17 +1762,7 @@ pub(crate) mod tests {
         plan.user_index_sha256 = before.index_sha256.clone();
         plan.plan_sha256 = "0".repeat(64);
         plan.plan_sha256 = hash(&serde_json::to_vec(&plan).unwrap());
-        let approval = record_manual_commit_approval(
-            &plan,
-            ManualCommitApprovalDecision {
-                approval_id: "approval-uncertain-0001".into(),
-                approval_channel_sha256: hash(b"synthetic approval channel"),
-                approved_at_epoch_ms: 10_000,
-                expires_at_epoch_ms: 20_000,
-                human_confirmed: true,
-            },
-        )
-        .unwrap();
+        let prepared = prepare_reconciliation_fixture(&mut plan);
         let mut result = uncertain_commit_result(&before, "linux.git.commit.postflight");
         assert_eq!(result.outcome, OperationOutcome::Failed);
         assert!(!result.cleanup_verified);
@@ -1711,8 +1780,7 @@ pub(crate) mod tests {
         result.task_branch_after = Some(object);
         let reconcile = |r| {
             reconcile_local_commit(
-                &plan,
-                &approval,
+                &prepared,
                 r,
                 "authority-uncertain-0001",
                 "attempt-uncertain-0001",
@@ -2078,25 +2146,14 @@ pub(crate) mod tests {
         };
         commit_plan.plan_sha256 =
             hash(&serde_json::to_vec(&commit_plan).expect("commit serialization"));
-        let approval = record_manual_commit_approval(
-            &commit_plan,
-            ManualCommitApprovalDecision {
-                approval_id: "approval-native-0001".to_owned(),
-                approval_channel_sha256: hash(b"approval-channel"),
-                approved_at_epoch_ms: 10_000,
-                expires_at_epoch_ms: 20_000,
-                human_confirmed: true,
-            },
-        )
-        .expect("manual approval");
+        let prepared = prepare_reconciliation_fixture(&mut commit_plan);
         let git = LinuxGitArtifact::verify("/usr/bin/git").expect("git artifact");
         let collector = LinuxRepositoryCollector::new(git);
         let executor = LinuxLocalCommitExecutor::new(collector, scope, signer);
         let platform =
             executor.run_plan(&commit_plan, &commit_before, &cancellation("signed-commit"));
         let receipt = reconcile_local_commit(
-            &commit_plan,
-            &approval,
+            &prepared,
             platform,
             "authority-native-0001",
             "attempt-native-0001",

@@ -1,0 +1,134 @@
+Commit: 2ef6211107212a6ddcd0fb008b225be96eddc06e
+Scope: local-coding-dispatch-clock
+
+# Independent review: trusted clock at signed-commit dispatch (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate session, read-only, pinned checkout `/lane/review-checkout`.
+Same-model review (accepted for now; a cross-model review must come before any public release).
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = `2ef6211107212a6ddcd0fb008b225be96eddc06e`. `HEAD^` is
+  `5bec05b94bab7ace5a8359bc05397e8cf32a8dca`, so this is one commit on the immutable parent.
+- Read IP-POLICY.md, `docs/evidence/t306-dispatch-clock-2026-11-10.md`, the TASKS.md and guide
+  diffs, the retained `docs/reviews/5bec05b94bab-local-coding-review-source-pairs.txt`, and the
+  full diffs of `kernel/engine/src/{authority_transaction.rs,local_commit.rs,local_commit_review_preparation_tests.rs}`.
+  Also read the surrounding `LocalCommitEffectDriver`, `PreparedLocalCommit::verify_at`,
+  `verify_manual_commit_approval`, `EffectAuthorization::grant_live_at`, `RuntimeClock` and the
+  authority test fixture (grant issued 2_000 / expires 30_000; consumption at 15_000; approval
+  10_000 to 20_000).
+- Read the bundle's README, run.py, check.py, parse_gate.py, light.py, stage_check.py and
+  mutations.py, plus the raw mutation and focused logs.
+- Ran every command in the request myself in the pinned checkout (fresh suffix `R1`).
+- Used no GPU, host keys, network downloads or push, and made no change to the repository.
+
+## Commands and results
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-dispatch-clock/review-inputs.sha256`: exit 0.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-dispatch-clock/run.py /lane/state/tmp/review-dispatch-clock-full-R1`:
+   exit 1 as expected. `{"exit": 1, "source_unchanged": true, "seconds_including_reservations": 1292.61,
+   "raw_log_sha256": "72a312ddf8aa996dd0ba73e946973ff158e758c0d7d0932334eeee0767488139"}`.
+   The light commands, fmt (740.22 s, mostly waiting for a reservation) and Clippy `-D warnings`
+   (56.17 s) exited 0. `cargo test` exited 101 after 494.63 s. Log ends `FAST GATE: FAIL`.
+3. `python3 -B .../check.py /lane/state/tmp/review-dispatch-clock-full-R1`: exit 0 (DATA ONLY).
+   Output: 46 targets, totals [3079 passed, 72 failed, 72 ignored, 0 measured, 0 filtered].
+   Per-target failure and ignore identities match the baseline exactly, with +3 Linux and +3 kernel
+   passes. All 34 `#[test]` methods in the three changed sources show `ok`. Public-content and
+   TASKS row-line checks pass.
+4. `cmp .../validation-1/source-freeze.json .../review-dispatch-clock-full-R1/source-freeze.json`: exit 0.
+5. `python3 -B .../light.py`: exit 0. git diff --check, untracked lint, review lint and
+   markdownlint (0 issues) all passed.
+6. `git diff --check 5bec05b94bab7ace5a8359bc05397e8cf32a8dca --`: exit 0.
+7. `git status --short`: empty both before and after the run.
+
+My totals equal the builder's (3079/72/72 over 46 targets). The kernel-engine target has zero
+failures. The 72 inherited failures are in `agentmage_host` (53: linux_coding_runtime, linux_read,
+linux_repository_map) and `agentmage_platform_linux` (19: command_runner, local_commit native
+tests, repository_safety, secret_service). They are byte-identical to the baseline. My raw log hash
+differs from the builder's, as expected for a separate run, because timings vary.
+
+The plan differs from the builder's `validation-1/plan.json` only by the retained review report
+path and its `--lint-reviews` command, which were added after the source freeze. This is
+consistent with "only docs and the report after freeze". check.py asserts that the cargo commands
+are identical.
+
+The new methods pass in my run:
+`commit_dispatch_samples_clock_and_refuses_expired_approval_or_consumed_grant`,
+`commit_dispatch_rechecks_packet_and_call_bindings_after_real_consumption` and
+`commit_driver_refuses_unavailable_construction_clock`. The builder's raw mutation logs show the
+packet-recheck removal failing at test line 533 and the grant-lifetime removal failing at line 448
+(the 10_000 to 14_999 pre-consumption case). Each is `0 passed; 1 failed`, so both mutants are killed.
+
+## Analysis
+
+- **Dispatch-time checks.** `execute` (`local_commit.rs:1280-1300`) samples the host
+  `RuntimeClock` first. A clock error refuses with `ApprovalDenied`. It then checks, in order:
+  rollback below the construction sample, `grant_live_at(now)` (issued ≤ now, consumed ≤ now,
+  now < expiry), operation = GitCommit, held object, exact argument bytes and hash, and
+  `prepared.verify_at(now)` (complete packet binding plus approval window). All of this happens
+  before cancellation is checked and before `executor.execute`. No branch reaches the executor
+  without passing every check. Reconciliation receives the same checked `now_epoch_ms`. Nothing
+  renews or replays permission: the grant was already consumed single-use by the coordinator, and
+  the driver only narrows.
+- **Construction.** `new` samples the clock and refuses failure (`ApprovalDenied`), verifies the
+  manifest and `verify_at(now)`, and stores `constructed_at_epoch_ms`. The previous caller-supplied
+  `now_epoch_ms: u64` is gone. That was the earlier low L-1 gap (a construction-time timestamp
+  reused at dispatch). This change closes it.
+- **Test composition.** `dispatch_commit_fixture` drives a real `GrantIssuer`, `PolicyEngine` and
+  `AuthorityTransactionCoordinator::execute_effect` with a GitCommit grant bound to the prepared
+  request bytes, and asserts that a consumed grant digest exists. No `EffectAuthorization` is built
+  directly. `pub(crate) mod tests` remains `#[cfg(test)]`, so nothing leaks into the product API.
+  The positive controls (15_000 and 19_999) launch exactly once. `driver.clock.0.is_empty()`
+  proves exactly two samples, one at construction and one at dispatch. The other cases separate
+  the checks:
+  - approval-only expiry: 20_000 with the grant still live;
+  - grant-only expiry: 30_000 with a 40_000 approval;
+  - pre-consumption only: construction 10_000, dispatch 14_999.
+
+  Packet integrity, a resealed material finding, a resealed binding change, argument mismatch and
+  cancellation each refuse with zero launches.
+- **Confinement.** Nothing in this change widens a boundary. No product, API, MCP or terminal
+  route constructs the driver: the only call sites are in the test file. The clock is a
+  host-supplied port, and there is no model- or document-controlled input to it.
+- **Honesty, IP and public content.** The docs label held objects, consent and executor results as
+  synthetic. They claim no native commit, signing, host key, model result or score. Both rows stay
+  OPEN, the TASKS `| [` row lines are unchanged and no sub-row is added. There are no private
+  paths, usernames, credentials, product comparisons or trademark branding. `/lane/state/tmp`
+  references follow the established repository convention. The retained parent review is
+  byte-identical to `/lane/reviews/5bec05b94bab-local-coding-review-source-pairs.md`. No evaluator,
+  hidden or held-out task, scorer, prompt, threshold, dependency or SBOM file changed (7 files
+  total, listed above).
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L-1 (low, test coverage)**: `kernel/engine/src/local_commit.rs:1286` (`now_epoch_ms < self.constructed_at_epoch_ms`).
+  The rollback guard is never the only check that rejects a test case. The rollback samples (14_999
+  after a 15_000 construction, and 0) are also rejected by `grant_live_at`, because consumption is
+  fixed at 15_000. So deleting this line would leave every test passing (by reasoning; I did not
+  mutate the checkout). The guard matters when the caller-supplied consumption time precedes
+  driver construction.
+  - Fix: add a case with construction at 16_000 and dispatch at 15_500. Consumption (15_000) and
+    the approval stay valid, so only the rollback guard can reject it. Assert zero launches.
+  - Same-row backlog.
+- **L-2 (low, test coverage)**: `kernel/engine/src/local_commit.rs:1288-1289`. The commit driver
+  has no dispatch test for a non-GitCommit operation or for a held repository scope that differs
+  from the consumed grant's target. The generic `authorizes_held_object` is exercised by the
+  authority-transaction tests, and this commit did not change these checks.
+  - Fix: add two cases through `dispatch_commit_fixture`: one with a different `synthetic_held`
+    identity, one with a non-commit operation. Assert zero launches.
+  - Same-row backlog.
+
+The earlier lows remain backlog as stated by the builder: complete-packet L-2 (raw post-effect
+reconciliation) and source-pair L-1 (empty-blob source-pair test).
+
+## Per-row result
+
+- T-303: increment PASS, no high or medium finding. The row stays OPEN, as requested; this is not
+  a closing increment.
+- T-306: increment PASS, no high or medium finding. The row stays OPEN. Native admission, trusted
+  checker and artifact provenance, full original-owner consent, durable recovery, measurements and
+  approved push remain open.
+
+Verdict: PASS

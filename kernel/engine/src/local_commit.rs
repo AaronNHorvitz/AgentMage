@@ -148,11 +148,9 @@ pub fn verify_local_commit_review(packet: &LocalReviewPacket) -> Result<(), Loca
                     .iter()
                     .map(|suppressed| &suppressed.finding),
             )
-            .any(|finding| {
-                matches!(
-                    finding.severity,
-                    FindingSeverity::Medium | FindingSeverity::High | FindingSeverity::Critical
-                )
+            .any(|finding| match finding.severity {
+                FindingSeverity::Info | FindingSeverity::Low => false,
+                FindingSeverity::Medium | FindingSeverity::High | FindingSeverity::Critical => true,
             })
     {
         return Err(LocalCommitError::ReviewMismatch);
@@ -993,16 +991,21 @@ pub struct LocalCommitReceipt {
     pub receipt_sha256: String,
 }
 
-/// Reconciles exact commit, signature, branch, index, remote, and repository postconditions.
+/// Reconciles exact postconditions against a complete prepared packet.
+///
+/// Raw plans and approval receipts cannot enter this boundary. This checks packet
+/// admission and result consistency, not independent reviewer or executor provenance.
+/// `now_epoch_ms` is the checked launch time, not renewed post-effect authority.
 pub fn reconcile_local_commit(
-    plan: &LocalCommitPlan,
-    approval: &ManualCommitApprovalReceipt,
+    prepared: &PreparedLocalCommit,
     result: LocalCommitPlatformResult,
     authority_transaction_id: &str,
     operation_attempt_id: &str,
     now_epoch_ms: u64,
 ) -> Result<LocalCommitReceipt, LocalCommitError> {
-    verify_manual_commit_approval(plan, approval, now_epoch_ms)?;
+    prepared.verify_at(now_epoch_ms)?;
+    let plan = &prepared.plan;
+    let approval = &prepared.approval;
     result
         .before
         .verify()
@@ -1307,8 +1310,7 @@ where
             &self.cancellation,
         );
         match reconcile_local_commit(
-            &self.prepared.plan,
-            &self.prepared.approval,
+            &self.prepared,
             result,
             authorization.transaction_id().as_str(),
             authorization.attempt_id().as_str(),
@@ -1729,12 +1731,12 @@ mod tests {
 
     #[test]
     fn signed_commit_reconciliation_rejects_index_remote_signer_and_surface_drift() {
-        let candidate_before = manifest('7', 'c');
-        let commit_before = manifest('8', 'c');
-        let commit_after = manifest('9', 'd');
-        let candidate = candidate_receipt(&candidate_before, &commit_before);
-        let plan = local_plan(&commit_before, &candidate);
-        let approval = approval(&plan);
+        let (prepared, commit_before) = review_preparation_tests::prepared_fixture();
+        let plan = prepared.plan();
+        let mut commit_after = commit_before.clone();
+        commit_after.object_database_sha256 = hash('9');
+        commit_after.agentmage_refs_sha256 = hash('d');
+        let commit_after = RepositoryPreservationManifest::seal(commit_after).unwrap();
         let commit_object = object('f');
         let result = || LocalCommitPlatformResult {
             outcome: OperationOutcome::Succeeded,
@@ -1759,8 +1761,7 @@ mod tests {
             platform_code: "linux.git.commit.succeeded".to_owned(),
         };
         let receipt = reconcile_local_commit(
-            &plan,
-            &approval,
+            &prepared,
             result(),
             "authority-transaction-0001",
             "operation-attempt-0001",
@@ -1796,8 +1797,7 @@ mod tests {
             }
             assert_eq!(
                 reconcile_local_commit(
-                    &plan,
-                    &approval,
+                    &prepared,
                     changed,
                     "authority-transaction-0001",
                     "operation-attempt-0001",

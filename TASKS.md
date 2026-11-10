@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The retained [dispatch-clock review](docs/reviews/2ef621110721-local-coding-dispatch-clock.txt)
+has **Verdict: PASS** for exact commit
+`2ef6211107212a6ddcd0fb008b225be96eddc06e`, with no high or medium finding.
+Its low L-1 isolated rollback-guard coverage and L-2 operation/held-scope dispatch
+coverage remain same-row backlog. Neither T-303 nor T-306 closes.
+
+The [packet-bound result reconciliation batch](docs/evidence/t306-prepared-reconciliation-2026-11-10.md)
+requires the complete prepared packet at reconciliation, makes severity admission
+exhaustive, and adds explicit empty-base source-pair coverage through an internal
+held-target fixture; the public selector still refuses empty content. The full
+affected gate remains **FAIL**: 3,082 passes, the exact inherited 72 failures and
+72 ignores over 46 unfiltered targets. All three new methods, 87 existing
+runnable controls, formatting and Clippy pass; five source hashes stay fixed.
+Two inherited native fixtures still fail artifact admission, so the migrated
+native signing reconciliation is not claimed exercised. Independent core review
+is required. T-303/T-306 remain open without new rows. Trusted checker/artifact
+integration, full original-owner approval composition, native admission,
+recovery, model measurements and approved push remain open.
+
 The retained [source-pair review](docs/reviews/5bec05b94bab-local-coding-review-source-pairs.txt)
 has **Verdict: PASS** for exact commit
 `5bec05b94bab7ace5a8359bc05397e8cf32a8dca`, with no high or medium finding.
