@@ -137,6 +137,18 @@ coding run. It retains the same original repository and recorded successful edit
 lineage; it does not adopt a worktree path or enable other manual tools. The
 read consent and exact apply decision described above are still required.
 
+Candidate review also requires complete creation publication. Once native
+creation dispatch begins, this live owner refuses candidate review until its
+original checked creation proof is published. A failed, uncertain, unsupported
+or unpublished creation leaves review unavailable for the lifetime of that
+owner, including later edits, successful creations and runtime handoffs. The
+diagnostic is `code.commit.creation-provenance`. Inspect the retained files and
+use a fresh service and approved worktree; restarting cannot adopt the old one.
+This conservative refusal prevents an unrecorded creation from appearing as an
+ordinary existing-file edit. It neither removes files nor changes the separate
+original-transfer permissions. It does not verify every preimage against Git's
+immutable base; that remains necessary before candidate execution.
+
 ## Continue from a terminal coding run
 
 For an endpoint service explicitly started with original review enabled, use:

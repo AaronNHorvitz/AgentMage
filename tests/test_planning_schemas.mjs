@@ -836,6 +836,35 @@ test("local review history integrity ignores object key order and counts UTF-8 b
   assert.ok(result.schemaErrors.includes("complete write history exceeds its byte bound"));
 });
 
+test("local review packets refuse malformed containers without throwing", () => {
+  const single = JSON.parse(fs.readFileSync(path.join(ROOT,
+    "schemas/runtime/examples/local-review-packet.valid.json"), "utf8"));
+  for (const source of [single, historyPacket()]) {
+    const mutations = [
+      (p) => { p.change_set.files = {}; },
+      (p) => { p.change_set.files = "not an array"; },
+      (p) => { p.change_set.files = [null]; },
+      (p) => { p.change_set.review_hooks = {}; },
+      (p) => { p.change_set = null; },
+      (p) => { p.commit_plan.groups = {}; },
+      (p) => { p.review_results.findings = [null]; },
+      (p) => { p.review_results = null; },
+    ];
+    for (const mutate of mutations) {
+      const packet = structuredClone(source);
+      mutate(packet);
+      const result = validateReview(packet);
+      assert.equal(result.valid, false);
+      assert.ok(result.schemaErrors.length > 0);
+    }
+  }
+  for (const value of [null, [], 7, "packet"]) {
+    const result = validateReview(value);
+    assert.equal(result.valid, false);
+    assert.ok(result.schemaErrors.length > 0);
+  }
+});
+
 test("local review histories preserve once-seen diff bytes and normalize only retries", () => {
   const source = historyPacket();
   const set = source.change_set;

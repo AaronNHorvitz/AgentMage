@@ -21,6 +21,7 @@ struct CreationAttempt {
     plan: FilesystemPlan,
     approval: FilesystemApprovalReceipt,
     previous_write: Option<LinuxCodingAppliedWrite>,
+    previous_creation_review_incomplete: bool,
 }
 
 /// Native creation driver with the same live owner as structured edits. It can
@@ -158,6 +159,10 @@ impl<'a> LinuxCodingRuntimeCreateDriver<'a> {
             (None, Some(proof)) => Some(proof),
             (_, None) => None,
         };
+        // Only complete, published native proof can clear this dispatch's
+        // marker. A later successful creation cannot clear an earlier gap.
+        owner.creation_review_incomplete =
+            attempt.previous_creation_review_incomplete || owner.applied_write.is_none();
         self.applied = false;
         Ok(())
     }
@@ -220,6 +225,7 @@ impl ControlledFilesystemDriver for LinuxCodingRuntimeCreateDriver<'_> {
                     plan: authorization.plan().clone(),
                     approval: authorization.approval().clone(),
                     previous_write: None,
+                    previous_creation_review_incomplete: owner.creation_review_incomplete,
                 })
             })();
             let mut attempt = match candidate {
@@ -240,6 +246,7 @@ impl ControlledFilesystemDriver for LinuxCodingRuntimeCreateDriver<'_> {
             // Remove original history before native dispatch; only checked
             // completion after publication can restore it with this creation.
             attempt.previous_write = owner.applied_write.take();
+            owner.creation_review_incomplete = true;
             // No prior path is eligible here, but do not retain it if a future
             // caller changes validation. Publication is the only insertion site.
             for (path, _, _) in attempt.operations.values() {

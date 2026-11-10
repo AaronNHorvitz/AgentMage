@@ -1802,6 +1802,7 @@ fn creation_review_requires_original_proof_and_refuses_incomplete_or_unpublished
         let lease = runtime_lease(f.owner());
         runtime_create(&f, &lease, &[("new.py", "created\n", 0o600)], publish, None).unwrap();
         let mut owner = recover_lease(lease);
+        assert_eq!(owner.creation_review_incomplete, !publish);
         let purposes = || {
             vec![
                 agentmage_kernel_engine::review_packet::ChangePurposeAssignment {
@@ -1827,10 +1828,15 @@ fn creation_review_requires_original_proof_and_refuses_incomplete_or_unpublished
         if publish {
             assert!(owner.capture_applied_write_review(purposes).is_err());
         } else {
-            // Unpublished native creation has no owner lineage; only this later
-            // existing-file edit is reviewable, never an absent-before creation.
-            let later = owner.capture_applied_write_review(purposes).unwrap();
-            assert_eq!(later.files()[0].preimage_sha256, hash(b"created\n"));
+            // The later edit cannot hide an unpublished native creation behind
+            // an existing-file preimage. Its bytes remain inspectable on disk.
+            assert_eq!(
+                owner
+                    .capture_applied_write_review(purposes)
+                    .unwrap_err()
+                    .code(),
+                "code.commit.creation-provenance"
+            );
             assert!(
                 owner.created.as_ref().unwrap().edits["new.py"]
                     .created_mode
@@ -1840,6 +1846,50 @@ fn creation_review_requires_original_proof_and_refuses_incomplete_or_unpublished
         assert!(!f.0.join("original/new.py").exists());
         f.assert_preserved();
     }
+}
+
+#[test]
+fn unpublished_creation_review_gap_survives_later_published_creation_and_handoff() {
+    let f = Fixture::new();
+    let lease = runtime_lease(f.owner());
+    runtime_create(
+        &f,
+        &lease,
+        &[("new.py", "unpublished\n", 0o600)],
+        false,
+        None,
+    )
+    .unwrap();
+    let mut owner = recover_lease(lease);
+    assert!(owner.creation_review_incomplete);
+    f.edit(&mut owner, "new.py", "later ordinary edit\n");
+    assert!(owner.applied_write.is_some());
+    let lease = runtime_lease(owner);
+    runtime_create(
+        &f,
+        &lease,
+        &[("other.py", "published\n", 0o600)],
+        true,
+        None,
+    )
+    .unwrap();
+    let owner = recover_lease(lease);
+    assert!(owner.applied_write.is_some());
+    assert!(owner.creation_review_incomplete);
+    assert_eq!(
+        owner
+            .capture_applied_write_review(history_purposes(2))
+            .unwrap_err()
+            .code(),
+        "code.commit.creation-provenance"
+    );
+    assert_eq!(
+        fs::read(f.0.join("owned/worktree/new.py")).unwrap(),
+        b"later ordinary edit\n"
+    );
+    assert!(!f.0.join("original/new.py").exists());
+    assert!(!f.0.join("original/other.py").exists());
+    f.assert_preserved();
 }
 
 #[test]

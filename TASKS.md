@@ -2,6 +2,16 @@
 
 ## Active queue: local agent mission
 
+The [review-refusal repairs](docs/evidence/t306-review-refusals-2026-11-09.md)
+address same-row creation low L1 and consumer low L3. Incomplete native creation
+publication cannot become an existing-file review through later edits, and
+schema-invalid runtime packets return structured refusals. The complete affected
+gate remains **FAIL**: 1,301 Rust passes, the exact same 72 inherited failures
+and 64 existing ignores across 26 unfiltered targets. Both affected Rust methods,
+all 86 schema tests, formatting and Clippy pass; six code hashes stay fixed.
+Independent core review is required. T-303/T-306 remain open; no row or sub-row
+is added or closed. Native execution and model measurement remain open.
+
 The [retry-cycle repair](docs/evidence/t306-retry-cycle-2026-11-09.md) addresses
 same-row low L2: repeated content changes can retain separate original checked
 applications after rollback; replaying an application still refuses. T-303/T-306

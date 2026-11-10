@@ -291,7 +291,10 @@ export function validateRuntimeRecord(recordType, data, validators) {
     throw new Error(`unknown runtime record type: ${recordType}`);
   }
   const schemaValid = validator(data);
-  const semanticErrors = runtimeSemanticErrors(recordType, data);
+  // Semantic checks assume the closed schema's object and array shapes. Keep
+  // malformed input a structured refusal rather than throwing while traversing
+  // it. No schema-invalid input can reach semantic acceptance.
+  const semanticErrors = schemaValid ? runtimeSemanticErrors(recordType, data) : [];
   const valid = schemaValid && semanticErrors.length === 0;
   return {
     valid,

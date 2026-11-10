@@ -36,6 +36,9 @@ impl LinuxCodingRepository {
         purposes: Vec<ChangePurposeAssignment>,
     ) -> Result<ReviewableChangeSet> {
         let created = self.verify_apply_roots()?;
+        if self.creation_review_incomplete {
+            return Err(err("code.commit.creation-provenance"));
+        }
         let proof = self
             .applied_write
             .as_ref()
