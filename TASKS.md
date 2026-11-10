@@ -10,8 +10,12 @@ dormant. The complete affected gate remains **FAIL**: 1,399 passes, the exact
 inherited 72 failures and 64 ignores across 26 unfiltered targets. All six new
 methods, 33 controls, formatting and Clippy pass; all four source hashes stay
 fixed. Independent core review is required. T-303/T-306 remain open, without a
-new row or sub-row. The private-signing ancestor remains immutable while its
-review is in flight.
+new row or sub-row. The retained
+[private-signing review](docs/reviews/907724989c81-local-coding-private-signing.txt)
+has **Verdict: PASS** for exact commit
+`907724989c8183aa96ed154f0812be3f78e18f84`, with no high or medium finding.
+Its low L-1 signed percent escape and L-2 invalid-keygrip fixture strength remain
+same-row backlog. Neither parent closes.
 
 The [socket-free private signing primitive](docs/evidence/t306-private-signing-2026-11-10.md)
 adds selected sealed-key capture and a foreground offline signer under the

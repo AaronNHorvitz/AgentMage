@@ -1,0 +1,190 @@
+Commit: 907724989c8183aa96ed154f0812be3f78e18f84
+Scope: local-coding-private-signing
+
+# Independent review: dormant socket-free private signing primitive (T-303 / T-306)
+
+Reviewer: Claude Opus 5.5 (extra-high effort). This is a separate read-only session over the pinned
+checkout `/lane/review-checkout`. Same-model review; a cross-model review must still precede any
+public release.
+
+Request: non-closing same-row batch. No new row or sub-row, and neither parent closes. This review
+judges only the exact commit above.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = `907724989c8183aa96ed154f0812be3f78e18f84`. The pinned checkout
+  was clean.
+- Read IP-POLICY.md, Decision 0194, docs/evidence/t306-private-signing-2026-11-10.md, the TASKS.md
+  and guide diffs, and all of `platforms/linux/src/local_commit_signing.rs` and
+  `local_commit_signing_tests.rs`. Also read the inspection, supervision, local_commit and
+  verification-test diffs against `ac9621ddcf35`, plus the supporting code: `sealed_payload`,
+  `write_all_projection`/`seal_projection`, `run_owned`, `capture_error`, `verify_private_keyring`,
+  `LinuxGitArtifact` and the inspection flow that produces the listing. Read the bundle README.md,
+  run.py, check.py, parse_gate.py and light.py before running them.
+- Ran the seven requested commands from the pinned checkout. Builds used
+  `CARGO_TARGET_DIR=/lane/state/review-target`, and run.py reserves heavy commands internally (no
+  outer wrap).
+- Reproduced escape attempts myself. I wrote a reviewer-only test into a `git archive` copy of the
+  exact commit at `/tmp/rv-copy`, outside the repository, so the repository was not modified. It ran
+  through `/tools/build-slot` with the same separate target.
+
+## Commands and results
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-private-signing/review-inputs.sha256` gave exit 0.
+   The manifest SHA-256 is `83d1b777ff9cbf307c60ff87b9ff63fc654b797e1883ebf1dd7be4c9f50684e4`, as
+   stated.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B /lane/state/tmp/t306-private-signing/run.py
+   /lane/state/tmp/review-private-signing-full-907724989c81` gave **exit 1**, as expected.
+   - The fast gate is `FAST GATE: FAIL`, with `source_unchanged: true`.
+   - Elapsed time was 748.20 s including slot waits. The reviewer had to wait for a build slot. The
+     Clippy step was 470.94 s including its reservation, and the Rust suite took 238.82 s (exit 101).
+   - The raw log SHA-256 is `2b30d11b2cfc33d97744dff588164ca86b57b07caf1068d934826931b423b16a`.
+     A different hash from the builder's is expected, because the log contains timings.
+   - Across 26 unfiltered targets: **1393 passed, 72 failed, 64 ignored, 0 measured, 0 filtered**.
+3. `python3 -B .../check.py <out>` gave exit 0, printing `DATA COMPARISON ONLY: FULL GATE REMAINS
+   FAIL`.
+   - Every per-target failed and ignored identity equals the hash-pinned baseline. The only change is
+     +9 passes in the Linux library.
+   - All 33 named methods (9 new plus 24 controls) are `... ok`.
+   - Command exits are `0,0,0,0(fmt),0(Clippy),0,101(Rust)`.
+   - TASKS.md row lines are unchanged.
+   - The retained review is byte-identical to /lane/reviews. I also confirmed this separately with
+     `cmp`.
+4. `cmp .../validation-1/source-freeze.json <out>/source-freeze.json` gave exit 0. All 7 source
+   hashes are fixed.
+5. `python3 -B .../light.py` gave exit 0. All four light commands (`git diff --check`, untracked
+   lint, review lint, markdownlint) report `LIGHT_EXIT 0`.
+6. `git diff --check ac9621ddcf352487554b02c7262cc14eff8b91c3 --` gave exit 0.
+7. `git status --short` printed nothing.
+
+Inherited failures: 42 in linux_coding_runtime, 13 repository_safety, 10 linux_read, 2
+secret_service, 2 local_commit, 2 command_runner and 1 linux_repository_map. They match the frozen
+baseline identity for identity. The two local_commit failures are the pre-existing native
+candidate/signed-commit tests. Neither is in the new module, and both also fail in the baseline.
+
+Reviewer escape reproduction (`/tmp/rv-copy`, `cargo test -p agentmage-platform-linux --lib --
+signing::tests:: --nocapture`): **8 passed, 0 failed**. The 7 builder tests plus the reviewer test
+`reviewer_escape_attempts` gave these results:
+
+- **Symlinks and paths are refused.** A symlinked keyring root, a symlinked parent component, a
+  `private-keys-v1.d/..` keyring path and a relative keyring path are all refused.
+- **Exact selection holds.** A lowercase keygrip selects only the uppercase `<GRIP>.key`.
+- **File modes are enforced.** Mode 0400 is accepted; 0700 and 0602 are refused.
+- **Protocol violations are refused.** `S PROGRESS` inside the signing phase, a CRLF greeting, a `#`
+  comment line and an empty `D` record are all refused.
+- **The worker command is laid out correctly.**
+  - The OpenFile order is agent, seccomp, selected-key, which maps to guest fds 3/4/5. The arguments
+    are `--ro-bind-fd 3 /app/gpg-agent`, `--seccomp 4` and `--ro-bind-fd 5 …/<GRIP>.key`.
+  - There is no `--bind`, `--dev-bind`, `--share-net` or host-path argument. The fixture path never
+    appears in the arguments.
+  - The launcher environment is exactly `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS`, and the
+    guest gets `--clearenv`.
+- **Signed percent escape:** `%+1` is accepted and decoded to byte 0x01 (see L-1).
+
+## Review against the requested points
+
+- **Keygrip attachment and listing binding.**
+  - `selected_keygrip` runs over the same `listing` bytes that `signing_identity` validated and whose
+    SHA-256 is part of the inspection evidence. It runs only after the export step and the control
+    check (`local_commit_inspection.rs:271`).
+  - Selection is the exact `fpr` field 10, and `pub`/`sub` lines reset it. Revoker (`rvk`)
+    fingerprints are never selected.
+  - A duplicate, malformed, missing or all-zero grip returns `None`, which keeps public identity
+    usable and refuses private use (`sign_hash` at `local_commit_signing.rs:175-179`).
+  - Grips are 40-character hex, so a newline or path cannot be injected into `SIGKEY` or the file
+    name.
+- **Private capture.**
+  - The keyring path must equal its canonical form (`local_commit_signing.rs:47`). Root, directory
+    and file are opened with `NOFOLLOW|NONBLOCK|CLOEXEC`, and the directory and file through held
+    descriptors with `openat`.
+  - The type, uid and mode checks hold: directories must be `&0o077 == 0`, and the file must be
+    `&0o7177 == 0`, `nlink == 1` and 1..=128 KiB.
+  - Reads are bounded 16 KiB `pread` calls with a control check before each. Control is checked
+    again after reading and after sealing, and name, held metadata and directory identity are
+    revalidated before reading, after reading and after sealing.
+  - The tests exercise every checkpoint, including replacement of the root, directory, file and mode.
+  - The decision honestly states the same-user non-atomicity.
+- **Secret buffer.**
+  - The heap copy is `Zeroizing<Vec<u8>>`. `sealed_payload` writes directly into a memfd, seeks to
+    0 and seals it with no intermediate copy. No Debug or serialization, path or digest of the secret
+    is recorded.
+  - No secure-memory or kernel-erasure claim is made, and the unit sets `MemorySwapMax=0`.
+- **Worker.**
+  - The worker is a foreground `--server` agent with `--no-options`, `--disable-scdaemon`,
+    `--pinentry-program /nonexistent`, no external cache and zero cache TTLs, in a private tmpfs home.
+  - The fixed command stream is sealed and reaches the agent through stdin (`systemd-run --pipe`).
+    `run_owned` preserves the stdin the caller sets; the filter uses a separate pipe fd.
+  - Commands are fixed: `RESET/SIGKEY/SETHASH 8/PKSIGN/BYE`. No shell is involved.
+- **Artifacts and owner.**
+  - `SigningManifest` holds root-owned `LinuxGitArtifact`s for systemd-run, systemctl, bwrap and
+    gpg-agent, and revalidates all four in `control_path`.
+  - `LaunchOwner::PrivateSigning` requires exactly 2 projections and the exact nonce unit prefix, and
+    is tested. The global seccomp policy (`sandbox.rs`) is not in the diff, and
+    `policy_denies_every_worker_socket_and_connection_syscall` passes.
+- **Response handling.**
+  - Validation is phase-ordered: 6 `OK`s, `D` data only in phase 4, and a non-empty signing phase.
+    `ERR`, `INQUIRE`, `S` or `#` lines, CR and trailing records are refused.
+  - The outcome error is mapped first, so `CleanupUncertain` is preserved, both in `validate_result`
+    and through `capture_error` on the `run_owned` error path.
+  - Control is checked again after dispatch. Completeness, exit status and total/retained/digest
+    consistency are required on both streams, and stderr is never parsed.
+  - The result is only an unverified `(7:sig-val…))` byte vector, with no object, approval or push
+    authority.
+- **Dormancy.**
+  - `sign_hash` is `pub(super)`, and a grep finds no caller outside the module's tests. No route,
+    permission or activation is added.
+  - The existing signed-creation adapter is unchanged.
+- **Honest labelling.**
+  - The evidence, decision, guide and TASKS clearly state that the installed-agent fixture is a
+    direct component fixture. It is not the native worker, an OpenPGP packet or a verified
+    signature, and the gate remains FAIL.
+  - The fixture uses a disposable key in a temporary home, and a drop guard stops the agent before
+    the home is removed.
+- **Public content and IP.**
+  - The added lines contain no private host path, username, hostname, credential or personal data.
+    The only email is `fixture@example.test`.
+  - There is no product comparison and no trademark used as branding; GnuPG is named as the
+    dependency it is. There is no new dependency (`zeroize` already exists in the workspace).
+- **Evaluation integrity and delivery.**
+  - No evaluation, frozen, hidden, held-out, scorer, prompt, threshold, scoreboard, SBOM or
+    lifecycle file is touched; 12 files changed in total.
+  - There is no new row or sub-row, and TASKS row lines are unchanged.
+  - The increment adds running, measured code, not only plans.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L-1 (low, backlog).** In `platforms/linux/src/local_commit_signing.rs:295-296`, the percent
+  decoder accepts a signed escape. `u8::from_str_radix` accepts a leading `+`, so `%+1` decodes to
+  0x01.
+  - Reproduced: `parse_response(b"OK\nOK\nOK\nOK\nD (7:sig-val(1:x1:%+1))\nOK\nOK\n")` returns
+    `Some(..0x01..)`.
+  - This contradicts the evidence sentence saying the parser rejects malformed percent escapes. The
+    impact is low: the bytes come from the confined agent and are explicitly unverified and carry no
+    authority.
+  - Fix: require both bytes to satisfy `is_ascii_hexdigit()` before decoding, and add `D %+1` to the
+    protocol test's malformed list.
+- **L-2 (low, backlog, test strength).** In `platforms/linux/src/local_commit_signing_tests.rs:532-534`,
+  the `None` and `"A\nPKSIGN"` keygrip assertions in
+  `private_signing_refuses_invalid_selection_before_capture_…` cannot tell which check refused.
+  - The keyring `/never-read-private-keyring` would also fail at `verify_private_keyring`. The
+    production check at `local_commit_signing.rs:175-179` is correct by inspection.
+  - Fix: use a real valid fixture keyring for that signer, so only the keygrip check can refuse.
+
+Observations, not findings (already disclosed as open in Decision 0194):
+
+- The gpg-agent artifact is held and root-owned but not digest-pinned.
+- The installed-agent fixture gives the agent a writable copy of the key, whereas production uses a
+  read-only bind. Behaviour on a read-only mount and under the socket-denying filter is therefore
+  unexercised until native admission is tested.
+
+## Per-row result
+
+- **T-303:** this increment is acceptable, with no high or medium finding. **Not closed**: native
+  admission, packet construction, verification, approval composition and approved commit/push
+  remain open, and the gate remains FAIL.
+- **T-306:** this increment is acceptable, with no high or medium finding. **Not closed**, for the
+  same reasons. L-1 and L-2 go to backlog.
+
+Verdict: PASS

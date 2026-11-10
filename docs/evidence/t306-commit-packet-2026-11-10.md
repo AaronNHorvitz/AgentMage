@@ -2,7 +2,13 @@
 
 Status: complete affected gate remains **FAIL**; independent core review required. Neither parent
 closes, and no row or sub-row is added. The private-signing ancestor remains
-immutable while its independent review is in flight.
+immutable. Its independent review arrived after the implementation commit:
+the retained [report](../reviews/907724989c81-local-coding-private-signing.txt)
+has **Verdict: PASS** for exact commit
+`907724989c8183aa96ed154f0812be3f78e18f84`, with no high or medium finding.
+Low L-1 (signed percent escape) and L-2 (invalid-keygrip fixture strength) are
+recorded as same-row backlog for the next increment. The report is retained
+byte for byte; this increment does not claim those lows are fixed.
 
 [Decision 0195](../decisions/0195-dormant-rsa-commit-signature-assembly.md)
 adds exact unsigned content construction, bounded RSA/v4 signature packet and
