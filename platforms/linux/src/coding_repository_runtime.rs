@@ -203,6 +203,8 @@ struct Attempt {
     changes: ShadowChangeSet,
     approval: WriteApprovalReceipt,
     previous_write: Option<LinuxCodingAppliedWrite>,
+    previous_creation_review_incomplete: bool,
+    creation_lineage_at_risk: bool,
 }
 
 /// Native writer with optional live creation provenance. It cannot issue an
@@ -288,10 +290,14 @@ impl<'a> LinuxCodingRuntimeWriteDriver<'a> {
             .as_mut()
             .ok_or(err("code.runtime.worktree-required"))?;
         created.edits.extend(attempt.edits.clone());
+        let retained_previous_proof = attempt.previous_write.is_some();
         owner.applied_write = match attempt.previous_write {
             Some(previous) => previous.append(proof),
             None => Some(proof),
         };
+        owner.creation_review_incomplete = attempt.previous_creation_review_incomplete
+            || (attempt.creation_lineage_at_risk
+                && (!retained_previous_proof || owner.applied_write.is_none()));
         self.successful_apply = false;
         Ok(())
     }
@@ -370,6 +376,10 @@ impl AtomicWriteDriver for LinuxCodingRuntimeWriteDriver<'_> {
                     changes: authorization.change_set().clone(),
                     approval: authorization.approval().clone(),
                     previous_write: None,
+                    previous_creation_review_incomplete: owner.creation_review_incomplete,
+                    creation_lineage_at_risk: created.edits.values().any(|edit| {
+                        edit.created_mode.is_some() || edit.before_sha256 == "0".repeat(64)
+                    }),
                 })
             })();
             let mut attempt = match candidate {
@@ -390,6 +400,9 @@ impl AtomicWriteDriver for LinuxCodingRuntimeWriteDriver<'_> {
             // Remove history from the owner before dispatch. Only matching
             // native completion after publication can return it with a new proof.
             attempt.previous_write = owner.applied_write.take();
+            // History is shared by all paths. A failed or unpublished edit of
+            // any path must not erase a previously published creation's origin.
+            owner.creation_review_incomplete |= attempt.creation_lineage_at_risk;
             let created = owner.created.as_mut().expect("verified created worktree");
             for path in attempt.edits.keys() {
                 created.edits.remove(path);

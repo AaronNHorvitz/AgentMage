@@ -148,6 +148,14 @@ This conservative refusal prevents an unrecorded creation from appearing as an
 ordinary existing-file edit. It neither removes files nor changes the separate
 original-transfer permissions.
 
+The same refusal applies when a later edit retires published creation history
+without restoring its complete checked proof. The guard starts before native
+dispatch, including edits to other paths that share that history. Failed,
+unpublished or rejected completions leave it set across later successful edits,
+creations and handoffs. A committed edit can restore creation review only when
+the preceding proof was retained and the combined history is complete. Denial,
+expiry, stale decisions and abandoned previews do not retire the existing proof.
+
 The internal candidate planner also checks every reviewed first preimage against
 the exact immutable creation commit. Dirty starting content or an existing
 untracked file cannot become an ordinary base edit. A creation must be absent

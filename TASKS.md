@@ -2,6 +2,26 @@
 
 ## Active queue: local agent mission
 
+The [creation-history edit repair](docs/evidence/t306-creation-edit-history-2026-11-09.md)
+addresses the review-refusal report's same-row low L1 residual. Editing a path
+cannot discard a published creation's original proof and later relabel its
+bytes as an existing-file preimage. The conservative guard also covers other
+paths sharing the retired history. The corrected complete gate remains **FAIL**:
+1,313 Rust passes, the exact same 72 inherited failures and 64 existing ignores
+across 26 unfiltered targets. All four new regressions, four affected existing
+methods, formatting and Clippy pass; four source hashes remain fixed. Independent
+core review is required. T-303/T-306 remain open; no new or closed row or sub-row.
+The retained [review-refusal report](docs/reviews/81e600d0df9e-local-coding-review-refusals.txt)
+has **Verdict: PASS** for exact commit
+`81e600d0df9eb479452048c09cbbaba3aafe915f`, with no high or medium finding.
+Its reservation-timeout process note remains same-row backlog. Native execution,
+candidate execution, approved Git and coding measurements remain open.
+The [base-preimage report](docs/reviews/8ca2251f2381-local-coding-base-preimages.txt)
+also has **Verdict: PASS** for exact commit
+`8ca2251f23814bc2bb6f41cc2bdd1d7717a2661c`, with no high or medium finding.
+Its low L1 existing-file mode binding and L2 whole-tree availability limits
+remain same-row backlog. Neither report closes a parent row.
+
 The [immutable-base prerequisite](docs/evidence/t306-base-preimages-2026-11-09.md)
 binds candidate planning to the original creation commit's source bytes and
 absence, through the existing offline worker. Dirty or untracked starting

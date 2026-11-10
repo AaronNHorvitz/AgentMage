@@ -1,0 +1,159 @@
+Commit: 81e600d0df9eb479452048c09cbbaba3aafe915f
+Scope: local-coding-review-refusals
+
+# Independent core review: creation-review refusal and malformed-packet refusal
+
+Reviewer: Claude Opus 5.5, separate session, read-only checkout `/lane/review-checkout`
+pinned at the exact commit. `git rev-parse HEAD` returned
+`81e600d0df9eb479452048c09cbbaba3aafe915f`. The parent is
+`419331de0c7517fcee21200fb7a34dff807b5489`. Row: T-303 / T-306, a non-closing increment; both
+parents stay OPEN.
+
+## Methods
+
+1. I read IP-POLICY.md, the new TASKS.md paragraph, `docs/evidence/t306-review-refusals-2026-11-09.md`
+   and the guide change. I also read the prior reviews that raised the two lows being repaired:
+   - `5cd6332a060b-local-coding-creation-review.md` (L1);
+   - `906dc1e0bd1c-local-coding-history-consumer.md` (L3).
+2. I read every bundle runner before executing it: README.md, run.py, check.py, parse_gate.py,
+   light.py and probe.mjs. None of them downloads anything, uses the GPU, writes tracked files or
+   wraps itself in build-slot.
+3. I reviewed the full diff (9 files, +195/−5):
+   - the new `creation_review_incomplete` owner field;
+   - where it is set and cleared in `coding_repository_create.rs`;
+   - the refusal in `capture_applied_write_review`;
+   - every other site that writes `applied_write` or `created.edits` (manual edit, runtime edit,
+     original apply, new worktree creation, poisoned-lease recovery);
+   - the host's choice between owned and unowned drivers;
+   - the JS `validateRuntimeRecord` change and its callers.
+4. I ran the complete affected gate, the schema suite, the light checks and the probe.
+5. I wrote 3 scratch regression tests in an exported copy outside the repository
+   (`/lane/state/tmp/review-scratch-81e600d0df9e`). They test lineage loss after a **published**
+   creation.
+
+## Commands and results
+
+| Command | Result |
+|---|---|
+| `sha256sum --quiet -c …/review-inputs.sha256` | OK. The manifest's own SHA-256 is `2bb68c7f…b4bd9e`, as stated. |
+| `run.py /lane/state/tmp/review-refusals-full-81e600d0df9e` | Refused: `FileExistsError`. The directory already existed, left by an earlier session that had died (log stopped at 21:47, no `result.json`). I did not touch it. |
+| `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-refusals-full-81e600d0df9e-r2` | exit 1 (expected). `source_unchanged: true`. 2,744.34 s including reservations. Raw log SHA-256 `f9b83a532ebbe39f3aec5491bf36c5f524172634194c77a714807a815bf394c1`. |
+| Per-step results in that log | git diff --check 0; lint-untracked 0; markdownlint 0; **schema step 124 at 1,800.07 s**: the timeout expired while still waiting for a shared reservation, so no test ran; fmt 0 (678.19 s); Clippy 0 (35.70 s); cargo test 101 (228.67 s); `FAST GATE: FAIL`. |
+| `check.py …-r2` | exit 1, at line 35, on the schema-step exit 124. This is correct behaviour: a timeout refuses comparison. |
+| Per-target comparison (parse_gate) | 26 targets; totals 1,301 passed / 72 failed / 64 ignored / 0 measured / 0 filtered. The failure and ignore identities for each target are **identical** to the builder's `validation-1/fast.log` (`a == b` True). |
+| check.py with only the exit-vector and in-log schema assertions changed (copy at `/lane/state/tmp/review-check-variant-81e600d0df9e.py`) | exit 0. It confirms: all 6 frozen hashes; parent baseline hash; the expected 26 targets with 72 failures; both affected creation methods `... ok`; plan and cargo commands equal to the current plan; TASKS.md row lines unchanged; no private path in added lines; no `#[ignore` added. It prints `DATA COMPARISON ONLY: FULL GATE REMAINS FAIL`. |
+| `PATH=…/node/bin:$PATH bash /tools/build-slot node --test tests/test_planning_schemas.mjs` | exit 0; tests 86, pass 86, fail 0, cancelled 0, skipped 0, todo 0. This includes "local review packets refuse malformed containers without throwing". Log SHA-256 `5c77e22f…53e0bf3e`. |
+| `python3 -B …/light.py` | exit 0 (diff check, lint-untracked, markdownlint: 0 issues). |
+| `…/node/bin/node …/probe.mjs` | exit 0: valid packet accepted; 12 malformed refusals; a schema-valid semantic tamper is refused. |
+| `cmp validation-1/source-freeze.json …-r2/source-freeze.json` | exit 0 (identical). |
+| `git diff --check 419331de… --` | exit 0. |
+| `git status --short` | empty, before and after. |
+| Scratch: `CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot cargo test --locked --offline -p agentmage-platform-linux --lib reviewer_ -- --nocapture --test-threads=1` (in the scratch copy) | 3 passed; output below (log SHA-256 `afe4a3c1…bde4055c0`). |
+
+My complete gate is **INCOMPLETE as a single run**: its schema step timed out before it started. I
+cover that gap with a separate complete 86/86 schema run under build-slot, on the same unchanged
+checkout. Everything else in the gate ran to completion and matches the builder exactly. The Rust
+gate remains **FAIL** on the 72 inherited failures; the exact comparison is data only.
+
+## Analysis of the repair
+
+### Creation marker
+
+- **Set before dispatch.** `coding_repository_create.rs:249` sets the marker before native
+  dispatch, after shape validation. Shape denials (`:233-241`) return before the marker is touched,
+  so the claim that pre-dispatch denials never set it holds.
+- **Cleared only by checked completion.** It is cleared only in `complete()` (`:164-165`), and only
+  after the committed outcome, the transaction and grant identities, receipt verification, the exact
+  operation set and a non-`None` merged proof are all checked. The new value is
+  `previous || applied_write.is_none()`, so an earlier gap stays sticky.
+- **Every failure leaves it set.** A non-committed outcome returns early (`:87-89`), as do
+  verification errors and drop without `complete`, so all of these leave the marker `true`.
+- **Owner-wide reach is consistent with the claim.** Nothing resets the marker:
+  - creating a new worktree (`coding_repository.rs:487-503`) leaves it set;
+  - poisoned-lease recovery (`coding_repository_runtime.rs:150-160`) leaves it set;
+  - lease handoff moves the same struct;
+  - `open()` is the only place it starts `false`.
+- **The refusal comes first.** `capture_applied_write_review` refuses before any proof projection
+  (`coding_repository_commit_review.rs:39-41`). `plan_reviewed_candidate_tree` reaches projection
+  only through this function (`:186`).
+- **The edit and transfer paths are unchanged**, as claimed.
+
+### JS consumer
+
+- `validateRuntimeRecord` now runs semantic checks only when the schema passes
+  (`scripts/validate_planning_schemas.mjs:297`). `valid` still requires both, so acceptance can
+  only become stricter, never looser.
+- Direct `runtimeSemanticErrors` callers (lines 1882-2152) are nested composite checks and are
+  unaffected.
+- The probe confirms that schema-valid semantic tampering is still refused.
+
+### Evidence and claims
+
+- The evidence numbers (1,301/72/64, 26 targets, 86/86, fmt/Clippy pass) reproduce.
+- Fixtures are labelled synthetic. The guide and evidence explicitly disclaim complete Git-base
+  preimage verification.
+- No private path, username, credential or product name appears in the added lines.
+- No frozen, hidden, held-out, scorer, prompt, dependency or scoreboard file is touched, and no row
+  or sub-row is added or closed.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1-residual (low, same-row backlog):** creation lineage can still be lost after a *published*
+  creation, at `coding_repository_edit.rs:168-173` and `:215-219`, and
+  `coding_repository_runtime.rs:392-396` with `:241-243`.
+  - **Mechanism.** A manual or runtime edit of a natively created path removes that path's
+    `created.edits` entry (the absent-before record with `created_mode`) and takes `applied_write`
+    before dispatch. If that edit fails or is not published, neither is restored, and
+    `creation_review_incomplete` is never set.
+  - **Effect.** A later ordinary edit records the path with `prior = None`, so its `before_sha256`
+    is whatever bytes are on disk and its `created_mode` is `None`. Candidate review then projects
+    the path, which is absent from the Git base, as an existing-file edit. This is the same
+    relabeling as the original L1, reached by a different route.
+  - **Reproduction** (scratch tests, output verbatim):
+    - Control (published create, then a successful edit): `Ok([("new.py", "000…000")])`. Correct:
+      the file is still absent-before.
+    - A (published create, then an unpublished runtime edit of `new.py`, then an ordinary edit):
+      `marker=false edits=[]`, then `review=Ok([("new.py", "4bf458a9…", "410a6bb8…")])`. The
+      preimage is `sha256("runtime unpublished\n")`, not zeros.
+    - B (published create; drift between preview and decision makes the manual edit fail with
+      `code.write.transaction`; then an ordinary edit): `marker=false edits=[]`, then
+      `review=Ok([("new.py", "893105a8…")])`, which is `sha256("drifted\n")`.
+  - **Why low.** All candidate bytes are still in the full diff; no write, transfer, Git or
+    execution authority is gained; and the candidate plan is inert (candidate execution is OPEN).
+    This matches the L1 severity.
+  - **Claim wording.** The committed sentence at `docs/guides/coding-original-apply.md:147-148`
+    ("prevents an unrecorded creation from appearing as an ordinary existing-file edit") is broader
+    than what is implemented. It holds for creations that were never published. It does not hold
+    for creations whose record a later failed or unpublished edit drops.
+  - **Fix.** Make the marker, or a per-path lineage-lost set, sticky whenever an edit dispatch
+    removes an entry with `created_mode.is_some()` (or `before_sha256 == 0…0`) and fails to restore
+    it through checked completion. Then add tests A and B as regressions. Alternatively, narrow the
+    guide sentence to unpublished creations.
+- **Process note (low, backlog), `scripts/local_agent_fast_gate.py`.** The per-step `--timeout
+  1800` covers the time spent waiting for a shared reservation.
+  - Under host contention the schema step timed out after 1,800 s without running a test, so the
+    bundle's single-command reproduction could not complete.
+  - The refusal is correct fail-closed behaviour; the measured body is 1.55 s.
+  - Fix: start the timeout after the reservation is acquired, or report the wait separately.
+- **Bundle note.** The suggested output directory already existed, left by an earlier session that
+  did not finish. A fresh `-r2` directory was used. Nothing was deleted.
+- The earlier lows L1 and L3 are addressed as stated, apart from the L1 residual above. Other
+  earlier same-row lows are unchanged.
+
+## Per-row result
+
+- T-303 / T-306, increment `local-coding-review-refusals` at
+  `81e600d0df9eb479452048c09cbbaba3aafe915f`: **accepted as a non-closing increment.**
+  - There is no open high or medium finding.
+  - L1-residual and the timeout process note go to same-row backlog.
+  - The complete affected Rust gate remains FAIL on exactly the 72 inherited failures. The
+    comparison is data only; it is not a gate pass and does not accept either parent.
+  - My single-run gate had its schema step time out while waiting for a reservation. The complete
+    86/86 schema suite passed in a separate build-slot run on the same checkout.
+  - Both parents remain OPEN. Native and model workflow, full Git-base proof, reviewer and artifact
+    authentication, candidate execution, approved Git effects, measurements and durable recovery
+    remain OPEN.
+
+Verdict: PASS

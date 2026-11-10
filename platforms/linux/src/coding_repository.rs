@@ -163,8 +163,8 @@ pub struct LinuxCodingRepository {
     edit: Option<edit::PendingEdit>,
     edit_result: Option<Value>,
     applied_write: Option<crate::coding_workspace::LinuxCodingAppliedWrite>,
-    // A dispatched creation without checked publication must never be relabeled
-    // as an existing-file review by a later ordinary edit. Process-only and
+    // A creation whose proof was lost during creation or a later edit dispatch
+    // must never be relabeled as an existing-file review. Process-only and
     // sticky across handoffs; only a fresh repository owner starts clear.
     creation_review_incomplete: bool,
     apply: Option<apply::PendingApply>,

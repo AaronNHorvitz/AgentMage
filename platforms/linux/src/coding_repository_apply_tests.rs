@@ -1818,6 +1818,7 @@ fn creation_review_requires_original_proof_and_refuses_incomplete_or_unpublished
         }
         assert!(owner.capture_applied_write_review(purposes()).is_err());
         f.edit(&mut owner, "new.py", "later edit\n");
+        assert!(owner.creation_review_incomplete);
         let purposes = vec![
             agentmage_kernel_engine::review_packet::ChangePurposeAssignment {
                 operation_id: "edit-0".into(),
@@ -1843,6 +1844,241 @@ fn creation_review_requires_original_proof_and_refuses_incomplete_or_unpublished
                     .is_none()
             );
         }
+        assert!(!f.0.join("original/new.py").exists());
+        f.assert_preserved();
+    }
+}
+
+#[test]
+fn creation_review_failed_manual_edit_cannot_relabel_published_creation() {
+    let f = Fixture::new();
+    let lease = runtime_lease(f.owner());
+    runtime_create(&f, &lease, &[("new.py", "created\n", 0o600)], true, None).unwrap();
+    let mut owner = recover_lease(lease);
+    assert!(!owner.creation_review_incomplete);
+    let preview = owner
+        .prepare_edit(
+            owner.select_created_sources(&["new.py".into()]).unwrap(),
+            &[LinuxCodingReplacement {
+                path: "new.py",
+                before_sha256: &hash(b"created\n"),
+                content: "proposed\n",
+            }],
+            "Reject a changed preimage",
+            NOW,
+        )
+        .unwrap();
+    fs::write(f.0.join("owned/worktree/new.py"), b"human drift\n").unwrap();
+    assert_eq!(
+        owner
+            .decide_edit(preview["preview_sha256"].as_str().unwrap(), true, NOW)
+            .unwrap_err()
+            .code(),
+        "code.write.transaction"
+    );
+    assert_eq!(
+        fs::read(f.0.join("owned/worktree/new.py")).unwrap(),
+        b"human drift\n"
+    );
+    assert!(owner.creation_review_incomplete);
+    assert!(!owner.created.as_ref().unwrap().edits.contains_key("new.py"));
+    f.edit(&mut owner, "new.py", "later approved\n");
+    assert!(owner.applied_write.is_some());
+    assert_eq!(
+        owner
+            .capture_applied_write_review(history_purposes(1))
+            .unwrap_err()
+            .code(),
+        "code.commit.creation-provenance"
+    );
+    assert_eq!(
+        fs::read(f.0.join("owned/worktree/new.py")).unwrap(),
+        b"later approved\n"
+    );
+    assert!(!f.0.join("original/new.py").exists());
+    f.assert_preserved();
+}
+
+#[test]
+fn creation_review_unpublished_edit_retires_all_published_creation_history() {
+    // Editing another path also takes the shared native history. The creation's
+    // bytes need not change for its original approval proof to become unavailable.
+    for edited_path in ["new.py", "one.py"] {
+        let f = Fixture::new();
+        let lease = runtime_lease(f.owner());
+        runtime_create(&f, &lease, &[("new.py", "created\n", 0o600)], true, None).unwrap();
+        runtime_edit_at(&f, &lease, edited_path, "unpublished edit\n", false);
+        let mut owner = recover_lease(lease);
+        assert!(owner.creation_review_incomplete, "{edited_path}");
+        assert!(owner.applied_write.is_none());
+        f.edit(&mut owner, edited_path, "later approved\n");
+        let lease = runtime_lease(owner);
+        runtime_create(
+            &f,
+            &lease,
+            &[("other.py", "later creation\n", 0o640)],
+            true,
+            None,
+        )
+        .unwrap();
+        let owner = recover_lease(lease);
+        assert!(owner.applied_write.is_some());
+        assert!(owner.creation_review_incomplete);
+        assert_eq!(
+            owner
+                .capture_applied_write_review(history_purposes(2))
+                .unwrap_err()
+                .code(),
+            "code.commit.creation-provenance"
+        );
+        assert_eq!(
+            fs::read(f.0.join("owned/worktree").join(edited_path)).unwrap(),
+            b"later approved\n"
+        );
+        assert!(!f.0.join("original/new.py").exists());
+        assert!(!f.0.join("original/other.py").exists());
+        assert_eq!(fs::read(f.0.join("original/one.py")).unwrap(), b"first\n");
+        f.assert_preserved();
+    }
+}
+
+#[test]
+fn creation_review_rejected_edit_completion_cannot_restore_original_creation_proof() {
+    use agentmage_kernel_engine::write_transaction::WriteTransactionResult;
+    let corruptions: [fn(&mut WriteTransactionResult); 3] = [
+        |r| r.transaction_id = "foreign-transaction".into(),
+        |r| r.receipts.last_mut().unwrap().receipt_sha256 = "0".repeat(64),
+        |r| r.grant_consumption.issued_revision += 1,
+    ];
+    for corrupt in corruptions {
+        let f = Fixture::new();
+        let lease = runtime_lease(f.owner());
+        runtime_create(&f, &lease, &[("new.py", "created\n", 0o600)], true, None).unwrap();
+        let scope =
+            LinuxCodingReadScope::select(&f.0.join("owned/worktree"), &["new.py".into()]).unwrap();
+        let pending = scope
+            .prepare_write(
+                &[LinuxCodingReplacement {
+                    path: "new.py",
+                    before_sha256: &hash(b"created\n"),
+                    content: "actual native edit\n",
+                }],
+                "Refuse substituted completion",
+                NOW,
+            )
+            .unwrap();
+        assert!(
+            pending
+                .apply_with_owned_driver(&scope, &lease, NOW, true, Some(corrupt))
+                .is_err()
+        );
+        let mut owner = recover_lease(lease);
+        assert!(owner.creation_review_incomplete);
+        assert!(owner.applied_write.is_none());
+        assert_eq!(
+            fs::read(f.0.join("owned/worktree/new.py")).unwrap(),
+            b"actual native edit\n"
+        );
+        f.edit(&mut owner, "new.py", "later approved\n");
+        assert_eq!(
+            owner
+                .capture_applied_write_review(history_purposes(1))
+                .unwrap_err()
+                .code(),
+            "code.commit.creation-provenance"
+        );
+        assert!(!f.0.join("original/new.py").exists());
+        f.assert_preserved();
+    }
+}
+
+#[test]
+fn creation_review_inert_edit_choices_preserve_published_proof_and_successful_retries() {
+    use agentmage_kernel_engine::review_packet::{ChangePurposeAssignment, CommitChangePurpose};
+    for choice in ["deny", "expire", "stale", "abandon"] {
+        let f = Fixture::new();
+        let lease = runtime_lease(f.owner());
+        runtime_create(&f, &lease, &[("new.py", "created\n", 0o600)], true, None).unwrap();
+        let mut owner = recover_lease(lease);
+        let purposes = || {
+            vec![ChangePurposeAssignment {
+                operation_id: "create-0".into(),
+                purpose: CommitChangePurpose::Behavior,
+            }]
+        };
+        let before = owner.capture_applied_write_review(purposes()).unwrap();
+        let preview = owner
+            .prepare_edit(
+                owner.select_created_sources(&["new.py".into()]).unwrap(),
+                &[LinuxCodingReplacement {
+                    path: "new.py",
+                    before_sha256: &hash(b"created\n"),
+                    content: "proposed\n",
+                }],
+                "Keep prior creation when no edit dispatches",
+                NOW,
+            )
+            .unwrap();
+        let digest = preview["preview_sha256"].as_str().unwrap();
+        match choice {
+            "deny" => assert_eq!(
+                owner.decide_edit(digest, false, NOW).unwrap()["outcome"],
+                "denied"
+            ),
+            "expire" => assert_eq!(
+                owner
+                    .decide_edit(
+                        digest,
+                        true,
+                        preview["expires_at_epoch_ms"].as_u64().unwrap()
+                    )
+                    .unwrap_err()
+                    .code(),
+                "code.edit.expired"
+            ),
+            "stale" => assert_eq!(
+                owner
+                    .decide_edit(&hash(b"wrong preview"), true, NOW)
+                    .unwrap_err()
+                    .code(),
+                "code.edit.stale"
+            ),
+            "abandon" => owner.abandon_pending_decisions(),
+            _ => unreachable!(),
+        }
+        assert!(!owner.creation_review_incomplete, "{choice}");
+        assert_eq!(
+            owner.capture_applied_write_review(purposes()).unwrap(),
+            before
+        );
+        assert_eq!(
+            fs::read(f.0.join("owned/worktree/new.py")).unwrap(),
+            b"created\n"
+        );
+        // Both checked native completion paths must restore absent-before
+        // review, instead of leaving every ordinary successful edit blocked.
+        f.edit(&mut owner, "new.py", "manual retry\n");
+        assert!(!owner.creation_review_incomplete);
+        let lease = runtime_lease(owner);
+        runtime_edit_at(&f, &lease, "new.py", "runtime retry\n", true);
+        let owner = recover_lease(lease);
+        assert!(!owner.creation_review_incomplete);
+        let projection = owner
+            .capture_applied_write_review(history_purposes(1))
+            .unwrap();
+        assert_eq!(projection.files()[0].preimage_sha256, "0".repeat(64));
+        assert_eq!(
+            projection.files()[0].postimage_sha256,
+            hash(b"runtime retry\n")
+        );
+        let mut owner = owner;
+        f.edit(&mut owner, "one.py", "unrelated approved edit\n");
+        assert!(!owner.creation_review_incomplete);
+        let projection = owner
+            .capture_applied_write_review(history_purposes(2))
+            .unwrap();
+        assert_eq!(projection.files()[0].path, "new.py");
+        assert_eq!(projection.files()[0].preimage_sha256, "0".repeat(64));
         assert!(!f.0.join("original/new.py").exists());
         f.assert_preserved();
     }

@@ -165,7 +165,19 @@ impl LinuxCodingRepository {
             Some(json!({"preview_sha256":digest,"outcome":"dispatching","effect":"unknown"}));
         self.command = None;
         self.apply = None;
+        let previous_creation_review_incomplete = self.creation_review_incomplete;
+        let creation_lineage_at_risk = self.created.as_ref().is_some_and(|created| {
+            created
+                .edits
+                .values()
+                .any(|edit| edit.created_mode.is_some() || edit.before_sha256 == "0".repeat(64))
+        });
         let previous_write = self.applied_write.take();
+        let retained_previous_proof = previous_write.is_some();
+        // The shared history can contain creations even when this edit touches
+        // another path. Retiring it before dispatch must fail closed on unwind,
+        // failed native apply, lost completion or incomplete proof composition.
+        self.creation_review_incomplete |= creation_lineage_at_risk;
         // Uncertain writes must never leave an older transferable postimage.
         if let Some(created) = &mut self.created {
             for path in pending.edits.keys() {
@@ -217,6 +229,9 @@ impl LinuxCodingRepository {
                 (None, proof) => proof,
                 (_, None) => None,
             };
+            self.creation_review_incomplete = previous_creation_review_incomplete
+                || (creation_lineage_at_risk
+                    && (!retained_previous_proof || self.applied_write.is_none()));
         }
         self.edit_result = Some(value.clone());
         Ok(value)
