@@ -1,0 +1,127 @@
+Commit: b56acdd7f29b614fd01d8394c59d76c3f92b89e9
+Scope: local-coding-31b-measurement
+
+# Independent review — 31B development measurement (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate read-only session, extra-high effort. Range reviewed:
+1e35e2d2232eec97a8bbfaf4f345a1fa84311166..b56acdd7f29b614fd01d8394c59d76c3f92b89e9 (4 files:
+TASKS.md, docs/evidence/coding-scoreboard.md, docs/evidence/t303-31b-measurement-2026-11-11.md,
+docs/reviews/1e35e2d2232e-local-coding-a4b-measurement.txt). Product source is unchanged at
+42612ca9787f07e4df79402e6d92f39f578e5c67. No model, candidate, hidden test or held-out task was run;
+no GPU was used; the retired /lane/state/target was not used; the repository was not modified.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` in /lane/review-checkout = b56acdd7f29b614fd01d8394c59d76c3f92b89e9.
+- Verified size and SHA-256 of every shared file named in the request (all 8 new 31B files, the primary
+  ranges archive and bootstrap, the JavaScript runtime and its licence notice); all match the request.
+  The prior A4B bootstrap and archive used by the additive check also match their pinned hash
+  (8d7eecda…fbd4).
+- Read before executing: both restore bootstraps (31B and primary), the prior A4B bootstrap, both cold
+  drivers and both cold logs, the package log, the docs fast-gate log, and the retained scripts
+  audit.py, controller.py, prepare_review_helper.py, verify_proposals.py, compare_31b_contexts.py and
+  verify_manifest.py (plus relevant parts of batch.py and measurement_chat.py for the stated
+  300/60 s and 310 s settings).
+- Bootstrap reading: the 31B bootstrap pins the archive hash, validates every entry (relative, no `..`,
+  under the measurement root, regular files/directories only, no duplicates) before any write, then for
+  each entry asserts no symlinked parent or target, creates files with `open('xb')` (never overwrite),
+  and compares bytes of existing files. It then verifies both prior manifests (whose bytes come from the
+  hash-pinned archive or are byte-checked against it) and finally pins and verifies the 78,416-file
+  manifest. Output is exactly two PASS lines then JSON. The first cold driver's JSON parse error is
+  consistent with that output; the final driver checks the exact two-line prefix.
+
+## Exact commands and results
+
+All commands ran in /lane/review-checkout; output directory /lane/state/tmp/31b-measurement-review-HDekeb.
+
+1. `bash /tools/build-slot python3 -B /lane/reviews/42612ca9787f-31b-cold-check-final.py` to a NEW log
+   /lane/state/tmp/31b-review-coldlog-237/cold-restore-final-reviewer.log: exit 0. Its output is
+   line-for-line identical to the builder's final log: empty restore, repeated restore (equal JSON),
+   A4B restore then additive 31B restore, conflicting file refused with sentinel intact, symlinked
+   directory refused with outside directory empty, temporary state removed.
+2. `python3 -B /lane/reviews/42612ca9787f-31b-prepare-ranges-review.py` into the real (previously
+   absent) /lane/state/measure-five-20261111: two prior-manifest PASS lines, then
+   78,416 files, manifest 0c64857b…24bf7.
+3. `python3 -B …/verify_manifest.py`: 21,091 files, 4ee396ca…c0f1.
+4. `AGENTMAGE_MEASURE_REPO="$PWD" bash /tools/build-slot python3 -B …/audit.py --models gemma4-31b`
+   with GIT_DIR set: `cmp` against 31b-results.json is byte-identical; SHA-256 d5544d16…79c2, matching
+   the evidence "Audited results" binding.
+5. `prepare_review_helper.py`, then `cargo build --locked --offline` of the helper with
+   CARGO_TARGET_DIR in the output directory: success (dev profile, 18.88 s).
+6. `verify_proposals.py --helper <my build> --models gemma4-31b`: `{"verified_tasks": {"gemma4-31b": 30},
+   "candidate_execution": false, "hidden_tests_loaded": false}`; my helper hash 4ae36b63…9b35 differs
+   from the builder's adbc8794…de3 by build path only, as expected. Semantics are identical: all 30 contexts
+   and all 8 strict checks reproduce; every candidate equals the base projection.
+7. `python3 -B /lane/reviews/42612ca9787f-prepare-ranges-review.py`: 19,633 files, 4a883ee5…4eb3.
+   `compare_31b_contexts.py`: `cmp` with 31b-context-comparison.json is byte-identical (b9038caf…fcfb);
+   30/30 contexts and request messages match the primary gpt-oss run byte for byte.
+8. `cmp docs/reviews/1e35e2d2232e-local-coding-a4b-measurement.txt /lane/reviews/1e35e2d2232e-local-coding-a4b-measurement.md`:
+   identical (parent PASS retained verbatim).
+9. Runtime d1de76d8…932c and licence 4573185d…d18 hashes match; I read the licence notice (MIT-style
+   Node.js notice plus bundled-component notices). `node --version`: v24.15.0.
+10. `python3 -B scripts/local_agent_fast_gate.py --base 1e35e2d2…`: FAST GATE: PASS (diff check,
+    untracked lint, review lint, markdownlint 3 files / 0 issues).
+11. `git diff --check 1e35e2d2… --`: clean. `git status --short`: empty.
+
+Additional checks of my own:
+
+- Every binding hash in the evidence table matches the restored files: weights/runtime manifest/
+  model identity (from results), development set 0c2a0624…, freeze 972c6947…, API binary 72ca6848…,
+  original helper 0e06f7b8…, reproduction a34fb8c7…, context comparison b9038caf…, both manifests.
+- All 30 per-task rows in the evidence match the audited `development` records exactly (task,
+  preflight, allowance, request/check seconds to 3 d.p., observed counters, cause): 0 mismatches.
+  Sums: request/check 8303.782 s; counters 54,642 / 55,081 over 8 tasks; allowance range
+  22,998–29,579 = 32768 − preflight − 32; reserved wall 8853.704 s / 60 = 147.562 min.
+- The new 31B manifest contains every A4B manifest entry unchanged (60,276/60,276). The first two 31B
+  attempts (gemma4-31b-00) were already bound there. The audit requires 300000/60000 ms settings, the
+  same policy hash, API binary, helper, n_ctx and an identical model identity for every job,
+  including job 00. Its reservation log and batch report show the same settings. Mixing the two
+  controllers changed no measured variable.
+- All 15 reservation logs show the shared build reservation, exclusive GPU reservation, model verification,
+  two task lines and a `completed` status; every report has settings revoked, API reaped, key and socket
+  removed, no resource-guard error and sampled peak GPU 20,678–21,245 MiB (≤ 22,528).
+- The scoreboard's prior-run comparison (29 timeouts, 0/30 at 120/30 s) matches the existing
+  November 10/11 rows in docs/evidence/coding-scoreboard.md. Settings in batch.py and
+  measurement_chat.py (300/60 s, 310 s) and controller.py (900 s jobs) match the stated changes.
+- Escape attempts on the 31B restore helper (network-disabled bwrap, temporary /lane/state): (a) dangling
+  file symlink at a bound file path → AssertionError, outside directory empty; (b) the measurement root itself
+  a symlink → refused, outside empty; (c) a nested `collection` directory symlink → refused, outside
+  empty. As documented, earlier missing paths can be added before the refusal.
+- Private inspection (content not reproduced here): all 8 strict-format refusals are complete answers
+  whose only defect is a Markdown code fence around otherwise parseable JSON, which the system
+  instruction forbids ("No Markdown"). Refusals are therefore correct under the stated contract.
+  All 22 timeouts end at 300.006–300.020 s, i.e. the total limit.
+- Evaluation integrity: the commit changes only documentation; no prompt, code or source change; no
+  held-out, hidden-test or candidate execution; all 30 attempts are counted (22 + 8) and zero
+  does-not-fit; the audit is re-runnable by one command and byte-identical.
+- Honest claims: pass rates are stated as unavailable, not zero; "strict ungraded proposals" are not
+  called solved tasks. GPU minutes are described as reserved wall time, not kernel time. Combined
+  variables are stated as not isolated, and 32K is not called a hardware limit. No row, sub-row,
+  tick, role or admission claim is added. TASKS.md, the scoreboard and the evidence agree, and the
+  remaining model (qwen35-27b) matches policy.json.
+- MEASURE FIRST: the batch has its scoreboard line on the same day. Changed context/output budgets
+  and timeouts are stated, ceilings are named, does-not-fit is counted apart, and every number traces
+  to the audited raw logs.
+- Public hygiene: the added lines contain no private host path, username, hostname, e-mail or
+  credential, and name no other agent product, private project, paper or patent. The /lane/… paths
+  appear only inside the verbatim retained parent review, as in earlier accepted reviews. The private
+  home path in prepare_review_helper.py lives only in /lane/state, not in the repository. Model family
+  names are used as identifiers, not branding.
+
+## Findings
+
+No critical, high or medium findings.
+
+- L1 (low, backlog): docs/evidence/t303-31b-measurement-2026-11-11.md:51 reports the 8 refusals only as
+  `code.proposal.format`. They share one structural cause: fenced JSON contrary to the "No Markdown"
+  instruction. Fix: add one sentence saying so (no raw content), so the next source change after the
+  remaining repeat starts from it. Do not tune on held-out tasks. Nothing currently stated is wrong.
+- Inherited low notes stay open as already recorded: the qwen35-27b repeat, atomic preflight for the
+  additive restore, and the T-309 note on backend cancellation positions and transport sublimits.
+
+## Per-row result
+
+- T-303: non-closing development measurement verified. Evidence reproduced; row stays open.
+- T-306: non-closing; no loop, apply, test or push path exercised; row stays open.
+
+Verdict: PASS

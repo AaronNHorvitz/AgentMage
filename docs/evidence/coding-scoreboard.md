@@ -778,6 +778,9 @@ without rerunning or dropping either earlier attempt. No model was downloaded.
 | `generation-refused:error:chat.transport.timeout` | 22 |
 | `strict-edit-refused:code.proposal.format` | 8 |
 
+All eight complete answers wrap JSON in Markdown code fences, contrary to the
+existing “No Markdown” instruction; strict checking correctly refuses them.
+
 Unambiguous backend counters cover 8/30 tasks:
 54642 input / 55081 output tokens.
 API usage was not requested; other counters remain unknown.

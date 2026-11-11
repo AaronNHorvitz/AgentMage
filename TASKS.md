@@ -8,13 +8,22 @@ CAP-29 work and changes neither measure-first nor the coding-agent work order.
 The [planning evidence](docs/evidence/t315-memory-linking-study-plan-2026-11-11.md)
 records the scope and documentation checks; T-315 stays open.
 
+The retained [31B measurement review](docs/reviews/b56acdd7f29b-local-coding-31b-measurement.txt)
+has **Verdict: PASS** for exact commit
+`b56acdd7f29b614fd01d8394c59d76c3f92b89e9`, with no high or medium finding.
+A fresh source build independently reproduces all 30 contexts and eight strict
+checks; the documentation gate and cold/additive restoration checks pass.
+Its low format finding is clarified: all eight complete answers contain
+Markdown fences forbidden by the existing prompt. The remaining model repeat
+and inherited T-309 backlog remain open. Neither T-303 nor T-306 closes.
+
 The [31B development measurement](docs/evidence/t303-31b-measurement-2026-11-11.md)
 runs all 30 frozen development tasks once at source
 `42612ca9787f07e4df79402e6d92f39f578e5c67`: 0/30 strict ungraded
 proposals; task pass rates unavailable. No tests, retries or held-out tasks ran.
 One other complete prepared-model repeat remains pending. Largest individual
 refusal: `generation-refused:error:chat.transport.timeout` (22); the other eight
-attempts fail strict format checking. Independent core review is required.
+attempts fail strict format checking. The retained independent review above returns PASS.
 T-303/T-306 remain open without new rows, sub-rows or completion ticks.
 
 The retained [A4B measurement review](docs/reviews/1e35e2d2232e-local-coding-a4b-measurement.txt)
