@@ -643,6 +643,8 @@ AgentMage assigns one authority to each data domain:
 - **Markdown beginning in v0.2:** sole authority for user-owned knowledge and approved portable long-term memory.
 - **JSON Lines:** explicit derived audit or export format only; never a co-authoritative database.
 
+CAP-29's [open memory-linking study](docs/decisions/0204-open-study-memory-linking.md) will compare replaceable, named and versioned memory-writing, linking and context-selection methods using fixed tasks and run evidence; T-315 begins no earlier than the first CAP-29 work, with no current implementation or priority change.
+
 ```mermaid
 flowchart TD
     OP["Sessions, plans, actions, grants, events, receipts, checkpoints"] --> SQL[("Encrypted SQLite")]

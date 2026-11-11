@@ -2,6 +2,10 @@
 
 ## Active queue: local agent mission
 
+The owner's [open memory-linking study](docs/decisions/0204-open-study-memory-linking.md)
+is recorded as planning only in T-315. It starts no earlier than the first
+CAP-29 work and changes neither measure-first nor the coding-agent work order.
+
 The [31B development measurement](docs/evidence/t303-31b-measurement-2026-11-11.md)
 runs all 30 frozen development tasks once at source
 `42612ca9787f07e4df79402e6d92f39f578e5c67`: 0/30 strict ungraded
@@ -2515,6 +2519,7 @@ hidden tests or weaken thresholds. Desktop UI work is deferred to a separate she
 | [ ] | T-308 | T-307 | User-level Kinoite build/install, user service, CLI launcher, uninstall and guide exercising chat, task, documents, research and code. Temporary-HOME verification and scripted end-to-end demonstration. |
 | [ ] | T-309 | T-301 through T-308 implementations | Revisit all three-strike findings; review permissions and sandbox across tools. Earlier rows must close or name an explicit owner-action blocker. |
 | [ ] | T-310 | T-309 | Full gate including the unchanged long documentation gate once, end-to-end demonstration and independent PASS. Then prepare OWNER-TEST-READY with exact build/install/start commands, guide and unexercised owner checks; no public release. |
+| [ ] | T-315 | Starts no earlier than the first CAP-29 work; preserves current queue order | Study how agent memories are linked under [Decision 0204](docs/decisions/0204-open-study-memory-linking.md). Compare named, versioned, replaceable linking methods over the same facts, with per-link provenance and set-wide disabling without rewrites. Keep source-backed memory writing and context selection replaceable and record all method names/versions in run evidence. Fixed-task comparisons report needed facts reached, wrong facts brought into context, cost and task outcomes; adopt by measurement without changing thresholds or choosing methods on held-out results. Planning only now; implementation evidence and independent PASS required for closure. |
 
 ## Current Delivery Amendment (2026-09-24)
 

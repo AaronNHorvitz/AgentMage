@@ -51,7 +51,7 @@ test, not duplicated implementations or shared mutable state.
 | CAP-26 | P1 | Runtime | Language intelligence | Qualified language-server adapters provide diagnostics, references and rename previews; launches, workspace edits and dynamic server configuration use ordinary tool authority. |
 | CAP-27 | P2 | Memory + Coordinator | Cross-repository impact graph | Versioned source/dependency/interface relations support impact queries with provenance and scope isolation; stale indexing is explicit and never grants cross-repository write access. |
 | CAP-28 | P1 | Runtime + Host | Inspectable context budgeting | Show pinned instructions, selected sources, token estimates and compaction/omission decisions; retained constraints and source links survive reflow and model switching. |
-| CAP-29 | P1 | Memory + Runtime | Source-backed project memory | Store bounded scoped facts with citations, corrections, expiry, revocation and deletion behavior; existing authoritative stores remain authoritative until migration is qualified. |
+| CAP-29 | P1 | Memory + Runtime | Source-backed project memory | Store bounded scoped facts with citations, corrections, expiry, revocation and deletion behavior; existing authoritative stores remain authoritative until migration is qualified. See [the open linking study](#open-study-how-agent-memories-are-linked). |
 | CAP-30 | P0 | Runtime + Coordinator | Crash-safe resume | Recover interrupted work without replaying uncertain effects, losing user edits or reusing expired authority; repository and model drift require revalidation. |
 | CAP-31 | P1 | Runtime + Coordinator | Engineering recipes | Versioned, parameterized dependency updates, migrations, security repairs, docs and test recipes declare scope, prerequisites, verification and rollback boundaries. |
 | CAP-32 | P2 | Runtime + Memory | Authorized knowledge connectors | Scoped tickets, documents and decision records have provider-specific authorization, retention and revocation; no ambient access to a user's connected accounts. |
@@ -71,6 +71,20 @@ test, not duplicated implementations or shared mutable state.
 | CAP-46 | P0 | All owners | Reproducible evaluations | Publish exact real-repository/model/hardware profiles and outcomes, including interruption, adversarial and recovery tests; distinguish fake-provider, local-model and independent evidence. |
 | CAP-47 | P1 | Host + all owners | Private support and diagnostics | Provide inspectable, manually exported redacted support bundles and outcome evidence; no automatic telemetry or crash uploads and no private identities in public artifacts. |
 | CAP-48 | P1 | All owners | Sustainable licensing and packaging | Reconcile root licenses, SPDX/package metadata, notices, dependency/model obligations and contribution provenance; validate paid-pilot value before pricing or release claims. |
+
+## Open study: how agent memories are linked
+
+CAP-29 must study which facts to link, when and by what method so later context
+selection reaches needed facts beyond word or meaning matches. No algorithm is
+selected. [Decision 0204](docs/decisions/0204-open-study-memory-linking.md) requires
+named, versioned, replaceable linking methods with provenance on every link,
+coexisting methods over the same facts and disabling a method as a set without
+rewriting data. Memory writing and context selection are replaceable too, with
+their names and versions in run evidence. Compare methods on the same fixed
+tasks: needed facts reached, wrong facts retrieved, cost and task outcomes;
+never choose a method using held-out results or change existing thresholds.
+T-315 begins no earlier than the first CAP-29 work. This is planning only and
+does not change the current coding or measure-first priorities.
 
 ## First Research Increment
 
@@ -112,6 +126,8 @@ local model inference and cloud model inference are three distinct disclosures.
    inference process; consumer-specific launchers cannot race independent GPU allocations.
    Defer optional integrations until standalone behavior and both adapter sides are qualified.
 5. Memory initially remains a rebuildable derived index with provenance and per-scope budgets.
+   The [open linking study](#open-study-how-agent-memories-are-linked) governs later
+   method selection; no graph-linking algorithm is presumed qualified.
    Test corrections, stale generations, revocation, reopen and source deletion before promotion.
    Graph retrieval improves context selection; it does not guarantee that a small model never
    forgets, reasons correctly or matches a frontier model.
