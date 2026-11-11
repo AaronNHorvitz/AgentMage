@@ -237,6 +237,7 @@ fn equal(a: &str, b: &str) -> bool {
 
 struct Configuration {
     endpoint: String,
+    limits: TransportLimits,
     // Runs can retain these exact immutable instances without borrowing mutable
     // settings or copying credentials. Operation/revocation rules stay here.
     transport: Arc<LocalChatTransport>,
@@ -668,6 +669,18 @@ struct Settings {
     #[serde(default, deserialize_with = "secret")]
     key: Option<Zeroizing<String>>,
     approve_conversations: bool,
+    #[serde(default = "default_total_timeout_ms")]
+    total_timeout_ms: u64,
+    #[serde(default = "default_idle_timeout_ms")]
+    idle_timeout_ms: u64,
+}
+
+fn default_total_timeout_ms() -> u64 {
+    TransportLimits::default().total.as_secs() * 1000
+}
+
+fn default_idle_timeout_ms() -> u64 {
+    TransportLimits::default().idle.as_secs() * 1000
 }
 
 fn secret<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<Zeroizing<String>>, D::Error> {
@@ -1923,7 +1936,9 @@ fn handle(
             response(
                 socket,
                 200,
-                json!({"endpoint":state.configured.as_ref().map(|c| &c.endpoint),"settings_revision":state.revision}),
+                json!({"endpoint":state.configured.as_ref().map(|c| &c.endpoint),"settings_revision":state.revision,
+                    "total_timeout_ms":state.configured.as_ref().map(|c| c.limits.total.as_millis()),
+                    "idle_timeout_ms":state.configured.as_ref().map(|c| c.limits.idle.as_millis())}),
             )
         }
         ("PUT", "/v1/settings") => {
@@ -1945,14 +1960,20 @@ fn handle(
                 None => None,
             };
             let approval = LocalChatApproval::for_endpoint(endpoint.clone());
-            let transport = LocalChatTransport::new(endpoint, key, TransportLimits::default())
-                .map_err(|_| ApiError::Configuration)?;
+            let limits = TransportLimits {
+                total: Duration::from_millis(input.total_timeout_ms),
+                idle: Duration::from_millis(input.idle_timeout_ms),
+            };
+            let Ok(transport) = LocalChatTransport::new(endpoint, key, limits) else {
+                return error(socket, 400);
+            };
             let mut state = state.lock().map_err(|_| ApiError::Io)?;
             if state.active.is_some() || state.runtime_excludes_manual() {
                 return error(socket, 409);
             }
             state.configured = Some(Arc::new(Configuration {
                 endpoint: input.endpoint,
+                limits,
                 transport: Arc::new(transport),
                 approval: Arc::new(approval),
             }));

@@ -1,0 +1,117 @@
+Commit: 6b15590e800e18b6f75b3b3350e1aa23ede2418f
+Scope: local-coding-development-measurement
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate read-only session. This is a same-model review.
+Rows: T-303 / T-306 (non-closing development measurement; T-314 scoreboard file). No row is proposed for closure.
+
+## Methods
+
+Pinned checkout: /lane/review-checkout. `git rev-parse HEAD` = 6b15590e800e18b6f75b3b3350e1aa23ede2418f.
+I read IP-POLICY.md, the MEASURE FIRST / REFOCUS sections of the builder brief, the top of TASKS.md and the
+complete four-file diff from 33ae305a3bc0bca71f3dbdee3dc6f79a4c5eddf3. I recomputed every aggregate in the new
+scoreboard section from the 180 per-task rows in the evidence file. I checked the prose claims against product
+source (output caps, transport error codes, Git-artifact refusal) and the lane environment. I did not change the
+repository.
+
+## Commands and results
+
+1. `test "$(git rev-parse HEAD)" = 6b15590e…` → HEAD-OK.
+2. `git diff --stat 33ae305a… HEAD` → 4 files, all documentation: TASKS.md, docs/evidence/coding-scoreboard.md,
+   docs/evidence/t303-development-measurement-2026-11-10.md, and
+   docs/reviews/33ae305a3bc0-local-coding-candidate-build-deadline.txt. No product source, test, schema, SBOM or
+   row status changed.
+3. `cmp /lane/reviews/33ae305a3bc0-local-coding-candidate-build-deadline.md docs/reviews/33ae305a3bc0-local-coding-candidate-build-deadline.txt`
+   → exit 0 (byte-identical).
+4. `git diff --check 33ae305a… --` → exit 0. `git status --short` → empty, before and after.
+5. `CARGO_TARGET_DIR=/lane/state/review-target PATH=/lane/state/tmp/t306-confined-candidate/node/bin:$PATH python3 -B scripts/local_agent_fast_gate.py --base 33ae305a…`
+   → FAST GATE: PASS, 4 commands (diff --check, --lint-untracked, --lint-reviews on the retained review,
+   markdownlint on 3 files: 0 issues).
+6. **Sealed private roots are absent from this review session.** `ls /lane/state/` shows only `review-target` and
+   `tmp`; `/lane/state/measure-20261110` and `/lane/state/measure-more-20261110` do not exist, and a filesystem
+   search found neither. `python3 -B /lane/state/measure-20261110/verify_manifest.py` →
+   `can't open file … [Errno 2] No such file or directory`, exit 2. So none of these could run: manifest
+   verification (expected 117972 files, SHA256 db75967c…), `audit_all.py` and its `cmp` against
+   `verified-results.json` (expected 0c9006b3…), `prepare_review_helper.py`, the fresh offline helper build, or
+   `verify_proposals.py` (expected 30 tasks × 6 models, candidate_execution=false, hidden_tests_loaded=false).
+   I could not read or verify the scripts that the request asked me to read before running. I removed the
+   empty temporary directory I had created (/lane/state/tmp/measure-review-gQ6Rth).
+7. Internal consistency, from a Python recomputation over the 180 per-task rows:
+   - each model has 30 unique tasks; 180 rows in total;
+   - every output allowance equals `min(32768, 32768 - preflight - 32)`; the min/max per model match the scoreboard
+     ranges exactly;
+   - outcome counts per model match the cause table exactly. Totals: transport.timeout 104, strict proposals 36
+     (10/12/10/0/0/4);
+   - tasks with observed counters (12/22/28/0/1/4) and the input/output sums match the counter table exactly. Every
+     observed input equals its preflight input;
+   - request/check sums match within 0.003 s (rounding of per-row milliseconds);
+   - reserved job wall s / 60 equals GPU work minutes for all six models; 6 models × 15 two-task jobs = 90 jobs.
+8. Blocker corroboration: `stat /usr/bin/git /usr/libexec/git-core/git` → owner `nfsnobody` (65534), not root. This
+   matches the claimed `linux.repository.git_artifact.invalid` admission refusal
+   (platforms/linux/src/repository_safety.rs:86). The public proposal cap of 4,096 tokens is confirmed at
+   platforms/local-api/src/lib.rs:1062 and coding_mcp.rs:249. The transport codes `chat.transport.timeout`
+   (overall or idle deadline) and `chat.transport.limit` (wire/header/body ceiling) are confirmed at
+   platforms/linux-inference/src/local_chat_transport.rs:69-101. That supports the statement that a `limit`
+   event does not say which sublimit was hit.
+9. Licence links: the cited Qwen licence URL resolves to an Apache License 2.0 page. I did not open the Gemma page.
+
+## Prose review
+
+- Partial path versus graded passes: the scoreboard, evidence and TASKS.md all say first-attempt and within-budget
+  passes are "unavailable, not zero". Strict proposals are called "ungraded edits, not solved tasks". No pass rate
+  is derived from the 36 strict edits. Satisfied.
+- Both blockers are preserved in all three files: native executable-ownership refusal, and missing original
+  grading controls with the admission `evaluation.io-failed`. Satisfied.
+- Changed variables are listed against the 2026-11-06 checkpoint: 32,768 context (was 8,192), 32,768-byte selection
+  (was 6,000), output formula (was 2,048), the private adapter, two tasks per load (was five), and family-default
+  reasoning for the four added models. They are explicitly "not a controlled attribution experiment". The 6,000
+  and 2,048 baselines match docs/evidence/t303-snapshot-proposal-api-2026-11-06.md:72. Does-not-fit is 0 and is
+  stated. Satisfied.
+- Every model and task is listed (180 rows). Missing counters are "unknown", not zero. API usage is null.
+- Native tools, tests, retries and held-out runs are not implied: "One attempt per task, zero retries, zero
+  executed candidate tests", "Held-out tasks were not loaded or run", and worktree/test/retry/approval/commit/push
+  are listed as unmeasured.
+- 32K is described as "the largest prepared context tested here, not an exhaustive hardware-limit search". The
+  seventh Muse wrapper "was not used for inference". Satisfied.
+- Context selection uses only the task statement and editable base file. This is the same protocol as the
+  reviewed 2026-11-06 collector (t303-snapshot-proposal-api-2026-11-06.md:69-71), not a new path-oracle leak.
+- Privacy and IP: the added lines have no host home path, username, hostname, email or credential. The /lane
+  paths appear only inside the required verbatim retained review. There is no comparison with or naming of other
+  agent products. Model family names are used only to identify artifacts, not as branding.
+- Next work follows the largest cause (104 transport timeouts) and adds no guard increment. This matches MEASURE
+  FIRST item 4.
+- The scoreboard has the required line for this batch: date, commit, model, context/output budget,
+  first/within-budget (unavailable), time, GPU minutes and failures by cause.
+
+## Findings
+
+No critical, high or medium finding was found in the committed documents.
+
+- **Low — model label and licence evidence disagree.**
+  docs/evidence/t303-development-measurement-2026-11-10.md:62 and :80, and docs/evidence/coding-scoreboard.md:395.
+  The artifact is published as `qwen35-27b`, but the licence evidence links the page for a different version
+  (`Qwen3.8-27B`). The disclaimer that "the label is not a model claim" appears only in the evidence file; the
+  scoreboard table shows the bare label. A reader would take the 4/30 strict-proposal row to be a 3.5-series model.
+  Either the label or the licence check names the wrong model.
+  Fix: state the artifact's metadata-declared model name and version next to its bound SHA-256, and either rename
+  the label to match or link that exact model's licence page.
+- **Low — scoreboard omits the time limit that actually bound most attempts.**
+  docs/evidence/coding-scoreboard.md:378-388. The table gives 22,767–29,882 output tokens as "Output-token budget
+  range". But 104/180 attempts stopped at the unchanged 120 s total / 30 s idle transport deadline, long before
+  that allowance. The 120/30 s limit is stated only in the evidence file (t303-development-measurement…md:42).
+  Fix: next to the budget columns, add one scoreboard sentence that the transport limit (120 s total, 30 s idle)
+  and the unchanged byte caps were the effective ceiling.
+- **Backlog / owner attention (outside this diff; not verified).** The evidence says the original accepted
+  complete-controls receipt and its logs "are absent from lane retention". The reviewed 2026-11-06 graded
+  checkpoint and the closed T-311.18 baseline used those controls. If they are really gone, those published scores
+  can no longer be re-run with one command. Restoring or recording that retention loss should precede the next
+  graded line. I could not confirm the absence because the private roots are not visible to this session.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing measurement batch; T-314 scoreboard line): **INCONCLUSIVE.** The documents are
+  consistent, honest about scope and pass the fast gate. But the required manifest verification, full artifact
+  audit and native context/check reproduction could not run, so I cannot confirm that the numbers trace to the raw
+  logs (a high-severity evaluation-integrity check). The rows stay open as the builder proposed.
+
+Verdict: INCONCLUSIVE
+The sealed private roots /lane/state/measure-20261110 and /lane/state/measure-more-20261110 do not exist in this review session, so the required verify_manifest.py, audit_all.py, the fresh helper build and verify_proposals.py runs could not be performed.

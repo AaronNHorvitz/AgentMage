@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The [development measurement review](docs/reviews/6b15590e800e-local-coding-development-measurement.txt)
+is **INCONCLUSIVE** for exact commit
+`6b15590e800e18b6f75b3b3350e1aa23ede2418f`: no high or medium documentary
+finding, but the reviewer could not access the sealed private inputs. A private
+review archive now carries both unchanged input roots for reproduction; acceptance
+still requires an independent verdict. The scoreboard now states the effective
+120/30-second limits and the unidentified local conversion metadata explicitly.
+T-303/T-306 remain open.
+
 The [larger-budget development measurement](docs/evidence/t303-development-measurement-2026-11-10.md)
 and [scoreboard](docs/evidence/coding-scoreboard.md#larger-budget-development-measurement-2026-11-1011)
 record all 30 development tasks on six existing local backends. This is a partial

@@ -71,7 +71,7 @@ upgrade, redirects or retries.
 | --- | --- | --- |
 | GET `/v1/status` | Client or control | Version, configured/busy booleans and settings revision; no connection to a model |
 | GET `/v1/activity` | Client or control | Latest 128 ordered metadata events, last sequence and `retention: process-only` |
-| GET `/v1/settings` | Control | Chosen endpoint and revision, never its key |
+| GET `/v1/settings` | Control | Chosen endpoint, effective timeouts and revision, never its key |
 | PUT `/v1/settings` | Control | Explicit endpoint choice below; installs in-memory configuration without opening a model socket |
 | DELETE `/v1/settings` | Control | Clears configuration and erases its owned key; fails busy during an operation |
 | POST `/v1/probe` | Control | `{"endpoints":["http://127.0.0.1:8080/v1"]}`; at most eight explicit candidates, unauthenticated model listings only |
@@ -97,7 +97,9 @@ After the person chooses the endpoint for conversations, trusted settings send:
 {
   "endpoint": "http://127.0.0.1:8080/v1",
   "key": null,
-  "approve_conversations": true
+  "approve_conversations": true,
+  "total_timeout_ms": 300000,
+  "idle_timeout_ms": 60000
 }
 ```
 
@@ -109,6 +111,23 @@ scheme cannot configure an endpoint. A successful probe never chooses anything:
 chat and `/v1/models` still return 428 until explicit configuration. Probe requests
 never carry the configured key and cannot receive a key field. There is no
 ambient port scan, DNS, proxy, provider selection or environment credential.
+
+Both timeout fields are optional integer milliseconds. Omission preserves the
+transport defaults: 120000 total and 30000 idle. Total must be 1–300000; idle
+must be positive and at most total. Null, fractional, negative, duplicate and
+out-of-range values refuse with 400 without replacing the previous settings or
+opening a model connection. When unconfigured, both GET timeout fields are null.
+Choose these budgets in trusted controls for the expected local inference time;
+neither model text nor chat/proposal request arguments can change them.
+
+The immutable transport applies the chosen bounds to model listing, chat and
+manual coding proposals, including repairs. Coding request observations retain
+the exact total/idle durations. Progress never extends the total; timeout leaves
+all prior text partial. Existing cancellation, settings-revision checks and
+busy/revocation rules still apply. Probe budgets remain fixed. Native development
+launches have separate configuration and continue using their original transport
+defaults; this setting does not change native run or tool budgets. Output-token
+and response-size ceilings are unchanged.
 
 Settings and the model key are **not persisted**. Restart requires a fresh
 authenticated endpoint choice. API tokens persist in their private directory.

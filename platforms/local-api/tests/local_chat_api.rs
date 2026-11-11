@@ -2459,6 +2459,186 @@ fn proposal_usage_uses_the_same_validated_stream_without_authorizing_edits() {
 }
 
 #[test]
+fn trusted_timeout_settings_preserve_defaults_and_refuse_invalid_changes_without_io() {
+    let api = Api::new();
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let endpoint = format!("http://{}/v1", listener.local_addr().unwrap());
+    api.configure(&endpoint);
+    let settings = || {
+        let (status, body) = api.call("GET", "/v1/settings", CONTROL, None);
+        assert_eq!(status, 200);
+        serde_json::from_slice::<Value>(&body).unwrap()
+    };
+    assert_eq!(settings()["total_timeout_ms"], 120_000);
+    assert_eq!(settings()["idle_timeout_ms"], 30_000);
+    let input = json!({"endpoint":endpoint,"approve_conversations":true,
+        "total_timeout_ms":300_000,"idle_timeout_ms":300_000});
+    assert_eq!(
+        api.call("PUT", "/v1/settings", CLIENT, Some(input.clone()))
+            .0,
+        403
+    );
+    assert_eq!(
+        api.call("PUT", "/v1/settings", CONTROL, Some(input.clone()))
+            .0,
+        200
+    );
+    let accepted = settings();
+    assert_eq!(accepted["total_timeout_ms"], 300_000);
+    assert_eq!(accepted["idle_timeout_ms"], 300_000);
+    assert!(accepted.get("key").is_none());
+    for (field, invalid) in [
+        ("total_timeout_ms", json!(0)),
+        ("total_timeout_ms", json!(300_001)),
+        ("total_timeout_ms", json!(u64::MAX)),
+        ("total_timeout_ms", json!(-1)),
+        ("total_timeout_ms", json!(1.5)),
+        ("total_timeout_ms", json!("300000")),
+        ("total_timeout_ms", Value::Null),
+        ("idle_timeout_ms", json!(0)),
+        ("idle_timeout_ms", json!(300_001)),
+        ("idle_timeout_ms", json!(u64::MAX)),
+        ("idle_timeout_ms", json!(true)),
+        ("idle_timeout_ms", Value::Null),
+    ] {
+        let mut bad = input.clone();
+        bad[field] = invalid;
+        assert_eq!(api.call("PUT", "/v1/settings", CONTROL, Some(bad)).0, 400);
+        assert_eq!(settings(), accepted);
+    }
+    let duplicate = format!(
+        "{{\"endpoint\":{endpoint:?},\"approve_conversations\":true,\"total_timeout_ms\":300000,\"total_timeout_ms\":1}}"
+    );
+    assert_eq!(
+        split(api.raw(&api.bytes("PUT", "/v1/settings", CONTROL, duplicate.as_bytes(), ""))).0,
+        400
+    );
+    assert_eq!(settings(), accepted);
+    assert!(listener.accept().is_err(), "settings must not connect");
+    api.configure(&endpoint);
+    assert_eq!(settings()["total_timeout_ms"], 120_000);
+    assert_eq!(settings()["idle_timeout_ms"], 30_000);
+    assert_eq!(api.call("DELETE", "/v1/settings", CONTROL, None).0, 200);
+    assert_eq!(settings()["total_timeout_ms"], Value::Null);
+    assert_eq!(settings()["idle_timeout_ms"], Value::Null);
+}
+
+#[test]
+fn configured_timeouts_bind_the_exact_coding_exchange_and_cannot_be_model_arguments() {
+    for custom in [false, true] {
+        let api = Api::new();
+        let (endpoint, task) = upstream(|mut s| {
+            let raw = incoming(&mut s);
+            let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
+            let request: Value = serde_json::from_slice(&raw[start..]).unwrap();
+            assert!(request.get("total_timeout_ms").is_none());
+            assert!(request.get("idle_timeout_ms").is_none());
+            reply(
+                &mut s,
+                "text/event-stream",
+                &(chunk(&coding_answer()) + &end()),
+            );
+        });
+        let mut choice = json!({"endpoint":endpoint,"approve_conversations":true});
+        if custom {
+            choice["total_timeout_ms"] = json!(300_000);
+            choice["idle_timeout_ms"] = json!(60_000);
+        }
+        assert_eq!(
+            api.call("PUT", "/v1/settings", CONTROL, Some(choice)).0,
+            200
+        );
+        for field in ["total_timeout_ms", "idle_timeout_ms"] {
+            let mut input = coding_request();
+            input[field] = json!(300_000);
+            assert_eq!(
+                api.call("POST", "/v1/code/proposals", CLIENT, Some(input))
+                    .0,
+                400
+            );
+        }
+        let (status, body) = api.call("POST", "/v1/code/proposals", CLIENT, Some(coding_request()));
+        assert_eq!(status, 200);
+        let rows = events(&body);
+        let last = rows.last().unwrap();
+        assert_eq!(last["type"], "proposal");
+        assert_eq!(last["tested"], false);
+        assert_eq!(last["applied"], false);
+        assert_eq!(
+            rows[0]["model_binding"]["total_timeout"],
+            json!({"secs":if custom {300} else {120},"nanos":0})
+        );
+        assert_eq!(
+            rows[0]["model_binding"]["idle_timeout"],
+            json!({"secs":if custom {60} else {30},"nanos":0})
+        );
+        assert_endpoint_runtime_observation(&rows);
+        task.join().unwrap();
+    }
+}
+
+#[test]
+fn configured_idle_and_total_timeouts_stop_chat_without_promoting_partial_text() {
+    for idle in [false, true] {
+        let api = Api::new();
+        let (endpoint, task) = upstream(move |mut s| {
+            incoming(&mut s);
+            s.write_all(
+                b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nConnection: close\r\n\r\n",
+            )
+            .unwrap();
+            s.write_all(chunk("provisional").as_bytes()).unwrap();
+            if idle {
+                thread::sleep(Duration::from_secs(1));
+            } else {
+                // Progress must not renew the total deadline.
+                for _ in 0..100 {
+                    if s.write_all(b": progress\n\n").is_err() {
+                        return;
+                    }
+                    thread::sleep(Duration::from_millis(10));
+                }
+            }
+            let _ = s.write_all(end().as_bytes());
+        });
+        assert_eq!(
+            api.call(
+                "PUT",
+                "/v1/settings",
+                CONTROL,
+                Some(json!({
+                    "endpoint":endpoint,"approve_conversations":true,
+                    "total_timeout_ms":if idle {3000} else {250},
+                    "idle_timeout_ms":if idle {100} else {250}
+                }))
+            )
+            .0,
+            200
+        );
+        let (status, body) = api.call(
+            "POST",
+            "/v1/chat",
+            CLIENT,
+            Some(json!({
+                "model":"fixture","messages":[{"role":"user","content":"Hello"}],"max_tokens":100
+            })),
+        );
+        assert_eq!(status, 200);
+        let rows = events(&body);
+        assert!(
+            rows.iter()
+                .any(|r| r["type"] == "text" && r["text"] == "provisional")
+        );
+        assert_eq!(rows.last().unwrap()["type"], "error");
+        assert_eq!(rows.last().unwrap()["code"], "chat.transport.timeout");
+        assert_eq!(rows.last().unwrap()["partial"], true);
+        assert!(!rows.iter().any(|r| r["type"] == "complete"));
+        task.join().unwrap();
+    }
+}
+
+#[test]
 fn strict_multifile_proposals_stream_final_batch_bounds_through_the_configured_endpoint() {
     fn padded(first: &str) -> String {
         let mut s = format!("{first}\n");

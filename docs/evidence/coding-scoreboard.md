@@ -384,6 +384,12 @@ family defaults rather than the primary pair's medium reasoning setting.
 These are several changed variables, not a controlled attribution experiment.
 All 180 rendered inputs fit the served context; does-not-fit count is zero.
 One attempt per task, zero retries, zero executed candidate tests.
+The effective time ceilings were 120 seconds total and 30 seconds idle, with
+unchanged transport byte caps; the larger token allowance did not extend them.
+`qwen35-27b` is an opaque retained artifact label, not a verified model version.
+Its GGUF metadata supplies `general.size_label: 27B` and
+`general.license: apache-2.0`, but no model name or version. The linked base-model
+licence does not establish this local conversion's identity or provenance.
 
 | Date (UTC) | Model label | Context tokens | Output-token budget range | Dev first / within budget | Strict ungraded edits | Request/check s | Reserved job wall s | GPU work min |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |

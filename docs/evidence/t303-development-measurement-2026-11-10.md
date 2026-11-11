@@ -74,6 +74,13 @@ No role selection, native model admission or redistribution claim follows.
 | gemma4-31b | 17155893600 | `05e0fa1452e73e1b43bdfd378b82b488f57eb63db2bc5e4209f458e08d0542a7` |
 | qwen35-27b | 16547400032 | `5ae89d6720ba0a27f643e6fbb0d1b557870d17aeff23156e5981e863ec16985c` |
 
+Identity clarification after independent review: the last artifact has
+`general.size_label: 27B` and `general.license: apache-2.0`, but no GGUF model
+name, basename or version. Its retained `qwen35-27b` label does not establish a
+3.5-series identity. The base-model licence link above is not evidence of this
+conversion's exact name or provenance; that uncertainty remains open before
+further model admission. The observations remain bound to the exact weight hash.
+
 The four additional weight files declare permissive licensing in their metadata;
 the primary publisher licence pages were checked for
 [Gemma 4](https://ai.google.dev/gemma/apache_2) and

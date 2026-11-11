@@ -220,6 +220,7 @@ mod tests {
                 .unwrap();
         let mut config = Configuration {
             endpoint: endpoint.base_url(),
+            limits: TransportLimits::default(),
             transport: Arc::new(
                 LocalChatTransport::new(endpoint.clone(), None, TransportLimits::default())
                     .unwrap(),
@@ -280,6 +281,7 @@ mod tests {
                     .unwrap();
             let config = Configuration {
                 endpoint: endpoint.base_url(),
+                limits: TransportLimits::default(),
                 approval: Arc::new(LocalChatApproval::for_endpoint(endpoint.clone())),
                 transport: Arc::new(
                     LocalChatTransport::new(endpoint, None, TransportLimits::default()).unwrap(),
@@ -549,6 +551,7 @@ mod tests {
             });
             let config = Arc::new(Configuration {
                 endpoint: "synthetic".into(),
+                limits: TransportLimits::default(),
                 approval: Arc::new(LocalChatApproval::for_endpoint(endpoint.clone())),
                 transport: Arc::new(
                     LocalChatTransport::new(endpoint, None, TransportLimits::default()).unwrap(),
