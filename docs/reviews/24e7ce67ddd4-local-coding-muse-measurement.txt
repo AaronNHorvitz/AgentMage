@@ -1,0 +1,139 @@
+Commit: 24e7ce67ddd4d16d6a78b8ed8d891b0d6fe5b816
+Scope: local-coding-muse-measurement
+
+Reviewer: Claude Opus 5.5, separate read-only session, extra-high effort. Rows: T-303 / T-306 (non-closing
+development measurement, core tier). Range reviewed: 901a5d594a59e60c950a8baedb7e52497644fd91..24e7ce67ddd4d16d6a78b8ed8d891b0d6fe5b816.
+No model, candidate, hidden test or held-out task was run by me. I did not use the GPU and did not modify the repository.
+
+## Methods
+
+I read IP-POLICY.md, the MEASURE FIRST, REFOCUS and directive sections of the builder brief, the top of TASKS.md
+and the request. I read both bootstraps and every retained script before running it: verify_manifest.py
+(both roots), audit.py, prepare_review_helper.py, helper Cargo.toml and src/main.rs, verify_proposals.py,
+compare_muse_contexts.py, controller.py and the relevant parts of batch.py and collect.py. None of them runs a
+candidate or a hidden test, and none reads held-out data. The local API binds only to 127.0.0.1 ephemeral ports,
+with a loopback relay to the model's Unix socket, and is reaped after every two-task job.
+
+Diff scope: `git diff --stat 42612ca9787f..HEAD -- . ':!docs' ':!TASKS.md'` is empty, so product source is
+unchanged from 42612ca9787f07e4df79402e6d92f39f578e5c67. 901a5d59..HEAD touches only TASKS.md,
+docs/evidence/coding-scoreboard.md, docs/evidence/t303-muse-measurement-2026-11-11.md,
+docs/evidence/t303-small-model-measurement-2026-11-11.md and the retained review
+docs/reviews/901a5d594a59-local-coding-small-model-measurement.txt.
+
+## Commands and results (all in /lane/review-checkout; output dir /lane/state/tmp/muse-measurement-review-u5Dtls)
+
+1. `git rev-parse HEAD`: 24e7ce67ddd4d16d6a78b8ed8d891b0d6fe5b816. `git status --short`: empty (before and after).
+2. Shared inputs: sha256sum and byte sizes match the request exactly for all of these: the muse archive
+   (217485706 bytes, a3856116…), the muse bootstrap (b24c5ded…), the cold-restore log (66da24ef…), the docs
+   gate log (c5f5cea9…), the primary archive (165035003 bytes, ebade035…) and the primary bootstrap (e4f3f40a…).
+   The muse archive holds only regular files and directories (39269 files, 369 directories). The primary
+   archive holds 19634 files and 188 directories.
+3. `python3 -B /lane/reviews/42612ca9787f-muse-prepare-ranges-review.py` restored into empty state (the
+   /lane/state/measure-five-20261111 root was absent) in 11 s: `verified_files 39268`, manifest 9e0619aa….
+   A repeated run gives the same 39268 PASS.
+4. `verify_manifest.py`: the previous manifest is unchanged (21091 files, 4ee396ca…). My own check: every one of the
+   21091 old entries appears unchanged in the 39268-entry manifest. The 1443 old muse entries (muse-00, its
+   reservation log and muse-candidates) are byte-identical. The new paths are only muse-02…muse-28, the muse
+   logs and results, retained-manifest.json and new scripts.
+5. My own adversarial restore tests, using a copy of the bootstrap with only `root` redirected to a scratch
+   parent under /lane/state/tmp:
+   (a) A planted conflicting `audit.py` is refused with an AssertionError, and the planted file keeps its digest
+   (36035986…), so nothing was overwritten.
+   (b) A planted symlinked directory `helper -> outside` is refused, and the outside directory stays empty.
+6. `AGENTMAGE_MEASURE_REPO="$PWD" bash /tools/build-slot python3 -B …/audit.py --models muse > audit.json`
+   (GIT_DIR set): exit 0, about 14 minutes including the slot wait. `cmp` with muse-results.json is
+   byte-identical, with sha256 8dcee78d…, the same as the "Audited results" binding in the evidence. The audit
+   checks all of these:
+   - the 15 completed jobs, 300000/60000 ms timeouts, n_ctx 32768, the API binary hash and the policy hash;
+   - that the API key and model socket were removed, and that peak GPU stayed at or below 22528 MiB;
+   - that model identity is constant, every log hash, request max_tokens = min(32768, 32768 − preflight − 32),
+     and that messages equal the context;
+   - candidate bytes, base fallback on refusal, single terminal events, and that each backend slice is a
+     substring of the full server log.
+7. `prepare_review_helper.py`, then
+   `CARGO_TARGET_DIR=$out/target CARGO_BUILD_JOBS=2 bash /tools/build-slot cargo build --locked --offline …`:
+   Finished in 19.89 s. This is my own independent build against this checkout's
+   capabilities/repository-map.
+8. `bash /tools/build-slot python3 -B …/verify_proposals.py --repository "$PWD" --helper <my helper> --models muse`:
+   `{"candidate_execution": false, "helper_sha256": "f43ffbdc…", "hidden_tests_loaded": false,
+   "verified_tasks": {"muse": 30}}`. This is semantically identical to the builder's muse-reproduction.json
+   (cacdda87…, helper adbc8794…), and only the helper digest differs, as expected from the build path. All 30
+   contexts and every strict check were reproduced from fresh source by my own binary.
+9. `python3 -B /lane/reviews/42612ca9787f-prepare-ranges-review.py`: the primary root was restored into empty
+   state with 19633 files verified (manifest 4a883ee5…). `compare_muse_contexts.py > context-comparison.json`
+   is byte-identical (`cmp`) to muse-context-comparison.json (0b805cbb…): `matched_contexts {"muse": 30}`,
+   candidate_execution=false, hidden_tests_loaded=false.
+10. `cmp docs/reviews/901a5d594a59-local-coding-small-model-measurement.txt /lane/reviews/901a5d594a59-local-coding-small-model-measurement.md`:
+    identical. The parent PASS is retained verbatim.
+11. `python3 -B scripts/local_agent_fast_gate.py --base 901a5d59…` exits 1. Its git diff --check,
+    --lint-untracked and --lint-reviews steps each exit 0. The markdownlint step fails with "Missing executable:
+    node; no automatic download" (exit 127): `which node npx markdownlint markdownlint-cli2` finds none in this
+    reviewer environment. I did not download tooling and I claim no Markdown lint pass of my own. The builder's
+    shared log (c5f5cea9…) records markdownlint-cli2 v0.23.2 linting the same 4 files with 0 issues and FAST GATE:
+    PASS. I independently checked the table shape (step 13).
+12. `git diff --check 901a5d59… --`: exit 0 with no output. `git status --short`: empty.
+13. Published numbers against my audit.json, checked with my own script:
+    - strict ungraded proposals 18/30;
+    - output allowance 24394–29889; preflight 2847–8342;
+    - request/check 4945.146 s, reserved job wall 5674.078 s, GPU work minutes 94.568;
+    - causes: chat.response.incomplete 1, chat.transport.timeout 2, code.proposal.edit 6, code.proposal.format 3,
+      ungraded-proposal 18;
+    - counters 28/30 at 171088 / 184996; backends 28 stopped-below-token-limits and 2 unobserved (the 2 timeouts,
+      dev-011 at 300.021 s and dev-027 at 300.012 s).
+
+    All 30 per-task rows in the evidence file match the audit cell for cell: task, preflight, allowance,
+    seconds to 3 decimals, observed tokens or "unknown", and cause.
+
+    Both 9-column results tables (scoreboard and evidence) now have 9-cell separators, so the parent's low
+    finding is fixed. The comparison text now names the 120/30 s November 10/11 run, which fixes the parent's
+    other low finding. The prior-run figures cited (10/30 proposals, 18 timeouts) match scoreboard lines 396 and
+    413. "Three other prepared models" matches policy.json, which lists five models, two of them done.
+14. dev-006 spot check: the backend slice shows a normal stop (7913 in, 7717 out, truncated = 0), but the API emits
+    `chat.response.incomplete`. It is published under the API terminal code as a generation refusal, not a
+    proposal. The labelling is honest.
+15. GPU evidence (read only): all 15 muse reservation logs show the build-slot wait, the exclusive GPU
+    reservation and a completed report with error null. The largest job is 589 s, below the 900 s job limit.
+    The resume log shows that pairs 4…30 completed and muse-00 was skipped. controller.py refuses to replay a
+    partial directory.
+16. Hygiene: I grepped the added lines for usernames, home paths, hostnames, e-mail addresses, credentials and
+    agent-product names. The only hits are /lane sandbox paths and the reviewer line inside the verbatim
+    retained review, both of which earlier reviews accepted. There are no private host paths, personal data or
+    trademark branding. Model identifiers name weights only.
+17. Evaluation integrity:
+    - No held-out ids, hidden-test names or hidden content appear in the diff.
+    - batch.py, collect.py and the controller contain no hidden or held-out entry; collect.py records
+      held_out_executed false.
+    - Neither the audit nor the reproduction loads hidden tests.
+    - The development set digest is 0c2a0624…, and the source freeze 972c6947… is verified against this checkout.
+    - Failures are counted: 12 of 30 refusals are published, and none was dropped.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (carried, open): the remaining prepared-model repeats (gemma4-26b-a4b, gemma4-31b, qwen35-27b) are still
+pending. TASKS.md and both evidence files say so and claim no model comparison. This stays open until they finish.
+
+Backlog notes (no fix needed for this batch):
+- /lane/reviews/42612ca9787f-muse-prepare-ranges-review.py validates the archive shape before writing, but it
+  detects conflicts with existing targets during extraction. When it refuses a conflict, missing files that
+  precede the conflict may already have been added. It never overwrites, so this is not a data-loss issue. A
+  future bootstrap could check all targets before creating any path.
+- The shared muse archive keeps per-job `auth/client.token` and `auth/control.token` files. They belong to reaped
+  loopback-only API instances and the archive is lane-private, not committed. The pattern predates this batch
+  (muse-00 was already in the earlier manifest). Excluding dead tokens from future packages would reduce
+  exposure.
+
+## Per-row result
+
+- T-303 / T-306 non-closing development measurement: PASS. Every published number traces to the raw logs, and I
+  reproduced it with my own audit, my own helper build and the context comparison.
+  - The budgets and timing changes are stated as combined variables, and does-not-fit is counted separately (0).
+  - Passes are reported as unavailable, not zero, and the partial path is labelled as partial.
+  - No new rows or sub-rows, completion ticks, role choice or release claims.
+  - The scoreboard line for 2026-11-11 is present, so MEASURE FIRST is satisfied for this batch.
+  - Neither row closes.
+- Limitation: Markdown lint could not run in this reviewer environment because node is missing. I relied on the
+  builder's shared log for it and checked table shapes independently.
+
+Verdict: PASS

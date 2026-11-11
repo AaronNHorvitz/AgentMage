@@ -2,6 +2,24 @@
 
 ## Active queue: local agent mission
 
+The [26B A4B development measurement](docs/evidence/t303-a4b-measurement-2026-11-11.md)
+runs all 30 frozen development tasks once at source
+`42612ca9787f07e4df79402e6d92f39f578e5c67`: 0/30 strict ungraded
+proposals; task pass rates unavailable. No tests, retries or held-out tasks ran.
+Two other complete prepared-model repeats remain pending. Largest individual
+refusal: `generation-refused:error:chat.transport.limit` (29).
+Independent core review is required. T-303/T-306 remain open without new rows,
+sub-rows or completion ticks.
+
+The retained [Muse measurement review](docs/reviews/24e7ce67ddd4-local-coding-muse-measurement.txt)
+has **Verdict: PASS** for exact commit
+`24e7ce67ddd4d16d6a78b8ed8d891b0d6fe5b816`, with no high or medium finding.
+The reviewer independently reproduces all 30 contexts and available checks
+from a fresh source build. Its low remaining-model-repeat finding stays open. Additive restore
+preflight and exclusion of retired loopback tokens from future private packages
+join the T-309 backlog; neither changes sealed inputs. This non-closing review
+closes neither T-303 nor T-306.
+
 The [Muse development measurement](docs/evidence/t303-muse-measurement-2026-11-11.md)
 runs all 30 frozen development tasks once at source
 `42612ca9787f07e4df79402e6d92f39f578e5c67`: 18/30 strict ungraded
