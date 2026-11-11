@@ -28,12 +28,12 @@ All 30 selected contexts match the preceding current-source GPT-OSS run byte for
 byte; backend tokenization and output allowances differ by model.
 
 | Date (UTC) | Model | Context tokens | Output-token allowance | First / within budget task passes | Strict ungraded proposals | Request/check s | Reserved job wall s | GPU work min |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-11 | gemma4-e4b | 32768 | 22998–29579 | unavailable / unavailable (30 tasks) | 10/30 | 1592.324 | 1733.627 | 28.894 |
 
 Does-not-fit tasks: 0. One attempt per task, zero retries and no grade.
-Transport timeouts: 0 (the preceding larger-budget run had 1).
-The preceding larger-budget run had 10/30 strict ungraded proposals; neither count
+Transport timeouts: 0 (the November 10/11 run at 120/30 s had 1).
+The November 10/11 run at 120/30 s had 10/30 strict ungraded proposals; neither count
 is a task pass rate. GPU work minutes mean reserved model-job wall/60, including
 verification, loading and cleanup; queue and wrapper checks are excluded. Active
 GPU kernel time was not measured. Request/check time excludes context preparation

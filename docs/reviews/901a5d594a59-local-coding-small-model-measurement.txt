@@ -1,0 +1,155 @@
+Commit: 901a5d594a59e60c950a8baedb7e52497644fd91
+Scope: local-coding-small-model-measurement
+
+Reviewer: Claude Opus 5.5, separate read-only session, extra-high effort. Rows: T-303 / T-306 (non-closing
+development measurement). Range reviewed: 8e346d7500df7999111a7d1ea7b4a4163f59fa4d..901a5d594a59e60c950a8baedb7e52497644fd91
+(one commit, documentation only: TASKS.md, docs/evidence/coding-scoreboard.md, new
+docs/evidence/t303-small-model-measurement-2026-11-11.md, verbatim parent review
+docs/reviews/8e346d7500df-local-coding-exact-source-coverage.txt). No model, candidate, hidden test, held-out task or
+GPU was used by this review.
+
+## Methods
+
+Before executing anything, I read both bootstraps, both archived `verify_manifest.py` files (extracted to stdout or a
+scratch directory first), `audit.py`, `prepare_review_helper.py`, `verify_proposals.py` and `compare_contexts.py`. I
+also read the campaign's `controller.py`, `batch.py`, `collect.py`, `policy.json` and `helper/Cargo.toml`. All of the
+checks only hash, parse, build or compare. None runs inference, candidate code or hidden tests.
+
+All commands ran in /lane/review-checkout. Output directory: /lane/state/tmp/small-model-review-ZpIZyH.
+
+1. `git rev-parse HEAD` = 901a5d594a59e60c950a8baedb7e52497644fd91. `git log` shows exactly one commit in the range, and
+   `git diff --stat` lists only the four documentation files above. Product source is unchanged.
+2. Shared inputs: `sha256sum` and `stat`. The e4b archive is 168920476 bytes, 6a750e05…e6e9. Its bootstrap is
+   52c6cfaf…8d33e, the cold-restore log 1506e69d…8557 and the docs-gate log a0685098…9555. The old archive is
+   165035003 bytes, ebade035…594, with bootstrap e4f3f40a…3f15f3. All match the request.
+3. Archive listing (`tar tzvf`): 21092 regular files and 199 directories, with no links or devices. Every path is under
+   `measure-five-20261111/`.
+4. `python3 -B /lane/reviews/42612ca9787f-e4b-prepare-ranges-review.py` restored into empty state (the root was absent
+   before) and verified 21091 files against manifest 4ee396ca…c0f1. Afterwards `find` reports 21092 files and 0
+   symlinks. No manifest key contains `..` or lies outside the root. A standalone `verify_manifest.py` run also gives
+   21091 files.
+5. `AGENTMAGE_MEASURE_REPO="$PWD" bash /tools/build-slot python3 -B …/audit.py --models gemma4-e4b > audit.json`
+   followed by `cmp` against the retained `verified-results.json`: **byte-identical**. SHA-256 2c802d61…84e9 matches
+   the evidence table. The audit's own assertions cover:
+   - the frozen repository and private inputs (freeze 972c6947…02e9);
+   - the API binary 72ca6848…4965 and the original helper 0e06f7b8…9fe0;
+   - the 300000/60000 ms settings, n_ctx 32768, revocation of settings, reaping of the API, and the removal of the
+     API key and model socket;
+   - the bindings between request, context, candidate and logs, each task's terminal event, and backend slices
+     contained in the full server log.
+6. Every published number checked against the audit JSON:
+   - The 30 per-task rows (preflight tokens, allowance, request/check seconds, observed input/output, outcome) were
+     parsed from the evidence file and compared: **0 mismatches**.
+   - Aggregates: 10/30 strict proposals; causes 17 `code.proposal.format`, 3 `code.proposal.edit` and 10
+     `ungraded-proposal`; 0 timeouts and 0 does-not-fit.
+   - Allowance range 22998–29579; request/check 1592.324 s; reserved job wall 1733.627 s, which is 28.894 GPU work
+     minutes.
+   - Backend counters cover 30/30 tasks: 214722 input / 142033 output tokens. All 30 backend terminations are
+     `stopped-below-token-limits`, and every API terminal is `complete:stop`.
+   - First and within-budget passes are `null` and are displayed as "unavailable", not 0.
+   - Model identity: weights d35a3aa7…fe9f, 5405170144 bytes; runtime manifest f007bf5a…9ba1; temperature 0, seed 42.
+7. `prepare_review_helper.py "$PWD" …/helper` rebinds the path dependency to
+   /lane/review-checkout/capabilities/repository-map. Then
+   `CARGO_TARGET_DIR=…/target CARGO_BUILD_JOBS=2 bash /tools/build-slot cargo build --locked --offline --manifest-path …/helper/Cargo.toml`
+   finished with exit 0 in 20.33 s.
+8. `bash /tools/build-slot python3 -B …/verify_proposals.py --repository "$PWD" --helper <fresh> --models gemma4-e4b`
+   returned `{"candidate_execution": false, "hidden_tests_loaded": false, "verified_tasks": {"gemma4-e4b": 30}}`.
+   - The fresh helper digest is 3c0267da…9c1e; the builder's is adbc8794…b3de. As stated, the binaries differ by
+     build location, and the semantic output is otherwise identical.
+   - All 30 contexts and strict-check results were reproduced from the exact source.
+   - The builder's `reproduction.json` hashes to 6c1772ed…7151, as tabled. Its `fresh-helper-build.log` shows a real
+     22.58 s clean compile.
+9. `python3 -B /lane/reviews/42612ca9787f-prepare-ranges-review.py` restored the old root into empty state and
+   verified 19633 files (4a883ee5…4eb3). Then `compare_contexts.py`, followed by `cmp` against the retained
+   `context-comparison.json`, was **byte-identical** (bda014b1…75b1).
+   - Result: `matched_contexts: {gemma4-e4b: 30}`, with the same frozen repository and binaries as the GPT-OSS
+     source run.
+   - After the run, both roots still verify (21091 and 19633 files).
+10. Raw-log inspection:
+    - Both controller logs, all 16 reservation logs and all 15 batch reports.
+    - Each e4b job is `completed` with no error and lasted 79.7–171.8 s, below 900 s. Peak sampled GPU use was
+      5814–6307 MiB.
+    - Every reservation log shows both the shared build slot and the exclusive GPU reservation.
+    - `controller.log` shows a single Muse line (`completed 2`). `muse-00` is `completed` with settings revoked.
+      There is no `muse-02` directory or reservation log, so no dispatched job was killed.
+    - `controller.py` skips completed reports and refuses (`assert not directory.exists()`) any partial directory,
+      so a silent replay cannot happen.
+    - `collect.py` times only from request dispatch through the strict check, and reads only `development_tasks()`.
+11. Refusal labels spot-checked against the raw answers (dev-003, dev-014, dev-019). Of the 17 format refusals, 11
+    are JSON wrapped in a Markdown code fence and 6 are unfenced `{"edits": …}` payloads that the unchanged checker
+    refuses. The labels match `checked.json`.
+12. `cmp docs/reviews/8e346d7500df-local-coding-exact-source-coverage.txt /lane/reviews/8e346d7500df-…-coverage.md`:
+    identical. The parent is PASS, and its low finding (the other model repeats are pending) is retained in this
+    review below.
+13. `unset GIT_DIR; CARGO_TARGET_DIR=/lane/state/review-target python3 -B scripts/local_agent_fast_gate.py --base 8e346d75…`:
+    - `git diff --check`, `--lint-untracked` and `--lint-reviews` each exit 0.
+    - The markdownlint step fails with `Missing executable: node; no automatic download` (exit 127), so the gate
+      prints `FAST GATE: FAIL`. Actual documentation gate exit: 1.
+    - This review has no Node available. The builder's shared log (a0685098…) shows markdownlint-cli2 v0.23.2 with
+      "0 issues in 0 files" and `FAST GATE: PASS`.
+14. `git diff --check 8e346d75… --` exits 0 with no output. `git status --short` is empty. /lane/control/STOP is
+    absent.
+15. Hygiene: I grepped the diff for usernames, home paths, hostnames, credentials, e-mail addresses and other agent
+    product names.
+    - The only hits are /lane lab paths inside the verbatim parent review, which were previously accepted.
+    - The private home path in `batch.py` and `helper/Cargo.toml` exists only in the private and shared review
+      inputs, not in a committed file.
+    - Model labels are measurement identifiers, not branding.
+
+## Evaluation integrity and safety
+
+- **Held-out data:** no held-out content appears in the range. The collector and audit load only development tasks.
+  `held_out_executed=false` and `hidden_tests_executed=false`.
+- **Retries and grading:** one attempt per task with zero retries, and no task is graded. Strict proposals are
+  labelled as ungraded edits, not solved tasks.
+- **Failures:** every refusal is counted. The does-not-fit count (0) is reported separately from model failures.
+- **Retained inputs:** the frozen inputs, the parent root and the 2-task Muse progress are unchanged and are not
+  counted as a 30-task score.
+- **No loop safety claim:** nothing was applied, committed or pushed, and no native loop ran. This batch makes no claim
+  about loop safety.
+
+## Measure first
+
+The scoreboard gains a dated line for gemma4-e4b at the current source. It states the changed context and output
+budgets (32768 tokens and 32768 bytes, the per-task formula, 300/60 s, 310 s and 900 s), traces to the raw logs above,
+and counts tasks that do not fit separately. The line is present. Its table rendering defect is reported below.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low (backlog): the new results tables have 9 header cells but 10 delimiter cells.**
+  - Where: `docs/evidence/coding-scoreboard.md:578-579` and
+    `docs/evidence/t303-small-model-measurement-2026-11-11.md:30-31`. The delimiter row was copied from the 10-column
+    table at scoreboard line 467-468.
+  - Effect: under the GFM table rule, a header and delimiter row with different cell counts is not recognised as a
+    table. On the public repository, the dated scoreboard line therefore renders as a run of pipe-separated text, not
+    as a table row.
+  - The numbers remain present and correct. markdownlint does not flag this, because an unrecognised table never
+    reaches its column-count rule.
+  - No GFM renderer exists in this environment. This conclusion rests on the spec rule, not on a rendered page.
+  - Fix: drop one `| --- |` cell from each delimiter row.
+- **Low (backlog): the comparison label "preceding larger-budget run" is ambiguous.**
+  - Where: `docs/evidence/coding-scoreboard.md:583-584` and
+    `docs/evidence/t303-small-model-measurement-2026-11-11.md:35-36`.
+  - The preceding e4b run had the *smaller* time limits (120/30 s against 300/60 s here). It had essentially the same
+    32K context and output allowance. A reader can take the phrase to mean the earlier run had more budget and still
+    timed out.
+  - Fix: name it explicitly, e.g. "the November 10/11 run (120/30 s)".
+- **Low (carried from the parent review, still open): four prepared model repeats remain.** Muse has 2 of 30 tasks.
+  gemma4-26b-a4b, gemma4-31b and qwen35-27b have not been run at this source. Every committed file says so, and none
+  claims a comparison or role. Fix: finish the resumable repeat before any T-312 comparison relies on these lines.
+- **Limitation (not a finding):** I could not run markdownlint, because no Node binary is available. The real exit
+  127 is recorded above. The builder's actual 0-issue output is in the shared log.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing development measurement): PASS.**
+  - Every published number traces to the retained raw logs and reproduces from the exact source with a fresh offline
+    build.
+  - Contexts match the prior primary-model run byte for byte.
+  - Labelling is honest: passes are unavailable, not 0; this is a partial path; nothing involves held-out tasks.
+  - No row, sub-row, tick, closure or release claim is added. Neither row closes, and both "done when" conditions
+    remain unmet: there is no native loop, no tests, no retries and no graded passes.
+
+Verdict: PASS

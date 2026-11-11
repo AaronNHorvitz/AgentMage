@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The retained [small-model measurement review](docs/reviews/901a5d594a59-local-coding-small-model-measurement.txt)
+has **Verdict: PASS** for exact commit
+`901a5d594a59e60c950a8baedb7e52497644fd91`, with no high or medium finding.
+Its two low documentation findings are corrected: the results tables have nine
+columns and the earlier comparison explicitly names the 120/30-second run.
+The pending-model-repeat finding stays open; this is a non-closing measurement
+review and neither T-303 nor T-306 closes.
+
 The [small-model development measurement](docs/evidence/t303-small-model-measurement-2026-11-11.md)
 runs all 30 frozen development tasks once on the prepared `gemma4-e4b` artifact
 at source `42612ca9787f07e4df79402e6d92f39f578e5c67`: 10/30 strict
