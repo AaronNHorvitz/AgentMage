@@ -2,6 +2,20 @@
 
 ## Active queue: local agent mission
 
+The [larger-budget development measurement](docs/evidence/t303-development-measurement-2026-11-10.md)
+and [scoreboard](docs/evidence/coding-scoreboard.md#larger-budget-development-measurement-2026-11-1011)
+record all 30 development tasks on six existing local backends. This is a partial
+retrieval/chat/strict-edit path: native startup refuses the lane's executable
+ownership, and missing original grading controls prevent task pass rates.
+No tests, retries or held-out tasks ran. T-303/T-306 remain open; no new row is added.
+
+The retained [candidate-build deadline review](docs/reviews/33ae305a3bc0-local-coding-candidate-build-deadline.txt)
+has **Verdict: PASS** for exact commit
+`33ae305a3bc0bca71f3dbdee3dc6f79a4c5eddf3`, with no high or medium finding.
+Low findings about cleanup wording and cooperative worker hashing join the
+same-row backlog; they do not authorize another guard increment before measurement.
+The broader inherited fast-gate failures remain open.
+
 The retained [terminal observation review](docs/reviews/dcd7411ce51c-local-coding-terminal-watch.txt)
 has **Verdict: PASS** for exact commit
 `dcd7411ce51c73e190b8232315a30e6355252577`, with no high or medium finding.

@@ -1,0 +1,152 @@
+Commit: 33ae305a3bc0bca71f3dbdee3dc6f79a4c5eddf3
+Scope: local-coding-candidate-build-deadline
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate read-only session. This is a same-model review.
+Row: T-303 / T-306 (core tier, same-row non-closing batch). No row or sub-row is added or closed.
+
+## Methods
+
+Pinned checkout: /lane/review-checkout. `git rev-parse HEAD` and `git rev-parse 33ae305a…` both give
+33ae305a3bc0bca71f3dbdee3dc6f79a4c5eddf3. Its parent is dcd7411ce51c73e190b8232315a30e6355252577.
+Before running anything I read IP-POLICY.md, Decision 0201, the evidence note
+docs/evidence/t306-candidate-build-deadline-2026-11-10.md, the complete diff against the parent (11 files),
+all five Rust inputs in full where they changed (local_commit.rs, local_commit_candidate_build.rs,
+local_commit_candidate_build_tests.rs, repository_candidate.rs, repository_candidate_tests.rs), both guide
+diffs, the TASKS.md diff, the retained parent report, and the bundle README.md, run.py, check.py,
+parse_gate.py and light.py. I also read the existing collector `collect_until`
+(repository_safety.rs:360, repository_preservation.rs:79), the worker `perform`/`cleanup`
+(repository_candidate.rs) and the fast-gate reservation logic (scripts/local_agent_fast_gate.py:208,305).
+None of the scripts changes source. run.py reserves cargo through /tools/build-slot internally, so I did
+not wrap it.
+
+## Commands and results
+
+All commands ran from the pinned checkout. Fresh suffix: `r33ae`. Independent target: /lane/state/review-target.
+
+1. `sha256sum --quiet -c /lane/state/tmp/t306-candidate-build-deadline/review-inputs.sha256`: exit 0.
+   The manifest's own SHA-256 is a5c2e02e95253a7e17490eb79f898051cde6c0e2fdb262f9e446b8a282d82d72 (matches).
+   Node at /lane/state/tmp/t306-confined-candidate/node/bin/node has SHA-256
+   d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches). Nothing was downloaded.
+2. `CARGO_TARGET_DIR=/lane/state/review-target python3 -B …/run.py /lane/state/tmp/review-candidate-build-deadline-r33ae`:
+   **exit 1, as expected** (`FAST GATE: FAIL`). `source_unchanged: true`. 899.25 s including reservations.
+   That breaks down as fmt 561.34 s (mostly waiting for a build slot), Clippy `-D warnings` 43.49 s exit 0,
+   and cargo test 292.83 s exit 101. All four light pre-steps exit 0. Raw log SHA-256:
+   7055fefe8a4e74fba5e4a460e97cf4c6fbb6b7659bf2fa93f74dfd72e7faca96. This differs from the builder's
+   a1208807…, which is expected because the run is independent and timings differ.
+3. `python3 -B …/check.py …-r33ae`: exit 0. Totals [1476, 72, 64, 0, 0] over 26 unfiltered targets.
+   Every target's counts and every failed and ignored identity equal the retained full host/Linux baseline
+   with the 11 local-API targets taken from the preceding complete run. The Linux lib target has exactly +6
+   passes. All 6 new methods print `... ok`. The 5 Rust hashes are unchanged. This is a data comparison
+   only; the gate is FAIL. I also checked by hand that
+   `native_candidate_tree_uses_only_owned_index_and_preserves_user_state ... FAILED`, the only
+   candidate-named failure, is present in the baseline. It is the inherited native executable-ownership
+   blocker.
+4. `cmp validation-1/source-freeze.json …-r33ae/source-freeze.json`: exit 0, no output.
+5. `python3 -B …/light.py`: exit 0. The steps were diff-check, lint-untracked, lint-reviews (parent report)
+   and markdownlint on 5 files with 0 issues.
+6. `cmp docs/reviews/dcd7411ce51c-local-coding-terminal-watch.txt /lane/reviews/dcd7411ce51c-local-coding-terminal-watch.md`: exit 0.
+7. `git diff --check dcd7411ce51c73e190b8232315a30e6355252577 --`: exit 0, no output.
+8. `git status --short`: empty, before and after all runs.
+
+I did not use the GPU. The batch has no GPU work.
+
+## Code review
+
+- **Public entry and seams.** `LinuxCandidateTreeBuilder::build` (local_commit.rs:195-209) always calls
+  `candidate_build::run` with `NativeSession`. That uses the concrete collector and
+  `CandidateSession::new_until`, with the original token and `Instant::now() + 30 s` taken at entry,
+  before plan verification. The `Session` trait, `run_with` and `check_at` are private to the module.
+  `CandidateSession::new` and `new_with` are now `#[cfg(test)]`, and `new_with_until` is private. A
+  caller cannot install a collector, worker or clock. The builder stays dormant (`dead_code` allowances)
+  and no API, grant or route is added.
+- **One deadline.** Both `collect(deadline)` calls pass the entry deadline to `collect_until`. That
+  function takes `min(deadline, now + 30 s)` (repository_safety.rs:367), so a phase can shorten the
+  deadline but never renew it. `new_with_until` takes `min(deadline, now + PROCESS_TIMEOUT)`
+  (repository_candidate.rs:148) and stores it as the session deadline. Every worker `perform` checks it
+  before and after dispatch, and dispatch receives it (repository_candidate.rs:274, 384, 391). The test
+  confirms the exact shorter deadline reaches the dispatch seam and that a 300 s outer deadline is
+  capped below itself.
+- **Setup.** `check()` runs:
+  - before plan verification;
+  - after the original capture and before `mkdirat`;
+  - after the worker capture while `claim.armed` is still true;
+  - after the final revalidation, before disarming.
+  A stopped entry therefore creates nothing. A stop during capture drops the armed claim. That claim
+  removes the directory only after it revalidates and only with `REMOVEDIR`, so a non-empty directory is
+  retained. Both cases are tested against real private directories.
+- **Ordering and late success.** `run_with` checks:
+  - before and after every phase;
+  - inside `checked_hash` before, between and after each 64 KiB chunk;
+  - after cleanup and after the final collection.
+  It unpacks `operation?` only after the last check, so a late worker or a late postflight cannot return
+  `Succeeded`. Cleanup is called on every path once `start` has succeeded, including stopped and failed
+  ones. Cleanup is not tied to the deadline (repository_candidate.rs:452) and still refuses unknown or
+  replaced entries (`cleanup_allowed` and the entry-name checks). When `start` fails there is no session,
+  and the setup claim guard handles rollback.
+- **Bounds.** A vector-count mismatch is refused before the `BTreeMap` is built. Duplicate IDs are
+  caught by `count != map.len()`. The checked total stays at most `MAX_TOTAL_POSTIMAGE_BYTES`. Each plan
+  file must be present with an exact SHA-256. Mode, the per-file 64 MiB cap and the blob-ID equality
+  checks in the worker are unchanged. The temporary-index path hash check moved from preflight into
+  `NativeSession::start`. It still runs before any directory is created, and `new_with_until` checks it a
+  second time. The checks that do not depend on scratch (manifest, repository and user-index digests)
+  still run before hashing.
+- **Confinement.** Worker arguments, environment (`candidate_environment`), sealed stdin, hardened Git
+  prefix and descriptor revalidation are unchanged. No network or new process path is introduced. A
+  failure after dispatch returns a plain error that carries neither rollback nor retry authority, as the
+  decision states.
+- **Tests.** The tests use controlled clocks and do not depend on a real-time success window. They cover:
+  - every stage under both expiry and cancellation;
+  - every phase failure;
+  - five malformed-postimage and manifest cases;
+  - exclusive expiry (`deadline - 1 ns` is accepted, `deadline` is refused);
+  - every hashing checkpoint for lengths 0, 1, 64 Ki, 64 Ki+1 and 192 Ki;
+  - a positive result in sha1 and sha256 reconciled through `reconcile_candidate_tree`, with
+    `ref_update_authority == false`.
+
+  No `#[ignore]` or `#[should_panic]` is added, and no threshold changes.
+- **Honest claims.** The evidence, decision, TASKS and guides say that native admission is unverified,
+  that the gate remains FAIL, and that synthetic sequencing is not a product effect. The early failures
+  (LowerHex compile error; setup 4 passes and 2 failures from a fixture cancellation-origin mismatch) are
+  recorded, and the fix is in fixtures only. Production cancellation is unchanged, and
+  `cancellation.is_cancelled()` is still used everywhere. The numbers in the evidence match the builder's
+  retained result, and my independent run reproduces the counts and identities.
+- **Evaluation integrity.** No prompt, coordinator, evaluation input, hidden or held-out test, threshold,
+  scoreboard, dependency or SBOM file is in the diff. No held-out content appears.
+- **Privacy and IP.** The added lines contain no host home paths, usernames, hostnames, emails or
+  credentials, and no third-party product branding. The generic lane review paths in the retained parent
+  report follow the pattern accepted earlier. The model name appears only as reviewer identification.
+  Nothing was read from other products.
+- **Parent report.** It is retained byte-identically, and the TASKS row table is unchanged (check.py).
+  The guide wording for parent L1 (control contention, explicit 409, no automatic retry) is accurate.
+- **Measure first.** The scoreboard's last line is 2026-11-06. The MEASURE FIRST directive was written at
+  17:03:18 and this commit at 17:03:36 the same day, so this is the commit in progress that the directive
+  says to finish first. I do not count the missing line against this batch. The builder's **next** batch
+  must add the full development-set line required by MEASURE FIRST step 1, or that batch gets a medium
+  finding. More deadline or cancellation increments of this kind belong in a T-309 backlog note unless a
+  high or medium finding or a "done when" requires them.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, documentation).** local_commit.rs:200-201 and
+  docs/guides/reviewing-and-creating-local-commits.md:117-119 say the thirty-second deadline "covers …
+  cleanup". In the code, cleanup is never gated by the deadline (repository_candidate.rs:452). The guide
+  qualifies this a sentence later. Fix: say that cleanup runs regardless of the deadline, rather than
+  saying the deadline covers it. Backlog.
+- **L2 (low, backlog).** The worker `Step::Hash` re-hashes each postimage (up to 64 MiB) in one call
+  (repository_candidate.rs:315), without the 64 KiB cooperative checks used in preflight. This is bounded
+  and falls under the disclosed "individual blocking operations" caveat. Backlog only; no further
+  increment is needed for any "done when".
+- Parent L2 (growth between nonempty pages) and native launch forwarding remain same-row backlog, as
+  recorded.
+
+## Per-row result
+
+- T-303 / T-306 (this non-closing batch): **PASS**. The exact commit has no open high or medium finding.
+  The gate counts and identities reproduce independently: FAIL on exactly the inherited 72 failures and
+  64 ignores. fmt, Clippy `-D warnings` and light checks pass, and all six new methods pass. Both rows stay
+  open. Native admission, independent checker and artifact integration, original-owner approval
+  composition, native and model coding, approved push and durable recovery remain unverified.
+
+Verdict: PASS

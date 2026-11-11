@@ -7,8 +7,8 @@ are not evidence of relative model quality. Later scoreboards must identify a
 changed context or output budget as a separate variable.
 
 Actual-run measurements of the fixed chat-only text-proposal baseline. This is
-not execution of the native coding agent. The running chat API has no repository
-tools, tests or retry loop; the native CLI retains the deferred host-trust blocker.
+not execution of the native coding agent. At that initial baseline, the chat path supplied no repository
+tools, tests or retry loop; the native CLI retained the deferred host-trust blocker.
 The [policy and limits](../guides/coding-baseline.md) were committed before the
 first request. [Freeze verification](t311-18-baseline-freeze-2026-11-05.md) binds
 all 160 control attempts. The [independent core re-review](../reviews/3a6daad09675-local-coding-t311-18-reporting-repair.txt)
@@ -364,3 +364,81 @@ Raw requests, events, candidates, graders and server logs remain private.
 The independent reviewer receives the exact retained location and reproduction
 commands. This source batch awaits independent core review and closes no
 parent row, acceptance or release gate.
+
+## Larger-budget development measurement, 2026-11-10/11
+
+Source: `33ae305a3bc0bca71f3dbdee3dc6f79a4c5eddf3`. **Partial path**, measured
+on every frozen development task: current Rust context selection, credential-owning
+chat API and strict Rust edit checking. Native worktree/tool/test/retry/approval/
+commit/push execution could not start in this lane. Missing original grading
+controls also refuse evaluator admission. **First-attempt and within-budget task
+passes are unavailable, not zero.** Strict proposals below are ungraded edits,
+not solved tasks. Held-out tasks were not loaded or run.
+
+Changed variables from the November 6 development checkpoint: 32,768 context
+tokens (was 8,192); a 32,768-byte message-selection budget (was 6,000);
+output reservation `min(32768, 32768 - rendered_input_tokens - 32)` (was 2,048);
+a private effect-free library adapter to use that larger chat output allowance;
+two tasks per cold model load (was five); four additional models using their
+family defaults rather than the primary pair's medium reasoning setting.
+These are several changed variables, not a controlled attribution experiment.
+All 180 rendered inputs fit the served context; does-not-fit count is zero.
+One attempt per task, zero retries, zero executed candidate tests.
+
+| Date (UTC) | Model label | Context tokens | Output-token budget range | Dev first / within budget | Strict ungraded edits | Request/check s | Reserved job wall s | GPU work min |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-10–11 | muse | 32768 | 24278–29882 | unavailable / unavailable (30 tasks) | 10/30 | 3135.649 | 3485.948 | 58.099 |
+| 2026-11-10–11 | gpt-oss | 32768 | 24223–29779 | unavailable / unavailable (30 tasks) | 12/30 | 1403.251 | 1628.866 | 27.148 |
+| 2026-11-10–11 | gemma4-e4b | 32768 | 22767–29470 | unavailable / unavailable (30 tasks) | 10/30 | 1264.942 | 1409.855 | 23.498 |
+| 2026-11-10–11 | gemma4-26b-a4b | 32768 | 22767–29470 | unavailable / unavailable (30 tasks) | 0/30 | 3329.030 | 3830.751 | 63.846 |
+| 2026-11-10–11 | gemma4-31b | 32768 | 22767–29470 | unavailable / unavailable (30 tasks) | 0/30 | 3483.553 | 4044.447 | 67.407 |
+| 2026-11-10–11 | qwen35-27b | 32768 | 23973–29725 | unavailable / unavailable (30 tasks) | 4/30 | 3405.421 | 3824.544 | 63.742 |
+
+Request/check seconds sum the chat request and strict-check interval; they exclude
+context preparation and token preflight. GPU work minutes mean reserved model-job
+wall time divided by 60, including verification, loading and cleanup, excluding
+queue waits and reservation-wrapper checks; they are not active GPU kernel time.
+API usage counters were not requested and remain null. Unambiguous backend
+counters, including reasoning tokens, cover the task counts shown below; missing
+counters remain unknown. No token estimate replaces them.
+
+| Model | Outcome / cause | Tasks |
+| --- | --- | --- |
+| muse | `generation-refused:error:chat.transport.timeout` | 18 |
+| muse | `strict-edit-refused:code.proposal.format` | 2 |
+| muse | `ungraded-proposal` | 10 |
+| gpt-oss | `generation-refused:error:chat.response.invalid` | 1 |
+| gpt-oss | `generation-refused:error:chat.transport.limit` | 7 |
+| gpt-oss | `generation-refused:error:chat.transport.timeout` | 1 |
+| gpt-oss | `strict-edit-refused:code.proposal.edit` | 8 |
+| gpt-oss | `strict-edit-refused:code.proposal.format` | 1 |
+| gpt-oss | `ungraded-proposal` | 12 |
+| gemma4-e4b | `generation-refused:error:chat.transport.timeout` | 1 |
+| gemma4-e4b | `strict-edit-refused:code.proposal.edit` | 3 |
+| gemma4-e4b | `strict-edit-refused:code.proposal.format` | 16 |
+| gemma4-e4b | `ungraded-proposal` | 10 |
+| gemma4-26b-a4b | `generation-refused:error:chat.transport.limit` | 1 |
+| gemma4-26b-a4b | `generation-refused:error:chat.transport.timeout` | 29 |
+| gemma4-31b | `generation-refused:error:chat.transport.timeout` | 29 |
+| gemma4-31b | `strict-edit-refused:code.proposal.format` | 1 |
+| qwen35-27b | `generation-refused:error:chat.transport.timeout` | 26 |
+| qwen35-27b | `ungraded-proposal` | 4 |
+
+| Model | Tasks with observed backend counters | Observed input / output tokens |
+| --- | --- | --- |
+| muse | 12/30 | 71445 / 39013 |
+| gpt-oss | 22/30 | 130332 / 124228 |
+| gemma4-e4b | 28/30 | 208437 / 117956 |
+| gemma4-26b-a4b | 0/30 | unknown |
+| gemma4-31b | 1/30 | 9465 / 2071 |
+| qwen35-27b | 4/30 | 29274 / 10184 |
+
+The largest refusal cause is the current transport timeout. Next work must address
+completion through the existing loop and measure again, then the strict edit
+refusals; these observations do not justify another unrelated guard increment.
+Restoring the native executable-trust environment and original controls is needed
+before a complete coding score can be measured. No model role is selected here.
+
+See [measurement evidence](t303-development-measurement-2026-11-10.md) for exact
+scope, model identities, per-task time/tokens, artifact bindings and reproduction.
+This non-closing batch awaits independent core review. T-303 and T-306 stay open.
