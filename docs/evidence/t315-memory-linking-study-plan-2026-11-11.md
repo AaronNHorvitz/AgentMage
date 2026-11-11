@@ -20,10 +20,14 @@ The coding-agent and measure-first priorities remain in force.
 
 Validation uses the documentation fast gate from the preceding measurement
 commit, plus direct Markdown lint on every changed document. Both pass.
-The fast-gate CLI initially reports four requested files but zero linted files
-in its summary; the direct library invocation explicitly returns those four
-file names with zero issues. Final checks including this evidence cover all
-five documents, with zero issues in the direct check. No product tests,
-model qualification or task-pass result
-is claimed by these documentation checks. Independent review is still required;
-this planning batch does not close T-315, T-303 or T-306.
+The fast-gate CLI lists the requested files under “Linting”; its summary
+“0 issues in 0 files” counts files with issues. The direct library invocation
+also returns the four initial file names with zero issues. Final checks including
+this evidence cover all five documents, with zero issues in the direct check.
+No product tests, model qualification or task-pass result is claimed by these
+documentation checks. The retained [independent planning review](../reviews/a72a492830b6-memory-linking-study-plan.txt)
+returns PASS for exact commit `a72a492830b627dc3ae85fa4bacb01d020a0277c`.
+Its three low wording findings are corrected: set-wide disabling rewrites no
+stored fact or link, graph retrieval's benefit remains conditional on measurement,
+and the lint summary is described accurately. This planning batch does not
+close T-315, T-303 or T-306.

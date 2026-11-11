@@ -1,0 +1,118 @@
+Commit: a72a492830b627dc3ae85fa4bacb01d020a0277c
+Scope: memory-linking-study-plan
+
+# Independent review — T-315 memory-linking study planning record (non-closing)
+
+Reviewer: Claude Opus 5.5, separate read-only session, frozen checkout `/lane/review-checkout`.
+Range: `b56acdd7f29b614fd01d8394c59d76c3f92b89e9..a72a492830b627dc3ae85fa4bacb01d020a0277c`
+(commits `5c460c72` "Record the later open study of memory linking" and `a72a4928` "Retain the
+memory-linking planning scope and checks"). No model, candidate, hidden test, held-out task or GPU was
+used. Nothing in the repository was modified.
+
+## Methods
+
+1. Confirmed `git rev-parse HEAD` = `a72a492830b627dc3ae85fa4bacb01d020a0277c`; clean `git status --short`.
+2. Read the full range diff (5 files, +100/−1: `CAPABILITY-ROADMAP.md`, `PRD.md`, `TASKS.md`,
+   `docs/decisions/0204-open-study-memory-linking.md`,
+   `docs/evidence/t315-memory-linking-study-plan-2026-11-11.md`). No runtime source, prompt, permission,
+   evaluation task, grading control or hidden test is touched.
+3. Compared Decision 0204, the new roadmap heading, the integration-rule-5 edit, the CAP-29 link, the PRD
+   line and the T-315 row clause by clause against "Owner note to record (2026-11-11)" in
+   `/lane/control/brief.md` (rules a, b, c and item 3).
+4. Checked decision numbering (`0203` was the highest; one `0204` file; no decisions index to update),
+   row id uniqueness (T-315 appears only in this range's text), anchors
+   (`#open-study-how-agent-memories-are-linked` matches the new heading; PRD `## 12. Canonical Data and
+   Storage` matches `#12-canonical-data-and-storage`), and relative link targets (`IP-POLICY.md` exists).
+5. Public hygiene: grepped every added line for host paths, usernames, hostnames, e-mail, URLs,
+   credentials, product/project names, papers and patents. Only hit: the word "patents" in the
+   decision's own prohibition. Commit authorship matches the repository's existing owner identity used
+   by all 20 preceding commits.
+6. Repo-wide search for documents that present a linking method as settled (knowledge graph, graph
+   retrieval, entity linking, co-occurrence, traversal, multi-hop, memory graph).
+7. Ran the requested command block from the frozen checkout.
+
+## Commands and results
+
+```text
+review_output_dir=/lane/state/tmp/memory-study-review-bY3P3C
+sha256sum /lane/reviews/42612ca9787f-a4b-node /lane/reviews/42612ca9787f-a4b-node-LICENSE
+  d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c  (matches expected)
+  4573185d56580da2b890ba34a85a409257640f1c5632eade4300137266194d18  (matches expected)
+  LICENSE read: Node.js MIT-style notice plus bundled-component notices (2946 lines); local use only.
+node --version                                  -> v24.15.0
+python3 -B scripts/local_agent_fast_gate.py --base b56acdd7...   -> exit 0
+  paths: the five changed files; git diff --check exit 0; --lint-untracked exit 0;
+  markdownlint-cli2 v0.23.2: "Linting: 5 files", "Summary: 0 issues in 0 files"; FAST GATE: PASS
+direct markdownlint/promise lint (five files, MD013/MD022/MD024/MD060 off)  -> exit 0
+  checked: CAPABILITY-ROADMAP.md, docs/decisions/0204-..., docs/evidence/t315-..., PRD.md, TASKS.md
+  issues: []
+git diff --check b56acdd7... --                 -> exit 0, no output
+git status --short                              -> empty (clean)
+```
+
+My results match the retained builder logs `a72a492830b6-memory-study-fast.log` and
+`a72a492830b6-memory-study-direct-lint.log`.
+
+## Assessment against the owner's rules
+
+- **Rule a (replaceable, versioned linking wherever it runs; per-link method provenance; coexisting
+  methods; set-wide disabling without rewrites):** present in Decision 0204 item 1, the roadmap note,
+  and T-315. See L-1 for a small narrowing in the decision's wording.
+- **Rule b (replaceable source-backed writing and context selection; names/versions in run
+  evidence so a run can be repeated under another method):** Decision 0204 item 2 matches; roadmap,
+  PRD and T-315 agree.
+- **Rule c (adopt by measurement on the same fixed tasks; needed facts reached, wrong facts brought in,
+  cost, task outcomes; no threshold or held-out-rule change; held-out never chooses a method):**
+  Decision 0204 item 3, roadmap note and T-315 match. No evaluation-integrity text is weakened.
+- **Open question:** every new text says no algorithm/method is selected; integration rule 5 adds
+  "no graph-linking algorithm is presumed qualified". See L-2 for an adjacent pre-existing sentence.
+- **Placement and ordering:** own heading beside CAP-29 and integration rule 5, both linking to it;
+  one PRD line in §12 where memory's storage authority is planned; one later row T-315 whose
+  dependency is "Starts no earlier than the first CAP-29 work; preserves current queue order". The
+  decision and TASKS preamble state no change to measure-first, the coding-agent order, or T-303/T-306.
+  T-315 stays `[ ]`; no coding sub-row is added. A single owner-mandated later row that requires
+  implementation evidence for closure is not excessive splitting.
+- **IP / original expression:** wording is the project's own; names no other product, private project,
+  paper or patent. The new text says "the Memory role's service" rather than naming a project.
+- **Evidence honesty:** the evidence file claims only documentation checks and explicitly claims no
+  product tests, qualification or pass result. My runs confirm both checks pass. See L-3.
+- **Repo-wide "settled method" check:** no document presents a particular linking method as settled.
+  Hits in `Agent-Scaffolding-Inventory.md` concern provider identity links and an unbuilt skill, not a
+  memory-linking method.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L-1 (low, backlog)** — `docs/decisions/0204-open-study-memory-linking.md:22-23`: "all links from
+  one method can be disabled together without rewriting the facts or other links". The owner's rule
+  is "switched off as a set without rewriting anything", the roadmap says "without rewriting data", and
+  T-315 says "without rewrites". The decision's version leaves room for disabling by rewriting each
+  of the disabled method's own links (e.g. per-link tombstones), which the owner rule rules out. Risk
+  is limited because T-315's done-when ("set-wide disabling without rewrites") governs closure.
+  Fix: change to "can be disabled together as a set without rewriting any stored fact or link".
+- **L-2 (low, backlog)** — `CAPABILITY-ROADMAP.md:132` (pre-existing, inside the edited rule 5):
+  "Graph retrieval improves context selection" is unhedged, next to the new "no graph-linking
+  algorithm is presumed qualified" and against Decision 0204's "A graph alone does not establish
+  useful recall". It names no method, so it does not present one as settled, but it states an
+  outcome the study has to measure. Fix: "Graph retrieval may improve context selection where the
+  open linking study's measurements show it; it does not guarantee ...".
+- **L-3 (low, backlog)** — `docs/evidence/t315-memory-linking-study-plan-2026-11-11.md:23-26` (and the
+  review request): the evidence says the CLI "reports ... zero linted files in its summary". The CLI
+  prints "Linting: 5 files"; "Summary: 0 issues in 0 files" counts files *with issues*. The direct
+  check is a harmless redundant confirmation, not a correction of a lint gap. Fix: describe the
+  summary line accurately.
+
+Out of scope (not introduced in this range, noted only): `CAPABILITY-ROADMAP.md:17` names the role
+projects for Coordinator and Memory. Earlier reviews accepted this, and the new text does not repeat it.
+
+## Per-row result
+
+- **T-315 (planning only; non-closing):** planning record accepted. Decision 0204, the roadmap note,
+  the CAP-29 and rule-5 links, the PRD line and the T-315 row are consistent with the owner's three
+  rules and leave the question open. T-315 remains open; this review accepts no study, implementation
+  or closure.
+- **T-303 / T-306:** unaffected and remain open; no scoreboard line is due from a documentation-only
+  batch that changes nothing the model sees, how edits apply, or how tests and retries run.
+
+Verdict: PASS

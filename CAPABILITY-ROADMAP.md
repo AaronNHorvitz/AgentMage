@@ -129,8 +129,8 @@ local model inference and cloud model inference are three distinct disclosures.
    The [open linking study](#open-study-how-agent-memories-are-linked) governs later
    method selection; no graph-linking algorithm is presumed qualified.
    Test corrections, stale generations, revocation, reopen and source deletion before promotion.
-   Graph retrieval improves context selection; it does not guarantee that a small model never
-   forgets, reasons correctly or matches a frontier model.
+   Graph retrieval may improve context selection where the open linking study demonstrates it.
+   It does not guarantee that a small model never forgets, reasons correctly or matches a frontier model.
 6. Use one designated writer per development checkout. Independent review remains distinct;
    routine progress does not require multiplying planning branches or reviewer workspaces.
 

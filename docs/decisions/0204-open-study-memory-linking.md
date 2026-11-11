@@ -20,7 +20,7 @@ The study has three requirements:
    the Memory role's service or AgentMage's rebuildable derived index. Every
    link records the method and version that produced it. Different methods
    can coexist over the same facts; all links from one method can be disabled
-   together without rewriting the facts or other links.
+   together as a set without rewriting any stored fact or link.
 2. AgentMage's memory-writing and context-selection steps are replaceable too.
    The writing step chooses source-backed facts, decisions and events from a
    run. The selection step asks for memories and follows their links. Run

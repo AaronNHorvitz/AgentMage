@@ -7,6 +7,11 @@ is recorded as planning only in T-315. It starts no earlier than the first
 CAP-29 work and changes neither measure-first nor the coding-agent work order.
 The [planning evidence](docs/evidence/t315-memory-linking-study-plan-2026-11-11.md)
 records the scope and documentation checks; T-315 stays open.
+The retained [independent planning review](docs/reviews/a72a492830b6-memory-linking-study-plan.txt)
+returns **Verdict: PASS** for exact commit
+`a72a492830b627dc3ae85fa4bacb01d020a0277c`, with no high or medium finding.
+Its three low wording findings are corrected in the decision, roadmap and
+planning evidence; no study, implementation or row closure is claimed.
 
 The retained [31B measurement review](docs/reviews/b56acdd7f29b-local-coding-31b-measurement.txt)
 has **Verdict: PASS** for exact commit
