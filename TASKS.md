@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The [Muse development measurement](docs/evidence/t303-muse-measurement-2026-11-11.md)
+runs all 30 frozen development tasks once at source
+`42612ca9787f07e4df79402e6d92f39f578e5c67`: 18/30 strict ungraded
+proposals; task pass rates unavailable. No tests, retries or held-out tasks ran.
+Three other complete prepared-model repeats remain pending. Largest individual
+refusal: `strict-edit-refused:code.proposal.edit` (6).
+Independent core review is required. T-303/T-306 remain open without new rows,
+sub-rows or completion ticks.
+
 The retained [small-model measurement review](docs/reviews/901a5d594a59-local-coding-small-model-measurement.txt)
 has **Verdict: PASS** for exact commit
 `901a5d594a59e60c950a8baedb7e52497644fd91`, with no high or medium finding.
@@ -14,9 +23,10 @@ The [small-model development measurement](docs/evidence/t303-small-model-measure
 runs all 30 frozen development tasks once on the prepared `gemma4-e4b` artifact
 at source `42612ca9787f07e4df79402e6d92f39f578e5c67`: 10/30 strict
 ungraded proposals, task pass rates unavailable. No candidate tests, retries or
-held-out tasks ran. Four other complete model repeats remain pending; Muse has
-two retained attempts. Largest individual refusal: `strict-edit-refused:code.proposal.format`
-(17). Independent core review is required. T-303/T-306 remain
+held-out tasks ran. At that checkpoint, four complete model repeats were pending
+and Muse had two retained attempts. Largest individual refusal:
+`strict-edit-refused:code.proposal.format` (17). The retained review above returns
+PASS for that non-closing batch. T-303/T-306 remain
 open, with no new rows, sub-rows or completion ticks.
 
 The retained [exact-source coverage review](docs/reviews/8e346d7500df-local-coding-exact-source-coverage.txt)

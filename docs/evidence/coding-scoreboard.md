@@ -606,3 +606,63 @@ The complete six-model repeat remains unfinished; no unrelated source work is
 justified by this subset. T-303/T-306 remain open. See
 [evidence](t303-small-model-measurement-2026-11-11.md) for exact bindings,
 per-task observations and reproduction.
+
+## Muse exact-source development repeat, 2026-11-11
+
+Source: `42612ca9787f07e4df79402e6d92f39f578e5c67`. All 30 frozen development tasks ran once on the
+prepared `muse` artifact through Rust context selection, credential-owning chat
+and strict edit checking. **Partial path: task first-attempt and within-budget
+passes remain unavailable, not zero.** Native Git executable admission and missing
+original grading controls prevent native execution and task grading. No native
+tools, worktree edits, candidate tests, test feedback, retries, approvals, apply,
+commit, push or held-out tasks ran. Strict proposals are ungraded edits, never
+solved tasks. Selection receives only the statement and editable base file;
+full repository analysis and retrieval are not measured. Neither native trust
+nor original control admission is bypassed or reconstructed.
+
+Changed variables versus this artifact's November 10/11 measurement: complete
+source lines and merged/canonical excerpts with the exact-edit instruction;
+total/idle 300/60 s (was 120/30), private client/relay 310 s (was 130) and two-task
+cold-load jobs 900 s (was 600). Context remains 32768 tokens and selection 32768
+bytes. Output allowance is `min(32768, 32768 - rendered_input_tokens - 32)`,
+including reasoning. The private effect-free adapter uses the existing chat
+allowance; the product proposal route stays capped at 4096 output tokens.
+All existing byte caps and strict refusals remain. Combined changes do not
+isolate which variable changed an outcome. 32K is the largest prepared context
+tested, not an exhaustive hardware-limit search. Runtime, read-only weights,
+temperature zero, seed 42 and family template settings match the preceding
+campaign. All 30 contexts match the current-source primary-model run byte for
+byte; tokenization and output allowances differ by model.
+
+| Date (UTC) | Model | Context tokens | Output-token allowance | First / within budget task passes | Strict ungraded proposals | Request/check s | Reserved job wall s | GPU work min |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-11 | muse | 32768 | 24394–29889 | unavailable / unavailable (30 tasks) | 18/30 | 4945.146 | 5674.078 | 94.568 |
+
+Does-not-fit tasks: 0. One attempt per task, zero retries and no grade.
+Transport timeouts: 2; the November 10/11 run at 120/30 s had 18.
+That November 10/11 run had 10/30 strict ungraded proposals; neither count is a task
+pass rate. GPU work minutes mean reserved model-job wall/60, including
+verification, loading and cleanup, excluding queue and wrapper checks.
+Active GPU kernel time was not measured. Request/check time excludes context
+preparation and preflight. All 15 two-task jobs used both shared reservations
+and released them after completion. The first two attempts predate the smaller
+model's repeat and were retained unchanged; the controller resumed from task 3,
+without rerunning or dropping earlier attempts. No model was downloaded.
+
+| Outcome / cause | Tasks |
+| --- | --- |
+| `generation-refused:error:chat.response.incomplete` | 1 |
+| `generation-refused:error:chat.transport.timeout` | 2 |
+| `strict-edit-refused:code.proposal.edit` | 6 |
+| `strict-edit-refused:code.proposal.format` | 3 |
+| `ungraded-proposal` | 18 |
+
+Unambiguous backend counters cover 28/30 tasks:
+171088 input / 184996 output tokens.
+API usage was not requested; other counters remain unknown.
+Largest individual refusal: `strict-edit-refused:code.proposal.edit` (6).
+Three other prepared models still need complete repeats before model comparison
+or unrelated source work. T-303/T-306 remain open without role selection,
+new rows/sub-rows, completion ticks or native coding/release claims. See
+[evidence](t303-muse-measurement-2026-11-11.md) for exact bindings and per-task
+observations. These measurements do not establish task-solving improvement.
