@@ -2,6 +2,23 @@
 
 ## Active queue: local agent mission
 
+The [small-model development measurement](docs/evidence/t303-small-model-measurement-2026-11-11.md)
+runs all 30 frozen development tasks once on the prepared `gemma4-e4b` artifact
+at source `42612ca9787f07e4df79402e6d92f39f578e5c67`: 10/30 strict
+ungraded proposals, task pass rates unavailable. No candidate tests, retries or
+held-out tasks ran. Four other complete model repeats remain pending; Muse has
+two retained attempts. Largest individual refusal: `strict-edit-refused:code.proposal.format`
+(17). Independent core review is required. T-303/T-306 remain
+open, with no new rows, sub-rows or completion ticks.
+
+The retained [exact-source coverage review](docs/reviews/8e346d7500df-local-coding-exact-source-coverage.txt)
+has **Verdict: PASS** for exact commit
+`8e346d7500df7999111a7d1ea7b4a4163f59fa4d`, with no high or medium finding.
+A fresh source build reproduces all 30 primary-model contexts and strict checks;
+the full affected gate retains the same 53 inherited failures. Its low finding
+requires the other five prepared model repeats before any model comparison.
+Those repeats remain in progress; neither T-303 nor T-306 closes.
+
 The [exact-source coverage batch](docs/evidence/t303-exact-source-coverage-2026-11-11.md)
 preserves original line boundaries and merges excerpts under existing budgets,
 with the strict checker unchanged. Its affected gate records 1020 passes, 53 inherited
@@ -9,9 +26,10 @@ failures and 11 ignores over 29 targets; all 3 new methods, format and Clippy pa
 The new complete 30-task primary-model partial-path run records
 11 strict ungraded proposals, with task pass rates unavailable.
 Largest individual refusal: `generation-refused:error:chat.transport.limit` (8).
-Other five models still need the repeat. No candidate tests, retries or held-out
-tasks ran. Independent core review is required; T-303/T-306 stay open without
-new rows/sub-rows, completion ticks or native/solve/release claims.
+At that checkpoint, the five other model repeats were pending. No candidate
+tests, retries or held-out tasks ran. The retained exact-source review above
+returns PASS; T-303/T-306 stay open without new rows/sub-rows, completion ticks
+or native/solve/release claims.
 
 The retained [trusted-timeout review](docs/reviews/d31e2969c3ab-local-coding-trusted-model-timeouts.txt)
 has **Verdict: PASS** for exact commit

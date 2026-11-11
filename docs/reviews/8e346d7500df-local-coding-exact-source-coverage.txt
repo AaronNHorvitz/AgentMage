@@ -1,0 +1,168 @@
+Commit: 8e346d7500df7999111a7d1ea7b4a4163f59fa4d
+Scope: local-coding-exact-source-coverage
+
+Reviewer: Claude Opus 5.5, separate read-only session, extra-high effort. Rows: T-303 / T-306 (non-closing
+source-coverage and development-measurement batch). Range reviewed: d31e2969c3ab..8e346d7500df, i.e. source commit
+42612ca9787f07e4df79402e6d92f39f578e5c67 plus the docs-only evidence commit 8e346d75. Neither row is proposed for
+closure, and this review closes neither.
+
+## Methods
+
+I read IP-POLICY.md, the brief's MEASURE FIRST and REFOCUS sections, decision 0203, the top of TASKS.md and the full
+range diff. I read every restore, audit, helper-preparation, replay and diagnostic script before running it (one
+exception: the `measure-timeouts` `verify_manifest.py` was run by its restore script before I read it; it only
+hashes files). I checked the selection and merge logic in `capabilities/repository-map/src/coding_proposal.rs` line
+by line. I also wrote and ran a reviewer-only randomized invariant check, built offline in scratch space outside the
+repository. I traced every published number to the reproduced audit. I did not use the GPU, run any model, execute
+any candidate, load hidden or held-out tests, or modify the repository.
+
+## Commands and results
+
+All commands ran in /lane/review-checkout. `git rev-parse HEAD` = 8e346d7500df7999111a7d1ea7b4a4163f59fa4d.
+Output directory: /lane/state/tmp/source-coverage-review-NaSwXm.
+
+1. Shared inputs: `sha256sum` and `stat` on the /lane/reviews inputs. Archive size 165035003 bytes. The SHA-256 values
+   of the ranges archive, ranges prepare script, cold-restore log, docs fast-gate log, timeout archive and timeout
+   prepare script all match the request.
+2. `tar -tzvf` on both archives: regular files and directories only, under the fixed top-level roots.
+3. `python3 -B /lane/reviews/42612ca9787f-prepare-ranges-review.py`: restored into empty state, 19633 files
+   verified, manifest 4a883ee5…4eb3, `candidate_execution=false`, `hidden_tests_loaded=false`.
+   `verify_manifest.py` rerun: same result.
+4. `AGENTMAGE_MEASURE_REPO=$PWD bash /tools/build-slot python3 -B …/audit.py --models gpt-oss > audit.json`, then
+   `cmp` against `verified-results.json`: **byte-identical**. SHA-256 e24a3b29…3de42 matches the evidence's
+   "Audited results" binding.
+5. `prepare_review_helper.py "$PWD" helper`: the repository hashes for the frozen 42612ca9 inputs match this
+   checkout. The helper's path dependency was rebound to /lane/review-checkout/capabilities/repository-map.
+6. **Fresh build:** `CARGO_TARGET_DIR=$out/target CARGO_BUILD_JOBS=2 bash /tools/build-slot cargo build --locked
+   --offline --manifest-path $out/helper/Cargo.toml`. It compiled repository-map from this checkout and finished
+   successfully. Fresh binary SHA-256 is 8bc93b81…86dc; the retained binary is 0e06f7b8…9fe0. The difference comes
+   from the build location, as expected. I did not execute the retained binary.
+7. `bash /tools/build-slot python3 -B …/verify_proposals.py --repository $PWD --helper <fresh> --models gpt-oss`:
+   `{"candidate_execution": false, "hidden_tests_loaded": false, "verified_tasks": {"gpt-oss": 30}}`.
+   **30/30.** Each task's context equals the retained `context.json`, and so the retained request messages. Each
+   completed answer's strict check equals the retained `checked.json`, and each candidate snapshot equals the checked
+   change or the base. Apart from `helper_sha256`, the output is identical to the retained reproduction (7b4b1007…).
+8. `python3 -B /lane/reviews/6bb0008ae6ca-prepare-timeout-review.py`: 19634 files verified (6741929…), legacy API alias
+   1f9c30ea…489b. `diagnose_saved_answers.py --helper <fresh>`, then `cmp` against `saved-answer-diagnostic.json`:
+   **byte-identical**. 21 old completed answers: 12 old proposals still accepted, 2 old `code.proposal.edit`
+   refusals now strict proposals, 6 edit and 1 format refusals unchanged. This is saved-answer reuse, not inference
+   or grading, and the evidence labels it that way.
+9. `unset GIT_DIR; CARGO_TARGET_DIR=/lane/state/review-target python3 -B scripts/local_agent_fast_gate.py --base
+   d31e2969… > fast.log`: exit status **1, FAST GATE: FAIL**.
+   - The `parse_gate` comparison from the request passes: all 29 unfiltered targets match the builder's log in
+     counts and in failure/ignore identities. Totals: 1020 passed, 53 failed, 11 ignored, 0 measured, 0 filtered.
+   - All 53 failures are in the `agentmage_host` unit target. They are sandbox-manifest
+     (`LinuxSandboxError { kind: InvalidManifest }`) and related host-environment panics in
+     `linux_coding_runtime.rs` and `linux_read.rs`. The range does not touch that code. The failure list is
+     identical to the archived `baseline-fast.log`, and so are failures and ignores in all 21 shared targets. The
+     5 baseline-only Linux targets were not rerun; the evidence says so.
+   - New target `coding_context_ranges`: 3 passed, 0 failed. `cargo fmt --check`: exit 0. Clippy with `-D warnings`:
+     exit 0.
+   - git diff --check, `--lint-untracked` and `--lint-reviews`: exit 0.
+   - The markdownlint step returned exit 127: `Missing executable: node; no automatic download`. No Node binary
+     exists in this environment (`which node` finds none, and the previous reviewer's Node path is absent). I did
+     not download one and do not claim that check passed.
+   - The builder's log shows actual markdownlint-cli2 v0.23.2 (markdownlint v0.41.1) with 0 issues: in the source
+     gate for decision 0203 and the guide, and in the shared docs log for the other five Markdown files. The
+     builder's gate log SHA-256 2be8c7f6…ded81 matches the published value.
+10. `cmp docs/reviews/d31e2969c3ab-local-coding-trusted-model-timeouts.txt /lane/reviews/d31e2969c3ab-…-timeouts.md`:
+    **identical**.
+11. `git diff --check d31e2969… --`: clean. `git status --short`: empty before and after.
+12. Reviewer invariant check (scratch crate; same lockfile; `cargo run --release --locked --offline` via build-slot).
+    It ran 4000 random contexts over 1–4 files (`.py`, `.rs`, `.js`, `.txt`), with LF and CRLF line endings, files
+    without a final newline, multi-byte UTF-8, JSON-escaped characters, inline `x = 1; def …` definitions, and
+    budgets from 2048 to 32768. Every context satisfied:
+    - message within budget, and `message_bytes` equals user plus instruction;
+    - 1–64 excerpts;
+    - each excerpt's text equals the exact source slice, and every start and end is line-aligned;
+    - excerpts sorted by path and offset, and strictly disjoint and nonadjacent within a file;
+    - the serialized user message carries exactly those excerpts;
+    - reversing caller file order produces an identical user message.
+
+    For the checker, 16430 visible, unique, first-occurrence fragment edits were accepted with the exact expected
+    result, and 7628 invisible edits were refused with `code.proposal.edit`. Two early harness assertions failed;
+    both were bugs in my harness: a mid-character slice, and treating an overlapping earlier occurrence as unique.
+    The checker was correct to refuse the second.
+
+## Code review
+
+- **Line expansion (`coding_proposal.rs:236-246`).** Parser ranges are already validated as char-boundary slices
+  (`get(start..end)`). `rfind('\n') + 1` and `find('\n') + end + 1` land on ASCII byte boundaries. `end >= 1` holds
+  because `start < end`. CRLF is covered because `\r` precedes `\n`. Content before the definition on the same line
+  is included verbatim. That is exact source, not invention.
+- **Merge (`:317-354`).** The containment skip, then a single ordered pass that absorbs every same-path excerpt
+  overlapping or touching the growing range, keeps excerpts disjoint and nonadjacent. Excerpts before the absorbed
+  one cannot become touching, because the invariant gives `end_j < start_i`. My randomized check confirmed this.
+  The merged text is `content[start..end]`, so no gap bytes are invented. The 64-excerpt cap, the 2048-candidate cap
+  and the serialized byte ceiling (`proposed.len() + instruction <= max`) are applied to the whole proposed set
+  before acceptance. A candidate that does not fit leaves the previous set untouched. Visibility only grows.
+  - Removing the early `break` at 64 means up to 2048 clone, sort and serialize passes of at most 32 KiB. The work is
+    bounded and small.
+- **Checker.** From `struct ModelProposal` to end of file, the code is byte-identical to d31: the SHA-256 of that
+  region is 119eff1d… on both sides. No normalization, fuzzy matching or repair was added. Path validity, the
+  edit-must-lie-inside-one-excerpt rule, uniqueness, overlap and stale-digest refusals are unchanged.
+- **Instruction.** The fixed constant gained generic exact-whitespace, distinguishing-context and "new must differ"
+  wording. It contains no task content, and repository text still cannot change authority.
+- **Authority.** No filesystem, command, network, grant or tool code changed. 8e346d75 is docs-only. The range
+  touches nothing under `scripts/`, `shells/`, `platforms/` or `kernel/`.
+
+## Evaluation integrity and honesty
+
+- The measurement code loads only `suite.development_tasks()`. The policy records `held_out: not loaded or executed`,
+  and the audit reports `hidden_tests_executed=false`, `held_out_executed=false`, `native_execution=false`. No
+  evaluation script, task, hidden test or threshold changed in the range. The development set digest is
+  0c2a0624…1570, and the source/private freeze is ed848196…13ed. Tuning the selection and instruction on
+  development answers is permitted; no held-out content appears in the prompt, code or tests.
+- Every published number traces to the reproduced audit:
+  - 30 per-task rows (preflight tokens, allowance, seconds, observed counters, cause): 0 mismatches;
+  - 11/30 strict proposals;
+  - causes 1/8/7/3/11;
+  - allowance range 24223–29812;
+  - 1515.472 s request/check, 1692.982 s reserved wall, 28.216 GPU-work minutes;
+  - counters for 22/30 tasks, 139703 input / 146413 output tokens;
+  - 0 does-not-fit tasks.
+
+  The scoreboard block matches the evidence block. Failures are counted, not dropped.
+- The labelling is honest:
+  - task passes are "unavailable, not zero";
+  - the evidence states "no increase … 11/30 versus 12/30" and that task solving is unmeasured;
+  - it is a partial path, with no tests, retries, held-out tasks or native workflow;
+  - selection and instruction effects are not isolated;
+  - the five other models are pending;
+  - no role selection, admission or row tick is made.
+
+  The largest refusal, `chat.transport.limit` (8), is identified as the next work.
+- MEASURE FIRST: this batch changes what the model sees, and a dated scoreboard line for it is present, with context
+  and output budgets stated as changed or unchanged variables.
+- Retained parent review: byte-identical. The TASKS.md "in flight" marker (formerly line 1108, now 1126) and all
+  history are preserved. The only removed TASKS.md lines are rewordings of the top-of-queue status paragraphs. No
+  row tick changed.
+- Public-repository hygiene: the range adds no private host path, username, hostname, credential or personal data.
+  The only absolute paths are /lane lab paths inside the verbatim retained review, as previously accepted. No other
+  agent product is named or compared. The private helper and build logs contain a host home path, but they are
+  uncommitted review inputs only.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low (backlog): only GPT-OSS has measured the last two context changes.** Both the 300/60-second repeat and this
+  exact-source change were measured on GPT-OSS alone. The other five prepared models' newest lines therefore
+  predate two changes to what the model sees (`docs/evidence/coding-scoreboard.md`, new section, paragraph 1). Every
+  file already says so honestly and none claims a bake-off, so this does not block the batch. Fix: run the pending
+  five-model resumable repeat on the current source before any T-312 comparison relies on these lines.
+- **Limitation (not a finding):** I could not run markdownlint myself because no Node binary is available. The
+  gate's exit-127 refusal is retained above. The builder's actual 0-issue markdownlint output is in the shared logs.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing batch): PASS.**
+  - The source change is correct, bounded and deterministic, and adds no authority. Its documentation is accurate.
+  - The development measurement is fully reproduced from a fresh source build: the audit is byte-identical, 30/30
+    contexts and checks replay, and the diagnostic is byte-identical.
+  - The source gate is genuinely FAIL only on the 53 inherited host-environment failures, with identities matching
+    the baseline.
+  - The scoreboard line is present and traceable.
+  - Neither row closes; the "done when" for both remains unmet (no native loop, tests, retries or graded passes).
+
+Verdict: PASS
