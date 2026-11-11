@@ -52,9 +52,14 @@ Files are sorted by path. Existing pinned language parsers supply definitions;
 task-word matches rank definition names, source and paths. Unsupported files use
 lexical windows of up to five complete lines. Small complete files are also
 candidates. Selection considers at most 2,048 ranked candidates and retains at
-most 64 non-overlapping excerpts within the serialized message ceiling. A long
-line or definition that does not fit is omitted, never cut mid-character. If no
-excerpt fits, the request is refused before inference.
+most 64 non-overlapping excerpts within the serialized message ceiling. Parser
+ranges include complete original lines, preserving indentation and trailing
+newlines. Overlapping or touching candidates merge when the resulting message
+fits; a complete-file candidate can replace smaller selected ranges. Retained
+ranges are ordered by path and byte offset. Gaps remain omitted unless a larger
+candidate containing them fits. A long line or definition that does not fit is
+omitted, never cut mid-character. If no excerpt fits, the request is refused
+before inference.
 
 The outline lists every supplied path, its complete digest and byte count, and
 up to eight parser-backed names, each capped at 64 characters. An empty name
@@ -79,6 +84,11 @@ previous replacements. Overlapping edits, unchanged replacements, NUL in new
 text, net unchanged files and growth beyond the snapshot limits reject the whole
 proposal. A changed complete source digest rejects a stale context. These checks
 validate an edit proposal, not its correctness or safety to execute.
+
+The model instruction explicitly requires copying decoded excerpt text with its
+original whitespace and enough surrounding source to distinguish repeated
+fragments. The checker still refuses ambiguous or altered preimages; it does
+not trim, normalize or repair a model's edit.
 
 The 128 KiB candidate limit covers the final combined snapshot, including
 unchanged files. Growth in one file can be balanced by shrinkage in another
