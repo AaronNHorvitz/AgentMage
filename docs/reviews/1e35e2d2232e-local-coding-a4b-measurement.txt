@@ -1,0 +1,186 @@
+Commit: 1e35e2d2232eec97a8bbfaf4f345a1fa84311166
+Scope: local-coding-a4b-measurement
+
+# Independent review: 26B A4B exact-source development measurement (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate read-only session, extra-high effort. Range reviewed:
+24e7ce67ddd4d16d6a78b8ed8d891b0d6fe5b816..1e35e2d2232eec97a8bbfaf4f345a1fa84311166. Product source is
+42612ca9787f07e4df79402e6d92f39f578e5c67. Neither row is proposed for closure, and this review closes neither.
+I ran no model, candidate, hidden test or held-out task and used no GPU.
+
+## Methods
+
+- I confirmed the frozen checkout at /lane/review-checkout is HEAD 1e35e2d2232eec97a8bbfaf4f345a1fa84311166
+  with a clean tree. The diff touches four documentation files only: TASKS.md (+18 prose lines, no rows,
+  sub-rows or ticks), docs/evidence/coding-scoreboard.md (+59), the new
+  docs/evidence/t303-a4b-measurement-2026-11-11.md (+141) and the verbatim parent review
+  docs/reviews/24e7ce67ddd4-local-coding-muse-measurement.txt (+139). No script, prompt, product source or
+  task data changed.
+- I checked the hash and size of all eight new shared files and both primary-package files. All match the
+  request exactly. The cold-check log, both gate logs and the package log (7571b0e5…) were read.
+- Before running anything, I read both restore bootstraps, verify_manifest.py, audit.py,
+  prepare_review_helper.py, verify_proposals.py, compare_a4b_contexts.py, controller.py, the order note,
+  policy.json, the helper's main.rs/Cargo.toml and the cold-check script. To read them I extracted the
+  top-level files to a scratch directory, which I later removed.
+  - The a4b bootstrap validates the whole archive first: relative paths only, no "..", a single root, and
+    regular files/directories only.
+  - It then refuses any symlinked root, parent or target. It verifies existing bytes, creates missing files
+    with O_EXCL ('xb'), and verifies the full 60,276-entry manifest.
+  - An archive listing shows 60,277 regular files and 563 directories: the manifest plus 60,276 bound
+    files.
+  - No restored script runs a model or candidate. verify_proposals.py only calls the helper (context
+    selection and strict check) and reads candidate files as bytes.
+- Escape attempts on the restore helper (my own, network-disabled bwrap with a temporary /lane/state):
+  - the measurement root itself a symlink to an outside directory: refused, outside empty;
+  - a dangling file symlink at an archive path (audit.py -> ../outside/written): refused, nothing written;
+  - a directory where a file is expected: refused;
+  - a same-name file with different size (policy.json = "{}"): refused, content unchanged.
+
+  I also re-ran the builder's cold-check script to a fresh tempfile path, which reproduced every PASS line.
+  Empty restore and repeat both gave 60,276 files (730c2869…). Additive over the prior Muse bootstrap gave
+  39,268 (9e0619aa…), then 60,276. A conflicting file was refused without overwrite, and a symlinked
+  directory was refused with the outside directory unchanged.
+
+## Exact commands and results
+
+All commands ran in /lane/review-checkout. The output directory was
+/lane/state/tmp/a4b-measurement-review-AMV8pl.
+
+1. `test "$(git rev-parse HEAD)" = 1e35e2d2232eec97a8bbfaf4f345a1fa84311166`: PASS.
+2. `python3 -B /lane/reviews/42612ca9787f-a4b-prepare-ranges-review.py` restored into empty state in
+   15.7 s. Result: `verified_files 60276`, manifest 730c2869113124d68afe369b967f2c99d76c6f5273f4aea18cb56a70952fa026.
+3. `python3 -B /lane/state/measure-five-20261111/verify_manifest.py`: 21,091 files, 4ee396ca…
+   (unchanged earliest manifest).
+   - I independently found that muse-retained-manifest.json is 9e0619aaf77ebb6b741970cd54e7b3da5da5f379e431cc9d043f5b8c620b85cf
+     with 39,268 entries.
+   - Both earlier manifests are exact subsets of the a4b manifest.
+   - The a4b manifest binds every regular file in the root except itself (60,277 on disk).
+   - frozen-inputs.json, a4b-results.json, a4b-reproduction.json and a4b-context-comparison-final.json hash
+     to the values in the evidence binding table.
+   - a4b-context-comparison.json is the retained 0-byte failed output, as the order note says.
+4. Audit under build-slot (`AGENTMAGE_MEASURE_REPO="$PWD" … audit.py --models gemma4-26b-a4b`) exited 0
+   after a 23-minute queue wait. `cmp` against a4b-results.json gave **byte-identical**.
+5. `prepare_review_helper.py "$PWD" …/helper` followed by
+   `CARGO_TARGET_DIR=…/target CARGO_BUILD_JOBS=2 build-slot cargo build --locked --offline` built my own
+   helper from the frozen checkout in 19.5 s. It is a 24-line main.rs over the repository-map
+   `prepare_coding_proposal` and `check_coding_proposal`.
+6. `verify_proposals.py --helper <my build> --models gemma4-26b-a4b` gave `verified_tasks
+   {gemma4-26b-a4b: 30}`, candidate_execution false, hidden_tests_loaded false.
+   - My helper's sha256 is 8db33619… and the builder's is adbc8794…. The digests differ by build path, as
+     expected, but the semantic output is identical.
+   - All 30 contexts were reproduced. Exactly one answer.txt exists (gemma4-26b-a4b-24/collection/dev-026),
+     and its strict check reproduced `code.proposal.format`.
+   - All 30 candidates equal the base projection.
+7. `42612ca9787f-prepare-ranges-review.py` verified the primary root (19,633 files, 4a883ee5…).
+   `compare_a4b_contexts.py` gave matched_contexts 30. `cmp` against a4b-context-comparison-final.json gave
+   **byte-identical**.
+8. `cmp docs/reviews/24e7ce67ddd4-local-coding-muse-measurement.txt /lane/reviews/24e7ce67ddd4-local-coding-muse-measurement.md`:
+   identical, so the parent PASS is retained verbatim.
+9. Node: the sha256 values are d1de76d8… and 4573185d…, matching the request. The binary is an ELF x86-64
+   executable, and the LICENSE file is the complete Node.js licence notice (MIT header plus bundled
+   notices). I used it only through a scratch PATH symlink, and `node --version` reports v24.15.0.
+   .tools is not linked into this checkout, so I could not compare it byte for byte with the "already
+   retained" copy. I rely on the hash and version.
+10. `python3 -B scripts/local_agent_fast_gate.py --base 24e7ce67…` gave **FAST GATE: PASS, exit 0**:
+    - git diff --check: 0;
+    - --lint-untracked: 0;
+    - --lint-reviews on the parent review copy: 0;
+    - markdownlint-cli2 v0.23.2 on 3 files: 0 issues.
+
+    The builder's first gate log (node missing, exit 127, FAIL) is retained as stated.
+11. `git diff --check 24e7ce67… --`: exit 0. `git status --short`: empty.
+
+## Evidence traced independently
+
+- Aggregates recomputed from a4b-results.json:
+  - 30 tasks; 0 strict ungraded proposals; first/within-budget passes null (published as "unavailable",
+    not zero).
+  - Causes: 29 `generation-refused:error:chat.transport.limit` and 1 `strict-edit-refused:code.proposal.format`.
+  - Allowance 22,998–29,579; preflight 3,157–9,738.
+  - Request/check 4275.841 s; reserved 4800.543 s = 80.009 min.
+  - Counter coverage 1/30 at 5,329 / 10,262.
+  - Identity: n_ctx 32768, temperature 0, seed 42, q8_0 K/V, 256/128, weights a07f7222….
+
+  All 30 per-task evidence rows match the audit details cell for cell (scripted comparison, 0 mismatches).
+  The scoreboard row matches.
+- The prior-run comparison figures (29 timeouts, 0/30 proposals, 120/30 s) match scoreboard lines 399 and
+  426–438.
+- Controller claims:
+  - remaining-three-controller-20261111.log ends after a4b 2/30 and 31b 2/30.
+  - a4b-controller-resume-20261111.log runs 4/30 through 30/30, then COMPLETE.
+  - controller.py skips completed reports and asserts on any partial directory, so nothing can replay
+    silently.
+  - All 15 a4b batch reports and reservation logs end `completed` with `error: null`, the largest job
+    352 s, inside 900 s.
+  - gemma4-31b-00 is completed and retained, and there is no qwen35-27b job.
+- Measure-first: this batch adds its scoreboard line. Context (32768 tokens), selection (32768 bytes), the
+  output formula and the changed timeouts are all stated, and the combined variables are explicitly not
+  isolated. Does-not-fit (0) is counted apart, and transport refusals are labelled as refusals, not as model
+  failures or grades.
+- Evaluation integrity:
+  - No held-out content, task tuning, hidden test or grading-control change appears in the range.
+  - audit.py and verify_proposals.py load only `suite.development_tasks()` and assert policy source hashes
+    against `suite.source_hashes()`.
+  - No retries (asserted 0).
+- Public hygiene: the added lines contain no private host path, username, hostname, e-mail or credential.
+  - The /lane/… paths in the retained parent review are lane-generic and were already present in earlier
+    committed reviews.
+  - There is no other-agent-product comparison and no trademark branding. Model labels are used
+    nominatively.
+  - The private home path in the restored prepare_review_helper.py is under /lane/state only and is not
+    committed.
+
+## Findings
+
+No critical, high or medium findings.
+
+**Low L1: the binding output ceiling for this batch is the unchanged transport byte cap, not the stated
+token allowance, and the published text does not quantify it.**
+Locations: docs/evidence/t303-a4b-measurement-2026-11-11.md:16-22 and :28-30;
+docs/evidence/coding-scoreboard.md:685-699.
+
+What the retained data shows:
+
+- For all 29 `chat.transport.limit` attempts, backend-slice.log ends with `srv stop: cancel task` followed
+  by `stop processing: n_tokens = N, truncated = 0`.
+- N minus the preflight input gives 16,202–17,778 generated tokens at cancellation, against allowances of
+  22,998–29,579. For example, dev-001 stopped at 25,737 − 9,500 = 16,237 against 23,236.
+- events.ndjson has no text events before the error, so the ceiling hit is most consistent with the
+  stream/wire byte caps filling with reasoning deltas. Those caps are MAX_STREAM_BYTES 4 MiB at
+  platforms/linux-inference/src/local_chat.rs:15 and MAX_WIRE 5 MiB at
+  platforms/linux-inference/src/local_chat_transport.rs:30. The 1 MiB text cap is not consistent with
+  text-free events.
+
+What the documents say and omit:
+
+- The documents truthfully say "All existing byte caps … remain".
+- They report the 22,998–29,579 allowance as the output budget.
+- They report 29 tasks as observed counters "unknown". They do not say that the larger timeouts turned the
+  previous 29 timeouts into 29 byte-cap cancellations at about 16–18K tokens.
+
+Nothing stated is false, and measurements are not gates, so this does not block. However, a reader cannot
+tell from the scoreboard that the effective output budget was about 16–18K tokens.
+
+Fix (future batches or T-309): state the effective byte ceilings next to the allowance. Also have the audit
+record the backend `n_tokens` at cancellation, or name the transport sublimit in the error code, so that
+limit refusals carry a generated-token position.
+
+Backlog notes, with no fix needed for this batch:
+
+- The node copy's "already-retained" provenance could not be compared byte for byte, because .tools is not
+  linked here. The hash and version were checked.
+- The low remaining-model-repeat finding from the parent review stays open. Complete repeats of gemma4-31b
+  (31b-00 must be skipped on resume) and qwen35-27b are still pending before any model comparison or source
+  tuning.
+- The restore helper's behaviour, which may add earlier missing paths before it reaches a conflict, is as
+  documented. Additive preflight is already in the T-309 backlog.
+
+## Per-row result
+
+- T-303 (non-closing development measurement): the evidence is reproduced and honestly labelled, with no
+  high or medium finding. The row stays open and is not proposed for closure; this review closes nothing.
+- T-306 (non-closing development measurement): same result as T-303. No tools, worktree, candidate tests,
+  feedback, retries, approval, apply, commit or push ran, so no loop-safety claim is made or needed. The
+  row stays open.
+
+Verdict: PASS

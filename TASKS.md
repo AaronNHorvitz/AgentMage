@@ -2,13 +2,33 @@
 
 ## Active queue: local agent mission
 
+The [31B development measurement](docs/evidence/t303-31b-measurement-2026-11-11.md)
+runs all 30 frozen development tasks once at source
+`42612ca9787f07e4df79402e6d92f39f578e5c67`: 0/30 strict ungraded
+proposals; task pass rates unavailable. No tests, retries or held-out tasks ran.
+One other complete prepared-model repeat remains pending. Largest individual
+refusal: `generation-refused:error:chat.transport.timeout` (22); the other eight
+attempts fail strict format checking. Independent core review is required.
+T-303/T-306 remain open without new rows, sub-rows or completion ticks.
+
+The retained [A4B measurement review](docs/reviews/1e35e2d2232e-local-coding-a4b-measurement.txt)
+has **Verdict: PASS** for exact commit
+`1e35e2d2232eec97a8bbfaf4f345a1fa84311166`, with no high or medium finding.
+The reviewer independently reproduces all 30 contexts and the available strict
+check from a fresh source build; its documentation fast gate also passes.
+Low L1 joins the T-309 backlog: expose cancellation token positions or distinct
+transport sublimits. The unchanged 4 MiB stream-body, 5 MiB wire and 1 MiB text
+ceilings can stop generation before the stated token allowance. Remaining model
+repeats and additive-restore preflight remain open. This non-closing review
+closes neither T-303 nor T-306.
+
 The [26B A4B development measurement](docs/evidence/t303-a4b-measurement-2026-11-11.md)
 runs all 30 frozen development tasks once at source
 `42612ca9787f07e4df79402e6d92f39f578e5c67`: 0/30 strict ungraded
 proposals; task pass rates unavailable. No tests, retries or held-out tasks ran.
-Two other complete prepared-model repeats remain pending. Largest individual
-refusal: `generation-refused:error:chat.transport.limit` (29).
-Independent core review is required. T-303/T-306 remain open without new rows,
+At that checkpoint, two other complete prepared-model repeats remained pending.
+Largest individual refusal: `generation-refused:error:chat.transport.limit` (29).
+The retained A4B review above returns PASS. T-303/T-306 remain open without new rows,
 sub-rows or completion ticks.
 
 The retained [Muse measurement review](docs/reviews/24e7ce67ddd4-local-coding-muse-measurement.txt)
