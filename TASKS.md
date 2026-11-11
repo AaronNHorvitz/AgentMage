@@ -5,6 +5,8 @@
 The owner's [open memory-linking study](docs/decisions/0204-open-study-memory-linking.md)
 is recorded as planning only in T-315. It starts no earlier than the first
 CAP-29 work and changes neither measure-first nor the coding-agent work order.
+The [planning evidence](docs/evidence/t315-memory-linking-study-plan-2026-11-11.md)
+records the scope and documentation checks; T-315 stays open.
 
 The [31B development measurement](docs/evidence/t303-31b-measurement-2026-11-11.md)
 runs all 30 frozen development tasks once at source
