@@ -2,6 +2,19 @@
 
 ## Active queue: local agent mission
 
+The [trusted model timeout batch](docs/evidence/t303-trusted-model-timeouts-2026-11-11.md)
+exposes existing total/idle budgets through control-only settings, preserving the
+120/30-second defaults and five-minute ceiling. The affected fast gate passes
+269 tests with formatting and Clippy. A new complete 30-task GPT-OSS partial-path
+repeat records 12 strict ungraded proposals, unchanged from its prior count,
+zero transport timeouts and unavailable task pass rates. All 30 request/context
+pairs match the prior run byte-for-byte. Current largest individual refusal is
+strict edit checking (8), then unchanged transport size limits (7). Other models
+still need the repeat. Original private review inputs were packaged, cold-restored
+and fully reverified; only an independent verdict can accept them. T-303/T-306
+remain open; no new rows/sub-rows or completion ticks. Independent core review is
+required for this batch.
+
 The [development measurement review](docs/reviews/6b15590e800e-local-coding-development-measurement.txt)
 is **INCONCLUSIVE** for exact commit
 `6b15590e800e18b6f75b3b3350e1aa23ede2418f`: no high or medium documentary

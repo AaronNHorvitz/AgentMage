@@ -448,3 +448,45 @@ before a complete coding score can be measured. No model role is selected here.
 See [measurement evidence](t303-development-measurement-2026-11-10.md) for exact
 scope, model identities, per-task time/tokens, artifact bindings and reproduction.
 This non-closing batch awaits independent core review. T-303 and T-306 stay open.
+
+## Trusted timeout selection repeat, 2026-11-11
+
+Source: `6bb0008ae6ca5ad491fedd02c53c8f52e1781b1f`. Partial path: current Rust selection,
+credential-owning chat API and strict edit checking. All 30 GPT-OSS development
+requests/contexts are byte-identical to their prior counterparts. No candidate
+tests, retries or held-out tasks ran; native execution and original-control
+admission remain blocked. Other five models were not rerun.
+
+Changed variables: total/idle 300/60 s (was 120/30), containing private relay/client
+310 s (was 130), two-task job reservation 900 s (was 600). Context/output and all
+byte caps are unchanged. Progress never renews total time. Every input fits.
+The 12/30 strict ungraded proposals equal the previous count;
+no task-solving improvement is established. Missing task grades remain unknown.
+
+| Date (UTC) | Model | Context tokens | Output-token budget | Total / idle s | Dev first / within budget | Strict ungraded edits | Request/check s | Reserved job wall s | GPU work min |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-11 | gpt-oss | 32768 | 24223–29779 | 300 / 60 | unavailable / unavailable (30 tasks) | 12/30 | 1428.275 | 1607.238 | 26.787 |
+
+GPU work minutes are reserved model-job wall/60, including load/verification/
+cleanup and excluding queue/wrapper checks, not active GPU kernel time. Backend
+counters cover 23/30 tasks: 138757 input / 143734 output tokens.
+Other counters are unknown; API usage was not requested. Zero does-not-fit tasks,
+zero transport timeouts, one attempt each; first/within-budget passes unavailable.
+
+| Outcome / cause | Tasks |
+| --- | --- |
+| `generation-refused:error:chat.response.incomplete` | 1 |
+| `generation-refused:error:chat.response.invalid` | 1 |
+| `generation-refused:error:chat.transport.limit` | 7 |
+| `strict-edit-refused:code.proposal.edit` | 8 |
+| `strict-edit-refused:code.proposal.format` | 1 |
+| `ungraded-proposal` | 12 |
+
+Largest individual refusal: `code.proposal.edit` (8); next source work follows
+strict edit failures. The remaining models' timeout results still need repeating;
+this run does not justify a further guard or size-ceiling increment. No model
+role or coding admission is selected. See [evidence](t303-trusted-model-timeouts-2026-11-11.md)
+for per-task metrics, bindings, raw-log audit and independent reproduction.
+The previous measurement's missing review inputs are now privately packaged and
+cold-restored successfully; its acceptance still requires the independent reviewer.
+T-303/T-306 remain open. This batch requires independent core review.
