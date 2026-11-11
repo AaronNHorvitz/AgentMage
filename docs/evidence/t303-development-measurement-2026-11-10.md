@@ -131,8 +131,10 @@ not cure the inherited broader Rust fast-gate failure: the independently reviewe
 source still has 1,476 passes, 72 inherited failures and 64 ignores across 26
 unfiltered targets. No source, hidden test, threshold, row or lifecycle status was
 changed. The retained [prior independent review](../reviews/33ae305a3bc0-local-coding-candidate-build-deadline.txt)
-is PASS with no high or medium finding; this measurement batch requires its own
-core review. T-303/T-306 remain open. Further daily/batch development measurements
+is PASS with no high or medium finding. The later
+[trusted-timeout review](../reviews/d31e2969c3ab-local-coding-trusted-model-timeouts.txt)
+reproduces this batch's complete raw evidence and returns PASS with no high or
+medium finding. T-303/T-306 remain open. Further daily/batch development measurements
 must continue while they are open; held-out measurement remains reserved for row
 closure. No acceptance, public release or owner-test readiness is claimed.
 

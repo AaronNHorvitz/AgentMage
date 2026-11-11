@@ -69,7 +69,8 @@ requests, so aggregate changes are not a causal quality attribution experiment.
 | `strict-edit-refused:code.proposal.format` | 1 |
 | `ungraded-proposal` | 12 |
 
-There are zero transport timeouts in this repeat. The largest individual refusal
+There are zero transport timeouts in this repeat; the prior GPT-OSS run had
+one timeout (dev-016, now ending in `chat.response.incomplete`). The largest individual refusal
 cause is strict edit checking (8),
 followed by the unchanged transport size limit
 (7).
@@ -171,3 +172,9 @@ unambiguous backend observations, including reasoning where reported.
 | dev-028 | 8152 | 24584 | 89.517 | unknown | `generation-refused:error:chat.transport.limit` |
 | dev-029 | 8058 | 24678 | 19.069 | 8058 / 2416 | `generation-refused:error:chat.response.invalid` |
 | dev-rust-001 | 3590 | 29146 | 44.172 | 3590 / 8647 | `ungraded-proposal` |
+
+The later [independent review](../reviews/d31e2969c3ab-local-coding-trusted-model-timeouts.txt)
+returns **PASS** for exact commit
+`d31e2969c3ab48902b2426638dc62e14cb7bd7fd`, with no high or medium finding.
+It also reproduces and accepts the earlier raw measurement evidence. Its low
+timeout-comparison clarification is addressed above; T-303/T-306 remain open.

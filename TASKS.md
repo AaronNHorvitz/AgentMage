@@ -2,25 +2,43 @@
 
 ## Active queue: local agent mission
 
+The [exact-source coverage batch](docs/evidence/t303-exact-source-coverage-2026-11-11.md)
+preserves original line boundaries and merges excerpts under existing budgets,
+with the strict checker unchanged. Its affected gate records 1020 passes, 53 inherited
+failures and 11 ignores over 29 targets; all 3 new methods, format and Clippy pass.
+The new complete 30-task primary-model partial-path run records
+11 strict ungraded proposals, with task pass rates unavailable.
+Largest individual refusal: `generation-refused:error:chat.transport.limit` (8).
+Other five models still need the repeat. No candidate tests, retries or held-out
+tasks ran. Independent core review is required; T-303/T-306 stay open without
+new rows/sub-rows, completion ticks or native/solve/release claims.
+
+The retained [trusted-timeout review](docs/reviews/d31e2969c3ab-local-coding-trusted-model-timeouts.txt)
+has **Verdict: PASS** for exact commit
+`d31e2969c3ab48902b2426638dc62e14cb7bd7fd`, with no high or medium finding.
+Its fresh reproductions also resolve the earlier measurement's missing-input
+blocker: both raw audits and all 210 Rust context/check reproductions pass.
+The low timeout-comparison finding is clarified: the earlier GPT-OSS run had
+one timeout, while the 300/60-second repeat had zero. Neither parent row closes.
+
 The [trusted model timeout batch](docs/evidence/t303-trusted-model-timeouts-2026-11-11.md)
 exposes existing total/idle budgets through control-only settings, preserving the
 120/30-second defaults and five-minute ceiling. The affected fast gate passes
 269 tests with formatting and Clippy. A new complete 30-task GPT-OSS partial-path
 repeat records 12 strict ungraded proposals, unchanged from its prior count,
 zero transport timeouts and unavailable task pass rates. All 30 request/context
-pairs match the prior run byte-for-byte. Current largest individual refusal is
+pairs match the prior run byte-for-byte. Its largest individual refusal was
 strict edit checking (8), then unchanged transport size limits (7). Other models
 still need the repeat. Original private review inputs were packaged, cold-restored
-and fully reverified; only an independent verdict can accept them. T-303/T-306
-remain open; no new rows/sub-rows or completion ticks. Independent core review is
-required for this batch.
+and fully reverified; the retained trusted-timeout review above returns PASS.
+T-303/T-306 remain open; no new rows/sub-rows or completion ticks.
 
 The [development measurement review](docs/reviews/6b15590e800e-local-coding-development-measurement.txt)
-is **INCONCLUSIVE** for exact commit
+was **INCONCLUSIVE** for exact commit
 `6b15590e800e18b6f75b3b3350e1aa23ede2418f`: no high or medium documentary
-finding, but the reviewer could not access the sealed private inputs. A private
-review archive now carries both unchanged input roots for reproduction; acceptance
-still requires an independent verdict. The scoreboard now states the effective
+finding, but the reviewer could not access the sealed private inputs. The later
+trusted-timeout review above reproduces both unchanged input roots and returns
+PASS, resolving that earlier missing-input blocker. The scoreboard now states the effective
 120/30-second limits and the unidentified local conversion metadata explicitly.
 T-303/T-306 remain open.
 

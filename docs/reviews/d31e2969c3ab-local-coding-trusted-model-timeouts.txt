@@ -1,0 +1,155 @@
+Commit: d31e2969c3ab48902b2426638dc62e14cb7bd7fd
+Scope: local-coding-trusted-model-timeouts
+
+# Independent review — trusted model timeouts and GPT-OSS development repeat
+
+Reviewer: Claude Opus 5.5, separate read-only session, extra-high effort. Row: T-303 / T-306 (non-closing batch).
+Diff reviewed: 6b15590e800e18b6f75b3b3350e1aa23ede2418f..d31e2969c3ab48902b2426638dc62e14cb7bd7fd (source commit
+6bb0008ae6ca5ad491fedd02c53c8f52e1781b1f plus the measurement/documentation commit). Re-review of the earlier INCONCLUSIVE
+6b15590e800e measurement evidence is included. No closure is proposed, and this review closes nothing.
+
+## Methods and exact commands
+
+All commands ran in /lane/review-checkout. `git rev-parse HEAD` = d31e2969c3ab48902b2426638dc62e14cb7bd7fd.
+`git status --short` was empty before and after.
+
+1. Shared inputs: `sha256sum` and `stat` on the six /lane/reviews files. All sizes and SHA-256 values match the request
+   (inputs e1b7a834…, helper.gz 6cccb18b…, prepare-measurement 122f8af0…, timeout inputs 6f7c4958…,
+   prepare-timeout 7874d8f6…).
+2. I read both bootstrap scripts before running them. They only stream-check tar members (relative paths, no `..`,
+   fixed top-level roots, regular files and directories only), extract with `filter='data'` into /lane/state, refuse to
+   overwrite partial state, verify hashes, restore the original helper at mode 0600 and `git archive` the frozen
+   source list. They start no model, candidate or hidden test. I also read `audit.py`/`audit_all.py`,
+   `prepare_review_helper.py`, `verify_proposals.py`, `verify_manifest.py`, `controller.py`, `batch.py`, `collect.py` and
+   `measurement_chat.py` in both roots, plus `scripts/coding_eval.py` `projection`/`read_candidate`. Those two only read
+   files and refuse symlinks and extra entries; they execute nothing.
+3. Bootstrap and manifests, run as given in the request:
+   - prepare-measurement → `{"baseline_source": …, "files": 2281, "inputs_restored": true, "candidate_execution": false, "hidden_tests_loaded": false}`
+   - prepare-timeout → manifest 6741929716243eb49e8290874b871ba2961dd7d9132a8f837167de4a836e8d47, 19634 files, timeout_inputs_restored=true
+   - measure-20261110/verify_manifest.py → db75967cb49c049cd99103971ded3f01cf0e0a976cc02508bce0cf9b7f022c46, **117972** files
+   - measure-timeouts-20261111/verify_manifest.py → 6741929716243eb4…, **19634** files
+4. Old audit: `AGENTMAGE_MEASURE_REPO=<baseline> build-slot python3 -B audit_all.py` → `cmp` against verified-results.json:
+   **byte-identical**.
+5. Old helper: `prepare_review_helper.py` then `cargo build --locked --offline` (fresh, in my own target dir) → OK.
+   `verify_proposals.py` → `{"candidate_execution": false, "hidden_tests_loaded": false, "verified_tasks": {"gemma4-26b-a4b": 30, "gemma4-31b": 30, "gemma4-e4b": 30, "gpt-oss": 30, "muse": 30, "qwen35-27b": 30}}`
+   (180/180). Fresh helper sha256 51cee751…, which differs from the retained 4da3f973… because of the build location, as
+   the request expected.
+6. New audit: `AGENTMAGE_MEASURE_REPO=$PWD build-slot python3 -B measure-timeouts-20261111/audit.py` → `cmp` against
+   verified-results.json (sha256 198111f8…, matching the evidence table): **byte-identical**.
+7. New helper: prepared and built offline. `verify_proposals.py` → `{"candidate_execution": false, "hidden_tests_loaded": false, "verified_tasks": {"gpt-oss": 30}}`
+   (30/30). Fresh helper sha256 23958a8a…; report sha256 91512160…. The builder's fresh report c4e5dbc0… also verifies
+   against its file. The difference comes only from the helper-hash field.
+8. `unset GIT_DIR; PATH=/lane/state/tmp/t306-confined-candidate/node/bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target python3 -B scripts/local_agent_fast_gate.py --base 6b15590e…`
+   → **FAST GATE: FAIL**, caused only by markdownlint: `Missing executable: node; no automatic download`, exit 127. The
+   node directory named in the request does not exist in this session (`ls` → No such file). No node binary exists
+   anywhere on this filesystem (`find / -xdev -name node`). Every other step passed:
+   - `git diff --check`
+   - `--lint-untracked`
+   - `--lint-reviews` on the retained review
+   - `cargo fmt --check -p agentmage-local-api`
+   - `cargo clippy --locked --offline --all-targets -D warnings`
+   - `cargo test --locked --offline -p agentmage-local-api --all-targets --no-fail-fast` → 11 targets, **269 passed, 0 failed, 0 ignored**,
+     including the three new tests.
+   In place of markdownlint I ran a Python check of the enabled rules that matter on all six changed Markdown files
+   (.markdownlint config disables MD013/022/024/060). It checked final newline, consecutive blank lines, fenced-block
+   blanks and language, heading space, hard tabs, trailing spaces, table pipe and column consistency, and bare URLs.
+   All six files are clean. This substitute is not markdownlint itself. It can only miss Markdown style issues, which
+   would be low severity and cannot change this verdict.
+9. `git diff --check 6b15590e… --` → exit 0.
+10. Verbatim review: `diff docs/reviews/6b15590e800e-local-coding-development-measurement.txt /lane/reviews/6b15590e800e-local-coding-development-measurement.md`
+    → identical.
+11. Privacy: I grepped the added lines for home paths, usernames, the e-mail address, hostnames and credentials. The
+    only hits are /lane/... paths inside the verbatim retained review, which is accepted lab-path practice. No private
+    path or credential appears in committed files. The private helper Cargo.toml path substitution exists only in
+    uncommitted /lane/state scripts.
+12. Harness diffs against the prior run:
+    - `diff measure-20261110/batch.py measure-timeouts-20261111/batch.py`: only the root path, the relay deadline
+      (130→310), settings adding `total_timeout_ms: 300000, idle_timeout_ms: 60000`, and a GET /v1/settings check that
+      aborts on mismatch.
+    - `measurement_chat.py` vs `git show 6bb0008a:scripts/local_chat_smoke.py`: only the two 130→310 client deadlines.
+    - `controller.py`: `queue-run agentmage 900`. It refuses to replay a partial job directory
+      (`assert not directory.exists()`), so no attempt can be silently retried or dropped.
+    - policy.json key diff: models, source_commit, transport 300/60 and descriptive fields only.
+
+## Product change review (6bb0008a)
+
+- platforms/local-api/src/lib.rs:665-685. `Settings` keeps `deny_unknown_fields`. The new u64 fields default to the
+  `TransportLimits::default()` values of 120000/30000. Serde rejects null, negative, fractional, string, bool and
+  duplicate keys. The new test covers each of these, including a raw duplicate body.
+- lib.rs:1960-1979. `TransportLimits` is built from the input and validated by the existing `LocalChatTransport::new`
+  → `TransportLimits::validate` (platforms/linux-inference/src/local_chat_transport.rs:206-215: total in (0, 300 s],
+  idle in (0, total]). The validation failure returns 400 *before* the state lock, so the old configuration, revision
+  and approval stay as they were. The test compares the whole GET body, including `settings_revision`, after every
+  invalid PUT. A nonblocking listener has `accept().is_err()` afterwards, which shows no connection was opened.
+  `Duration::from_millis(u64::MAX)` does not panic, and `validate` rejects it.
+- Authorization: the route sits in the control-only settings branch. The test shows a client token gets 403. GET
+  returns no `key`, and when unconfigured it returns null timeouts.
+- Binding: model_binding `total_timeout`/`idle_timeout` come from the immutable transport's `limits`
+  (local_chat_transport.rs:486-487). The proposal dispatch deadline also reads `binding.limits().total_timeout`
+  (lib.rs:1280). The test checks 120/30 by default and 300/60 when configured.
+- Model-facing inputs: `Chat` (lib.rs:703-705) and the proposal input deny unknown fields. The test shows
+  `total_timeout_ms`/`idle_timeout_ms` in a proposal body return 400, and the upstream request body carries neither
+  field.
+- Partial text: `configured_idle_and_total_timeouts_stop_chat_without_promoting_partial_text` uses real sockets.
+  - The total case uses 250 ms total and sends a progress comment every 10 ms for 1 s, so it proves progress does not
+    renew the total.
+  - The idle case uses 100 ms idle with a 3 s total.
+  - Both end in `chat.transport.timeout`, `partial: true`, with no `complete` event.
+- Native launch: coding_endpoint_edit_launch.rs keeps its own limits. The diff does not touch native, sandbox,
+  approval, output-token or byte-cap code. The only product client with a fixed deadline, coding_cli.rs:18 (180 s),
+  never calls `/v1/code/proposals` or `/v1/chat`, so the new 300 s ceiling cannot be cut short by it on the claimed
+  surface.
+- The claimed surface is the authenticated HTTP settings API (docs/guides/local-chat-api.md:97-130). No UI claims a
+  timeout control. The guide text matches the code.
+
+## Measurement review (d31e2969)
+
+- Every number in the new evidence, scoreboard section and TASKS.md entry matches my audit output:
+  - 12 strict ungraded proposals out of 30
+  - causes: 8 edit, 1 format, 7 `chat.transport.limit`, 1 invalid, 1 incomplete, 0 timeouts
+  - output budget 24223–29779, preflight 2957–8513
+  - request/check 1428.275 s, reserved wall 1607.238 s, 26.787 GPU min
+  - counters 23/30, 138757 / 143734 tokens
+  - all 30 per-task rows (preflight, allowance, seconds, counters, cause)
+- `chat.transport.limit` is the size/framing error (local_chat_transport.rs:101, 552, 919-1135), separate from
+  `Timeout`. Calling the 7 refusals size limits is therefore correct.
+- Integrity: the audit asserts that all 30 `context.json` and `request.json` files are byte-identical to the
+  measure-20261110 GPT-OSS counterparts. It also asserts the task set equals `development_tasks()`, the source and
+  private freezes match, and each run has zero retries and `graded=false`. Candidates are read inertly. No held-out
+  task, hidden test or candidate execution occurs in any script I read or ran. Failures are counted per task, none are
+  dropped, and does-not-fit is stated as zero.
+- Measure-first: the scoreboard has a dated 2026-11-11 line and states context tokens, the output budget and the
+  changed total/idle (300/60). The prose states the relay and job changes (310 s, 900 s). Missing grades are
+  "unavailable", not zero, and no solve-rate improvement, role selection or closure is claimed.
+- Prior measurement re-review: with the inputs now present, the original 117972-file manifest, the byte-identical
+  six-model audit and the 180/180 fresh-helper reproduction all pass. The earlier INCONCLUSIVE was caused only by
+  missing inputs, and that cause is resolved. Its documentary content is unchanged apart from the added
+  qwen35-27b identity clarification (docs/evidence/t303-development-measurement-2026-11-10.md:77-82, scoreboard
+  :387-392). The clarification is accurate and labels the conversion's identity as unverified.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low (backlog) — the timeout comparison does not state the GPT-OSS baseline.**
+  docs/evidence/t303-trusted-model-timeouts-2026-11-11.md:64 and docs/evidence/coding-scoreboard.md:473 report "zero
+  transport timeouts". They do not say that the prior GPT-OSS run had only **one** timeout (dev-016, which now ends
+  `chat.response.incomplete` at its output cap of 24621 tokens). Decision 0202 cites 104 timeouts in 180 attempts,
+  almost all on the other five models. A reader could therefore overrate what this repeat shows about the 300/60
+  setting. Both files already say the other models still need the repeat.
+  Fix: add "prior GPT-OSS run: 1 timeout (dev-016)" next to the zero.
+- **Environment note, not a finding against the commit.** The fast gate's markdownlint step could not run here
+  because no node exists in this session. The substitute rule check (item 8) was clean.
+
+## Per-row result
+
+- T-303 / T-306 non-closing timeout-selection and development-measurement batch at d31e2969: **PASS**, with no high
+  or medium finding.
+  - The trusted-settings timeout selection is confined to control credentials, validated before publication, bound
+    into coding exchanges and unreachable from model-facing inputs.
+  - The GPT-OSS 30-task repeat reproduces exactly from raw evidence.
+  - Both rows stay open, and no closure is requested or granted.
+- Prior measurement 6b15590e800e (raw-evidence re-review): reproduction requirements now met (117972-file manifest,
+  byte-identical audit, 180/180 fresh Rust reproduction), with no high or medium finding.
+
+Verdict: PASS

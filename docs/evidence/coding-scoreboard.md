@@ -447,7 +447,8 @@ before a complete coding score can be measured. No model role is selected here.
 
 See [measurement evidence](t303-development-measurement-2026-11-10.md) for exact
 scope, model identities, per-task time/tokens, artifact bindings and reproduction.
-This non-closing batch awaits independent core review. T-303 and T-306 stay open.
+The later [trusted-timeout review](../reviews/d31e2969c3ab-local-coding-trusted-model-timeouts.txt)
+reproduces the complete raw evidence and returns PASS. T-303 and T-306 stay open.
 
 ## Trusted timeout selection repeat, 2026-11-11
 
@@ -471,7 +472,8 @@ GPU work minutes are reserved model-job wall/60, including load/verification/
 cleanup and excluding queue/wrapper checks, not active GPU kernel time. Backend
 counters cover 23/30 tasks: 138757 input / 143734 output tokens.
 Other counters are unknown; API usage was not requested. Zero does-not-fit tasks,
-zero transport timeouts, one attempt each; first/within-budget passes unavailable.
+zero transport timeouts (prior GPT-OSS run: one, dev-016), one attempt each;
+first/within-budget passes unavailable.
 
 | Outcome / cause | Tasks |
 | --- | --- |
@@ -487,6 +489,59 @@ strict edit failures. The remaining models' timeout results still need repeating
 this run does not justify a further guard or size-ceiling increment. No model
 role or coding admission is selected. See [evidence](t303-trusted-model-timeouts-2026-11-11.md)
 for per-task metrics, bindings, raw-log audit and independent reproduction.
-The previous measurement's missing review inputs are now privately packaged and
-cold-restored successfully; its acceptance still requires the independent reviewer.
-T-303/T-306 remain open. This batch requires independent core review.
+The later [trusted-timeout review](../reviews/d31e2969c3ab-local-coding-trusted-model-timeouts.txt)
+returns PASS for this repeat and resolves the preceding raw measurement's
+missing-input blocker. No high or medium finding remains. Its low comparison
+clarification is addressed above; T-303/T-306 remain open.
+
+## Exact-source coverage development repeat, 2026-11-11
+
+Source: `42612ca9787f07e4df79402e6d92f39f578e5c67`. All 30 frozen development tasks ran once on GPT-OSS through
+Rust retrieval, the credential-owning chat API and the unchanged Rust strict
+checker. **Partial path: first-attempt and within-budget task passes remain
+unavailable, not zero.** No candidate tests, retries, held-out tasks, native
+worktree/tool execution, apply/commit/push approvals or durable coding workflow
+ran. Native admission and original grading controls remain blockers. The other
+five prepared models have not been measured on this source; their resumable
+campaign is pending. No model role or coding admission is selected.
+
+Changed variables from the preceding 300/60-second primary-model repeat: complete
+original lines and merged/canonical excerpts, plus the clarified exact-edit
+instruction. Rendered input and output allowances change with that context.
+Unchanged: 32768 context tokens, 32768 serialized selection bytes, output formula
+`min(32768, 32768 - rendered_input_tokens - 32)`, total/idle 300/60 seconds,
+private client/relay 310 seconds, two-task cold-load jobs 900 seconds, all existing
+byte caps, temperature zero, configured seed 42 and medium reasoning. The product
+proposal route remains capped at 4096 output tokens; the same private effect-free
+adapter uses the larger existing chat allowance. No output ceiling was raised.
+These observations do not isolate selection from instruction changes, and fixed
+settings do not establish deterministic model output or task-solving improvement.
+
+| Date (UTC) | Model | Context tokens | Output-token allowance | First / within budget task passes | Strict ungraded proposals | Request/check s | Reserved job wall s | GPU work min |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-11 | gpt-oss | 32768 | 24223–29812 | unavailable / unavailable (30 tasks) | 11/30 | 1515.472 | 1692.982 | 28.216 |
+
+Does-not-fit tasks: 0. One attempt per task, zero retries.
+Strict proposals are ungraded edits, never solved tasks. This run shows no
+increase in strict proposal acceptance: 11/30 versus 12/30.
+Task-solving quality remains unmeasured. Request/check time excludes
+context preparation/preflight. GPU work minutes mean reserved model-job wall/60,
+including verification/loading/cleanup and excluding queue/wrapper guards;
+active GPU kernel time was not measured. Unambiguous backend token counters
+cover 22/30 tasks: 139703 input / 146413 output.
+Other counters are unknown; API usage was not requested.
+
+| Outcome / cause | Tasks |
+| --- | --- |
+| `generation-refused:error:chat.response.invalid` | 1 |
+| `generation-refused:error:chat.transport.limit` | 8 |
+| `strict-edit-refused:code.proposal.edit` | 7 |
+| `strict-edit-refused:code.proposal.format` | 3 |
+| `ungraded-proposal` | 11 |
+
+Largest individual refusal: `generation-refused:error:chat.transport.limit` (8).
+Use these results for the next development investigation, after any arriving
+high/medium review findings. They do not authorize an unrelated limit or
+bookkeeping increment. No held-out evidence or row closure is claimed.
+See [evidence](t303-exact-source-coverage-2026-11-11.md) for task-level observations,
+exact bindings and independent reproduction. T-303/T-306 stay open.
