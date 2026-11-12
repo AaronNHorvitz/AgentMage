@@ -1009,3 +1009,32 @@ total limit. Its `chat.transport.timeout` terminal code does not establish an
 infrastructure fault. The one recorded refusal and all measurement numbers
 remain unchanged. No new model run or task grade is claimed by this clarification.
 T-303/T-306 remain open.
+
+## Raw JSON instruction GPT-OSS development repeat — 2026-11-12
+
+Source: `a99fe467c72e2625022b639d8d38b72e845f612a`. All 30 frozen development tasks ran once on `gpt-oss`. **Partial path: Rust source selection, credential-owning chat and strict edit checking. First-attempt and within-budget task passes remain unavailable, not zero.** No candidate tests, feedback, retries, approvals, apply, commit, push or held-out tasks ran. Native executable trust and the absence of the expected original grading-controls receipt remain unresolved; no control is bypassed or reconstructed. Selection receives only the statement and editable frozen base file; full repository analysis and retrieval are not measured. A strict proposal is an ungraded edit, never a solved task.
+
+This is the third prepared model measured after the raw-JSON instruction change, with no intervening product change. Versus this profile's preceding complete repeat, the fixed generation instruction adds an original JSON syntax example and raw-object and string-escaping requirements. Source selection and strict checking stay unchanged. The profile retains `reasoning_effort:medium` in its template kwargs; runtime and model bytes, temperature zero, seed 42, 32768-token context, 32768-byte source selection, output formula `min(32768, 32768 - rendered_input_tokens - 32)`, 300/60-second total/idle, 310-second relay/client and byte ceilings are unchanged. 32K is the largest prepared context tested, not an exhaustive hardware maximum. The source-built effect-free helper uses the unchanged reviewed chat-only API binary. The product proposal route still caps output at 4096; this measurement adapter uses the existing chat allowance.
+
+| Date (UTC) | Model | Context tokens | Output-token allowance | First / within budget task passes | Strict ungraded proposals | Request/check s | Reserved job wall s | GPU work min |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | gpt-oss | 32768 | 24219–29748 | unavailable / unavailable (30 tasks) | 3/30 | 1902.747 | 2075.168 | 34.586 |
+
+GPU work minutes mean reserved model-job wall/60, including verification, loading and cleanup, excluding queues and wrapper checks. Active GPU kernel time was not measured. Request/check time excludes preparation and preflight.
+
+| Outcome / cause | Tasks |
+| --- | --- |
+| `generation-refused:error:chat.transport.limit` | 19 |
+| `strict-edit-refused:code.proposal.edit` | 6 |
+| `strict-edit-refused:code.proposal.format` | 2 |
+| `ungraded-proposal` | 3 |
+
+Does-not-fit tasks: 0. One attempt per task, zero retries. All 15 two-task reservations use both required wrappers, complete and release the shared slots; their model and API processes are reaped and temporary model keys/sockets removed. No model was downloaded.
+
+Unambiguous backend counters cover 11/30 tasks: 75060 input / 62786 output tokens. Other counters remain unknown; API usage was not requested.
+
+Strict ungraded proposals change from the preceding published full GPT-OSS measurement's 11/30 to 3/30 in this repeat. This new instruction repeat reports current-source observations, without isolating the instruction from changes to excerpt delivery or rendered output reservation. It establishes neither task correctness, generalization nor a model role. No new private comparison receipt is claimed.
+
+Largest individual refusal in this repeat: generation-refused:error:chat.transport.limit (19). Across the three current-source model repeats, the 31B profile's 25 format refusals remain the largest individual refusal cause. Three prepared current-source repeats (muse, gemma4-e4b and gemma4-26b-a4b) remain pending before further source work except high/medium review findings. No profile or model role is adopted. Further limit, deadline, cancellation and bookkeeping features remain T-309 backlog unless an open high/medium finding or the row's own completion requirement needs them. T-303/T-306 remain open, without new rows, sub-rows or completion ticks.
+
+See [evidence](t303-raw-json-gpt-2026-11-12.md) for per-task observations, frozen bindings and reproduction.
