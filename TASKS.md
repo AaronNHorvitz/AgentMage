@@ -2,6 +2,16 @@
 
 ## Active queue: local agent mission
 
+The [GPT-OSS complete-response repeat](docs/evidence/t303-complete-gpt-2026-11-12.md)
+finishes all 30 frozen development tasks at source
+`974d2bb55afa6be47bd58ffcf1dd30a6450f70cd`: 5/30 strict ungraded proposals.
+Task grades and retries remain unavailable; no candidate or held-out test ran.
+All inputs fit 32K. Two prepared profiles still require the full repeat
+before tuning, except high/medium fixes. Source/record audit, helper
+reproduction and archive verification pass. The source repair has independent
+PASS; this measurement requires core review. T-303/T-306 remain open with no
+new row or completion tick.
+
 The retained [independent 27B timing re-review](docs/reviews/95616eb9f850-complete-response-qwen-timing-repair.txt)
 returns **Verdict: PASS** for exact reporting repair commit
 `95616eb9f85079819a3e089e6f30aad83fdc91ee`, resolving medium M1 with no

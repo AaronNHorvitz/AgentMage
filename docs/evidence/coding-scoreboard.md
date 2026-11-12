@@ -1424,3 +1424,42 @@ additional measurement or a guarantee of constant generation speed. Any
 deadline change remains T-309 backlog. Measured counts, original sealed
 inputs and earlier entries stay unchanged. T-303/T-306 remain open; no task
 grade, retry, held-out result or row closure is claimed.
+
+## Complete-response GPT-OSS development repeat — 2026-11-12
+
+Source: `974d2bb55afa6be47bd58ffcf1dd30a6450f70cd`. All 30 development tasks
+complete on this profile; the measured coding path remains partial.
+
+| Date | Model | Context / output tokens | First-attempt task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU work min | Observed input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | gpt-oss | 32768 / 24219–29748 | Unavailable | Unavailable | 5/30 | Not run | 2743.824 | 48.771 | 188409 / 539597 |
+
+Changed variables: complete upstream framing and explicitly chosen 300-second
+idle instead of 60; total stays 300 seconds. Output is
+`min(32768, 32768 - rendered input tokens - 32)`. All 30 inputs fit;
+does not fit: 0. The existing medium-reasoning profile, prompts, source
+selection, strict checker and byte ceilings stay unchanged. The source repair
+has an independent PASS for the exact commit; no row closes.
+The recorded GPU driver package is
+`xorg-x11-drv-nvidia-cuda-615.71.09-3.fc44.x86_64`; the platform tuple changed
+since preparation and remains unqualified for coding.
+
+Causes: 13 `generation-refused:error:chat.response.incomplete`, 8 `strict-edit-refused:code.proposal.edit`, 4 `strict-edit-refused:code.proposal.format`, 5 `ungraded-proposal`.
+
+All 13 incomplete refusals reached their output allowance; the reason no completed answer was accepted is not established.
+
+GPU work means 2926.278 seconds of job wall inside
+15 separate reservations, including verification/load/cleanup and excluding
+queues and wrapper overhead; active kernel time was not measured. Backend
+final counters cover 30/30 and include non-answer output.
+Final counters are available for all 30 attempts. No
+candidate tests, feedback, retries, held-out tasks or task grades ran. The
+native artifact and original grading-control blockers remain; the available
+path is Rust source selection → credential-owning chat → strict checker.
+No whole-loop, model-role or quality-improvement claim is made.
+
+Full source/record audit, 30-context/check reproduction and archive verification
+pass. See [evidence](t303-complete-gpt-2026-11-12.md) for per-task results,
+exact input bindings and limits. Two prepared profiles still require the full
+repeat before tuning, except high/medium fixes. T-303/T-306 remain open;
+independent core review is required and no row closes.
