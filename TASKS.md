@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The [Muse raw-JSON instruction repeat](docs/evidence/t303-raw-json-muse-2026-11-12.md)
+completes all 30 frozen development tasks at source `a99fe467c72e2625022b639d8d38b72e845f612a`:
+19/30 strict ungraded proposals, with task grades unavailable. No candidate tests,
+retries or held-out tasks ran. This batch changes no product source; two prepared
+model repeats remain pending before further source work except high/medium findings.
+The 31B profile's format refusals remain the largest current-source refusal cause.
+Independent core review is required; T-303/T-306 remain open without new rows or ticks.
+
 The retained [independent GPT-OSS measurement review](docs/reviews/d252fce24ad6-raw-json-gpt-measurement.txt)
 returns **Verdict: PASS** for exact commit
 `d252fce24ad6bb09aa216d324d2199ef98b4b46e`, with no high or medium finding.
