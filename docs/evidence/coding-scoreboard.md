@@ -1168,3 +1168,17 @@ Across the six current-source published repeat lines (180 attempts), strict ungr
 Largest individual refusal count in this repeat: 29; cause: generation-refused:error:chat.transport.limit. Across the six current-source model repeats, the A4B profile's 29 refusals (generation-refused:error:chat.transport.limit) remain the largest individual refusal cause. All six prepared current-source repeats are complete. The next product work must address the largest observed failure cause, subject to high/medium review findings; these partial-path measurements do not complete coding-loop measurement. No profile or model role is adopted. Further limit, deadline, cancellation and bookkeeping features remain T-309 backlog unless an open high/medium finding or the row's own completion requirement needs them. T-303/T-306 remain open, without new rows, sub-rows or completion ticks.
 
 See [evidence](t303-raw-json-a4b-2026-11-12.md) for per-task observations, frozen bindings and reproduction.
+
+## Independent A4B review clarification — 2026-11-12
+
+The [independent A4B measurement review](../reviews/9c715ed2d1c2-raw-json-a4b-measurement.txt)
+returns **Verdict: PASS** for exact commit
+`9c715ed2d1c264091ca5682c5f6124f4f903e4dd`, with no high or medium finding.
+Low L1 adds a checked distinction: none of the 29 size-limit refusals emitted
+visible text before the cut; the one proposal emitted 558 visible bytes for
+8,344 output tokens. Stream overhead and non-answer output consumed the byte
+allowance; these records do not isolate their respective costs. Low L2
+clarifies that A4B's 29 refusals are now the largest individual refusal cause,
+replacing the preceding leader of 25. Counts, original entries and sealed
+reporters remain unchanged. Low L3's private-archive hygiene remains T-309
+backlog. No row closes.

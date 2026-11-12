@@ -1,0 +1,179 @@
+Commit: 9c715ed2d1c264091ca5682c5f6124f4f903e4dd
+Scope: raw-json-a4b-measurement
+
+Reviewer: Claude Opus 5.5, separate read-only session.
+Range reviewed: ed6dd3f62ae225367b08b0134e1b792cea5d6e31..9c715ed2d1c264091ca5682c5f6124f4f903e4dd. This covers
+eb8bf6d2 (retained E4B review and its clarification) and 9c715ed2 (A4B repeat). Rows: T-303 / T-306, non-closing.
+
+## Methods
+
+1. Confirmed `git rev-parse HEAD` = 9c715ed2d1c264091ca5682c5f6124f4f903e4dd in /lane/review-checkout. The tree
+   is clean. The range has 5 paths, 269 insertions and 0 deletions: TASKS.md, coding-scoreboard.md, the A4B
+   evidence (new), the E4B evidence (appended) and docs/reviews/ed6dd3f62ae2-raw-json-e4b-measurement.txt (new).
+2. Read IP-POLICY.md, the MEASURE FIRST, REFOCUS and 2026-11-11 notes in /lane/control/brief.md, the newest
+   decisions (0203–0205) and the top of TASKS.md.
+3. Recomputed the SHA-256 of all 14 shared files and of the retained node binary. All match the request.
+4. Read scope.py, bootstrap.py and cold-check.py before running them.
+   - None of them runs a candidate, loads hidden tests or uses the network.
+   - cold-check runs the archived audit and verification inside `bwrap --unshare-net` with a read-only root and
+     the extracted state bound read-only at /lane/state.
+   - Its `contexts_reproduced: 30` field is a constant, but the result is still checked: verify_proposals asserts
+     `helper(payload) == context.json` for every task and `seen == tasks.keys()`, and its output must match the
+     sealed a4b-reproduction.json byte for byte.
+5. Extracted the archive into a private temporary directory, which I removed afterwards. I inspected these
+   archived files before trusting any output:
+   - audit.py: unchanged original. It asserts empty template kwargs for A4B, so no expectation fix was needed.
+   - verify_proposals.py, collect.py, batch.py and controller.py.
+   - policy.json: development only, held-out "not loaded or executed", retries 0, test_feedback false.
+   - helper Cargo.toml and src/main.rs: 24 lines. It only calls `prepare_coding_proposal` and
+     `check_coding_proposal`, with no process, file or network use.
+   - a4b_publish.py.
+   - The controller receipt (exec session 43439, exit 0, all 15 progress lines) and the 15 reservation logs.
+     Every log shows both the heavy-build wait and the exclusive GPU wait, followed by `"status": "completed"`.
+6. Recomputed the stream cuts from the raw records. For each task I read the `stop processing: n_tokens = N,
+   truncated = T` line in backend-slice.log and the terminal event in events.ndjson.
+   - All 29 `chat.transport.limit` refusals have exactly one stop line with truncated = 0.
+   - N minus the preflight input gives 16,195–16,270 tokens per refusal. Each is below its allowance
+     (23,004–29,513).
+   - Every terminal message reads "The server response exceeded a size limit. Any earlier text is partial."
+   - The ceiling is `MAX_STREAM_BYTES = 4 * 1024 * 1024` at platforms/linux-inference/src/local_chat.rs:15, which
+     is surfaced as `chat.transport.limit` at local_chat_transport.rs:101.
+   - The single proposal (dev-026) has prompt 5395 and eval 8344 tokens with truncated = 0, matching the
+     published counters.
+7. Summed the reservation walls from the 15 batch-report.json files: 4734.106 s, or 78.902 min. The per-task
+   request/check times sum to 4192.995 s. Every report has settings_revoked true and no resource-guard error.
+8. Recomputed the campaign totals from the six public cause tables in coding-scoreboard.md: 31B, 27B, GPT-OSS,
+   Muse, E4B and A4B.
+
+   | Outcome | 31B | 27B | GPT-OSS | Muse | E4B | A4B | Total |
+   | --- | --- | --- | --- | --- | --- | --- | --- |
+   | Proposals | 4 | 29 | 3 | 19 | 13 | 1 | 69 |
+   | Transport limit | 0 | 0 | 19 | 0 | 0 | 29 | 48 |
+   | Format refusals | 25 | 0 | 2 | 4 | 15 | 0 | 46 |
+   | Edit refusals | 1 | 0 | 6 | 3 | 2 | 0 | 12 |
+   | Timeouts | 0 | 1 | 0 | 4 | 0 | 0 | 5 |
+
+   The total is 180 attempts. This matches the commit and combined-scope.json. The largest aggregate cause is
+   the stream limit (48). The largest individual cause is A4B's 29, which exceeds the 31B profile's 25.
+9. Compared the E4B retention with its exact review.
+   - The committed .txt is byte-identical to /lane/reviews/ed6dd3f62ae2-raw-json-e4b-measurement.md, whose
+     verdict is PASS.
+   - The clarification correctly restates L1: one cause with 15 refusals, so "tied causes" was a template
+     artefact.
+   - It carries L2 to T-309 and changes no count.
+   - a4b_publish.py:26 now writes "cause:" for a single leader and "tied causes:" only for a tie.
+10. Public hygiene: grepped every added line for home paths, the username, the e-mail address, hostnames,
+    credentials and other product names. Nothing was found.
+    - The only paths are generic lane paths inside the retained review text.
+    - Model identifiers are used as model names, not as branding.
+    - No private project, future product or patent is named.
+    - The private host path in the archived batch.py and helper Cargo.toml is not committed and the archive is
+      not published. This is the carried L2.
+11. Lane observation after my runs: no model-server or local-API process is running. pgrep matched only this
+    reviewer's own sandbox command line. No raw-json-a4b-review or raw-json-a4b-cold temporary directory remains.
+    I cannot see the builder's /lane/state/measure-json-20261112 from this session, so I relied on the archived
+    batch reports for the absence of the key and socket. audit.py asserts this and reproduced cold.
+
+## Exact commands and results
+
+I ran the request's reproduction block verbatim from /lane/review-checkout, with
+`CARGO_TARGET_DIR=/lane/state/review-target` exported. The block overrides the target with its own temporary
+directory, so the helper was built fresh.
+
+- `sha256sum` of the archive and the three scripts: d4c68601…, 37da0579…, 33bf926d… and d0ef5bc6…, all as
+  requested.
+- `nice -n 10 python3 -B /lane/reviews/raw-json-a4b-20261112-scope.py`: PASS, with 3 changed paths, 507
+  preserved table lines, 9 bindings, 1 summary row and 30 task rows. The output is byte-identical
+  (`cmp`) to raw-json-a4b-20261112-scope-postcommit.json.
+- `cmp` of the E4B review copy: identical.
+- bootstrap.py: prepared the own-source helper and verified 2283 repository inputs. No candidate ran and no
+  hidden test was loaded.
+- `bash /tools/build-slot env CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=<tmp>/target cargo build --locked --offline
+  --manifest-path <tmp>/helper/Cargo.toml`: finished in 19.85 s. The fresh helper's SHA-256 is
+  9be2f397c852750267de7a3b2e7f2ff02a60af1361c0a83d17dd2794f67df010. It differs from the builder's 852cd7f5…
+  only because of the build path, as expected.
+- cold-check.py with the sealed helper: 19560 files, 1 cold audit, 30 contexts and 1 strict check; temporary
+  state removed.
+- cold-check.py with `--helper` set to the fresh reviewer build: 19560 files, 30 contexts and 1 strict check;
+  fresh_helper_used true. The reproduction JSON equals the sealed one apart from helper_sha256. This is an
+  independent build.
+- `scripts/local_agent_fast_gate.py --base ed6dd3f6…`: FAST GATE PASS. It covered `git diff --check`, untracked
+  lint, review lint and markdownlint-cli2 over 4 files with 0 issues.
+- The direct markdownlint API: 4 files, `issues: []`.
+- `git diff --check ed6dd3f6… --`: clean. `git status --short`: empty.
+
+No model, GPU, candidate grading, native workflow, hidden test or held-out task was run by me.
+
+## Findings
+
+No critical, high or medium findings.
+
+### Evaluation integrity (high class): no violation found
+
+- Only development tasks ran (development_sha256 0c2a0624…). held_out_executed and hidden_tests_executed are
+  false.
+- Product source a99fe467 is unchanged. scope.py asserts that the instruction module and its test are
+  byte-identical to the source.
+- Failures are counted, not dropped: 29 refusals are listed per task.
+- The audit re-runs with one command and matched the raw logs and backend slices byte for byte in the cold
+  replay.
+
+### Measure first
+
+- A dated 2026-11-12 line exists for this batch. It states the 32768 context, the 23004–29513 allowance and its
+  formula, the timeouts, and does-not-fit (0) separately.
+- Every number traces to raw records (steps 6–8).
+- With all six prepared repeats complete, the line correctly hands the next work to the largest failure cause.
+  It reorders nothing.
+
+### Honest labelling
+
+- The documents keep these labels: partial path; passes unavailable, not zero; proposals ungraded; GPU minutes
+  are reservation wall time, not kernel time; 32K is not a hardware maximum; no causal isolation, qualification
+  or model role.
+- Native Git UID 65534 and the missing controls receipt are disclosed as unresolved, with no bypass.
+
+### L1 (low, wording/completeness, backlog)
+
+Locations: docs/evidence/t303-raw-json-a4b-2026-11-12.md:22 and docs/evidence/coding-scoreboard.md:1162.
+
+- **What is missing:** both say the 4 MiB stream ceiling cut 29 attempts at about 16.2K tokens. They do not say
+  what the retained events show:
+  - All 29 refusals delivered **zero** visible text events before the cut. Each events.ndjson holds only the
+    error event.
+  - The single proposal's 8344 output tokens produced only 558 bytes of visible answer.
+- **Why it matters:** the stream bytes were therefore spent almost entirely on output that is not forwarded as
+  answer text. This is most consistent with reasoning deltas under the empty (default) template kwargs. The
+  GPT-OSS clarification already reports this distinction ("18 emitted no visible text").
+- **Which next step it informs:** it decides whether the largest-cause work is the byte ceiling or the
+  profile's reasoning or output accounting. It changes no count or claim.
+- **Fix:** add one sentence in a later additive note, e.g. "None of the 29 emitted visible text before the cut;
+  the one proposal emitted 558 visible bytes for 8,344 output tokens."
+
+### L2 (low, wording, backlog)
+
+Locations: docs/evidence/t303-raw-json-a4b-2026-11-12.md:28, docs/evidence/coding-scoreboard.md:1168 and the
+template at a4b_publish.py:75.
+
+- **What is wrong:** they say A4B's 29 refusals "remain the largest individual refusal cause". The previous
+  leader was the 31B profile's 25, so A4B's 29 is a new leader, not a remaining one.
+- **What is correct:** the number and the cause are right, and TASKS.md:10 words it correctly.
+- **Fix:** write "are now the largest" in a later note or generator.
+
+### L3 (low, carried, T-309 backlog)
+
+The private archive's helper/Cargo.toml and batch.py still hold the original private host path. bootstrap.py
+rewrites the path for reviewers. The archive is not committed or published, and it must be scrubbed before any
+public archive distribution, as the request states.
+
+## Per-row result
+
+T-303 / T-306 (non-closing measurement increment): **PASS.**
+
+- The A4B repeat is accurately recorded, additive and independently reproduced. This includes a fresh offline
+  reviewer helper build and a no-network cold replay.
+- The campaign totals and stream cuts recompute exactly.
+- The retained E4B verdict and its L1 clarification match the exact review.
+- No row closes. T-303, T-306, T-315 and T-316 remain OPEN as committed.
+
+Verdict: PASS

@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The retained [independent A4B measurement review](docs/reviews/9c715ed2d1c2-raw-json-a4b-measurement.txt)
+returns **Verdict: PASS** for exact commit
+`9c715ed2d1c264091ca5682c5f6124f4f903e4dd`, with no high or medium finding.
+Its low notes are clarified additively: 29 refusals emitted no visible text;
+A4B's 29 is the new individual leader. Private-archive hygiene remains T-309
+backlog. The next work follows the largest aggregate cause, 48 stream-size
+refusals. T-303/T-306 remain open and no row closes.
+
 The [A4B raw-JSON instruction repeat](docs/evidence/t303-raw-json-a4b-2026-11-12.md)
 completes all 30 frozen development tasks at source `a99fe467c72e2625022b639d8d38b72e845f612a`:
 1/30 strict ungraded proposals, with task grades unavailable. No candidate tests,
