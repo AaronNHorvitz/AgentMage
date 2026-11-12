@@ -1,0 +1,142 @@
+Commit: 974d2bb55afa6be47bd58ffcf1dd30a6450f70cd
+Scope: complete-response-empty-answer-repair
+
+Reviewer: Claude Opus 5.5, separate read-only session (extra-high effort). Rows T-303 / T-306, non-closing, tier core.
+Range reviewed: 05c53085b86074ac461185c0027361230ec136e7..974d2bb55afa6be47bd58ffcf1dd30a6450f70cd
+(one commit, 8 paths, +353/-0). Purpose: re-review medium M1 from 05c53085b860-bounded-complete-model-responses.md.
+
+## Methods
+
+1. `git rev-parse HEAD` in /lane/review-checkout = 974d2bb55afa6be47bd58ffcf1dd30a6450f70cd. `git status --short` was
+   empty before and after.
+2. Read the whole diff. Re-read `decode_complete_chat` (platforms/linux-inference/src/local_chat.rs:317-377), the stream
+   codec's `[DONE]`/`decode_event`/`collect_usage` (548-620), `chat_encoded` (local_chat_transport.rs:632-718),
+   `execute_inner` (365-405) and the local-api proposal refusal path (platforms/local-api/src/lib.rs:1320-1390). The aim
+   was to judge acceptance parity and observation parity apart from the builder's regression test.
+3. Read the new test and its fixtures (`complete_body`, `text_frame`, `ending`, `response`, `server`) to confirm the
+   16-case matrix tests what it claims.
+4. Ran the request's reproduction block unchanged (in two parts), and my own probe in a throwaway `git archive` copy
+   outside the repository.
+5. Read the private verifier before running it. It streams and hashes tar members, extracts nothing and executes no
+   archived code. I also streamed four JSON members of the prefix archive read-only to trace the published numbers.
+6. Checked the committed diff for private paths, personal data, credentials and product names, and checked the
+   ledger and scoreboard for edits to earlier content.
+
+No GPU, no model, no hidden or held-out task. Every build went through `/tools/build-slot` with
+`CARGO_TARGET_DIR=/lane/state/review-target`.
+
+## Commands and results
+
+- BINDINGS block: `All12retained bindings verified`. The index hash is
+  9d33cccd902e70f32bdbc8e4484db3aaa2c7f4dcaf58a63cfe07bed6621234cd.
+- `cmp docs/reviews/05c53085b860-bounded-complete-model-responses.txt /lane/reviews/05c53085b860-bounded-complete-model-responses.md`:
+  identical. The retained review is verbatim.
+- `nice -n 10 python3 -B /lane/reviews/complete-empty-fix-20261112-verify-prefix.py`: 3,759 verified files, 2,283 frozen
+  repository inputs and 16 private inputs. dev-001 has 9,502 input / 23,234 output tokens, 202.092 s. dev-002 has
+  9,564 / 23,172, 176.503 s. `accepted_edit:false` for both, `candidate_execution:false`, `task_passes:null`,
+  `hidden_tests_loaded:false`, and 10.018303849533307 reserved GPU-work minutes. The output equals the retained
+  prefix-verification.json.
+- Read-only streaming of archive members: `first-pair-audit.json` has `generation-refused:complete:length` ×2,
+  `held_out_executed:false`, `first_task_passes`/`within_budget_task_passes` null, pair 410.632849104 s and startup
+  failure 190.465381868 s. The pair `batch-report.json` has `load_seconds:21.298`, `settings_revoked:true`,
+  `response_mode:"complete"` and idle/total 300/300. `startup-path-correction.json` has `old_socket_path_bytes:109` and
+  `failed_request_tasks:0`. 202.092 + 176.503 = 378.595 s, and (410.633 + 190.465)/60 = 10.018 min. Every published
+  number traces to these records.
+- `complete-empty-fix-20261112-scope.json`: all 8 source hashes match the checkout files. TASKS.md has 507 table lines
+  at both commits, and the diff contains no deletions.
+- `bash /tools/build-slot env CARGO_BUILD_JOBS=2 cargo test --locked --offline -p agentmage-platform-linux-inference --test local_chat_transport complete_mode -- --test-threads=2`:
+  **5 passed, 0 failed**, 31 filtered, including
+  `complete_mode_empty_answers_match_stream_refusal_without_losing_nonempty_token_limits`.
+- GATE block: every assertion holds. Gate exit 1, `FAST GATE: FAIL`, no `error[E…]`, 30 result rows totalling
+  **1161 passed / 53 failed / 19 ignored / 0 measured / 0 filtered**. The 53 failure identities equal
+  `complete-responses-20261112-fast-gate-fixed.log`, and all 53 are in `-p agentmage-host --lib` (644/53/9). The new
+  test is `ok`. `git diff --check`, `--lint-untracked`, `--lint-reviews`, markdownlint-cli2 ("Linting: 5 files …
+  0 issues"), `cargo fmt --check` and `cargo clippy --all-targets -D warnings` all exit 0. Direct markdownlint gives
+  `issues: []` across 5 files. The gate log contains no `reviewer_` test.
+- `git diff --check 05c53085b86074ac461185c0027361230ec136e7 --`: clean.
+- Reviewer probe (throwaway copy, `reviewer_empty_answer_parity_974d`, `--nocapture`, each case with usage false and
+  true, all results identical across the usage setting):
+
+  ```text
+  stream stop / length / no-content : Err(Chat(Incomplete)) emitted=""
+  stream ws (" ")                    : OK finish=Stop bytes=1
+  complete stop / length (+reasoning): Err(Chat(Incomplete)) emitted=""
+  complete length, invalid usage     : Err(Chat(Incomplete)) emitted=""
+  complete null / missing content    : Err(Chat(Protocol))   emitted=""
+  complete ws (" ")                  : OK finish=Stop bytes=1
+  complete error:null                : OK finish=Stop bytes=1   (L1, unchanged backlog)
+  ```
+
+  In the prior review, the M1 reproduction gave `complete stop: ok=true … bytes=Some(0)` and
+  `complete length: ok=true finish=Some(OutputTokenLimit) bytes=Some(0)`. Both now return `Err(Chat(Incomplete))`.
+  Note: the copy compiled to the same artifact name in the shared target directory
+  (`local_chat_transport-b4cc583bfe042085`, used by the focused run). The gate used a different binary
+  (`…-9684c454d82afaa6`) and ran before the probe, so its counts are unaffected. Cargo's fingerprints will rebuild the
+  artifact from the checkout on its next use.
+
+## M1 re-review
+
+**Acceptance parity: restored.** `local_chat.rs:369-371` returns `ChatError::Incomplete` when `content.is_empty()`.
+The check sits after finish-reason validation and before usage parsing, so no usage can be returned. `chat_encoded`
+propagates the error through `?` (local_chat_transport.rs:656-664) before the text-limit check, the `text` callback or
+`ChatCompletion`. `execute_inner` therefore returns `Err`, with no `EndpointModelResult`, no response hash or bytes
+and no usage. This matches the stream rule (`local_chat.rs:550-553`, `text_bytes == 0` at `[DONE]`). Whitespace-only
+text is accepted identically in both modes, so no normalisation was introduced.
+
+**Observation parity: restored for empty-string content.** Both modes produce the same
+`TransportError::Chat(ChatError::Incomplete)`, which has code `chat.response.incomplete` (local_chat.rs:44). In
+local-api, `Err(code)` passes `completion = None` to `proposal_observation` (lib.rs:1333-1360). The event is therefore
+the same `error … partial:true` with no completed exchange in either framing. The A4B pre-fix records show the
+actual backend shape: `content:""` plus non-answer metadata, `complete:length`. That shape is now classified exactly
+as streaming would classify it. Non-answer metadata (`reasoning_content`) is ignored, as in the stream codec. Nonempty
+`length` answers keep `OutputTokenLimit`, and nonempty answers keep their text and byte counts. The test asserts this
+for both modes, both finishes and both usage settings. The strict checker, byte and text ceilings and finish mapping
+are unchanged. Documentation (Decision 0206, the API guide, the evidence and the scoreboard) now states the rule.
+
+**Measurement honesty.** The two pre-fix attempts are labelled as pre-fix partial observations, "not a full
+development scoreboard run or a framing comparison". Context (32,768) and output allowances are stated. First-attempt
+and within-budget passes are "unavailable", not zero. The 28 remaining tasks and all 30 on every prepared model are
+stated as pending on a freshly built, repaired binary. No held-out task, hidden test, grade, retry or candidate
+execution occurred, as shown by the records above. The scoreboard has a dated 2026-11-12 line for this batch, which
+meets MEASURE FIRST. The startup failure (109-byte AF_UNIX path) is counted apart and is not called a model failure.
+The queue stop receipt shows only shell, wrapper and `sleep` members, with `build_started:false` and
+`model_started:false`. No repaired-source measurement is claimed.
+
+**Scope and hygiene.** The only source change is three lines, plus one test. There is no new tool, file, command or
+network path, no permission or approval change and no dependency change. Model output stays untrusted text. The
+committed diff contains no private host path, username, credential or product branding. The `/lane/...` paths appear
+only in the verbatim retained review, as in earlier committed reviews. TASKS.md adds prose only, with no new row and
+no completion tick.
+
+M1 is **resolved**.
+
+## Findings
+
+No critical, high or medium finding.
+
+### L4 (low, error-code parity; backlog for T-309): null or missing `content` is classified differently by framing
+
+- Location: `platforms/linux-inference/src/local_chat.rs:337` (`content: String`, so null or absent content fails serde
+  with `ChatError::Protocol`). By contrast, the stream codec skips null content (577-584) and then returns
+  `Incomplete` at `[DONE]`. My probe shows `complete null/missing content → Err(Chat(Protocol))` against
+  `stream no-content → Err(Chat(Incomplete))`. Similarly, an empty complete answer with invalid usage reports
+  `Incomplete`, whereas the stream codec would report `Protocol` at the usage event before `[DONE]`.
+- Impact: both modes refuse, emit no text and publish no completion, so acceptance is identical and this does not
+  reopen M1. Only the code differs (`chat.response.invalid` vs `chat.response.incomplete`). A scoreboard that
+  classifies refusals by code could attribute the same backend behaviour to different causes across framings. The
+  observed A4B backend sends `""`, not null.
+- Fix (backlog): decode `content` as `Option<String>` and map `None`/`""` to `Incomplete`. Alternatively, have the
+  collector group both codes as "no visible answer" when comparing framings. This can be folded in with L1.
+
+L1 (null `error` key accepted; still reproduced), L2 (preflight-byte boundary) and L3 (buffer reallocations) are
+unchanged and remain T-309 backlog, as the request states.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing): the M1 repair is correct and tested at the socket level. The reproduction matches
+  every claimed count (5 focused tests pass; gate 30 targets 1161/53/19/0/0 with the same 53 inherited failures; still
+  FAIL, as documented). The pre-fix observations and costs are honestly labelled and trace to the records. No row
+  closes, and none was requested to. A fresh full 30-task development repeat on a newly built, frozen repaired binary
+  is still required before any framing comparison or further tuning.
+
+Verdict: PASS

@@ -141,3 +141,17 @@ Every compilation and project test uses the shared build reservation. No
 supply-chain output, hidden test, threshold or independent-review boundary is
 changed. The fresh development repeat still requires a new frozen API binary;
 no repaired-source model measurement or new model qualification is claimed.
+
+## Independent empty-answer repair review — 2026-11-12
+
+The [independent re-review](../reviews/974d2bb55afa-complete-response-empty-answer-repair.txt)
+returns **Verdict: PASS** for exact source commit
+`974d2bb55afa6be47bd58ffcf1dd30a6450f70cd`. Medium M1 is resolved; no high
+or medium finding remains. Low L4 records classification differences for null
+or missing content and malformed usage across framings. Both refuse those
+answers without a completion, so this does not reopen acceptance parity.
+The A4B repeat observes empty-string content, the repaired case; its counts
+remain unchanged. L4 joins L1–L3 as T-309 backlog, with no source change or
+new row. This is a review-retention note, not another model measurement or
+row closure. The five remaining complete-response profile repeats still
+precede tuning; T-303/T-306 remain open.
