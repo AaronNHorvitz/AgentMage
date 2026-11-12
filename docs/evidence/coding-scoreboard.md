@@ -1182,3 +1182,16 @@ clarifies that A4B's 29 refusals are now the largest individual refusal cause,
 replacing the preceding leader of 25. Counts, original entries and sealed
 reporters remain unchanged. Low L3's private-archive hygiene remains T-309
 backlog. No row closes.
+
+## Complete-response campaign queued — 2026-11-12
+
+[Product source](t303-complete-responses-2026-11-12.md):
+`7d860097edbf2e16cae279191b0fa7ac292b1283`. This is a scheduling note, **not a
+scoreboard run**: zero model tasks executed. The first reservation waited at the
+shared build slot and ended before acquiring the GPU slot or starting a model.
+The source is ready for independent core review; its full affected gate still
+has 53 inherited failures. The next measurements use complete responses with
+the explicitly chosen existing 300-second idle budget, unchanged 300-second
+total and unchanged byte/token ceilings. All 30 development tasks on every
+prepared profile remain pending before further source tuning, except fixes for
+high or medium findings. No task pass, improvement or model role is inferred.

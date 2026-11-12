@@ -54,3 +54,18 @@ native executable trust and the original grading-controls receipt are unresolved
 No controls may be reconstructed or admission bypassed. No held-out task runs.
 Independent core review is required. Further source tuning waits for the full
 prepared development repeats, except fixes for high or medium review findings.
+
+## Measurement scheduling
+
+Product source is `7d860097edbf2e16cae279191b0fa7ac292b1283`.
+The fresh local API binary and unchanged source-selection/checking helper are
+frozen for the next development campaign. Its explicit changed variables are
+complete upstream responses and the existing 300-second idle choice, replacing
+60 seconds; total remains 300 seconds and other ceilings remain unchanged.
+
+The first two-task reservation waited at the shared build slot and was ended
+before source-review handoff. It never acquired a GPU reservation, created a
+model job or executed a task. Only its verified queued process group was stopped;
+no other worker was changed. The queue log and exit 143 are retained. This is
+not a model failure or a scoreboard run. All 30 tasks on every prepared model
+remain pending before further source tuning, except high/medium review fixes.
