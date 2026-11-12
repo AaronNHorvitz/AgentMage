@@ -194,6 +194,7 @@ fn requests_bound_messages_tokens_and_encoded_size() {
                 }],
                 1,
                 include_usage,
+                ChatResponseMode::Stream,
             )
         };
         let overhead = encode("x").unwrap().len() - 1;

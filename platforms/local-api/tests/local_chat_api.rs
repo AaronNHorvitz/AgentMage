@@ -20,6 +20,138 @@ use sha2::{Digest, Sha256};
 
 const CLIENT: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const CONTROL: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
+#[test]
+fn complete_response_mode_is_a_trusted_immutable_setting_with_stream_default() {
+    let api = Api::new();
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let endpoint = format!("http://{}/v1", listener.local_addr().unwrap());
+    let settings = || {
+        let (status, body) = api.call("GET", "/v1/settings", CONTROL, None);
+        assert_eq!(status, 200);
+        serde_json::from_slice::<Value>(&body).unwrap()
+    };
+    assert_eq!(settings()["response_mode"], Value::Null);
+    api.configure(&endpoint);
+    assert_eq!(settings()["response_mode"], "stream");
+    let choice =
+        json!({"endpoint":endpoint,"approve_conversations":true,"response_mode":"complete"});
+    assert_eq!(
+        api.call("PUT", "/v1/settings", CLIENT, Some(choice.clone()))
+            .0,
+        403
+    );
+    assert_eq!(settings()["response_mode"], "stream");
+    assert_eq!(
+        api.call("PUT", "/v1/settings", CONTROL, Some(choice.clone()))
+            .0,
+        200
+    );
+    let accepted = settings();
+    assert_eq!(accepted["response_mode"], "complete");
+    for invalid in [json!("auto"), json!(true), json!(0), Value::Null, json!({})] {
+        let mut bad = choice.clone();
+        bad["response_mode"] = invalid;
+        assert_eq!(api.call("PUT", "/v1/settings", CONTROL, Some(bad)).0, 400);
+        assert_eq!(settings(), accepted);
+    }
+    let duplicate = format!(
+        "{{\"endpoint\":{endpoint:?},\"approve_conversations\":true,\"response_mode\":\"complete\",\"response_mode\":\"stream\"}}"
+    );
+    assert_eq!(
+        split(api.raw(&api.bytes("PUT", "/v1/settings", CONTROL, duplicate.as_bytes(), ""))).0,
+        400
+    );
+    assert_eq!(settings(), accepted);
+    for route in ["/v1/chat", "/v1/code/proposals"] {
+        let mut input = if route == "/v1/chat" {
+            chat()
+        } else {
+            coding_request()
+        };
+        input["response_mode"] = json!("stream");
+        assert_eq!(api.call("POST", route, CLIENT, Some(input)).0, 400);
+    }
+    assert!(
+        listener.accept().is_err(),
+        "settings or invalid bodies must not connect"
+    );
+    api.configure(&endpoint);
+    assert_eq!(settings()["response_mode"], "stream");
+    assert_eq!(api.call("DELETE", "/v1/settings", CONTROL, None).0, 200);
+    assert_eq!(settings()["response_mode"], Value::Null);
+}
+
+#[test]
+fn complete_responses_reach_chat_and_strict_proposals_over_the_same_versioned_api() {
+    for coding in [false, true] {
+        let api = Api::new();
+        let (tx, rx) = mpsc::channel();
+        let (endpoint, task) = upstream(move |mut socket| {
+            let raw = incoming(&mut socket);
+            let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
+            let input: Value = serde_json::from_slice(&raw[start..]).unwrap();
+            assert_eq!(input["stream"], false);
+            assert!(input.get("stream_options").is_none());
+            assert!(input.get("response_mode").is_none());
+            tx.send((
+                raw.len() - start,
+                Sha256::digest(&raw[start..])
+                    .iter()
+                    .map(|b| format!("{b:02x}"))
+                    .collect::<String>(),
+            ))
+            .unwrap();
+            reply(&mut socket, "application/json", &json!({"model":"fixture","choices":[{
+                "index":0,"message":{"role":"assistant","content":if coding {coding_answer()} else {"synthetic answer".into()}},
+                "finish_reason":"stop"}],"usage":{"prompt_tokens":10,"completion_tokens":3,"total_tokens":13}}).to_string());
+        });
+        assert_eq!(
+            api.call(
+                "PUT",
+                "/v1/settings",
+                CONTROL,
+                Some(json!({"endpoint":endpoint,
+            "approve_conversations":true,"response_mode":"complete"}))
+            )
+            .0,
+            200
+        );
+        let mut input = if coding { coding_request() } else { chat() };
+        input["include_usage"] = json!(true);
+        let (status, body) = api.call(
+            "POST",
+            if coding {
+                "/v1/code/proposals"
+            } else {
+                "/v1/chat"
+            },
+            CLIENT,
+            Some(input),
+        );
+        assert_eq!(status, 200);
+        let rows = events(&body);
+        let last = rows.last().unwrap();
+        assert_eq!(last["type"], if coding { "proposal" } else { "complete" });
+        assert_eq!(last["usage"]["total_tokens"], 13);
+        let (bytes, digest) = rx.recv().unwrap();
+        if coding {
+            assert_eq!(last["applied"], false);
+            assert_eq!(last["tested"], false);
+            assert_eq!(rows[0]["model_binding"]["request_body_bytes"], bytes);
+            assert_eq!(rows[0]["model_binding"]["request_body_sha256"], digest);
+            assert_eq!(rows[0]["model_binding"], last["model_binding"]);
+            assert_eq!(
+                rows[0]["model_binding"]["response_body_limit_bytes"],
+                4 * 1024 * 1024
+            );
+        } else {
+            assert_eq!(rows[0]["text"], "synthetic answer");
+        }
+        task.join().unwrap();
+    }
+}
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
 struct Api {

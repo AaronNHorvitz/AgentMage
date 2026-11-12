@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The [bounded complete-response source increment](docs/evidence/t303-complete-responses-2026-11-12.md)
+adds an optional trusted transport mode to measure stream framing overhead
+without increasing byte ceilings. Streaming remains the default. Six new tests
+pass; the complete affected gate has 1,160 passed, 53 inherited failed and 19
+ignored tests, and remains failing. A resumable development repeat is required
+before further source tuning, except high/medium review fixes. Independent core
+review is required; T-303/T-306 remain open, with no new row or completion tick.
+
 The retained [independent A4B measurement review](docs/reviews/9c715ed2d1c2-raw-json-a4b-measurement.txt)
 returns **Verdict: PASS** for exact commit
 `9c715ed2d1c264091ca5682c5f6124f4f903e4dd`, with no high or medium finding.

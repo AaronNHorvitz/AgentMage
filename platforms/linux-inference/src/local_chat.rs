@@ -6,7 +6,7 @@
 
 use std::net::{IpAddr, SocketAddr};
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use zeroize::Zeroizing;
 
@@ -162,6 +162,18 @@ fn valid_model(model: &str) -> bool {
     !model.is_empty() && model.len() <= 256 && !model.chars().any(char::is_control)
 }
 
+/// Trusted choice of upstream response framing, without changing any grant or
+/// response ceiling. Complete responses emit text only after validated EOF.
+#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ChatResponseMode {
+    /// Incremental server-sent events; the ordinary conversation default.
+    #[default]
+    Stream,
+    /// One bounded JSON response, avoiding per-token event framing overhead.
+    Complete,
+}
+
 /// Encodes a single-choice streaming request, with no implicit system prompt,
 /// tools, fallback or provider fields. Returned bytes are private conversation data.
 pub fn encode_chat(
@@ -169,7 +181,7 @@ pub fn encode_chat(
     messages: &[ChatMessage<'_>],
     max_tokens: u32,
 ) -> Result<Vec<u8>, ChatError> {
-    encode_chat_request(model, messages, max_tokens, false)
+    encode_chat_request(model, messages, max_tokens, false, ChatResponseMode::Stream)
 }
 
 /// Requests optional provider-reported token usage, without granting admission
@@ -179,14 +191,15 @@ pub fn encode_chat_with_usage(
     messages: &[ChatMessage<'_>],
     max_tokens: u32,
 ) -> Result<Vec<u8>, ChatError> {
-    encode_chat_request(model, messages, max_tokens, true)
+    encode_chat_request(model, messages, max_tokens, true, ChatResponseMode::Stream)
 }
 
-fn encode_chat_request(
+pub(super) fn encode_chat_request(
     model: &str,
     messages: &[ChatMessage<'_>],
     max_tokens: u32,
     include_usage: bool,
+    mode: ChatResponseMode,
 ) -> Result<Vec<u8>, ChatError> {
     if !valid_model(model)
         || !(1..=32768).contains(&max_tokens)
@@ -228,12 +241,14 @@ fn encode_chat_request(
         &Request {
             model,
             messages,
-            stream: true,
+            stream: mode == ChatResponseMode::Stream,
             max_tokens,
             n: 1,
-            stream_options: include_usage.then_some(StreamOptions {
-                include_usage: true,
-            }),
+            stream_options: (include_usage && mode == ChatResponseMode::Stream).then_some(
+                StreamOptions {
+                    include_usage: true,
+                },
+            ),
         },
     )
     .map_err(|_| ChatError::Request)?;
@@ -295,6 +310,67 @@ fn parse_chat_usage(value: &Value, max_tokens: u32) -> Result<ChatUsage, ChatErr
         return Err(ChatError::Protocol);
     }
     Ok(usage)
+}
+
+/// Decode a whole, HTTP-framed response before exposing any text. Typed fields
+/// reject duplicate critical keys; unrelated metadata stays untrusted and inert.
+pub(super) fn decode_complete_chat(
+    bytes: &[u8],
+    model: &str,
+    usage_limit: Option<u32>,
+) -> Result<(Zeroizing<String>, ChatFinish, Option<ChatUsage>), ChatError> {
+    #[derive(Deserialize)]
+    struct Completion {
+        model: String,
+        choices: Vec<Choice>,
+        usage: Option<Value>,
+        error: Option<Value>,
+    }
+    #[derive(Deserialize)]
+    struct Choice {
+        index: u64,
+        message: Message,
+        finish_reason: String,
+    }
+    #[derive(Deserialize)]
+    struct Message {
+        role: String,
+        content: String,
+        tool_calls: Option<Value>,
+        function_call: Option<Value>,
+        refusal: Option<Value>,
+    }
+    if bytes.len() > MAX_STREAM_BYTES {
+        return Err(ChatError::Limit);
+    }
+    let mut response: Completion =
+        serde_json::from_slice(bytes).map_err(|_| ChatError::Protocol)?;
+    if response.model != model || response.error.is_some() || response.choices.len() != 1 {
+        return Err(ChatError::Protocol);
+    }
+    let choice = response.choices.pop().ok_or(ChatError::Protocol)?;
+    let content = Zeroizing::new(choice.message.content);
+    if choice.index != 0
+        || choice.message.role != "assistant"
+        || choice.message.tool_calls.is_some()
+        || choice.message.function_call.is_some()
+        || choice.message.refusal.is_some()
+    {
+        return Err(ChatError::Protocol);
+    }
+    if content.len() > MAX_TEXT_BYTES {
+        return Err(ChatError::Limit);
+    }
+    let finish = match choice.finish_reason.as_str() {
+        "stop" => ChatFinish::Stop,
+        "length" => ChatFinish::Length,
+        _ => return Err(ChatError::Protocol),
+    };
+    let usage = match (usage_limit, response.usage) {
+        (Some(limit), Some(value)) => Some(parse_chat_usage(&value, limit)?),
+        _ => None,
+    };
+    Ok((content, finish, usage))
 }
 
 /// Incremental untrusted text, or a completion marker pending transport EOF.

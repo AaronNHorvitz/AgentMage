@@ -71,7 +71,7 @@ upgrade, redirects or retries.
 | --- | --- | --- |
 | GET `/v1/status` | Client or control | Version, configured/busy booleans and settings revision; no connection to a model |
 | GET `/v1/activity` | Client or control | Latest 128 ordered metadata events, last sequence and `retention: process-only` |
-| GET `/v1/settings` | Control | Chosen endpoint, effective timeouts and revision, never its key |
+| GET `/v1/settings` | Control | Chosen endpoint, effective timeouts, response mode and revision, never its key |
 | PUT `/v1/settings` | Control | Explicit endpoint choice below; installs in-memory configuration without opening a model socket |
 | DELETE `/v1/settings` | Control | Clears configuration and erases its owned key; fails busy during an operation |
 | POST `/v1/probe` | Control | `{"endpoints":["http://127.0.0.1:8080/v1"]}`; at most eight explicit candidates, unauthenticated model listings only |
@@ -128,6 +128,25 @@ busy/revocation rules still apply. Probe budgets remain fixed. Native developmen
 launches have separate configuration and continue using their original transport
 defaults; this setting does not change native run or tool budgets. Output-token
 and response-size ceilings are unchanged.
+
+Optional `response_mode` selects upstream framing: `stream` (the default) or
+`complete`. Complete mode sends `stream: false` to the same endpoint and accepts
+one bounded JSON completion. It emits at most one text event after validating
+the entire response and HTTP EOF. The local API still returns its usual NDJSON
+events; strict proposals remain unapplied and untested. Missing or invalid
+completion fields, tools, refusal, wrong model and invalid requested usage fail
+without emitted text. No automatic retry or streaming fallback occurs.
+With `include_usage: true`, complete mode observes the response's ordinary usage
+field without sending stream-only options. Missing usage remains absent; counts
+remain unverified provider reports.
+
+Complete mode has no intermediate progress. The configured idle deadline still
+applies while waiting for the response; choose suitable existing timeout values
+explicitly in trusted settings. Selecting the mode does not extend a deadline
+or byte ceiling. GET reports the effective mode, or null when unconfigured.
+Invalid, duplicate or null mode values refuse without replacing settings or
+connecting. Chat/proposal bodies cannot set the mode. Native development
+launchers keep their separate default configuration.
 
 Settings and the model key are **not persisted**. Restart requires a fresh
 authenticated endpoint choice. API tokens persist in their private directory.

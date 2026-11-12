@@ -22,8 +22,8 @@ use sha2::{Digest, Sha256};
 use zeroize::{Zeroize, Zeroizing};
 
 use crate::local_chat::{
-    ChatError, ChatEvent, ChatFinish, ChatMessage, ChatStream, ChatUsage, LocalChatEndpoint,
-    MAX_STREAM_BYTES, MAX_TEXT_BYTES, encode_chat, encode_chat_with_usage,
+    ChatError, ChatEvent, ChatFinish, ChatMessage, ChatResponseMode, ChatStream, ChatUsage,
+    LocalChatEndpoint, MAX_STREAM_BYTES, MAX_TEXT_BYTES, decode_complete_chat, encode_chat_request,
 };
 
 const IO_TICK: Duration = Duration::from_millis(50);
@@ -247,6 +247,7 @@ pub struct LocalChatTransport {
     endpoint: LocalChatEndpoint,
     credential: Option<BearerKey>,
     limits: TransportLimits,
+    response_mode: ChatResponseMode,
 }
 
 /// Completion confirmed at HTTP and codec EOF. Counts remain server reports;
@@ -428,7 +429,24 @@ impl LocalChatTransport {
             endpoint,
             credential,
             limits,
+            response_mode: ChatResponseMode::Stream,
         })
+    }
+
+    /// Select upstream framing while constructing trusted immutable settings.
+    /// This performs no I/O and changes no approval, byte ceiling or deadline.
+    /// Complete mode has no incremental progress, so idle time still applies to
+    /// the wait for its body. No fallback or implicit retry is performed.
+    #[must_use]
+    pub fn with_response_mode(mut self, mode: ChatResponseMode) -> Self {
+        self.response_mode = mode;
+        self
+    }
+
+    /// Effective upstream framing in this immutable transport configuration.
+    #[must_use]
+    pub const fn response_mode(&self) -> ChatResponseMode {
+        self.response_mode
     }
 
     fn authorized(&self, approval: &LocalChatApproval) -> Result<(), TransportError> {
@@ -451,11 +469,13 @@ impl LocalChatTransport {
         include_usage: bool,
     ) -> Result<PreparedEndpointChat<'_>, TransportError> {
         self.authorized(approval)?;
-        let body = Zeroizing::new(if include_usage {
-            encode_chat_with_usage(model, messages, max_tokens)?
-        } else {
-            encode_chat(model, messages, max_tokens)?
-        });
+        let body = Zeroizing::new(encode_chat_request(
+            model,
+            messages,
+            max_tokens,
+            include_usage,
+            self.response_mode,
+        )?);
         // Use the same serde message-array encoding as the frozen body. This
         // observes JSON bytes and roles, never a server's rendered prompt tokens.
         let mut fingerprint = MessageFingerprint::default();
@@ -617,6 +637,40 @@ impl LocalChatTransport {
         control: &DispatchControl<'_>,
         mut text: impl FnMut(&str),
     ) -> Result<ChatCompletion, TransportError> {
+        if self.response_mode == ChatResponseMode::Complete {
+            let mut wire = self.request(
+                "POST",
+                &self.endpoint.chat_path(),
+                "application/json",
+                body,
+                cancel,
+                control,
+            )?;
+            let framing = wire.headers("application/json")?;
+            let mut response = Zeroizing::new(Vec::new());
+            wire.body(framing, MAX_STREAM_BYTES, |bytes| {
+                response.extend_from_slice(bytes);
+                Ok(())
+            })?;
+            wire.check()?;
+            let (content, finish, usage) = decode_complete_chat(
+                &response,
+                binding.model(),
+                binding
+                    .limits()
+                    .provider_usage_requested
+                    .then_some(binding.limits().requested_max_output_tokens),
+            )?;
+            if content.len() > binding.limits().response_text_limit_bytes {
+                return Err(TransportError::Limit);
+            }
+            wire.check()?;
+            if !content.is_empty() {
+                text(&content);
+            }
+            wire.check()?;
+            return Ok(ChatCompletion { finish, usage });
+        }
         let mut codec = if binding.limits().provider_usage_requested {
             ChatStream::with_usage(
                 binding.model(),

@@ -8,7 +8,7 @@ use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
 use agentmage_platform_linux_inference::local_chat::{
-    ChatError, ChatFinish, ChatMessage, ChatRole, LocalChatEndpoint,
+    ChatError, ChatFinish, ChatMessage, ChatResponseMode, ChatRole, LocalChatEndpoint,
 };
 use agentmage_platform_linux_inference::local_chat_transport::{
     BearerKey, ChatCancellation, LocalChatApproval, LocalChatTransport, LocalProbeApproval,
@@ -16,6 +16,248 @@ use agentmage_platform_linux_inference::local_chat_transport::{
 };
 
 const LIST: &str = "{\"data\":[{\"id\":\"test-model\"},{\"id\":\"second-model\"}]}";
+
+fn complete_body() -> serde_json::Value {
+    serde_json::json!({"model":"test-model","choices":[{"index":0,
+        "message":{"role":"assistant","content":"hello 🦀"},"finish_reason":"stop"}],
+        "usage":{"prompt_tokens":10,"completion_tokens":3,"total_tokens":13}})
+}
+
+#[test]
+fn complete_mode_freezes_actual_body_and_reports_only_validated_text_and_optional_usage() {
+    use sha2::{Digest, Sha256};
+    for usage in [false, true] {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let endpoint =
+            LocalChatEndpoint::parse(&format!("http://{}/v1", listener.local_addr().unwrap()))
+                .unwrap();
+        let (client, approval) = connection(endpoint, limits());
+        assert_eq!(client.response_mode(), ChatResponseMode::Stream);
+        let client = client.with_response_mode(ChatResponseMode::Complete);
+        let (tx, rx) = mpsc::channel();
+        let task = thread::spawn(move || {
+            let (mut socket, _) = listener.accept().unwrap();
+            let request = read_request(&mut socket);
+            let start = request.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
+            assert!(
+                std::str::from_utf8(&request[..start])
+                    .unwrap()
+                    .contains("Accept: application/json\r\n")
+            );
+            let body: serde_json::Value = serde_json::from_slice(&request[start..]).unwrap();
+            assert_eq!(body["stream"], false);
+            assert!(body.get("stream_options").is_none());
+            assert!(body.get("tools").is_none());
+            tx.send((
+                request.len() - start,
+                Sha256::digest(&request[start..])
+                    .iter()
+                    .map(|b| format!("{b:02x}"))
+                    .collect::<String>(),
+            ))
+            .unwrap();
+            let body = serde_json::to_vec(&complete_body()).unwrap();
+            let reply = response("application/json", &body);
+            // Fragmented UTF-8 and JSON must never leak partial parsed text.
+            for fragment in reply.chunks(11) {
+                socket.write_all(fragment).unwrap();
+            }
+        });
+        let prepared = client
+            .prepare_chat(
+                &approval,
+                "test-model",
+                &[ChatMessage {
+                    role: ChatRole::User,
+                    content: "synthetic task",
+                }],
+                16,
+                usage,
+            )
+            .unwrap();
+        let binding = prepared.binding().clone();
+        let mut text = String::new();
+        let result = prepared
+            .execute_recorded(&ChatCancellation::default(), |s| text.push_str(s))
+            .unwrap();
+        assert_eq!(text, "hello 🦀");
+        assert_eq!(result.response_text_bytes, text.len());
+        assert_eq!(result.token_accounting.provider_reported().is_some(), usage);
+        let (body_bytes, body_sha256) = rx.recv().unwrap();
+        assert_eq!(binding.body().request_body_bytes, body_bytes);
+        assert_eq!(binding.body().request_body_sha256, body_sha256);
+        task.join().unwrap();
+    }
+}
+
+#[test]
+fn complete_mode_refuses_bad_envelopes_tools_counts_and_framing_without_emitting_text() {
+    let base = complete_body();
+    let mut cases = vec![b"{".to_vec(), b"data: [DONE]\n\n".to_vec()];
+    for (pointer, value) in [
+        ("/model", serde_json::json!("another-model")),
+        ("/choices", serde_json::json!([])),
+        (
+            "/choices",
+            serde_json::json!([base["choices"][0], base["choices"][0]]),
+        ),
+        ("/choices/0/index", serde_json::json!(1)),
+        ("/choices/0/message/role", serde_json::json!("user")),
+        ("/choices/0/message/content", serde_json::Value::Null),
+        ("/choices/0/finish_reason", serde_json::json!("tool_calls")),
+        ("/usage/total_tokens", serde_json::json!(12)),
+        ("/usage/completion_tokens", serde_json::json!(17)),
+    ] {
+        let mut bad = base.clone();
+        *bad.pointer_mut(pointer).unwrap() = value;
+        cases.push(serde_json::to_vec(&bad).unwrap());
+    }
+    for field in ["tool_calls", "function_call", "refusal"] {
+        let mut bad = base.clone();
+        bad["choices"][0]["message"][field] = serde_json::json!([]);
+        cases.push(serde_json::to_vec(&bad).unwrap());
+    }
+    cases.push(format!("{{\"model\":\"test-model\",{}", &base.to_string()[1..]).into_bytes());
+    cases.push(format!("{} {{}}", base).into_bytes());
+    for body in cases {
+        let (endpoint, task) = server(move |mut socket| {
+            socket
+                .write_all(&response("application/json", &body))
+                .unwrap();
+        });
+        let (client, approval) = connection(endpoint, limits());
+        let client = client.with_response_mode(ChatResponseMode::Complete);
+        let mut emitted = false;
+        assert!(
+            client
+                .chat_with_usage(
+                    &approval,
+                    "test-model",
+                    &[ChatMessage {
+                        role: ChatRole::User,
+                        content: "synthetic task",
+                    }],
+                    16,
+                    &ChatCancellation::default(),
+                    |_| emitted = true
+                )
+                .is_err()
+        );
+        assert!(!emitted);
+        task.join().unwrap();
+    }
+}
+
+#[test]
+fn complete_mode_preserves_body_and_narrowed_text_ceilings_and_callback_cancellation() {
+    for mode in ["body", "text", "narrow", "cancel", "truncated", "media"] {
+        let (endpoint, task) = server(move |mut socket| {
+            let mut value = complete_body();
+            if mode == "text" {
+                value["choices"][0]["message"]["content"] =
+                    serde_json::json!("x".repeat(1024 * 1024 + 1));
+            }
+            let body = serde_json::to_vec(&value).unwrap();
+            let mut reply = response(
+                if mode == "media" {
+                    "text/event-stream"
+                } else {
+                    "application/json"
+                },
+                &body,
+            );
+            if mode == "body" {
+                reply = b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 4194305\r\n\r\n".to_vec();
+            } else if mode == "truncated" {
+                reply.pop();
+            }
+            let _ = socket.write_all(&reply);
+        });
+        let (client, approval) = connection(endpoint, limits());
+        let client = client.with_response_mode(ChatResponseMode::Complete);
+        let mut prepared = client
+            .prepare_chat(
+                &approval,
+                "test-model",
+                &[ChatMessage {
+                    role: ChatRole::User,
+                    content: "synthetic task",
+                }],
+                16,
+                false,
+            )
+            .unwrap();
+        if mode == "narrow" {
+            prepared = prepared.with_response_text_limit(3).unwrap();
+        }
+        let cancel = ChatCancellation::default();
+        let mut emitted = false;
+        let result = prepared.execute_recorded(&cancel, |_| {
+            emitted = true;
+            if mode == "cancel" {
+                cancel.cancel();
+            }
+        });
+        assert!(result.is_err(), "{mode}");
+        assert_eq!(emitted, mode == "cancel", "{mode}");
+        task.join().unwrap();
+    }
+}
+
+#[test]
+fn complete_mode_wait_is_bounded_by_idle_total_and_owner_stop_without_partial_text() {
+    use agentmage_kernel_contracts::ModelOperationStop;
+    for cause in ["idle", "total", "owner", "cancel"] {
+        let cancel = ChatCancellation::default();
+        let server_cancel = cancel.clone();
+        let control = run_control(500);
+        let stop = control.stop.clone();
+        let (endpoint, task) = server(move |mut socket| {
+            socket.write_all(b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nConnection: close\r\n\r\n{").unwrap();
+            if cause == "owner" {
+                *stop.lock().unwrap() = Some(ModelOperationStop::TimedOut);
+            }
+            if cause == "cancel" {
+                server_cancel.cancel();
+            }
+            thread::sleep(Duration::from_millis(100));
+        });
+        let bounds = TransportLimits {
+            total: Duration::from_millis(if cause == "total" { 30 } else { 500 }),
+            idle: Duration::from_millis(if cause == "idle" {
+                20
+            } else if cause == "total" {
+                30
+            } else {
+                500
+            }),
+        };
+        let (client, approval) = connection(endpoint, bounds);
+        let client = client.with_response_mode(ChatResponseMode::Complete);
+        let prepared = std::sync::Arc::new(client)
+            .prepare_chat_shared(
+                &approval,
+                "test-model",
+                &[ChatMessage {
+                    role: ChatRole::User,
+                    content: "synthetic task",
+                }],
+                16,
+                false,
+            )
+            .unwrap();
+        let mut emitted = false;
+        let result = prepared.execute_recorded_controlled(&cancel, &control, |_| emitted = true);
+        let expected = match cause {
+            "owner" => TransportError::OperationStopped(ModelOperationStop::TimedOut),
+            "cancel" => TransportError::Cancelled,
+            _ => TransportError::Timeout,
+        };
+        assert_eq!(result.unwrap_err(), expected, "{cause}");
+        assert!(!emitted, "{cause}");
+        task.join().unwrap();
+    }
+}
 
 fn limits() -> TransportLimits {
     TransportLimits {

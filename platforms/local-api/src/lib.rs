@@ -79,7 +79,8 @@ use agentmage_platform_linux::{
 };
 
 use agentmage_platform_linux_inference::local_chat::{
-    ChatFinish, ChatMessage, ChatRole, LocalChatEndpoint, encode_chat, encode_chat_with_usage,
+    ChatFinish, ChatMessage, ChatResponseMode, ChatRole, LocalChatEndpoint, encode_chat,
+    encode_chat_with_usage,
 };
 use agentmage_platform_linux_inference::local_chat_transport::{
     BearerKey, ChatCancellation, ChatCompletion, EndpointChatBinding, LocalChatApproval,
@@ -673,6 +674,8 @@ struct Settings {
     total_timeout_ms: u64,
     #[serde(default = "default_idle_timeout_ms")]
     idle_timeout_ms: u64,
+    #[serde(default)]
+    response_mode: ChatResponseMode,
 }
 
 fn default_total_timeout_ms() -> u64 {
@@ -1938,7 +1941,8 @@ fn handle(
                 200,
                 json!({"endpoint":state.configured.as_ref().map(|c| &c.endpoint),"settings_revision":state.revision,
                     "total_timeout_ms":state.configured.as_ref().map(|c| c.limits.total.as_millis()),
-                    "idle_timeout_ms":state.configured.as_ref().map(|c| c.limits.idle.as_millis())}),
+                    "idle_timeout_ms":state.configured.as_ref().map(|c| c.limits.idle.as_millis()),
+                    "response_mode":state.configured.as_ref().map(|c| c.transport.response_mode())}),
             )
         }
         ("PUT", "/v1/settings") => {
@@ -1967,6 +1971,7 @@ fn handle(
             let Ok(transport) = LocalChatTransport::new(endpoint, key, limits) else {
                 return error(socket, 400);
             };
+            let transport = transport.with_response_mode(input.response_mode);
             let mut state = state.lock().map_err(|_| ApiError::Io)?;
             if state.active.is_some() || state.runtime_excludes_manual() {
                 return error(socket, 409);
