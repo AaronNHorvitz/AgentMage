@@ -80,3 +80,17 @@ No product source changed in this batch. The source batch's whole affected Rust 
 | Prior-profile comparison | `dc97aa33204bab9596a8cdef19451ad5550b3cce8284603cd2660f6b01b8b0e0` |
 | Retained manifest | `321450f52f144d96096c9693b57028aed390ace91ba9848c4708c2a6d1c99c4c` |
 | Private archive | `d35886d11bddf37577fe8ab3f72ddf87c07ea8be3150effe692904787201b79a` |
+
+## Independent review clarification — 2026-11-12
+
+The [independent core review](../reviews/086c321ec5b0-raw-json-qwen-measurement.txt)
+returns **Verdict: PASS** for exact commit
+`086c321ec5b0f2b13ab261cf298d2a9dd48c6a2c`, with no high or medium finding,
+and independently resolves the preceding M1 fence-classification finding.
+Its low L2 observation clarifies dev-004: the model kept streaming repetitive
+text until the existing 300-second total limit stopped it. The retained
+`chat.transport.timeout` is the terminal code for that non-terminating
+generation; it does not establish an infrastructure fault. Counts, budgets,
+tokens and times are unchanged. L1 remains T-309 backlog: scrub private
+helper and launch paths before any public archive distribution. The raw
+archives remain private. Neither T-303 nor T-306 closes.

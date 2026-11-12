@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The retained [independent 27B measurement review](docs/reviews/086c321ec5b0-raw-json-qwen-measurement.txt)
+returns **Verdict: PASS** for exact commit
+`086c321ec5b0f2b13ab261cf298d2a9dd48c6a2c`, with no high or medium finding,
+and independently resolves M1. Its low L2 is clarified in the evidence and
+a dated scoreboard note: dev-004 kept producing repetitive text until the
+existing total limit; the terminal code does not establish an infrastructure fault.
+Low L1 remains the existing private-archive hygiene backlog. No row closes.
+
 The [27B raw-JSON instruction repeat](docs/evidence/t303-raw-json-qwen-2026-11-12.md)
 completes all 30 frozen development tasks at source `a99fe467c72e2625022b639d8d38b72e845f612a`:
 29/30 strict ungraded proposals, with task grades unavailable. No candidate tests,

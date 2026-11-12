@@ -1,0 +1,144 @@
+Commit: 086c321ec5b0f2b13ab261cf298d2a9dd48c6a2c
+Scope: raw-json-qwen-measurement
+
+Reviewer: Claude Opus 5.5 (independent, separate read-only session). Range reviewed:
+52c3f10029e0dfb786993f26e4c45b586ff5ffba..086c321ec5b0f2b13ab261cf298d2a9dd48c6a2c (8636d30e, 086c321e).
+Row context: T-303 / T-306, non-closing. No row closes.
+
+## Methods
+
+1. `git rev-parse HEAD` = 086c321ec5b0f2b13ab261cf298d2a9dd48c6a2c in /lane/review-checkout. Status is clean.
+   Five changed paths: TASKS.md, docs/evidence/coding-scoreboard.md,
+   docs/evidence/t303-raw-json-generation-2026-11-12.md, docs/evidence/t303-raw-json-qwen-2026-11-12.md and
+   docs/reviews/52c3f10029e0-raw-json-generation-measurement.txt. No product source, task, hidden test,
+   threshold or dependency changed.
+2. Recomputed SHA-256 for all 16 listed shared files, the retained node binary (d1de76d8…932c) and the
+   original archive (5955f588…2937). Every hash matches the request.
+3. Read the scope, bootstrap, cold-check and correction scripts before running them. Extracted the new
+   archive with tarfile `filter='data'` into my own temp directory: 19,710 members, all regular files. Read
+   these before trusting any output: audit.py, compare.py, verify_proposals.py, batch.py, collect.py,
+   controller.py, policy.json, helper/src/main.rs and helper/Cargo.toml. None of them executes model output,
+   a candidate, a project test or a hidden or held-out test. The helper only calls
+   `prepare_coding_proposal` / `check_coding_proposal` on stdin JSON. Candidate files are written but never
+   run. The cold runs use bwrap `--unshare-net`, with the root and the extracted state bound read-only.
+4. The retained review `docs/reviews/52c3f10029e0-raw-json-generation-measurement.txt` is byte-identical
+   to `/lane/reviews/52c3f10029e0-raw-json-generation-measurement.md` (empty `diff`) and ends `Verdict: FINDINGS`.
+5. Re-reviewed M1 independently, without relying on the correction script's own asserts. I read the original
+   archive directly and classified all 30 31B answers by checked error, leading ```` ```json ````, trailing
+   ```` ``` ```` and a closing fence on its own line. The result is format+leading+own-line 19,
+   format+leading+joined 6, accepted bare 4 and edit-refused bare 1. The six joined answers are dev-012, -013,
+   -014, -021, -022 and -027, the same six I identified in the 52c3f100 review.
+6. Traced every published Qwen number to the archived audit output and raw logs (see below). Inspected the
+   dev-004 raw stream and backend slice. Inspected the 15 batch reports, API exits and reservation logs, the
+   archive manifest, and the absence of tokens and weights. Checked the read-only blocker facts myself.
+7. Searched the committed diff for private paths, usernames, hostnames, credentials and product names.
+8. Did not run models, use the GPU, grade candidates, or run native workflows or hidden/held-out tests.
+
+## Commands and results (all in /lane/review-checkout)
+
+- `nice -n 10 python3 -B /lane/reviews/raw-json-qwen-20261112-scope.py` → rc 0, `scope: PASS`: 5 paths,
+  507 preserved table lines, 10 bindings, 1 summary row and 30 task rows. Output `cmp`-identical to
+  raw-json-qwen-20261112-scope-postcommit.json.
+- `nice -n 10 python3 -B /lane/reviews/raw-json-fence-correction-20261112.py > $d/fence-correction.json` →
+  rc 0. `cmp` is identical to raw-json-fence-correction-20261112.json (ff29a6eb…c3cf3) and to the archived
+  measure-json-20261112/fence-correction.json. The archived classify_fence_correction.py is identical to the
+  shared script. Counts: format_refusals 25, leading_json_fence 25, own_line 19, joined 6,
+  answers_with_leading_fence 25, over-ceiling 0. 90 manifest-bound inputs.
+- The original archive manifest still binds `answer-classification.json` at 5a7b358e…, so the original
+  classifier output is preserved unchanged. The original manifest SHA is 76fda34c…43f2.
+- `bootstrap.py --repository $PWD --output $d/helper` → `prepared_own_source_helper: true`, with 2283
+  verified repository inputs. The dependency path is rewritten to /lane/review-checkout/capabilities/repository-map.
+- `bash /tools/build-slot env CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=$d/target cargo build --locked --offline
+  --manifest-path $d/helper/Cargo.toml` → Finished. Reviewer helper SHA-256:
+  5f60e5b4c10c86861dfe156b8fd395864f0e4c9be5399fffcf8e82a0ecba26ab. It differs from the builder's
+  852cd7f5…, as expected from the different build paths.
+- `bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 CARGO_TARGET_DIR=$d/target cargo test
+  --locked --offline -p agentmage-capability-repository-map --all-targets` → rc 0, 87 passed / 0 failed / 0
+  ignored across 8 targets. This includes `only_the_raw_object_is_accepted_even_when_task_requests_wrapping`.
+- `AGENTMAGE_MEASURE_REPO=$PWD cold-check.py` → rc 0: 19709 files verified, audit, comparison, 30 contexts
+  and 29 available checks reproduced, `fresh_helper_used: false`, temp state removed.
+- `cold-check.py --helper $d/target/debug/agentmage-development-measurement-helper` → rc 0, same result
+  with `fresh_helper_used: true`. My independently built helper reproduces all 30 contexts and the 29
+  available strict checks. No `raw-json-qwen-cold-*` directory remains.
+- `python3 -B scripts/local_agent_fast_gate.py --base 52c3f100…` → `FAST GATE: PASS` (4 Markdown files, 0 issues).
+- markdownlint one-liner → 4 checked keys, `issues: []`.
+- `git diff --check 52c3f100… --` → clean. `git status --short` → empty.
+- Raw-data trace (my own reads of the extracted qwen35-27b-results.json and logs):
+  - Strict proposals 29/30. Causes: 29 ungraded, 1 `generation-refused:error:chat.transport.timeout` (dev-004).
+  - Output budgets 24137–29804. Request/check 1385.953 s. Reserved wall 1740.182 s = 29.003 min.
+  - Counters 29/30, 186402 in / 34920 out. Backend endings: stopped-below-token-limits 29,
+    unobserved-or-ambiguous 1. Terminals: complete:stop 29, error:chat.transport.timeout 1. Does-not-fit 0.
+  - All 15 batch reports `completed`, `settings_revoked: true`, `resource_guard_error: null`. All 15 API
+    exits `reaped: true`. Every reservation log begins with both the build-slot and GPU-slot waits.
+  - Model identity: temperature 0, seed 42, n_ctx 32768, `enable_thinking: false`.
+  - Comparison: 30 system instructions changed, 19/30 user payloads and 19/30 excerpts identical, launch
+    profiles identical except state root. The prior thinking-disabled 27B run is 30/30 ungraded.
+  - The settings GET stored in the reports omits the backend key; the command line shows only the
+    key-file path. No token, api-key, socket or .gguf file is in the archive.
+- Blocker facts reproduced read-only: `/usr/bin/git` has owner UID 65534 and mode 755.
+  `/lane/state/tmp/t311-baseline/controls-v1/summary.json` is absent. The reviewer's UID is 1000.
+  The archived blocker observation (04:46Z) and the shared fresh one (06:20Z) state the same facts.
+
+## M1 re-review
+
+M1 is resolved. The evidence sentence (t303-raw-json-generation-2026-11-12.md:97) now says all 25 format
+refusals begin with a JSON fence, with 19 standalone and 6 joined closing fences. That matches my
+independent count. The "Answer syntax observations" binding (line 152) now points to the additive receipt
+ff29a6eb…, and the new "Review correction" section says so explicitly. The original classifier, its output
+(5a7b358e…), the original manifest and the original archive are unchanged. The scoreboard corrigendum is
+appended and dated, and all earlier scoreboard bytes are preserved (the scope script asserts this against
+both 52c3f100 and 8636d30e). It does not change the counts of strict proposals, refusals, budgets or times,
+and it accepts, normalizes and executes nothing. TASKS.md summarizes the same facts and keeps L1 as T-309
+backlog.
+
+## Partial-path limits and causal wording
+
+The labelling is honest:
+- Only Rust selection, the credential-owning chat API and the strict checker ran.
+- First and within-budget passes are UNAVAILABLE, not zero, and a strict proposal is called ungraded.
+- No candidate tests, retries, apply or push ran.
+- Native trust and the missing controls receipt are stated as unresolved.
+- The 4096 product route and the larger adapter allowance are distinguished.
+- 32K is called the largest prepared context, not a hardware maximum.
+- The inherited 53 failures are restated, and the gate is not called green.
+
+The comparison explicitly does not separate the instruction wording from source delivery: 11/30 user
+payloads and excerpts differ. No model role or profile is adopted. The scoreboard has its dated line for
+this batch, as MEASURE FIRST requires, and the remaining four repeats are stated as pending before further
+source work. No other agent product, private project or patent is named. "Claude" appears only as the
+reviewer identity inside the retained review text.
+
+## Findings
+
+### L1 (low, backlog; carried over): private home path in private archives
+
+The new archive repeats the 52c3f100 L1. helper/Cargo.toml:8 and batch.py:13 keep the builder's absolute
+home path and username, and the batch-report `command` fields keep private host model and runtime paths.
+The archive is private (/lane/reviews only, not committed), and bootstrap.py rewrites the helper path. It
+stays on the T-309 backlog: scrub these paths before any archive is distributed.
+
+### L2 (low, backlog): dev-004 is labelled by the transport code only
+
+docs/evidence/t303-raw-json-qwen-2026-11-12.md, per-task row dev-004 and "Largest individual refusal" line.
+In the archived events.ndjson (1.12 MB), text streams continuously until 300.007 s. It repeats a short token
+pattern and ends with `chat.transport.timeout` (partial). The backend slice shows `cancel task` with
+`n_tokens = 16202, truncated = 0`. The prior run completed this task in 52 s with 2161 output tokens. This is
+therefore a model generation that never terminated, cut off by the existing 300 s total limit, not a
+transport or infrastructure fault. It is counted as a failure and not as does-not-fit, which is correct, and
+every number is accurate. The phrase "transport timeout" could still be read as infrastructure. Suggested
+fix, at the next evidence touch: add one sentence saying the stream kept producing text until the total
+limit. The counts and the cause code stay as they are.
+
+No high or medium finding. No confinement, authority, evaluation-integrity, held-out or secret-handling issue
+was found in this range. No source changed, so no escape reproduction was required for unchanged boundary
+code.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing measurement batch): the evidence is reproduced, and M1 from 52c3f100 is
+  corrected and independently verified. Neither row closes. No tick, row or sub-row was added (confirmed by
+  the preserved 507 table lines).
+- 8636d30e M1 correction and FINDINGS retention: PASS.
+- 086c321e Qwen 27B measurement publication: PASS. Two low items go to backlog.
+
+Verdict: PASS

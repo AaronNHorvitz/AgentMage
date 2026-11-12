@@ -998,3 +998,14 @@ Compared with the prior thinking-disabled 27B run, strict ungraded proposals cha
 Largest individual refusal in this repeat: generation-refused:error:chat.transport.timeout (1). Across the two current-source model repeats, the 31B profile's 25 format refusals remain the largest individual refusal cause. Four prepared current-source repeats (gpt-oss, muse, gemma4-e4b and gemma4-26b-a4b) remain pending before further source work except high/medium review findings. No profile or model role is adopted. Further limit, deadline, cancellation and bookkeeping features remain T-309 backlog unless an open high/medium finding or the row's own completion requirement needs them. T-303/T-306 remain open, without new rows, sub-rows or completion ticks.
 
 See [evidence](t303-raw-json-qwen-2026-11-12.md) for per-task observations, frozen bindings and reproduction.
+
+## Review clarification to the 27B repeat — 2026-11-12
+
+The [independent core review](../reviews/086c321ec5b0-raw-json-qwen-measurement.txt)
+returns **Verdict: PASS** for exact commit
+`086c321ec5b0f2b13ab261cf298d2a9dd48c6a2c`, with no high or medium finding.
+For dev-004, continuous repetitive model output reached the existing 300-second
+total limit. Its `chat.transport.timeout` terminal code does not establish an
+infrastructure fault. The one recorded refusal and all measurement numbers
+remain unchanged. No new model run or task grade is claimed by this clarification.
+T-303/T-306 remain open.
