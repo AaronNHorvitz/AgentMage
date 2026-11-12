@@ -1273,3 +1273,28 @@ remain unchanged. L4 joins L1–L3 as T-309 backlog, with no source change or
 new row. This is a review-retention note, not another model measurement or
 row closure. The five remaining complete-response profile repeats still
 precede tuning; T-303/T-306 remain open.
+
+## Independent A4B complete-response measurement review — 2026-11-12
+
+The [independent core review](../reviews/a363361186f4-complete-response-a4b-measurement.txt)
+returns **Verdict: PASS** for exact reporting commit
+`a363361186f407df9eb8c3b7e8b922ad6d309e46`, with no high or medium finding.
+It independently reproduces all 30 contexts and strict checks using its own
+helper build, verifies every reported task count, token allowance and timing,
+and confirms the measurement's partial scope. T-303/T-306 remain open.
+
+Low L1 corrects the A4B evidence’s earlier lint description: the CLI linted all three Markdown
+files with zero issues; its summary counts files with issues. The separate
+direct lint also covers all three. Low L3 adds the omitted platform disclosure:
+the recorded GPU driver package is `xorg-x11-drv-nvidia-cuda-615.71.09-3.fc44.x86_64`,
+and the profile marks its platform tuple changed since preparation. Reverified
+runtime and model bytes are not platform or coding qualification. No measured
+count or sealed input changes. Low L2, accepting an explicit archive root for
+the private reproduction scripts, joins T-309 backlog; the reviewer reproduced
+the result from the archive despite the original builder-only paths.
+
+This is review retention and clarification, not another model run or row
+closure. Five prepared profiles still require their complete-response repeats
+before further tuning, except high/medium fixes. The independent source-repair
+PASS is retained separately. No task grade, retry result or held-out run is
+claimed.

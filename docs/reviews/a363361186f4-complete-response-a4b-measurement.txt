@@ -1,0 +1,131 @@
+Commit: a363361186f407df9eb8c3b7e8b922ad6d309e46
+Scope: complete-response-a4b-measurement
+
+Reviewer: Claude Opus 5.5, independent read-only session, extra-high effort.
+Range: 974d2bb55afa6be47bd58ffcf1dd30a6450f70cd..a363361186f407df9eb8c3b7e8b922ad6d309e46
+(one commit, three Markdown files, +188 lines). Row: T-303 / T-306, non-closing core measurement.
+No model, GPU, candidate code or hidden test was run by this reviewer.
+
+## Methods
+
+1. `git rev-parse HEAD` in /lane/review-checkout = a363361186f407df9eb8c3b7e8b922ad6d309e46.
+   `git diff --stat 974d2bb5..a3633611`: TASKS.md +11, docs/evidence/coding-scoreboard.md +34,
+   docs/evidence/t303-complete-a4b-2026-11-12.md +143. No source, test, prompt, profile or SBOM change.
+   Read IP-POLICY.md, the MEASURE FIRST / REFOCUS sections of the brief and the full diff.
+2. Ran the requested bindings block unchanged: **PASS** (19 retained files by size and SHA-256,
+   bindings index 7c92ea20…10d3, three document hashes from the scope file match this checkout).
+3. Read `/lane/reviews/complete-a4b-20261112-verify-archive.py` and its diff from the initial
+   version before running it. It streams the tar (`r|gz`), hashes every member, keeps only JSON/log
+   members in memory, extracts nothing and imports no archived code. The correction only replaces
+   synthesized `dev-NNN` IDs with the ordered audit task IDs and adds a 30/uniqueness assertion.
+   Ran it: **PASS**, 21,845 files, 2,283 repository + 16 private inputs, 30 tasks, causes
+   26 `chat.response.incomplete` / 2 `code.proposal.format` / 2 ungraded proposals,
+   request/check 5943.180994734983 s, job wall 6507.37431438404 s, counters 30/30,
+   215,893 input / 743,647 output tokens.
+4. **Could not run** the reproduction's `audit.py` and `verify_proposals.py` steps as written:
+   `/lane/state/mc1-20261112` does not exist in this reviewer session (only `review-target` and
+   `tmp` are under /lane/state). I substituted the following independent checks:
+   - The 2,283 frozen repository bindings (`frozen-inputs-v2.json` in the archive) each equal
+     `git show 974d2bb5:<path>` byte-for-byte: 2,283 checked, 0 mismatches.
+   - The archived `audit-a4b.json` and `reproduction-a4b.json` equal the shared
+     `complete-a4b-20261112-audit.json` and `-reproduction.json` exactly.
+   - `policy.json` `source_hashes` equal `scripts.coding_eval_suite.source_hashes()` in this checkout.
+   - **Own helper build.** I took the archived helper source (`helper/src/main.rs`, Cargo.toml,
+     Cargo.lock), repointed its one path dependency at this checkout's
+     `capabilities/repository-map` and built it in scratch:
+     `CARGO_TARGET_DIR=/lane/state/review-target/a4b-helper bash /tools/build-slot cargo build --release --locked --offline`
+     → Finished in 37.27 s, SHA-256 41b83749…404ec (differs from the archived 852cd7f5… as expected
+     for a different path/profile; I did not execute the archived binary).
+   - Extracted only records, policy, frozen inputs and candidate trees (no model-state, no binaries)
+     into `/lane/state/tmp/rv-a4b/ex`, ran the archived `verify_proposals.py` with only its `original`
+     root changed to that scratch path and `--helper` set to my build:
+     `{"verified_tasks": {"gemma4-26b-a4b": 30}, "candidate_execution": false, "hidden_tests_loaded": false}`.
+     That is: all 30 contexts reproduce from the frozen task base, the 4 retained answers reproduce
+     their strict-check results, the 2 accepted changes equal the candidate source and the 28 other
+     candidates equal base. I confirmed `projection()` reads only base `scripts/*.py` via `git archive`
+     (no hidden tests).
+   - All 30 `request.json` message arrays equal the reproduced context messages; `include_usage` false.
+5. Independent per-task trace from the raw archive: for every task, the evidence table's input tokens
+   = `rendered_input_tokens_preflight` = backend `prompt eval` count; output allowance =
+   `requested_output_tokens` = request `max_tokens` = `min(32768, 32768 - input - 32)`; observed output
+   = backend `eval` count; outcome = record cause plus terminal event / `checked.json` error; seconds =
+   `generation_seconds` to 3 decimals. **30/30 match.** The 26 incomplete tasks stop at
+   `n_tokens = 32735` (input + allowance − 1), `truncated = 0`; the other four stop below their limit
+   (dev-010 26,183, dev-014 25,469, dev-016 22,631, dev-026 8,344). Every per-task backend slice is
+   a byte substring of its batch's full `server.log` (30/30); no server log contains `truncated = 1`.
+6. "Zero visible bytes" claim checked against source: in complete mode
+   `platforms/linux-inference/src/local_chat.rs:364-370` validates the finish reason and then
+   returns `ChatError::Incomplete` only when `message.content` is empty. A length finish with
+   non-empty content returns Ok. So the 26 `chat.response.incomplete` refusals really had empty answer
+   content upstream; the evidence's "including non-answer output" is the correct qualification
+   (the backend runs with `--reasoning auto`, `reasoning_in_content: false`).
+7. All 15 batch reports: `status completed`, `response_mode complete`, idle = total = 300000 ms,
+   `settings_revoked true`, `resource_guard_error null`, API SHA-256 41fa8967…26e, `api-exit reaped`.
+   Profile matches the evidence: context 32768, 4 threads, temperature 0, seed 42, q8_0 K/V,
+   batch 256, microbatch 128, model SHA-256 a07f7222…895a / 17,035,039,872 bytes. The backend runs
+   in bubblewrap with `--unshare-all`, `--clearenv`, `--cap-drop ALL`, a Unix socket and an API key
+   file, `--offline`. GPU minutes 6507.374 / 60 = 108.456. The reservation log for job 24 shows both
+   waits (build slot, exclusive GPU) before verification.
+8. Ran the docs gate and direct lint, with the retained node binary (v24.15.0, bound by hash) on PATH
+   through a temporary symlink directory:
+   `python3 -B scripts/local_agent_fast_gate.py --base 974d2bb5…` → **FAST GATE: PASS**
+   (git diff --check, untracked lint, markdownlint-cli2 "Linting: 3 files … 0 issues").
+   Direct `markdownlint/promise` lint of the three files with the stated config →
+   `{"files":[3 files],"issues":[]}` exit 0.
+   `git diff --check 974d2bb5… --` → exit 0. `git status --short` → empty before and after.
+9. Public hygiene: no host path, username, hostname, credential or `/lane/` path in the three changed
+   files; no other agent product, private project or patent named. Model identifiers are used
+   descriptively only. Raw private paths appear only in private retained records, not in Git.
+10. Evaluation integrity: only development task IDs appear; `held_out: not loaded or executed`;
+    no hidden test loaded; no retries; `graded` false for all 30; no change to tasks, prompts,
+    thresholds or the strict checker in this commit; the only source delta since the prior
+    complete-response commit is `local_chat.rs` +3 and its transport test (the M1 repair, whose
+    re-review is separately pending and is not judged here).
+
+## Assessment of claims
+
+- Measurement: every number in the scoreboard line and the evidence table traces to raw records
+  and logs I hashed and parsed. Failures are counted, not dropped; does-not-fit is counted apart (0).
+- Changed variables: complete framing and 300 s idle (from 60 s), total 300 s, output formula and
+  range are stated and match each request. Context 32,768 unchanged.
+- Limits: the evidence correctly states this is a partial path (Rust retrieval → local chat API →
+  strict checker), no task grade, no candidate execution, no retries, no held-out, no qualification.
+  T-303/T-306 stay open; no row or completion box changes.
+- MEASURE FIRST: this batch changes how responses are framed, and it adds its scoreboard line in the
+  same commit, with date, source commit, model, context/output budget, pass columns honestly
+  "Unavailable", time, GPU minutes, tokens and causes. The largest cause (26 incomplete) is named;
+  deferring source tuning until the other prepared profiles are repeated follows step 1 of
+  MEASURE FIRST ("on each local model the lane has").
+
+## Findings
+
+No critical, high or medium finding.
+
+- **Low L1 — inaccurate description of the CLI lint.** `docs/evidence/t303-complete-a4b-2026-11-12.md:134-136`
+  says "The CLI lint reports zero files, so its output is not treated as direct coverage." Both the
+  retained `complete-a4b-20261112-doc-gate.log` and my rerun print "Linting: 3 files" and
+  "Summary: 0 issues in 0 files"; the "0 files" counts files *with issues*. The claim understates
+  coverage, so it is harmless, but it is wrong. Fix: say the CLI linted all three files with 0 issues.
+  Backlog.
+- **Low L2 — reproduction depends on a private builder path.** `audit.py` and `verify_proposals.py`
+  hard-code `/lane/state/mc1-20261112` (and `audit.py` also `/lane/state/measure-more-20261110`). The
+  one-command reproduction therefore only runs on the builder host; it failed to start here. I got
+  the same substance through the retained archive plus an independently built helper (Method 4).
+  Fix: accept a `--root` argument and run the request's reproduction against an archive extraction.
+  Backlog.
+- **Low L3 — platform change is not disclosed.** Every batch report records
+  `platform_tuple.disposition: "changed since preparation; exact coding campaign must re-evaluate"`
+  (the GPU driver package differs from preparation). The evidence says weights and runtime bytes are
+  reverified and no preparation qualification is claimed, which is true, but it does not mention the
+  driver change. Measurements are published, not gated, and hardware qualification is not required,
+  so this does not block. Fix: one sentence in the evidence naming the changed platform tuple.
+  Backlog.
+
+## Per-row result
+
+- T-303 (non-closing core measurement batch): measurement, changed variables, retained bindings and
+  stated limits verified. No row-close requested or implied. Row stays OPEN.
+- T-306 (non-closing): same batch; no edit/test/retry path claimed. Row stays OPEN.
+- Not judged here: the source974d2 M1 repair re-review, which is still pending separately.
+
+Verdict: PASS

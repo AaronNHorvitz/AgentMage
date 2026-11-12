@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The retained [independent A4B complete-response measurement review](docs/reviews/a363361186f4-complete-response-a4b-measurement.txt)
+returns **Verdict: PASS** for exact reporting commit
+`a363361186f407df9eb8c3b7e8b922ad6d309e46`, with no high or medium finding.
+Additive evidence and scoreboard notes correct the lint summary and disclose
+the changed platform tuple; measured counts and sealed inputs stay unchanged.
+Low L2, archive-root portability for private reproduction, joins T-309 backlog.
+Five profile repeats still precede tuning; T-303/T-306 remain open and no row
+closes.
+
 The retained [independent empty-answer repair review](docs/reviews/974d2bb55afa-complete-response-empty-answer-repair.txt)
 returns **Verdict: PASS** for exact commit
 `974d2bb55afa6be47bd58ffcf1dd30a6450f70cd`, resolving medium M1 with no
