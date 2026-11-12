@@ -1370,14 +1370,18 @@ since preparation and remains unqualified for coding.
 
 Causes: 1 `generation-refused:error:chat.transport.timeout`, 29 `ungraded-proposal`.
 Dev-004 reaches the existing 300-second deadline with no visible text event;
-the terminal timeout code does not establish its root cause.
+its backend slice has 98 progress counters reaching `n_gen = 13220` at
+298.310 seconds after slot launch. Generation continued until the total
+deadline, before its 29,804-token allowance; the cause of the long output is
+not established. There is no final eval summary or stop line. The final output
+count is unavailable, with an observed lower bound of 13,220 tokens.
 
 GPU work means 1860.960 seconds of job wall inside
 15 separate reservations, including verification/load/cleanup and excluding
 queues and wrapper overhead; active kernel time was not measured. Backend
-counters cover 29/30 and include non-answer output.
-Tasks without counters: dev-004; totals exclude them.
-Missing counters are unavailable, not zero tokens. No
+final counters cover 29/30 and include non-answer output.
+Tasks without final counters: dev-004; totals exclude it and do not add its
+13,220-token lower bound. Missing final counters are unavailable, not zero tokens. No
 candidate tests, feedback, retries, held-out tasks or task grades ran. The
 native artifact and original grading-control blockers remain; the available
 path is Rust source selection → credential-owning chat → strict checker.
@@ -1388,3 +1392,16 @@ pass. See [evidence](t303-complete-qwen-2026-11-12.md) for per-task results,
 exact input bindings and limits. Three prepared profiles still require the full
 repeat before tuning, except high/medium fixes. T-303/T-306 remain open;
 independent core review is required and no row closes.
+
+## Independent 27B measurement review and correction — 2026-11-12
+
+The [independent core review](../reviews/355e4616aedd-complete-response-qwen-measurement.txt)
+returns **Verdict: FINDINGS** for exact reporting commit
+`355e4616aedd135fa066d760480cc321d60545f5`. Medium M1 identifies a false
+statement about dev-004's backend counters. The corrected entry above and
+[evidence](t303-complete-qwen-2026-11-12.md) distinguish its observed
+13,220-token progress lower bound from missing final counters. Task outcomes,
+aggregate totals, sealed records and all earlier entries stay unchanged.
+Low L1 is clarified by the effective deadline disclosure; deadline changes
+remain T-309 backlog. This is a reporting correction, not a new scoreboard run.
+Independent re-review is required; T-303/T-306 remain open and no row closes.

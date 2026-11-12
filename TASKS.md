@@ -2,6 +2,16 @@
 
 ## Active queue: local agent mission
 
+The retained [independent 27B measurement review](docs/reviews/355e4616aedd-complete-response-qwen-measurement.txt)
+returns **Verdict: FINDINGS** for exact reporting commit
+`355e4616aedd135fa066d760480cc321d60545f5`. Medium M1 identifies a false
+claim that dev-004 has no timing counters. Evidence and scoreboard now report
+98 progress counters reaching a 13,220-token lower bound before the total
+deadline, with final totals unavailable. The timeout and aggregate totals stay
+unchanged; no sealed input changes or model rerun. Low L1's effective deadline
+is disclosed, with deadline changes left in T-309 backlog. Independent
+re-review is required; T-303/T-306 remain open and no row closes.
+
 The [27B complete-response repeat](docs/evidence/t303-complete-qwen-2026-11-12.md)
 finishes all 30 frozen development tasks at source
 `974d2bb55afa6be47bd58ffcf1dd30a6450f70cd`: 29/30 strict ungraded proposals.

@@ -57,20 +57,25 @@ not qualify the changed platform for coding.
 
 Proposal outcomes are counted separately from task grades. All 29 accepted
 proposals have observed backend stops below their token limits. Dev-004 reaches
-the existing 300-second request deadline, with no visible text event. Its
-retained backend slice has no timing counters, so its termination and token
-counts remain unavailable. The terminal timeout code does not establish the
-root cause. Input and output counters include non-answer tokens.
+the existing 300-second total deadline, with no visible text event. Its
+retained backend slice has 98 progress counters reaching `n_gen = 13220` at
+298.310 seconds after slot launch. Generation continued until the total
+deadline; the slice lacks a final eval summary and stop line. Its final output
+count is unavailable, with an observed lower bound of 13,220 tokens. The cause
+of the long output is not established. For this attempt the total deadline
+binds before its 29,804-token allowance; changing that deadline remains T-309
+backlog. Input and output counters include non-answer tokens.
 
 Request/check time is **1,436.046 seconds**.
 Fifteen separate two-task jobs reserve **1,860.960
 seconds / 31.016 GPU work minutes**, including
 verification, load and cleanup, excluding queues and wrapper overhead. This is
-job wall inside the reservation, not active kernel time. Backend counters cover
+job wall inside the reservation, not active kernel time. Final backend counters cover
 29/30 attempts: **186,402 input and
 34,920 output tokens**, including non-answer output.
-Tasks without observed backend counters: dev-004.
-Token totals exclude those attempts; missing counters are not zero tokens.
+Tasks without final backend counters: dev-004.
+Token totals exclude that attempt; its 13,220-token lower bound is reported
+separately and is not added to the 34,920. Missing final counters are not zero tokens.
 API usage was not requested. Both resource wrappers are used with a 900-second
 cap per pair and release both reservations between pairs. Completed-job guard
 and cleanup checks pass: settings revoked, model keys and sockets removed, children reaped.
@@ -80,7 +85,7 @@ and cleanup checks pass: settings revoked, model keys and sockets removed, child
 | dev-001 | 8198 | 24538 | 1014 | `ungraded-proposal` | 39.900 |
 | dev-002 | 8303 | 24433 | 1193 | `ungraded-proposal` | 33.899 |
 | dev-003 | 4290 | 28446 | 723 | `ungraded-proposal` | 29.701 |
-| dev-004 | 2932 | 29804 | Unknown | `generation-refused:error:chat.transport.timeout` | 300.009 |
+| dev-004 | 2932 | 29804 | At least 13220; final unavailable | `generation-refused:error:chat.transport.timeout` | 300.009 |
 | dev-005 | 7154 | 25582 | 306 | `ungraded-proposal` | 22.679 |
 | dev-006 | 8024 | 24712 | 958 | `ungraded-proposal` | 29.023 |
 | dev-007 | 8449 | 24287 | 2777 | `ungraded-proposal` | 79.831 |
@@ -142,3 +147,25 @@ existing ledger rows and earlier scoreboard entries remain unchanged. Three
 other prepared profiles still require the full repeat before further tuning,
 except high/medium review fixes. Independent core review is required. No row,
 role, qualification, release or owner-test readiness is claimed.
+
+## Independent review and timing correction — 2026-11-12
+
+The retained [independent core review](../reviews/355e4616aedd-complete-response-qwen-measurement.txt)
+returns **Verdict: FINDINGS** for exact reporting commit
+`355e4616aedd135fa066d760480cc321d60545f5`. Medium M1 identifies the false
+claim that dev-004 has no timing counters. The corrections above report the
+progress-counter lower bound, distinguish it from unavailable final counters,
+and keep the timeout failure and all aggregate totals unchanged. Low L1 is
+clarified by the effective deadline disclosure; deadline changes remain T-309
+backlog. The raw archive, manifest and original bindings remain unchanged.
+No new model run or task grade is claimed by this correction. Independent
+re-review is required; T-303/T-306 remain open and no row closes.
+
+The documentation fast gate passes: three Markdown files and the retained
+review lint, with zero issues. A focused read-only check of the original
+sealed archive reproduces the 98 counters, 13,220-token lower bound and
+298.310083-second interval, verifies the missing final summary and stop line,
+and confirms the unchanged aggregate totals. All 2,283 frozen repository
+inputs, 507 ledger table lines and earlier scoreboard entries remain unchanged.
+The review is retained byte-for-byte. No archived code, candidate or hidden
+test is executed by this check.

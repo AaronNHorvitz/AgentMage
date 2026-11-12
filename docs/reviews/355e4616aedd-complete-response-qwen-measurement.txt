@@ -1,0 +1,192 @@
+Commit: 355e4616aedd135fa066d760480cc321d60545f5
+Scope: complete-response-qwen-measurement
+
+Reviewer: independent session (Claude Opus 5.5, extra-high effort). Read-only checkout at
+/lane/review-checkout, HEAD confirmed as 355e4616aedd135fa066d760480cc321d60545f5. Row: T-303 / T-306,
+a development measurement that does not close a row. Base e59c2cf42fa81699c398c8af388bd41dd5f7b187.
+I did not modify the repository. My scratch extraction (/tmp/rv-qwen, /tmp/rv-helper) was outside the
+repository and was deleted afterwards.
+
+## Scope of the increment
+
+`git diff --numstat e59c2cf4 355e4616` shows three files, all insertions with 0 deletions:
+- TASKS.md: +10 lines at the top of the active queue.
+- docs/evidence/coding-scoreboard.md: +40 lines appended. The earlier prefix is byte-identical (cmp).
+- docs/evidence/t303-complete-qwen-2026-11-12.md: new file, +144 lines.
+
+`git diff --name-only 974d2bb5..355e4616` lists only TASKS.md, docs/evidence/* and docs/reviews/*. None
+of those paths is in the 2,283-file frozen repository input set. So the measured source is unchanged
+from the repaired source 974d2bb5, and no product source, prompt, profile, threshold, hidden test,
+permission or SBOM file changed. TASKS.md has 507 pipe-prefixed table lines before and after the commit.
+50 of them match `\bT-\d`, the archived scope helper's definition. Because nothing was deleted, all
+earlier lines are unchanged.
+
+## Methods, commands and results
+
+1. `git diff --check e59c2cf42fa81699c398c8af388bd41dd5f7b187 --` → exit 0.
+2. Read all 78 lines of /lane/reviews/complete-qwen-20261112-verify-archive.py first. Its diff against
+   the PASSed 31B verifier changes only the prefix, the model name and the retired-token count (60 → 90).
+   It streams (`r|gz`), reads members into memory only, rejects absolute paths, `..`, non-files, token
+   and key names and `.gguf`, and imports nothing archived.
+   `python3 -B /lane/reviews/complete-qwen-20261112-verify-archive.py` → `"status": "PASS"`,
+   verified_files 61065, repository_inputs 2283, private_inputs 16, tasks 30,
+   strict_ungraded_proposals 29, request_check_seconds 1436.04648164002,
+   reserved_job_wall_seconds 1860.9597560540133, counter_coverage 29, observed input/output
+   186402/34920. Causes: ungraded-proposal 29, generation-refused:error:chat.transport.timeout 1.
+3. Ran the requested bindings block with `python3 -B` →
+   `PASS: 15 retained bindings and three document hashes`.
+4. Independent archive analysis on data only. I extracted the non-snapshot, non-gemma members (19,656
+   files, including the qwen35-27b candidate tree) into /tmp/rv-qwen with tarfile's `data` filter. I
+   executed no archived binary or script.
+   - Byte comparison: audit.py, verify_proposals.py, cleanup_qwen.py, verify_archive_qwen.py,
+     audit-qwen.json, cleanup-qwen.json, reproduction-qwen.json, api-build.log and prepared.json are
+     byte-identical to the shared /lane/reviews copies.
+   - Per-task table: I parsed all 30 rows of the evidence table and compared each row with
+     record.json, request.json, events.ndjson and the backend slice. Fields compared: input, allowance,
+     observed output or Unknown, cause with terminal code, and request/check seconds to 3 decimals.
+     **0 mismatches.**
+     - For every task, input + allowance + 32 = 32768.
+     - Inputs range 2932–8599 and allowances 24137–29804. Request/check sums to 1436.046 s.
+     - In the 29 tasks with counters, the preflight input equals the backend `prompt eval` count. Every
+       observed output is below its allowance, and every stop has `truncated = 0`. Sums: 186402 / 34920.
+     - All requests have `include_usage: false`.
+     - All 29 accepted tasks have checked.json without an error and an answer.txt.
+   - Settings: all 15 batch reports show `response_mode: complete` and idle = total = 300000 ms,
+     `settings_revoked` set, `resource_guard_error` null and API SHA 41fa8967…26e. The settings hold
+     no key.
+     - The model SHA 5ae89d67…985c and size 16,547,400,032 match. Served n_ctx is 32768.
+     - Launch argv: `--temp 0 --seed 42`, q8_0 K/V, `--batch-size 256 --ubatch-size 128`,
+       `--threads 4`, `--chat-template-kwargs {"enable_thinking": false}`, `--no-cache-prompt`.
+       All of this matches the evidence's effective profile.
+     - The summed `reserved_work_seconds` is 1860.960 s (/60 = 31.016 min).
+   - Platform: every report has nvidia package xorg-x11-drv-nvidia-cuda-615.71.09-3.fc44.x86_64 with
+     disposition "changed since preparation; exact coding campaign must re-evaluate", and the model is
+     "not-qualified". Both the evidence file and the scoreboard entry disclose this.
+   - Reservations and pauses: there is one reservation log per pair (15) and no guard refusal. Each
+     log shows the build wait, the GPU wait, verification of model and runtime, two task lines and
+     `completed`. controller-qwen.log shows 2…30 completed. The controller used is
+     controller_resume6_31b.py with `--models`. It passes `queue-run agentmage 900` inside
+     `build-slot` and `gpu-slot`. Its 30 × 1 s sleep runs after `subprocess.run` returns, so it is
+     outside both reservations. A report that already exists is skipped and a partial directory is
+     refused, so no attempt is replayed.
+   - Secrets: there are no api-key or token files in the qwen directories. A case-insensitive grep for
+     bearer/authorization/api_key hits only task source text such as `preauthorization` identifiers.
+5. Source snapshot: I checked all 2,283 entries of the archived frozen-inputs-v2.json two ways:
+   against `git show 974d2bb55afa6be47bd58ffcf1dd30a6450f70cd:<path>` and against this checkout's
+   working file. **0 mismatches.**
+6. Independent context/check reproduction. I copied the archived 24-line helper main.rs and Cargo.lock
+   into /tmp/rv-helper, with the path dependency pointed at this checkout's
+   capabilities/repository-map. Build:
+   `CARGO_TARGET_DIR=/lane/state/review-target/qwen-helper bash /tools/build-slot cargo build --offline --locked --release`
+   → Finished (42.32 s).
+   - My helper's SHA is 41b83749…04ec, identical to the helper built in the prior 31B review. It
+     differs from the builder's 852cd7f5 because the build paths differ.
+   - My own script used this checkout's coding_eval.projection/read_candidate and
+     coding_eval_suite.development_tasks. Hidden tests are not loaded, and read_candidate only reads
+     with O_NOFOLLOW.
+   - It checked log hashes, that the helper context equals context.json, that the request messages
+     equal the context messages, that the event text equals answer.txt, and that the helper strict
+     check equals checked.json. It also checked that acceptance equals `generation_succeeded` and that
+     the candidate tree equals the base projection plus the accepted change.
+   - Result: **reproduced 30, accepted 29.** dev-004 has no answer, and its only event is the
+     `chat.transport.timeout` error with `partial: true`.
+7. `python3 -B scripts/local_agent_fast_gate.py --base e59c2cf42fa81699c398c8af388bd41dd5f7b187`:
+   - git diff --check and `--lint-untracked` exit 0.
+   - markdownlint exits 127 with "Missing executable: node; no automatic download", so the gate
+     reports **FAST GATE: FAIL** in this lane. /lane/state/tooling is not mounted, and I downloaded
+     nothing. **I could not run markdownlint myself.**
+   - Compensating checks: the hash-bound builder log complete-qwen-20261112-doc-gate.log shows 3 files,
+     0 issues and FAST GATE: PASS. The scope binds the same node SHA d1de76d8…bd932c accepted in
+     earlier reviews. My scripted structural check of the three files found no trailing spaces, tabs,
+     repeated blank lines, bad end of file or inconsistent table column counts.
+8. Public hygiene: the 194 added lines contain no host path, username, hostname, email, credential,
+   private project name or other agent product. The archive's private model path and username stay in
+   private retention. `qwen35-27b` is used only as the measured artefact's identifier, as in earlier
+   PASSed entries. I made no patent search.
+9. Not reproduced: the builder's /lane/state/mc1-20261112 root is absent here, so I could not re-run
+   the live cleanup check. That claim rests on the hash-bound cleanup JSON and the per-report fields
+   checked in step 4.
+
+## Claim checks
+
+- These claims are verified by steps 2, 4 and 6:
+  - 29/30 strict ungraded proposals and 1 timeout refusal.
+  - Does not fit: 0. Context 32768. Allowances 24137–29804 from the stated formula.
+  - Request/check 1436.046 s. Job wall 1860.960 s / 31.016 min in 15 reservations.
+  - Counters 186402 / 34920 covering 29/30.
+- Task passes are reported as "Unavailable" and held-out as "Not run". Consistent: there are no grades,
+  native harness or retries, and the summary pass fields are null.
+- MEASURE FIRST: a dated scoreboard line exists for this batch. It states the changed variables and
+  budgets, and it counts does-not-fit apart from model failures. Its numbers trace to raw logs. One
+  exception is the dev-004 description, covered by M1.
+- Evaluation integrity: there was no held-out run, hidden test or candidate execution, and no tuning.
+  The increment contains no task content beyond IDs, and the failure is counted, not dropped.
+- "Three prepared profiles remain": of six, A4B, 31B and 27B are done. Consistent.
+
+## Findings
+
+High: none.
+
+### M1 (medium, honest claims / measurement evidence): dev-004's backend slice is misdescribed as having "no timing counters"
+
+docs/evidence/t303-complete-qwen-2026-11-12.md:60-62 says: "Its retained backend slice has no timing
+counters, so its termination and token counts remain unavailable." Line 83 gives the observed output
+as `Unknown`. The review request repeats this ("It has no text events and no timing counters in its
+backend slice").
+
+The raw log contradicts it. qwen35-27b-02/collection/dev-004/backend-slice.log (SHA 2e130d24…67e8,
+bound in record.json) has 100 lines. 98 of them are `slot print_timing` progress counters for task 742:
+- The first, at 0.49.499, is 6.2 s after `launch_slot_` at 0.43.341, with `n_gen = 136`.
+- They then rise steadily at 44.8–45.3 tokens/s.
+- The last, at 5.41.651, is 298.31 s after slot launch, with `n_gen = 13220, tg = 44.79 t/s`.
+
+Only the final `prompt eval time` / `eval time` summary and the `stop processing` line are missing. The
+backend was still generating when the client's 300 s total deadline fired. The pair's server was then
+stopped by the lab (`server_exit_code: -15`).
+
+So the slice does have timing counters, and it gives an observed lower bound of at least 13,220
+generated tokens. It also shows that the 300 s total deadline, not the 29,804-token allowance, ended
+this attempt.
+
+Why this is medium and not low (compare L2 of review 086c321ec5b0, which was an omission):
+- This is an affirmative statement about the raw evidence, and it is false. It is the only stated reason
+  the batch's only failure is reported as Unknown.
+- It hides the one observable fact about that failure: generation ran without stopping until the time
+  limit. That is the same behaviour this scoreboard already records for dev-004 on this model at
+  coding-scoreboard.md:1007-1009.
+- The brief requires each claim to trace to raw logs. This one does not.
+
+It changes no count, and I infer no root cause beyond what the log shows.
+
+Fix (documentation only, in the evidence and the scoreboard entry; no new run):
+- Replace the sentence with a log-true one. For example: "Its backend slice has 98 progress counters
+  reaching n_gen = 13,220 at 298.3 s after slot launch, with no final eval summary or stop line;
+  generation continued until the 300-second total deadline; its final output count is unavailable
+  (at least 13,220); the cause of the long output is not established."
+- Keep totals excluding dev-004 as now. Optionally report the lower bound separately, never added into
+  the 34,920.
+- Keep the timeout counted as a failure.
+
+### L1 (low, backlog): the effective output ceiling for this profile is time-bound, not the stated allowance
+
+At the observed ~45 tokens/s, the 300 s total deadline caps output at about 13,400 tokens. That is well
+below the 24,137–29,804 allowances described at t303-complete-qwen-2026-11-12.md:33-34 as "the
+largest allowances in the prepared 32K profile and transport policy". Both limits are stated, so this
+is not a missing budget line. Suggested fix: at the next evidence touch, add one sentence saying that
+for this profile the total deadline binds before the token allowance. Any change to the deadline itself
+is T-309 backlog.
+
+### Review limitation (not a finding)
+
+markdownlint and the live cleanup check could not be run in this lane (steps 7 and 9). They are attested
+by hash-bound builder artefacts plus my own structural and per-report checks.
+
+## Per-row result
+
+- T-303 / T-306 (development measurement that does not close a row): every count, cost, budget,
+  binding and reproduction claim is independently verified. No evaluation-integrity, confinement,
+  secret or hygiene issue was found. **M1 (medium) is open:** the evidence misstates what dev-004's raw
+  backend slice contains. It must be corrected in-row before this batch's evidence is accepted. The rows
+  stay open, as claimed; nothing closes or is ticked.
+
+Verdict: FINDINGS
