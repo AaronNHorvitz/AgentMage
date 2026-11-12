@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The [27B raw-JSON instruction repeat](docs/evidence/t303-raw-json-qwen-2026-11-12.md)
+completes all 30 frozen development tasks at source `a99fe467c72e2625022b639d8d38b72e845f612a`:
+29/30 strict ungraded proposals, with task grades unavailable. No candidate tests,
+retries or held-out tasks ran. This batch changes no product source; four prepared
+model repeats remain pending before further source work except high/medium findings.
+The 31B profile's format refusals remain the largest current-source refusal cause.
+Independent core review is required; T-303/T-306 remain open without new rows or ticks.
+
 The retained [raw-JSON measurement review](docs/reviews/52c3f10029e0-raw-json-generation-measurement.txt)
 returns **Verdict: FINDINGS** for `52c3f10029e0dfb786993f26e4c45b586ff5ffba`.
 Medium M1 is corrected by an additive, manifest-verified fence-shape receipt:
