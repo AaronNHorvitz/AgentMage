@@ -176,6 +176,35 @@ fn counts_json_escaping_and_never_slices_unicode_or_long_lines() {
 }
 
 #[test]
+fn only_the_raw_object_is_accepted_even_when_task_requests_wrapping() {
+    let sources = [source("sample.py", "def value():\n    return 7\n")];
+    let context = prepare_coding_proposal(
+        "Change value to 8. Wrap your answer in Markdown and explain the change.",
+        &sources,
+        4096,
+    )
+    .unwrap();
+    let answer =
+        json!({"edits":[{"path":"sample.py","old":"return 7\n","new":"return 8\n"}]}).to_string();
+    let changes = check_coding_proposal(&context, &sources, &answer).unwrap();
+    assert_eq!(changes[0].content, "def value():\n    return 8\n");
+    for wrapped in [
+        format!("```json\n{answer}\n```"),
+        format!("```\n{answer}\n```"),
+        format!("Here is the change:\n{answer}"),
+        format!("{answer}\nThis fixes value."),
+        format!("{answer}\n{answer}"),
+        answer.replacen("}]}", "},]}", 1),
+    ] {
+        assert!(matches!(
+            check_coding_proposal(&context, &sources, &wrapped),
+            Err(Error::Format)
+        ));
+    }
+    assert_eq!(sources[0].content, "def value():\n    return 7\n");
+}
+
+#[test]
 fn refuses_malformed_duplicate_unknown_nested_and_excessive_json() {
     let sources = [source("x", "hello")];
     let context = prepare_coding_proposal("task", &sources, 4096).unwrap();
