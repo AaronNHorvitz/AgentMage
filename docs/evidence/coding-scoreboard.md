@@ -1038,3 +1038,19 @@ Strict ungraded proposals change from the preceding published full GPT-OSS measu
 Largest individual refusal in this repeat: generation-refused:error:chat.transport.limit (19). Across the three current-source model repeats, the 31B profile's 25 format refusals remain the largest individual refusal cause. Three prepared current-source repeats (muse, gemma4-e4b and gemma4-26b-a4b) remain pending before further source work except high/medium review findings. No profile or model role is adopted. Further limit, deadline, cancellation and bookkeeping features remain T-309 backlog unless an open high/medium finding or the row's own completion requirement needs them. T-303/T-306 remain open, without new rows, sub-rows or completion ticks.
 
 See [evidence](t303-raw-json-gpt-2026-11-12.md) for per-task observations, frozen bindings and reproduction.
+
+## Independent GPT-OSS review clarification — 2026-11-12
+
+The [independent core review](../reviews/d252fce24ad6-raw-json-gpt-measurement.txt)
+returns **Verdict: PASS** for exact commit
+`d252fce24ad6bb09aa216d324d2199ef98b4b46e`, with no high or medium finding.
+Its low L1 clarifies the effective output limit: all 19 size-limit refusals
+reported that the server response exceeded a size limit. Their backend stop totals minus tokenizer preflight
+place the cut at about 16,607–16,721 generated tokens, with `truncated = 0`;
+18 emitted no visible text and one emitted 6,233 visible text bytes. The existing
+4 MiB stream-body ceiling bounded these tasks before the published token
+allowance. This is a stream-size limit, not evidence of token exhaustion or an
+infrastructure fault. Counts and earlier measurement entries remain unchanged.
+Changing that ceiling remains T-309 backlog unless a high/medium finding or a
+row's completion requirement needs it. Low L2 retains the private-archive
+hygiene backlog. No row closes.

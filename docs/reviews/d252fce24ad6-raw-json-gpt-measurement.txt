@@ -1,0 +1,129 @@
+Commit: d252fce24ad6bb09aa216d324d2199ef98b4b46e
+Scope: raw-json-gpt-measurement
+
+# Independent review — GPT-OSS raw-JSON instruction development repeat
+
+Reviewer: Claude Opus 5.5 (independent, separate read-only session). Range reviewed:
+086c321ec5b0f2b13ab261cf298d2a9dd48c6a2c..d252fce24ad6bb09aa216d324d2199ef98b4b46e (f3852ab5, d252fce2).
+Row: T-303 / T-306, non-closing. Tier: core. No GPU or model use by the reviewer, no hidden or held-out
+task, no candidate grading, no native workflow. The repository was not modified.
+
+## Methods
+
+1. `git rev-parse HEAD` in /lane/review-checkout = d252fce24ad6bb09aa216d324d2199ef98b4b46e; `git status --short` empty
+   before and after all runs.
+2. SHA-256 of all 17 shared files under /lane/reviews matches the request table exactly. The retained Node binary is
+   d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c, as stated.
+3. Read scope.py, bootstrap.py and cold-check.py before running them. Extracted the archive into a private temporary
+   directory and read gpt_audit.py, audit.py, verify_proposals.py, controller.py, collect.py (task selection),
+   policy.json, helper/src/main.rs and helper/Cargo.toml before trusting any output.
+4. Reviewed the combined five-path diff, all 15 reservation logs, the batch reports, the controller receipt, the blocker
+   observation, every per-task event stream for the 19 transport-limit refusals and the backend slices.
+5. Ran the original immutable audit.py against my own extraction (bwrap, networking off, read-only binds) to confirm the
+   claimed reporting correction independently.
+
+## Commands and results (all in /lane/review-checkout)
+
+- `nice -n 10 python3 -B /lane/reviews/raw-json-gpt-20261112-scope.py` → rc 0, `scope: PASS`: 3 paths since f3852ab5,
+  507 preserved table lines, 9 bindings, 1 summary row and 30 per-task rows verified, selection/checker unchanged,
+  prior scoreboard bytes preserved. Output is byte-identical (`cmp`) to raw-json-gpt-20261112-scope-postcommit.json.
+- Combined range check, done by me: `git diff --name-status 086c321e..HEAD` → exactly 5 paths (M TASKS.md,
+  M coding-scoreboard.md, A t303-raw-json-gpt-2026-11-12.md, M t303-raw-json-qwen-2026-11-12.md,
+  A docs/reviews/086c321ec5b0-raw-json-qwen-measurement.txt). The diff only adds lines (0 removed). The previous
+  scoreboard is a byte prefix of the new one. The TASKS.md `|` table lines are identical to 086c321e.
+  `git diff --check 086c321e --` is clean.
+- `cmp docs/reviews/086c321ec5b0-raw-json-qwen-measurement.txt /lane/reviews/086c321ec5b0-raw-json-qwen-measurement.md`
+  → identical. The original review is retained unedited, so the earlier M1 is resolved by the PASS that review records.
+- `bootstrap.py --repository $PWD --output …/helper` → 2283 repository inputs verified, own helper source hash-checked.
+  The dependency path is rewritten to /lane/review-checkout/capabilities/repository-map.
+- `bash /tools/build-slot env CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=… cargo build --locked --offline …` → exit 0, after
+  about 90 minutes queued behind other holders of both slots. The fresh reviewer helper is
+  a52b152a67c02a87e922419ac77f6d9a1e448dbe8809ee8f02874f8ac8b0b65d. The builder's is 852cd7f5…; the difference is
+  expected from the build path.
+- `cold-check.py` (archived helper) → rc 0: 19581 files verified, 1 cold audit, 30 contexts and available checks
+  reproduced, no candidate execution, no hidden tests, temporary state removed (no leftover raw-json-gpt-cold-* dir).
+- `cold-check.py --helper <fresh reviewer helper>` → rc 0, same result with `fresh_helper_used: true`. All 30 contexts
+  and the 11 strict checks of the available answers reproduce with an independently built helper. Both runs use
+  `bwrap --unshare-net` with `/` and the state directory bound read-only.
+- Original `audit.py --models gpt-oss` on my extraction → `AssertionError` at audit.py:75, the template-kwargs
+  expectation, and nowhere else. `gpt_audit.py --models gpt-oss` on my extraction → stdout byte-identical to the
+  archived gpt-oss-results.json.
+- `python3 -B scripts/local_agent_fast_gate.py --base 086c321e…` (retained Node on PATH) → `FAST GATE: PASS`
+  (diff check, untracked lint, review lint, markdownlint-cli2: 4 files, 0 issues).
+- The direct markdownlint command from the request → 4 files checked, `issues: []`, rc 0.
+- `git diff --check 086c321e --` → clean; `git status --short` → empty.
+
+## Independent checks of claims
+
+- **Additive auditor delta.** `diff audit.py gpt_audit.py` changes exactly two places: the docstring, and line 75
+  becomes `assert model == 'gpt-oss'` plus `assert identity['template_kwargs'] == {'reasoning_effort': 'medium'}`.
+  No request, budget, checker, task or threshold logic differs. The expectation matches the committed lab profile
+  (model-profiles/development/coding-model-lab.json:51, asserted by tests/test_coding_model_lab.py:126) and the
+  prior GPT-OSS measurement's "medium reasoning". This corrects the audit, not the measurement. Because the new
+  assertion requires exact equality, it is stricter than the original's intent for this profile, not looser.
+- **Numbers trace to raw logs.** I recomputed from the evidence table and from gpt-oss-results.json: 30 rows; outcomes
+  19/6/2/3; observed 75060 input / 62786 output tokens over 11 tasks; every allowance equals
+  32768 − preflight − 32 (range 24219–29748); request/check sum 1902.7467 s. The 15 batch reports' reserved work sums
+  to 2075.168 s, which is 34.586 min. Each reservation log total equals its batch report. Backend terminations: 11
+  `stopped-below-token-limits` (all `complete:stop`) and 19 `unobserved-or-ambiguous`. The scoreboard has the dated
+  line MEASURE FIRST requires. Does-not-fit is reported separately (0). Failures are counted, not dropped.
+- **Reservations and cleanup.** All 15 logs start with both the heavy-build and the exclusive-GPU waits. controller.py
+  launches `build-slot gpu-slot queue-run agentmage 900 … batch.py`. Every report is `completed`, with settings
+  revoked, `resource_guard_error: null`, a sampled GPU peak ≤ 13817 MiB and api-exit `reaped: true`. The controller
+  receipt records exit 0 and all 15 progress lines. The archive holds no api-key, socket, token or .gguf file; the
+  only large files are the two bin/ executables. The model SHA 27cd6c43… matches the scoreboard's earlier gpt-oss
+  binding.
+- **Evaluation integrity.** collect.py iterates only `suite.development_tasks()`. No held-out path, hidden test or
+  candidate execution occurs in any script read. Between the prior GPT-OSS source 42612ca9 and a99fe467,
+  capabilities/repository-map changes only the instruction constant and its tests; verify_proposals.py confirms that
+  selection and checker are byte-unchanged. No task content appears in the changed instruction. Evaluation integrity
+  holds.
+- **Causal limits stated honestly.** Compared with the 42612ca9 GPT-OSS run, 19/30 tasks gain exactly +64 input
+  tokens (the longer instruction). The other 11 differ by −33…+32 because selection runs against the 32768-byte
+  ceiling: dev-001, dev-013 and dev-019 have message_bytes of 32613–32701 with a 1072-byte system message, so the
+  longer instruction displaces excerpt bytes. The evidence's statement that the instruction is "not isolated from
+  changes to excerpt delivery or rendered output reservation" is therefore accurate. The 11/30 → 3/30 change is not
+  presented as a solve rate.
+- **Partial path labelling.** Pass rates are UNAVAILABLE, not zero. Strict proposals are called ungraded edits.
+  Native Git UID 65534 and the absent controls receipt are recorded as observations, not bypassed. No role, profile
+  adoption, qualification, row closure or readiness is claimed. The order of work is unchanged: three prepared
+  repeats are pending, and no new rows or ticks appear.
+- **Public-repository hygiene.** The added lines contain no home path, username, e-mail, hostname or credential. Those
+  in the retained review are /lane infrastructure paths, UID 1000 and a reviewer attribution, as in 238 earlier
+  committed reviews. No other agent product, private project or patent is named; model names identify the artifacts
+  measured, not branding. Raw archives are not committed.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, reporting): the evidence does not name the limit that actually stopped the 19 largest-cause refusals.**
+  docs/evidence/t303-raw-json-gpt-2026-11-12.md:7 and docs/evidence/coding-scoreboard.md:1021 publish an output-token
+  allowance of 24219–29748. Every one of the 19 `chat.transport.limit` events, though, carries the message "The
+  server response exceeded a size limit". Each backend slice ends with a single `stop processing` line,
+  `truncated = 0`, showing 16607–16721 generated tokens, a nearly constant cut. 18/19 had emitted zero visible text
+  bytes; dev-004 had 6233. This fits the 4 MiB stream-body ceiling
+  (platforms/linux-inference/src/local_chat.rs:15 `MAX_STREAM_BYTES`), reached while the model streams reasoning,
+  well before the token allowance. Nothing published is false: the code is named, byte ceilings are stated as
+  unchanged, and no timeout or context claim is made. However, a reader of the "Output-token allowance" column
+  would over-estimate the effective room for this profile. That matters because this cause rose from 8 to 19 and
+  drives the 11 → 3 change. Fix (documentation only, in the next additive note): state the observed uniform cut at
+  about 16.6K generated tokens with no visible text, and that the stream-size ceiling, not the token allowance,
+  bounded these 19 tasks. Any change to that ceiling is backlog, not required here.
+- **L2 (low, carried backlog, T-309):** the private archive's helper/Cargo.toml still holds the original private
+  host dependency path. The bootstrap rewrites it. It must be scrubbed before any public archive distribution. The
+  archive is private and nothing is committed.
+- **Note (no finding):** the auditor's check that the api-key and model.sock are gone runs against the extracted
+  archive in cold mode, where it is trivially true. That keys and sockets were removed during the run rests on the
+  builder's live receipts (settings revoked, reaped). This was accepted in previous reviews, and the archive itself
+  contains no such file.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing measurement batch): the measurement line is accepted. Every published number traces to
+  the retained raw logs and reproduces from an empty state with networking off, including with an independently built
+  helper. The additive auditor is a correct, minimal reporting correction. The partial-path and causal limits are
+  stated honestly, and evaluation integrity holds. Neither row closes; T-303, T-306, T-315 and T-316 stay open.
+- The f3852ab5 retention of the 086c321ec5b0 verdict and the L2 dev-004 clarification are accurate and additive.
+
+Verdict: PASS
