@@ -937,3 +937,33 @@ on 27B and from 22/30 to 0/30 on 31B. Strict ungraded proposals change from
 8/30 to 30/30 and from 0/30 to 0/30, respectively. These are generation and
 format observations; task correctness remains unknown. No model role or product
 profile is adopted from this comparison.
+
+## Raw JSON generation development measurement — 2026-11-12
+
+Source: `a99fe467c72e2625022b639d8d38b72e845f612a`. All 30 frozen development tasks ran once on `gemma4-31b`. **Partial path: Rust source selection, credential-owning chat and strict edit checking. First-attempt and within-budget task passes remain unavailable, not zero.** No candidate tests, feedback, retries, approvals, apply, commit, push or held-out task ran. Native execution remains unresolved and the expected original grading-controls receipt is absent. Selection receives only the statement and editable frozen base file; full repository analysis and retrieval are not measured. No control was bypassed or reconstructed.
+
+Changed variable versus this profile's preceding run: the fixed generation instruction now gives an original JSON syntax example and explicit raw-object and string-escaping requirements. Its increased size can change excerpt coverage under the unchanged 32768-byte message ceiling. The profile retains `enable_thinking:false`; runtime, weights, temperature zero, seed 42, 32768-token context, output formula `min(32768, 32768 - rendered_input_tokens - 32)`, 300/60-second total/idle, 310-second relay/client, byte caps, strict checking and two-task 900-second reservations remain unchanged. 32K is the largest prepared context tested, not an exhaustive hardware maximum. The freshly built source helper uses the unchanged reviewed chat-only API binary. The effect-free adapter uses the existing chat allowance; the product proposal route still caps output at 4096.
+
+| Date (UTC) | Model | Context tokens | Output-token allowance | First / within budget task passes | Strict ungraded proposals | Request/check s | Reserved job wall s | GPU work min |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | gemma4-31b | 32768 | 23002–29511 | unavailable / unavailable (30 tasks) | 4/30 | 1653.191 | 2154.301 | 35.905 |
+
+GPU work minutes mean reserved model-job wall/60, including verification, loading and cleanup, excluding queue and wrapper checks. Active GPU kernel time was not measured. Request/check time excludes preparation and preflight.
+
+| Outcome / cause | Tasks |
+| --- | --- |
+| `strict-edit-refused:code.proposal.edit` | 1 |
+| `strict-edit-refused:code.proposal.format` | 25 |
+| `ungraded-proposal` | 4 |
+
+Does-not-fit tasks: 0. One attempt per task, zero retries. No model or API process remains. All 15 two-task reservations completed and released both shared slots.
+
+Unambiguous backend counters cover 30/30 tasks: 215953 input / 38865 output tokens. Other counters remain unknown; API usage was not requested.
+
+Compared with the prior thinking-disabled 31B run, strict ungraded proposals change from 0/30 to 4/30. All 30 task statements and source outlines are unchanged; 19/30 user payloads and 19/30 excerpt selections are byte-identical. The longer instruction changes the remaining selections under the same message budget. Complete launch profiles match except the private state root. These observations do not isolate wording from changed source delivery or establish task correctness, generalization or a model role.
+
+Largest individual remaining refusal is `strict-edit-refused:code.proposal.format` (25). Syntax-only inspection classifies 19 of those answers as JSON code fences and six as other JSON-format failures; none exceeds the existing 64 KiB answer ceiling. This does not normalize a response, execute a candidate or change acceptance. No further limit, deadline, cancellation or bookkeeping feature is justified by these observations.
+
+Only this prepared profile has completed the current-source repeat. The other five prepared profiles (qwen35-27b, gpt-oss, muse, gemma4-e4b and gemma4-26b-a4b) remain pending before further source work except high/medium review findings. No product profile or model role is adopted. T-303/T-306 remain open, without new rows, sub-rows or completion ticks.
+
+See [evidence](t303-raw-json-generation-2026-11-12.md) for all task observations, bindings and reproduction.

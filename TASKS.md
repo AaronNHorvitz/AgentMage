@@ -2,6 +2,16 @@
 
 ## Active queue: local agent mission
 
+The [raw-JSON generation measurement](docs/evidence/t303-raw-json-generation-2026-11-12.md)
+completes all 30 development tasks on the 31B profile at source
+`a99fe467c72e2625022b639d8d38b72e845f612a`: 4/30 strict ungraded proposals,
+25 format refusals and one exact-edit refusal. Task grades remain unavailable;
+no candidate tests, retries or held-out tasks ran. The instruction changes; the
+source-selection and strict-checker implementations stay unchanged. Other five
+prepared current-source repeats remain pending before further source work except
+high/medium review findings. Format refusal remains the largest measured cause.
+Independent core review is required; T-303/T-306 remain open with no new row or tick.
+
 The retained [independent profile-measurement review](docs/reviews/5e0b4028defa-thinking-profile-measurement.txt)
 returns **Verdict: PASS** for exact commit
 `5e0b4028defae7bfe364b5058553e6131d6befe4`, with no high or medium finding.
