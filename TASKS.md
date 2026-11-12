@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The retained [independent profile-measurement review](docs/reviews/5e0b4028defa-thinking-profile-measurement.txt)
+returns **Verdict: PASS** for exact commit
+`5e0b4028defae7bfe364b5058553e6131d6befe4`, with no high or medium finding.
+It independently resolves timeout-diagnosis M1 and reproduces both complete
+30-task partial-path measurements. Every rejected 31B answer uses Markdown
+fences; the next source batch clarifies raw JSON generation while preserving
+strict refusal. Neither T-303 nor T-306 closes.
+
 The [thinking-disabled development experiment](docs/evidence/t303-thinking-profile-measurement-2026-11-12.md) completes both
 30-task profile repeats without task grades, retries or held-out execution.
 Largest observed failure in these 60 attempts is `strict-edit-refused:code.proposal.format` (30).
@@ -14,7 +22,8 @@ returns **Verdict: FINDINGS** for exact commit
 `e63165df3e05a2c78649bd9215db55bb4300ef68`: one medium finding, M1,
 identifies a mistyped original-manifest hash in the published binding table.
 That hash is corrected against the unchanged archived manifest; the sealed
-inputs and audit remain unchanged. Independent re-review is pending; no row closes.
+inputs and audit remain unchanged. The independent re-review above resolves M1;
+no row closes.
 
 The [retained timeout diagnosis](docs/evidence/t303-timeout-diagnosis-2026-11-12.md)
 audits all 45 recorded timeouts against 260 original manifest-bound inputs:

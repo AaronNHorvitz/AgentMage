@@ -1,0 +1,142 @@
+Commit: 5e0b4028defae7bfe364b5058553e6131d6befe4
+Scope: thinking-profile-measurement
+
+Reviewer: Claude Opus 5.5, separate read-only session, pinned checkout /lane/review-checkout.
+Range: e63165df3e05a2c78649bd9215db55bb4300ef68..5e0b4028defae7bfe364b5058553e6131d6befe4
+(6a8b4897, 5e0b4028; five changed paths, documentation only). Rows: T-303 / T-306 non-closing;
+re-review of timeout-diagnosis M1.
+
+## Methods
+
+1. Confirmed `git rev-parse HEAD` = 5e0b4028defae7bfe364b5058553e6131d6befe4 and a clean status. Read
+   the full diff of TASKS.md, the corrected timeout evidence, the new thinking-profile evidence, the
+   scoreboard append and the retained review.
+2. Hashed all eight shared files and the retained node binary. All match the request table, and node
+   matches d1de76d8…bd932c.
+3. Before running anything, read the scope script, the cold-check script, and the archived audit.py,
+   compare.py, verify_proposals.py, controller.py, policy.json and helper/src/main.rs + Cargo.toml.
+   - audit.py, compare.py and verify_proposals.py use only the standard library plus the frozen
+     repository's `scripts.coding_eval*` modules, after checking their hashes against frozen-inputs-v2.
+     They read and hash files only. No candidate is executed, and no hidden or held-out test is loaded.
+   - The helper parses model text with the product's `check_coding_proposal` and runs nothing it
+     receives.
+   - The cold script fully verifies hashes and structure (no absolute paths, `..` or duplicates)
+     before it writes anything. It then extracts into a fresh temp directory and runs the three
+     scripts under `bwrap --unshare-net` with `/lane/state` mounted read-only. It asserts that each
+     stdout is byte-equal to the sealed JSON.
+4. Ran the exact reproduction. As an extra precaution I wrapped the cold check in build-slot, at nice 10.
+5. Independent recomputation in my own code from the archive, not from the builder's summaries:
+   - the M1 manifest hash;
+   - the summary rows, prior-run counts and all 60 per-task table rows;
+   - answer shapes, in aggregate only;
+   - all 30 GPU reservation logs and batch reports.
+6. Checked public hygiene, IP, claim wording, MEASURE FIRST and the owner notes on every added line.
+
+I ran no model, no GPU work, no candidate, hidden or held-out test and no native workflow.
+
+## Commands and results
+
+- `sha256sum` of the shared files: 8/8 match.
+- `python3 -B /lane/reviews/thinking-development-20261112-scope.py` printed scope PASS: 5 paths, 507
+  preserved table rows, 17 bindings verified, M1_fixed true. Its output is `cmp`-identical to
+  thinking-development-20261112-scope-postcommit.json.
+- `AGENTMAGE_MEASURE_REPO=$PWD bash /tools/build-slot nice -n 10 python3 -B …cold-check.py` returned
+  rc 0 with `{"all_retained_files_verified": 39390, "cold_audits": 2,
+  "contexts_and_available_checks_reproduced": 60, "temporary_state_removed": true, …}`. The output is
+  `cmp`-identical to the shared cold-check log, and no `thinking-cold-*` directory remains.
+- `python3 -B scripts/local_agent_fast_gate.py --base e63165df…` with the retained node returned
+  FAST GATE: PASS: markdownlint 0 issues in 4 files, review lint, untracked lint and diff check.
+- The direct markdownlint snippet checked 4 keys with `issues: []`, exit 0.
+- `git diff --check e63165df… --` is clean, and `git status --short` is empty.
+
+## M1 re-review (independent)
+
+- I extracted `inputs/qwen-retained-manifest.json` from the unchanged timeout archive (archive sha
+  985f6bb5…cbf50, which equals the published binding). It hashes to
+  `e759f7d7127700b37a68c757efa8935a5027f543025c81ea7f32154a7831269d`.
+- docs/evidence/t303-timeout-diagnosis-2026-11-12.md:50 now carries exactly this value. The diff is
+  that single hash substitution, and the scope script asserts the file equals the old text with only
+  that substitution.
+- `grep -rn e759f7d71277 docs/` now gives the correct value at all three evidence bindings (qwen
+  measurement :101, timeout diagnosis :50, thinking profile :170). The bad value appears only inside
+  the verbatim retained review, which is correct.
+- docs/reviews/e63165df3e05-timeout-diagnosis.txt is `cmp`-identical to the /lane/reviews original
+  and still ends `Verdict: FINDINGS`. TASKS.md reports it as FINDINGS with re-review pending and
+  does not relabel it.
+- **M1 is resolved.** This review, not the retained one, is the PASS for it.
+
+## Judgement of the measurement claims
+
+- **Controlled variable.**
+  - compare.py checks 182 prior files against the original manifest (each hash and size via
+    `prior()`). It asserts identical `context.json` for all 60 tasks and identical request bodies
+    once `max_tokens` is removed. It also asserts identical complete launch profiles once the state
+    root and the kwarg are removed, the same API binary, helper, model sha/bytes and runtime
+    manifest, and the same 300000/60000 ms limits.
+  - Only `chat_template_kwargs` `{}`→`{"enable_thinking":false}` differs. Rendered input therefore
+    shifts slightly: prior qwen preflight 2905–8622 against 2869–8586 now, prior 31B 3157–9738
+    against 3159–9740. The output reservation shifts with it. The evidence says so explicitly.
+- **Numbers trace to raw data.**
+  - My recomputation reproduces both summary rows: 30/30 and 0/30 proposals; request/check
+    1132.698 / 1814.415 s; reserved wall 1462.580 / 2337.099 s; GPU 24.376 / 38.952 min; budgets
+    24150–29867 / 22996–29577; counters 188110/35780 and 214782/47482 at 30/30 coverage.
+  - All 60 per-task rows match the audited details, with 0 mismatches.
+  - Prior counts are confirmed: qwen 21 timeouts, 1 `chat.response.incomplete` and 8 proposals; 31B
+    22 timeouts and 8 format refusals.
+- **Limits and classification of partial-path outcomes.**
+  - All 60 attempts end `complete:stop` and stop below their token limits: no context truncation, no
+    output cap and 0 does-not-fit. The largest output is 5480 tokens, far under every byte ceiling.
+  - Classification of the 31B outcomes: I checked the shape of every answer, in aggregate only (no
+    raw text is quoted here). All 30 31B answers are wrapped in a Markdown code fence. The instruction
+    forbids that ("No Markdown"), so they are correctly refused as `code.proposal.format`. These are
+    model format violations, not harness truncation, and no thinking text leaked into the output.
+  - All 30 qwen answers are bare valid JSON, and the strict checker accepted every one.
+  - "Strict ungraded proposal" is never called a solve. First-attempt and within-budget passes are
+    `None` in the results and published as "unavailable", not zero. One attempt per task, zero
+    retries, and failures are counted, not dropped.
+  - The 32K context is stated as the largest prepared context tested, and the 4096-token product
+    route cap is stated as distinct from the measurement allowance. Causal wording stays limited: one
+    repeat, no claim of quality or generalization, no profile or role adopted.
+- **Evaluation integrity.** Only the development set ran (sha 0c2a0624…). `held_out_executed`,
+  `hidden_tests_executed` and `native_execution` are all false. Archive members whose names contain
+  "hidden" are repository script files that exist in the checkout (e.g.
+  scripts/hidden_network_surface_evidence.py), not tests. No task, prompt, checker, threshold or
+  product source changed.
+- **GPU and resource evidence.** controller.py runs every pair as `build-slot` → `gpu-slot queue-run
+  agentmage 900`. All 30 reservation logs end `{"status":"completed","error":null}` after both
+  waits. All 30 batch reports show completed and `settings_revoked`, with no api-key or socket left.
+- **Secrets and hygiene.** The archive has no token, key or credential file outside the repository
+  projections. The added public lines contain no home path, username, hostname, e-mail or
+  credential, and name no agent product, private project, paper or patent. The private host path in
+  the archived helper Cargo.toml is not committed. "Claude Opus 5.5" appears only as reviewer
+  attribution inside the retained review, as in the existing docs/reviews files.
+- **MEASURE FIRST and owner notes.**
+  - This batch changes what the model sees, and the scoreboard gets its required line: a table row
+    per model, changed budgets stated, and does-not-fit counted apart from model failures.
+  - Nothing changes the order of work, claims anything built or adds a second runtime, a
+    limit/deadline/cancellation feature, a row, a sub-row or a tick. T-303, T-306, T-315 and T-316
+    stay open.
+
+## Findings
+
+No critical, high or medium finding. No new low finding.
+
+Two observations, neither a finding:
+1. The comparison paragraph does not mention qwen's prior single `chat.response.incomplete`, which also
+   went to 0. The stated numbers are still accurate.
+2. The evidence could say that every 31B format refusal is a fenced answer. That aggregate fact
+   supports "next work follows this measured failure", but any change to the strict checker belongs
+   to a later reviewed batch and must not be tuned on held-out data.
+
+The inherited lows (T-309 backlog, the f619ec3c L-1…L-5, the 53 inherited Rust-gate failures) are
+unchanged.
+
+## Per-row result
+
+- **T-303**: non-closing measurement. Every published number is reproduced from sealed raw data, the
+  outcomes are classified correctly, and the partial path is labelled honestly. M1 from e63165df is
+  fixed. The row stays open.
+- **T-306**: non-closing. No loop, apply, test, commit or push path was exercised. The row stays open.
+- **M1 re-review**: resolved, verified against the unchanged archived manifest.
+
+Verdict: PASS
