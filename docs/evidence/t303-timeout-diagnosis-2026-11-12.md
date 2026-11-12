@@ -47,7 +47,7 @@ reconstruct admission controls or run held-out tasks to investigate this cause.
 
 | Binding | SHA-256 |
 | --- | --- |
-| Original reviewed retained manifest | `e759f7d7127700b37a68c757efa8935a5027f543025c81ea7f32604a7831269d` |
+| Original reviewed retained manifest | `e759f7d7127700b37a68c757efa8935a5027f543025c81ea7f32154a7831269d` |
 | Content-free 45-timeout audit result | `7cbd8a74d70e686ed5fb1c5d80608991a52c6027eaa0bf4fe35b0421a9f622b9` |
 | Audit script | `49271b5c527e2449677c3c716fa9989e54156c21e4c7de746a42f4afc7b0e073` |
 | Inert reproduction archive | `985f6bb5357b419ac0a028d6d96c64af1590675d2c6b2adbffa05e96429cbf50` |

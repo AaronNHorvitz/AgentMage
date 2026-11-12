@@ -1,0 +1,121 @@
+Commit: e63165df3e05a2c78649bd9215db55bb4300ef68
+Scope: timeout-diagnosis
+
+Reviewer: Claude Opus 5.5, separate read-only session, pinned checkout /lane/review-checkout.
+Range: f619ec3cdb681bc399bb779285f837332f76d3b2..e63165df3e05a2c78649bd9215db55bb4300ef68
+(673c0c23, e63165df; five changed paths, documentation only). Rows: T-303 / T-306 non-closing;
+retained T-316 planning review only.
+
+## Methods
+
+1. Confirmed `git rev-parse HEAD` = e63165df3e05a2c78649bd9215db55bb4300ef68; clean status; read the
+   full diff of TASKS.md and both evidence files, and the low-finding sections of both retained reviews.
+2. Hashed all seven shared inputs; every SHA-256 matches the request table.
+3. Read the scope script, the cold-check bootstrap and the archived audit.py (printed via the request's
+   snippet; SHA 49271b5c…0e073 verified) before executing anything. audit.py is standard-library only,
+   reads files under an explicit root, executes no model output or candidate code, and asserts the
+   original manifest SHA, per-file manifest hashes and byte counts, one terminal `chat.transport.timeout`
+   event, exactly one cancel and one `truncated = 0` stop per backend slice, 300000 ms total timeout,
+   no resource-guard error, zero retries, ungraded.
+4. Ran the exact reproduction, then an independent recomputation (my own code) from the raw archive
+   members, not from expected.json.
+5. Public-hygiene, IP, causal-claim and non-closing checks on every added line.
+
+No model, GPU, hidden test, held-out task or the deferred profile experiment was run.
+
+## Commands and results
+
+- `sha256sum /lane/reviews/timeout-diagnosis-20261112-*` — 7/7 match the request.
+- `python3 -B /lane/reviews/timeout-diagnosis-20261112-scope.py` — PASS; output byte-identical to the
+  shared scope.json (sha c60a149a…e45138): five paths, 507 existing table lines preserved, old plan
+  byte-identical, two reviews verbatim, scoreboard / status-model / source unchanged.
+- `bwrap --unshare-net --ro-bind / / --bind /lane/state/tmp /lane/state/tmp -- python3 -B …cold-check-v2.py`
+  — PASS, 260 inputs, 45 timeouts, 38 zero-final-text, audit sha 7cbd8a74…22b9; stdout `cmp`-identical
+  to the shared v2 log; no `agentmage-timeout-audit-*` temp directory remains.
+- `python3 -B scripts/local_agent_fast_gate.py --base f619ec3c…` with the retained node
+  (sha d1de76d8…bd932c) — FAST GATE: PASS (markdownlint 0 issues in 3 files, review lint, untracked lint,
+  diff check).
+- Direct markdownlint snippet — three keys checked, `issues: []`, exit 0.
+- `git diff --check f619ec3c… --` — clean. `git status --short` — empty.
+- Independent recomputation from the 263 archive members:
+  - Every `inputs/*` member except the manifest matches its entry in the original manifest (sha and
+    bytes): 0 mismatches. Input count 5 top-level + 45×5 per-attempt + 30 batch reports = 260.
+  - Raw event types across all 45 attempts: 2684 `text`, 45 `error`, no `complete`.
+  - Per model (timeouts / zero-text / seconds / stop n_tokens / truncated): muse 2 / 2 /
+    300.012–300.021 / 18727–20888 / all 0; gemma4-31b 22 / 16 / 300.006–300.020 / 13441–19628 / all 0;
+    qwen35-27b 21 / 20 / 300.006–300.031 / 15346–20975 / all 0. Matches the table and prose.
+  - Cause counts in the result files: 31B 22 timeouts, qwen 21, muse 0 at the top cause but 2 present
+    (2 + 22 + 21 = 45, equal to the summary's largest failure).
+  - Template options: gemma4-31b and qwen35-27b `{}`; muse `{"reasoning_strength":"medium"}`. All 30
+    batch reports record total 300000 / idle 60000 ms.
+  - `api_usage` is null in the records; the only backend counter is the stop `n_tokens` context position,
+    so "token usage remains unknown" is accurate.
+  - No archive member name or body contains auth/token/key material.
+
+## Judgement of claims
+
+- **Causal limitations.** The evidence states only what the data shows: cancellation at the 300 s total
+  limit, active backend, no context truncation. It labels stop positions as context positions, not
+  output counts, and explicitly says final-text absence does not establish reasoning as the cause. The
+  proposed `enable_thinking=false` comparison is described as next, not adopted, not measured and with no
+  improvement claimed, and it keeps prompts, artifacts, decoding, checker, context, reservation rule,
+  limits and boundaries. That is an honest, controlled next step consistent with MEASURE FIRST. It adds no
+  limit, deadline, cancellation or bookkeeping feature and no new row. Observation only, not a finding:
+  38 attempts produced no `text` event for 300 s while the 60 s idle limit never fired. That is
+  consistent with non-text stream activity. The next measurement entry may want to state it.
+- **Non-closing.** TASKS.md, the evidence and the request all keep T-303/T-306/T-315/T-316 open. No
+  ticks, sub-rows, role selection, scoreboard line or status-model change. The deferred experiment's
+  aborted queueing is not presented as evidence ("preparation and queueing are not evidence of model
+  execution").
+- **Evaluation integrity.** No held-out task, hidden test, task base, prompt, profile or threshold
+  changed (scope script plus the diff). The audit reads development artifacts only.
+- **Retained reviews.** Both docs/reviews files are byte-identical to /lane/reviews. Both say
+  Verdict: PASS with no high or medium finding, as TASKS.md states. The TASKS.md summary of the five
+  f619ec3c lows matches L-1…L-5. The 0a412ad8 L1 (first-pair retired tokens newly sealed; future
+  packages exclude every newly retired token, not an index range) and L2 ("At that checkpoint" wording
+  at both places) are corrected as asked, and no sealed manifest was rewritten.
+- **Public hygiene / IP.** Added lines contain no home path, username, hostname, e-mail or credential.
+  /lane/ paths appear only inside the verbatim reviews, following the established docs/reviews convention.
+  Model labels (Muse, Gemma, Qwen) are used descriptively as artifact labels, as in prior decisions.
+  No agent product, private project, paper or patent is named.
+
+## Findings
+
+### M1 (medium, evidence binding): the committed original-manifest hash is wrong
+
+- Location: docs/evidence/t303-timeout-diagnosis-2026-11-12.md:50.
+- The row "Original reviewed retained manifest" gives
+  `e759f7d7127700b37a68c757efa8935a5027f543025c81ea7f32604a7831269d`.
+- The actual manifest has a different hash:
+  `e759f7d7127700b37a68c757efa8935a5027f543025c81ea7f32154a7831269d`. This is the value audit.py
+  asserts, the one the request states, and the one the qwen measurement evidence binds at
+  docs/evidence/t303-qwen-measurement-2026-11-12.md:101. The two hashes differ at hex positions
+  52–53 (`60` vs `15`).
+- Reproduction: `sha256` of the archive member `inputs/qwen-retained-manifest.json`, or
+  `grep -rn e759f7d71277 docs/`, which shows the two inconsistent values.
+- Why it matters: this hash is the published anchor that binds the 260 inputs and the whole 45-timeout
+  analysis to the already-reviewed campaign. A reader checking the committed table against the manifest
+  gets a mismatch, so the published claim "verifies the original reviewed manifest" cannot be traced as
+  written. Neither the scope script nor the fast gate cross-checks evidence hashes, so the error passed
+  every check. The other four bindings in the table (audit result, script, archive, cold log) are correct.
+- Fix: correct line 50 to `…ea7f32154a7831269d` in the next commit. Optionally, add an equality check
+  between the evidence binding and the audit's asserted constant to the batch's scope script. Do not
+  edit the private package. The rows are not closing, so the fix belongs in the next batch, but no T-303 or
+  T-306 close may rely on this evidence until it is corrected.
+
+No critical or high finding. No new low finding. Inherited lows (T-309 backlog, the f619ec3c L-1…L-5,
+the 53 inherited Rust-gate failures) are unchanged and not re-litigated.
+
+## Per-row result
+
+- **T-303**: non-closing diagnosis. The counts and ranges are independently reproduced from the raw
+  inputs, and the causal wording is appropriately limited. M1 must be corrected before this evidence can
+  support any close. The row stays open.
+- **T-306**: non-closing. No loop, apply, test, commit or push path was exercised. The row stays open.
+- **T-316**: retained planning review recorded verbatim with an accurate summary of its lows. The row stays
+  open, and nothing is implemented or claimed.
+
+Summary: one medium evidence-binding error (M1: wrong original-manifest SHA-256 at
+docs/evidence/t303-timeout-diagnosis-2026-11-12.md:50); everything else reproduced and passed.
+
+Verdict: FINDINGS

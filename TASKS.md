@@ -2,6 +2,13 @@
 
 ## Active queue: local agent mission
 
+The retained [independent timeout review](docs/reviews/e63165df3e05-timeout-diagnosis.txt)
+returns **Verdict: FINDINGS** for exact commit
+`e63165df3e05a2c78649bd9215db55bb4300ef68`: one medium finding, M1,
+identifies a mistyped original-manifest hash in the published binding table.
+That hash is corrected against the unchanged archived manifest; the sealed
+inputs and audit remain unchanged. Independent re-review is pending; no row closes.
+
 The [retained timeout diagnosis](docs/evidence/t303-timeout-diagnosis-2026-11-12.md)
 audits all 45 recorded timeouts against 260 original manifest-bound inputs:
 38 emit no final text; seven emit some text before cancellation. All 45 backend
