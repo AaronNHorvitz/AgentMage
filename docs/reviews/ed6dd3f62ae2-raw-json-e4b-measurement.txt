@@ -1,0 +1,113 @@
+Commit: ed6dd3f62ae225367b08b0134e1b792cea5d6e31
+Scope: raw-json-e4b-measurement
+
+# Independent review: raw-JSON E4B development measurement (+ Muse L1 clarification)
+
+Reviewer: Claude Opus 5.5, separate read-only session. Range reviewed:
+fc035e714fdb8f30aba3e77f3d7d7c95e4cb4f7f..ed6dd3f62ae225367b08b0134e1b792cea5d6e31 (65bc5782, ed6dd3f6).
+Row: T-303 / T-306, non-closing. No model, GPU, candidate test, native workflow, hidden or held-out task was run by me.
+
+## Methods
+
+1. Confirmed `git rev-parse HEAD` = ed6dd3f62ae225367b08b0134e1b792cea5d6e31 in /lane/review-checkout; clean tree.
+   `git diff --stat` over the range: 5 paths (TASKS.md, coding-scoreboard.md, new t303-raw-json-e4b-2026-11-12.md,
+   appended t303-raw-json-muse-2026-11-12.md, new docs/reviews/fc035e714fdb-raw-json-muse-measurement.txt), 311
+   insertions and 0 deletions. `git diff --name-only a99fe467..HEAD` outside docs/ shows only TASKS.md, so product
+   source is unchanged since the measured source.
+2. sha256sum of all 14 shared files and of 42612ca9787f-a4b-node: every one matches the request table and the stated node digest.
+3. Read scope.py, cold-check.py and bootstrap.py before running them. They are inert: they read git and the archive,
+   do tar member checks (regular files, no absolute or `..` paths, no duplicates, size and sha bound to the manifest),
+   extract into a private tmp, and run under bwrap `--unshare-net` with `/` read-only. Bootstrap rewrites only the
+   helper's dependency path to the checkout.
+4. Extracted every non-candidate archive member to a private tmp and read audit.py, verify_proposals.py and
+   helper/src/main.rs plus Cargo.toml. I compared audit.py, batch.py, collect.py, controller.py, verify_proposals.py,
+   measurement_chat.py, compare.py, policy.json, frozen-inputs-v2.json, profiles/gemma4-e4b.json and the helper
+   Cargo.toml, Cargo.lock and main.rs against the previously reviewed Muse archive
+   (raw-json-muse-20261112-inputs.tar.gz). All are byte-identical, so the ORIGINAL audit.py is used unchanged. The
+   E4B empty-template-kwargs expectation is already in the original
+   (`{} unless qwen35-27b/gemma4-31b`), so no expectation fix was needed.
+5. Read the generation instruction at a99fe467 (coding_proposal.rs:15). It is generic: one example path
+   `example.py`, plus syntax, escaping and no-fence rules. It has no task-specific or held-out content. The diff
+   42612ca9787f..a99fe467 under capabilities/ is that one line plus a test, which supports "selection/checker unchanged".
+6. Ran the builder's exact reproduction block verbatim, with `CARGO_TARGET_DIR=/lane/state/review-target` exported.
+   The inner helper build used its own temporary target through `/tools/build-slot`, as written. Full log kept in
+   my private tmp. Exit 0.
+7. Independent recomputation from e4b-results.json and the evidence table:
+   - 30 rows; causes 13 ungraded-proposal / 15 code.proposal.format / 2 code.proposal.edit.
+   - Input sum 215,893; output sum 138,484.
+   - Every allowance equals `min(32768, 32768 - input - 32)`, range 23004–29513.
+   - Every observed output is below its allowance. backend_terminations = 30 stopped-below-token-limits.
+   - api_terminal = 30 `complete:stop`, so zero timeouts. Preflight input = observed input for all 30.
+   - 1495.8916/60 = 24.932.
+   - counter_coverage 30; first_passes and within_budget_passes null; held_out "not run".
+   - The prior E4B line (scoreboard:580, source 42612ca9787f) is 10/30, as claimed.
+8. All 15 gemma4-e4b-NN-reservation.log files contain both the shared heavy-build/test wait and the exclusive GPU
+   wait, `"status": "completed"` and `"error": null`. The controller receipt shows exit 0 with all 15 progress lines.
+9. Archive listing (19,619 members = 19,618 manifest-bound files + manifest). There is no api-key, token, socket,
+   .gguf or safetensors member. The largest members are the API binary (414.6 MB), the helper and the manifest;
+   model weights are 5.4 GB and absent.
+10. Muse L1 clarification (65bc5782): extracted record.json, backend-slice.log and events.ndjson for dev-004, 011,
+    012 and 027 from the Muse archive.
+    - Each has one stop line with `truncated = 0`, a cancel stop and a `chat.transport.timeout` terminal, at 300.01–300.02 s.
+    - Stop n_tokens minus preflight is 13531, 12955, 13238 and 12969; the allowances are 29805, 26793, 29795 and 24765.
+    - Visible text is 4276–15497 bytes.
+    The additive text in the Muse evidence and the scoreboard is accurate and changes no earlier number.
+11. Public-repository hygiene: grepped all added lines for home paths, the username, e-mail, hostnames, credentials,
+    other agent products, benchmarks and patents. The only hits are the retained review's own descriptive text about
+    "api-key" absence. No other product, private project or patent is named. The only path is the generic
+    `/lane/review-checkout`.
+12. Lane observation: no llama, model-server or agentmage-local-api process, and no api-key or model.sock under
+    /lane/state/measure-json-20261112. No raw-json-e4b-review or raw-json-e4b-cold temporary directory remains.
+
+## Exact commands and results
+
+- `sha256sum` (4 files): bf853da8…, fdf4caf1…, 7f7c682b…, 213d78ee…. All match the request.
+- `nice -n 10 python3 -B /lane/reviews/raw-json-e4b-20261112-scope.py`:
+  `{"changed_paths": 3, "per_task_rows_verified": 30, "preserved_table_lines": 507, "previous_scoreboard_bytes_preserved": true, "public_bindings": 9, "scope": "PASS", "source_selection_and_checker_unchanged": true, "summary_rows_verified": 1}`.
+  Identical (sorted JSON) to raw-json-e4b-20261112-scope-postcommit.json.
+- `cmp docs/reviews/fc035e714fdb-raw-json-muse-measurement.txt /lane/reviews/fc035e714fdb-raw-json-muse-measurement.md`: identical.
+- bootstrap.py: `{"candidate_execution": false, "hidden_tests_loaded": false, "prepared_own_source_helper": true, "verified_repository_inputs": 2283}`.
+- `bash /tools/build-slot env CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=<tmp>/target cargo build --locked --offline --manifest-path <tmp>/helper/Cargo.toml`:
+  Finished in 18.69 s. My fresh helper's sha256 is ca8166565daf8c0d6ae841ffaaf31f31f3bc26d2151cf76aed61dc8ba1fe2a3a.
+  It differs from the builder's 852cd7f5… because the build path differs, as expected.
+- cold-check.py (no helper):
+  `{"all_retained_files_verified": 19618, "cold_audits": 1, "contexts_and_available_checks_reproduced": 30, "fresh_helper_used": false, "temporary_state_removed": true, ...}`.
+- cold-check.py `--helper <my fresh build>`: the same with `"fresh_helper_used": true`. All 30 contexts and strict
+  checks reproduce with my independent build, and the audit output is byte-identical to e4b-results.json.
+- `python3 -B scripts/local_agent_fast_gate.py --base fc035e71…`: 5 paths. diff --check, lint-untracked,
+  lint-reviews and markdownlint-cli2 (4 files, 0 issues) all pass. `FAST GATE: PASS`.
+- Direct markdownlint via the retained node: 4 files, `issues: []`.
+- `git diff --check fc035e71… --`: clean. `git status --short`: empty.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **Evaluation integrity:** I found no violation.
+  - Development tasks only (development_sha256 0c2a0624…); held-out not run; hidden tests not loaded.
+  - The instruction is generic, and no source changed in this range.
+  - Failures are counted, not dropped: 17 refusals listed per task. One command re-runs the audit, and it is
+    consistent with the raw logs and backend slices.
+- **Measure first:** the scoreboard line for this batch exists and states the context (32768), the allowance range
+  and its formula, and the timeouts. Does-not-fit is counted separately (0). Each number traces to the retained raw
+  logs (step 7 and the cold audit). Exactly one prepared repeat (gemma4-26b-a4b) remains before source work, and
+  the order is unchanged.
+- **Honest labelling:** the commit keeps these labels: partial path; passes UNAVAILABLE, not zero; strict
+  proposals are ungraded; GPU minutes are reserved wall time, not kernel time; 32K is not a hardware maximum; no
+  causal effect, qualification or model role. Native Git UID 65534 and the absent controls receipt are disclosed as
+  unresolved, with no bypass.
+- **L1 (low, wording, backlog):** docs/evidence/t303-raw-json-e4b-2026-11-12.md:25 and
+  docs/evidence/coding-scoreboard.md:1125 say "Largest individual refusal count in this repeat: 15; tied causes:
+  strict-edit-refused:code.proposal.format". Only one cause holds that count, so "tied causes" is a template
+  artefact. Fix: in the generator, write "cause:" when there is a single cause. The number and cause are correct.
+- **L2 (low, carried, T-309 backlog):** the private archive's helper/Cargo.toml still holds the original private
+  dependency path (bootstrap.py rewrites it for reviewers). The archive is not published. It must be scrubbed before
+  any public archive distribution, as the request states.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing measurement increment): PASS. The E4B measurement and the retained Muse verdict with
+  its L1 clarification are accurate, additive and independently reproduced. No row closes; T-303, T-306, T-315 and
+  T-316 remain OPEN as committed.
+
+Verdict: PASS

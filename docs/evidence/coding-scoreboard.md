@@ -1125,3 +1125,15 @@ Strict ungraded proposals change from the preceding published full E4B measureme
 Largest individual refusal count in this repeat: 15; tied causes: strict-edit-refused:code.proposal.format. Across the five current-source model repeats, the 31B profile's 25 format refusals remain the largest individual refusal cause. One prepared current-source repeat (gemma4-26b-a4b) remains pending before further source work except high/medium review findings. No profile or model role is adopted. Further limit, deadline, cancellation and bookkeeping features remain T-309 backlog unless an open high/medium finding or the row's own completion requirement needs them. T-303/T-306 remain open, without new rows, sub-rows or completion ticks.
 
 See [evidence](t303-raw-json-e4b-2026-11-12.md) for per-task observations, frozen bindings and reproduction.
+
+## Independent E4B review clarification — 2026-11-12
+
+The [independent E4B measurement review](../reviews/ed6dd3f62ae2-raw-json-e4b-measurement.txt)
+returns **Verdict: PASS** for exact commit
+`ed6dd3f62ae225367b08b0134e1b792cea5d6e31`, with no high or medium finding.
+Low L1 clarifies that the 15 format refusals are the single largest cause in
+that repeat; the earlier phrase "tied causes" refers to only that one cause.
+Counts and earlier entries remain unchanged. The additive A4B reporter uses
+"cause" for a single cause and "tied causes" only for a tie; sealed E4B scripts
+remain unchanged. Low L2's private-archive hygiene remains T-309 backlog.
+No row closes.

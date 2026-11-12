@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The retained [independent E4B measurement review](docs/reviews/ed6dd3f62ae2-raw-json-e4b-measurement.txt)
+returns **Verdict: PASS** for exact commit
+`ed6dd3f62ae225367b08b0134e1b792cea5d6e31`, with no high or medium finding.
+Low L1 is clarified additively: 15 format refusals are the single largest cause,
+with no tie. The new A4B reporter fixes the singular wording; sealed scripts
+and counts stay unchanged. Private-archive hygiene remains T-309 backlog.
+No row closes.
+
 The [E4B raw-JSON instruction repeat](docs/evidence/t303-raw-json-e4b-2026-11-12.md)
 completes all 30 frozen development tasks at source `a99fe467c72e2625022b639d8d38b72e845f612a`:
 13/30 strict ungraded proposals, with task grades unavailable. No candidate tests,
