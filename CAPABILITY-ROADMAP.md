@@ -1,10 +1,11 @@
 # Local Developer Product Capability Roadmap
 
-Revision: 2026-09-24. Status: accepted product direction; implementation and release evidence remain separate.
+Revision: 2026-11-11. Status: accepted product direction; implementation and release evidence remain separate.
 
 ## Authority and Scope
 
-This catalogue consolidates 48 capabilities into stable CAP-01 through CAP-48 identifiers.
+This catalogue preserves the original CAP-01 through CAP-48 identifiers and adds
+CAP-49 under [Decision 0205](docs/decisions/0205-one-runtime-for-model-driven-work.md).
 It is a requirements crosswalk, not a second completion ledger. TASKS.md owns executable
 work packages and evidence. Existing implemented components are reused only after source
 and acceptance reconciliation; adding a row here never marks it complete.
@@ -25,7 +26,7 @@ test, not duplicated implementations or shared mutable state.
 | --- | --- | --- | --- | --- |
 | CAP-01 | P0 | Host | Native workspace | A real native Linux workspace opens projects, conversations, tasks, changes and research; errors and empty states use real backend records. Existing clients remain usable standalone. |
 | CAP-02 | P0 | Runtime | Setup and connection doctor | A clean account diagnoses missing runtime, permission, socket, model and disk prerequisites with actionable errors; no transport failure is presented as a completed task. |
-| CAP-03 | P0 | Runtime | Qualified model profiles | Pin artifact, codec, context and decoding settings; exercise tool calls, edits, malformed-output recovery and interrupted runs for each model separately. |
+| CAP-03 | P0 | Runtime | Qualified model profiles | Pin artifact, codec, context and decoding settings; exercise tool calls, edits, malformed-output recovery and interrupted runs for each model separately. Later T-316 freezes synthetic everyday-tool tasks and qualification scores before runs; measure tool/argument correctness, truthful results, asking first and injection refusal per profile and after prompt, tool-description, runtime or profile changes, never tuning on held-out results. |
 | CAP-04 | P1 | Host | Verified model manager | Inspect publisher, license, hashes, complete file sets and hardware fit; resume quarantined downloads and atomically activate or delete them. Public ungated models need no publisher account. |
 | CAP-05 | P0 | Runtime + Host | Hardware-aware admission | Enforce RAM, VRAM, disk and context reservations before launch; estimates are distinguished from measured suitability. Retest after hardware or profile changes. |
 | CAP-06 | P0 | Runtime | Real repository onboarding | Detect language, package manager and locked dependencies; inspect proposed build/test commands and repository trust before any executable configuration runs. |
@@ -51,7 +52,7 @@ test, not duplicated implementations or shared mutable state.
 | CAP-26 | P1 | Runtime | Language intelligence | Qualified language-server adapters provide diagnostics, references and rename previews; launches, workspace edits and dynamic server configuration use ordinary tool authority. |
 | CAP-27 | P2 | Memory + Coordinator | Cross-repository impact graph | Versioned source/dependency/interface relations support impact queries with provenance and scope isolation; stale indexing is explicit and never grants cross-repository write access. |
 | CAP-28 | P1 | Runtime + Host | Inspectable context budgeting | Show pinned instructions, selected sources, token estimates and compaction/omission decisions; retained constraints and source links survive reflow and model switching. |
-| CAP-29 | P1 | Memory + Runtime | Source-backed project memory | Store bounded scoped facts with citations, corrections, expiry, revocation and deletion behavior; existing authoritative stores remain authoritative until migration is qualified. See [the open linking study](#open-study-how-agent-memories-are-linked). |
+| CAP-29 | P1 | Memory + Runtime | Source-backed project memory | Ask a memory service through a versioned contract for bounded scoped facts with citations, corrections, expiry, revocation and deletion behavior. The runtime keeps only rebuildable indexes, never authoritative long-term memory; existing source authorities remain authoritative. See [the open linking study](#open-study-how-agent-memories-are-linked). |
 | CAP-30 | P0 | Runtime + Coordinator | Crash-safe resume | Recover interrupted work without replaying uncertain effects, losing user edits or reusing expired authority; repository and model drift require revalidation. |
 | CAP-31 | P1 | Runtime + Coordinator | Engineering recipes | Versioned, parameterized dependency updates, migrations, security repairs, docs and test recipes declare scope, prerequisites, verification and rollback boundaries. |
 | CAP-32 | P2 | Runtime + Memory | Authorized knowledge connectors | Scoped tickets, documents and decision records have provider-specific authorization, retention and revocation; no ambient access to a user's connected accounts. |
@@ -59,18 +60,34 @@ test, not duplicated implementations or shared mutable state.
 | CAP-34 | P0 | Runtime + Coordinator | Enforced isolation and secrets | Apply operating-system boundaries and least-privilege credential brokering; test denial and revocation, not merely prompt instructions or hidden UI controls. |
 | CAP-35 | P0 | Coordinator + Runtime | Durable background jobs | Queue, observe, cancel, suspend and resume jobs across UI closure; a single owner reconciles state and stale or duplicate control requests. |
 | CAP-36 | P0 | Runtime + Coordinator | Resource scheduling | Bound attempts, elapsed time, tokens, memory, GPU, CPU, storage and output; serialize scarce resources with leases/locks, fair queues and nonprogress backoff. |
-| CAP-37 | P2 | Coordinator | Engineering teams and roles | Director, lead, implementation pods, QA and independent reviewer operate under one deterministic coordinator; roles cannot mint authority or bypass serialized integration. |
+| CAP-37 | P2 | Coordinator + Runtime | Engineering teams and roles | Later several-agent work is composed as CAP-49 flows on the same execution runtime. Role coordination cannot introduce a second runtime, mint authority or bypass independent review or serialized integration. |
 | CAP-38 | P1 | Coordinator | Independent review and repair | Review the immutable candidate and evidence in a separate context; verify findings and correction limits. An implementer's model assessment is not independent acceptance. |
 | CAP-39 | P0 | Coordinator + Host | Truthful progress and completion | Distinguish running, queued, waiting, blocked, failed, locally verified, independently reviewed and delivered; percentages name their denominator and unknown scope. |
-| CAP-40 | P2 | Coordinator + Host | Typed visual workflows | Compose generative and deterministic nodes with schemas, provenance, pause/retry and effect ownership; execute through existing runtimes rather than a new GUI scheduler. |
+| CAP-40 | P2 | Coordinator + Host | Typed visual workflows | Present CAP-49 typed graphs with schemas, provenance, pause/retry and effect ownership through optional clients; execute on the same runtime, with no engine desktop interface or separate GUI scheduler. |
 | CAP-41 | P2 | Coordinator | Team administration | Optional enterprise identities, RBAC and organization policies constrain models, tools and projects; the single-user local path needs no organization login. |
 | CAP-42 | P1 | Coordinator + Runtime | Auditable action history | Record authorization, effect identity, outcome and evidence with redaction, retention and export; audit storage is not an excuse to log secrets or raw prompts. |
 | CAP-43 | P2 | Runtime + Host | Private and offline deployment | Qualify proxy/CA configuration, offline installation, model/doc packs and update channels; air-gapped claims require actual no-egress validation. |
-| CAP-44 | P1 | Runtime | Governed extensions | Admit versioned MCP/tools/plugins with provenance, capabilities, scoped credentials, lifecycle limits and revocation; untrusted extensions cannot grant permissions. |
+| CAP-44 | P1 | Runtime | Governed extensions and tools in both directions | Consume other programs' MCP tools under a separate off / ask each time / allow grant per tool; state-changing calls ask by default and show the exact call. Offer engine runs through its MCP server under the same permissions. Preserve provenance, scoped credentials, lifecycle limits and revocation; untrusted results and extensions cannot supply instructions, permissions or approvals. |
 | CAP-45 | P0 | Host + all owners | Usable Linux distribution | Validate install, upgrade, rollback and uninstall on the declared hardware/distro matrix, keyboard and assistive-technology workflows; a developer screenshot is not qualification. |
 | CAP-46 | P0 | All owners | Reproducible evaluations | Publish exact real-repository/model/hardware profiles and outcomes, including interruption, adversarial and recovery tests; distinguish fake-provider, local-model and independent evidence. |
 | CAP-47 | P1 | Host + all owners | Private support and diagnostics | Provide inspectable, manually exported redacted support bundles and outcome evidence; no automatic telemetry or crash uploads and no private identities in public artifacts. |
 | CAP-48 | P1 | All owners | Sustainable licensing and packaging | Reconcile root licenses, SPDX/package metadata, notices, dependency/model obligations and contribution provenance; validate paid-pilot value before pricing or release claims. |
+| CAP-49 | P1 | Runtime | Recorded typed flows | Compose model, tool, memory and approval steps as a typed graph on the existing runtime. Record every step's inputs, outputs, order, retries and limits; replay the record exactly without repeating effects, or re-run from a step with current authority. Determinism is the engine's, not a promise of identical new model output. Planning only under Decision 0205. |
+
+## One runtime for model-driven work
+
+[Decision 0205](docs/decisions/0205-one-runtime-for-model-driven-work.md) records
+the owner's planning direction: one engine owns the model/tool loop, permissions,
+approvals, budgets and stop. CLI use is sufficient without a host, and a
+conversation host remains usable without this engine. API, approval and run
+records must support a folder-free run using only tools offered by other
+programs. Check this when an interface is next touched; closed rows stay closed.
+Tool, file, page and memory text is data, never instructions or authority.
+There is no engine desktop interface or authoritative long-term memory.
+CAP-49 is unimplemented planning scope; current coding and measure-first
+priorities remain unchanged. Later T-316 qualifies everyday-tool behavior under
+CAP-03 only after the required coding measurement, without displacing current
+coding priorities.
 
 ## Open study: how agent memories are linked
 
@@ -114,10 +131,12 @@ local model inference and cloud model inference are three distinct disclosures.
    Rust. Reuse proven crates and established toolkits. Existing build/test scripts and
    independently packaged external inference engines, browsers, language servers and CLI
    providers are explicit integration boundaries, not a demand to rewrite those projects.
-2. AgentMage owns the task/tool/research/context execution loop. CodingMage owns campaigns,
-   role scheduling, repository integration and review policy. USTE owns graph/content storage
-   and bounded source-backed retrieval, not user permissions or agent execution. Hosts own
-   presentation and onboarding, not another authority engine.
+2. AgentMage owns the model/task/tool/research/context execution loop and CAP-49 flows.
+   A coordinator may select roles, campaigns and integration policy on this runtime;
+   it does not introduce another runtime. The Memory role owns graph/content storage
+   and bounded source-backed retrieval, not user permissions or agent execution. Hosts
+   own presentation and onboarding, remain usable independently and are not required
+   by the engine's CLI; AgentMage builds no desktop interface of its own.
 3. Start with pinned Rust crates or versioned local service adapters, not wholesale repository
    migration. Define run/task/repository identity, schema version, capability negotiation,
    event sequence, idempotency, typed errors, cancellation, deadlines and authorization.
@@ -126,6 +145,8 @@ local model inference and cloud model inference are three distinct disclosures.
    inference process; consumer-specific launchers cannot race independent GPU allocations.
    Defer optional integrations until standalone behavior and both adapter sides are qualified.
 5. Memory initially remains a rebuildable derived index with provenance and per-scope budgets.
+   The runtime owns no authoritative long-term memory; it asks a memory service
+   through a versioned contract. Memory-step results are untrusted data, not authority.
    The [open linking study](#open-study-how-agent-memories-are-linked) governs later
    method selection; no graph-linking algorithm is presumed qualified.
    Test corrections, stale generations, revocation, reopen and source deletion before promotion.

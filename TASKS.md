@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The owner's [one-runtime direction](docs/decisions/0205-one-runtime-for-model-driven-work.md)
+is planning only: CAP-49 typed flows share the existing execution runtime;
+CAP-44 covers MCP tools in both directions, and later T-316 measures everyday
+tool use under CAP-03. CLI independence, folder-free runs, untrusted-data
+boundaries and external memory authority apply when interfaces are next touched.
+No row is reopened or closed, no measurement is interrupted, and current coding
+and measure-first priorities remain unchanged. T-316 is open for later work.
+
 The [27B development measurement](docs/evidence/t303-qwen-measurement-2026-11-12.md)
 completes all 30 frozen development tasks at source
 `42612ca9787f07e4df79402e6d92f39f578e5c67`: 8/30 strict ungraded
@@ -2547,6 +2555,7 @@ hidden tests or weaken thresholds. Desktop UI work is deferred to a separate she
 | [ ] | T-309 | T-301 through T-308 implementations | Revisit all three-strike findings; review permissions and sandbox across tools. Earlier rows must close or name an explicit owner-action blocker. |
 | [ ] | T-310 | T-309 | Full gate including the unchanged long documentation gate once, end-to-end demonstration and independent PASS. Then prepare OWNER-TEST-READY with exact build/install/start commands, guide and unexercised owner checks; no public release. |
 | [ ] | T-315 | Starts no earlier than the first CAP-29 work; preserves current queue order | Study how agent memories are linked under [Decision 0204](docs/decisions/0204-open-study-memory-linking.md). Compare named, versioned, replaceable linking methods over the same facts, with per-link provenance and set-wide disabling without rewrites. Keep source-backed memory writing and context selection replaceable and record all method names/versions in run evidence. Fixed-task comparisons report needed facts reached, wrong facts brought into context, cost and task outcomes; adopt by measurement without changing thresholds or choosing methods on held-out results. Planning only now; implementation evidence and independent PASS required for closure. |
+| [ ] | T-316 | Later CAP-03 work, after MEASURE FIRST coding measurement; preserves current coding priorities and queue order | Under [Decision 0205](docs/decisions/0205-one-runtime-for-model-driven-work.md), freeze a synthetic everyday-tool task set, its development/held-out split and qualification scores before any run. Score the right tool and exact arguments, no invented result, asking first respected, and instructions hidden in tool results or documents not followed. Measure per model profile and again after changes to prompts, tool descriptions, runtime or profile. Never tune on held-out results or weaken existing thresholds. Planning only now; actual evidence and independent PASS required for closure. |
 
 ## Current Delivery Amendment (2026-09-24)
 

@@ -8,6 +8,8 @@ Rust-first delivery direction and ownership. TASKS.md remains the only completio
 This is accepted implementation scope, not evidence that the capabilities already work.
 Existing security, independent-review, licensing and release gates remain in force.
 
+[Decision 0205](docs/decisions/0205-one-runtime-for-model-driven-work.md) plans one standalone runtime for model-driven work, bidirectional MCP tools and recorded typed flows, including folder-free runs; CLI and host work independently, no engine desktop or authoritative long-term memory is added, and later CAP-03 everyday-tool qualification follows the required coding measurement without changing current priorities or claiming implementation.
+
 Finish and reconcile the standalone coding harness (48.2.4-48.2.6 and 50.2.4), then implement the P0 regular-search and bounded deep-research vertical slice. Continue through dependency-ready P0/P1 runtime work before P2. Existing independent acceptance stays open.
 
 | | |
