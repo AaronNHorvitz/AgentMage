@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The [retained timeout diagnosis](docs/evidence/t303-timeout-diagnosis-2026-11-12.md)
+audits all 45 recorded timeouts against 260 original manifest-bound inputs:
+38 emit no final text; seven emit some text before cancellation. All 45 backend
+stops report no context truncation. Reasoning remains an unproven cause; the
+next controlled profile experiment retains existing limits and safety boundaries.
+This audit runs no model or task, changes no source or evaluation input, and
+claims no improvement. T-303/T-306 remain open with independent review required.
+
 The owner's [one-runtime direction](docs/decisions/0205-one-runtime-for-model-driven-work.md)
 is planning only: CAP-49 typed flows share the existing execution runtime;
 CAP-44 covers MCP tools in both directions, and later T-316 measures everyday
@@ -9,6 +17,13 @@ tool use under CAP-03. CLI independence, folder-free runs, untrusted-data
 boundaries and external memory authority apply when interfaces are next touched.
 No row is reopened or closed, no measurement is interrupted, and current coding
 and measure-first priorities remain unchanged. T-316 is open for later work.
+The retained [independent planning review](docs/reviews/f619ec3cdb68-shared-runtime-plan.txt)
+returns **Verdict: PASS** for exact commit
+`f619ec3cdb681bc399bb779285f837332f76d3b2`, with no high or medium finding.
+Its low notes remain later T-309 backlog: default consumed-tool grants and
+untrusted tool descriptions; fixed flow order, retry policy and limits; credential
+references and prompt retention; wording of the already-binding untrusted-data
+rule; current roadmap-count pointers. No planning implementation is claimed.
 
 The [27B development measurement](docs/evidence/t303-qwen-measurement-2026-11-12.md)
 completes all 30 frozen development tasks at source

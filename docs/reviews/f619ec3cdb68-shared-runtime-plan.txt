@@ -1,0 +1,144 @@
+Commit: f619ec3cdb681bc399bb779285f837332f76d3b2
+Scope: shared-runtime-plan
+
+# Independent review: one-runtime planning record (T-316 planning only, non-closing)
+
+Reviewer: Claude Opus 5.5, separate read-only session, pinned checkout /lane/review-checkout.
+Range reviewed: 0a412ad80b13792477045da960b7bb9007b7990d..f619ec3cdb681bc399bb779285f837332f76d3b2
+(one commit, five documents, +161/-11). The preceding measurement commit 0a412ad8 is not judged here.
+
+## Methods
+
+1. Confirmed the commit: `git rev-parse HEAD` = `git rev-parse f619ec3c...` =
+   f619ec3cdb681bc399bb779285f837332f76d3b2; clean checkout; single commit in range.
+2. Read IP-POLICY.md, the owner note "Owner note to record (2026-11-11, late evening)" in
+   /lane/control/brief.md (items 1a-1d, 2, 3, 4, 5, 6), the matching review-brief note, MEASURE FIRST,
+   the 2026-11-02 directive, the 2026-10-25 owner decision, Decision 0204 and the roadmap's open
+   linking study, and the full diff of all five changed files.
+3. Checked the shared inputs' SHA-256 values (all four match the request). Read the scope-check script
+   before running it: it only runs `git show`, `git diff`, `git ls-files` and reads files, with no
+   writes or network access. It asserts the 131 old ledger rows stay identical, exactly one new
+   unchecked T-316 row, the old plan below the active queue is byte-identical, the changed-file set is
+   exactly five, the status model and scoreboard are unchanged, CAP-01..CAP-49 are ordered, the new
+   documents' local links resolve, and whitespace is clean. I judged these assertions adequate for
+   what they claim.
+4. Ran the exact reproduction (below), plus one ledger-parsing test to show the new row breaks no
+   TASKS.md consumer.
+5. Read every changed sentence against each owner item. Checked the added text for product names,
+   private-project names, host paths, usernames and patents. Checked consistency across Decision 0205,
+   the roadmap rows and section, the PRD line, the TASKS preamble and row, and the evidence file. Also
+   checked against Decision 0204 / CAP-29 and against existing CAP-34/CAP-42 security and logging rows.
+6. No model, GPU, candidate, held-out task or build was run, and none is required: this is
+   documentation-only planning. Runtime, permission and replay behaviour is unverified by design. No
+   UI is in scope.
+
+## Exact commands and results
+
+```bash
+set -euo pipefail
+test "$(git rev-parse HEAD)" = f619ec3cdb681bc399bb779285f837332f76d3b2          # ok
+sha256sum /lane/reviews/f619ec3cdb68-runtime-plan-*                               # 4/4 match request
+python3 -B /lane/reviews/f619ec3cdb68-runtime-plan-check_scope.py
+#   result PASS; existing_rows_preserved 131; new_unchecked_row T-316; old_plan_byte_identical true;
+#   CAP-01 through CAP-49 unique and ordered; new_document_local_targets_checked 5;
+#   runtime_source/scoreboard/status_model changed false
+review_output_dir=$(mktemp -d /lane/state/tmp/runtime-plan-review-XXXXXX)          # .../runtime-plan-review-Ex7NWq
+mkdir "$review_output_dir/bin"; ln -s /lane/reviews/42612ca9787f-a4b-node "$review_output_dir/bin/node"
+export PATH="$review_output_dir/bin:$PATH"
+sha256sum /lane/reviews/42612ca9787f-a4b-node   # d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c (matches)
+python3 -B scripts/local_agent_fast_gate.py --base 0a412ad80b13792477045da960b7bb9007b7990d
+#   markdownlint-cli2 "Linting: 5 files", "Summary: 0 issues in 0 files"; FAST GATE: PASS
+node --input-type=module -e '<direct lint of the five files, as in the request>'
+#   checked: 5 keys (all five files); issues: []; exit 0
+git diff --check 0a412ad80b13792477045da960b7bb9007b7990d --                      # exit 0
+git status --short                                                                 # empty
+python3 -B -m unittest tests.test_amendment_work_selection                         # Ran 10 tests, OK
+```
+
+My outputs match the builder's retained fast-gate log (FAST GATE: PASS) and direct-lint JSON
+(five keys, zero issues).
+
+## Content against the 2026-11-11 owner note
+
+| Owner item | Where recorded | Result |
+| --- | --- | --- |
+| Decision | docs/decisions/0205-one-runtime-for-model-driven-work.md | Present; status "Accepted planning direction; no new capability implemented". |
+| 1a loop owned by engine | 0205:10-15; roadmap integration rule 2 | Matches. |
+| 1b MCP both directions, per-tool off/ask/allow, state-changing asks by default with exact call, runs offered via MCP server | 0205:17-25; CAP-44 | Matches; adds that a grant cannot override scope/confinement and an MCP caller cannot approve its own effects. |
+| 1c new flows row: typed graph, every step recorded, exact replay, re-run from a step, engine determinism | CAP-49; 0205:27-43 | Matches. Replay runs no effects and does not regenerate; re-run uses current authority. See L-2 on "fixed". |
+| 1d several agents later as flows, no second runtime | CAP-37; 0205:40-43 (names T-313) | Matches. T-313's row text and queue position are unchanged; no new dependency is added. |
+| 2 no desktop; no authoritative memory; text is data | 0205:13-15, 50-56; CAP-29; CAP-40; rule 5 | Matches. CAP-29 agrees with Decision 0204 (linking stays open, sources stay authoritative). |
+| 3 folder-free API/approval/run record; check on next interface touch; closed rows not reopened | 0205:46-49; roadmap section; TASKS preamble | Matches. |
+| 4 CLI sufficient; host works without engine; engine needs no host | 0205:11-15; rule 2 | Matches. |
+| 5 one later row under CAP-03 with all criteria | TASKS T-316; CAP-03; 0205:58-67 | Matches every listed criterion: right tool and exact arguments, no invented result, asking first, hidden instructions in tool results/documents, scores frozen before runs, per profile and after prompt/tool-description/runtime/profile change, no held-out tuning, starts after the MEASURE FIRST coding measurement. |
+| PRD line | PRD.md:11 | Exactly one new line. |
+| 6 IP: own words, no other product, private project, future product or patent | added text | No product, private-project or future-product name added. "Model Context Protocol" is the owner-named open protocol, used descriptively. The commit *removes* two sibling names from integration rule 2. No host path, username or credential added. |
+| No order change, MEASURE FIRST not interrupted, nothing claimed built | 0205:69-78; TASKS preamble; evidence | Holds. Status model, scoreboard, runtime source, prompts, tasks and hidden tests are unchanged (verified by the script and the diff stat). The scoreboard's newest line is dated 2026-11-12; a planning-only batch changes nothing the model sees, so it needs no new line. |
+| Memory linking stays open (2026-11-11 note) | Open-study section unchanged; CAP-29 still links it | No linking method is presented as settled. |
+| Interface mediums (folder-required shape, second runtime, desktop, in-engine authoritative memory) | n/a | No interface is touched. The plan forbids all four. |
+
+Evaluation integrity: no evaluation task, hidden test, threshold, held-out run or scoreboard number is
+changed or added. T-316 restates the held-out and threshold rules. No issue.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (backlog; none blocks this planning record):
+
+- **L-1 (low, permission semantics): the default grant for a consumed MCP tool is unspecified and
+  rests on an unstated way of classifying tools as state-changing.**
+  docs/decisions/0205-one-runtime-for-model-driven-work.md:22 and CAPABILITY-ROADMAP.md:70 say "a
+  tool that changes state asks by default". They do not say what a tool with unknown effects defaults
+  to, or that a server's own description or hints (for example a server marking its tool read-only)
+  cannot lower that default. Such hints are untrusted text from the other program. If they set the
+  default, they would work as a permission, which is the boundary 0205:54-56 forbids.
+  Reasoning: a hostile local MCP server marks a file-deleting tool read-only, and a later
+  implementation that trusts the hint grants it "allow" without asking.
+  Fix: add to 0205 and CAP-44 that every consumed tool starts as "ask each time" (or "off"), and that
+  only the user or engine policy, never server-supplied metadata, can make it "allow". Also name tool
+  descriptions as untrusted text that T-316's injection cases should include.
+- **L-2 (low, determinism wording): the owner's "order, retries and limits are fixed" became
+  "recorded".** 0205:39 and CAP-49 bind order, retries and limits in the record but never say that
+  model output or tool text cannot change them during a run. Fix: add one sentence saying the flow
+  definition and engine policy fix step order, retry policy and limits before a step runs; model
+  output may only choose among branches the flow declares; tool, file, page or memory text cannot
+  change them.
+- **L-3 (low, logging of private content): CAP-49's "record every step's inputs and outputs"
+  conflicts with CAP-42's "audit storage is not an excuse to log secrets or raw prompts" without
+  saying how the two fit together.** 0205:30-34 sends sensitive content to protected storage but
+  allows credentials to be recorded there. Fix: state that brokered credentials (CAP-34) are never
+  step inputs and are recorded only as references, and that full prompts in flow records fall under
+  the CAP-42 redaction and retention rules (deletion makes exact replay unavailable, which 0205:33-34
+  already says).
+- **L-4 (low, wording): the TASKS.md preamble (TASKS.md:7-9) lists "untrusted-data boundaries" among
+  rules that "apply when interfaces are next touched".** This can read as if that boundary is
+  deferred, but it already binds the current kernel (PRD.md:610) and 0205:54-56 states it without
+  conditions. Fix: say the untrusted-data rule is already in force, and that only the folder-free and
+  CLI-independence checks wait for the next interface change.
+- **L-5 (low, stale count): PRD.md:5 ("The 48-capability roadmap"), which is in a changed file, and
+  IMPLEMENTATION-AMENDMENT.md:8 ("defines CAP-01 through CAP-48") are now stale.** The same phrase
+  appears in README.md:9, AGENTS.md:12 and IMPLEMENTATION-PLAN.md:5. Fix: update the count or drop it
+  from the current pointers. Leave TASKS.md:2562, which must stay byte-identical, and the historical
+  decision 0081 as they are.
+
+Out of scope (backlog observation, not a finding on this commit): CAPABILITY-ROADMAP.md:18 and :177,
+and many older files, still name the Coordinator and Memory sibling projects. The repository presents
+them as permissively licensed public engines (CAPABILITY-ROADMAP.md:174-177), and this commit adds no
+occurrence; it removes two. I cannot tell from the repository whether the owner counts them as
+"private siblings" under the 2026-10-25 decision. The owner should confirm before any public release.
+
+## Per-row result
+
+- **T-316** (planning only, non-closing): the planning record is accurate and complete against the
+  owner note, and claims nothing built. The row stays open; closing it needs real evidence and an
+  independent PASS, which nothing here provides.
+- **CAP-03/29/37/40/44/49 direction**: consistent across decision, roadmap, PRD, TASKS and evidence.
+  CAP-01..CAP-48 identifiers are preserved and CAP-49 is new.
+- **T-303, T-306, T-315** and all other rows: unaffected; nothing closed or reopened, and the order of
+  work is unchanged.
+
+These checks show only that the documents are consistent and match the owner note. They do not show
+any runtime, permission, MCP, flow or replay behaviour, any qualification, or any certification.
+
+Verdict: PASS
