@@ -1,0 +1,140 @@
+Commit: 86495ed05152ca8749cf801d59b802b55b8fb276
+Scope: complete-response-31b-measurement
+
+Reviewer: independent session (Claude Opus 5.5, extra-high effort). Read-only checkout at
+/lane/review-checkout, HEAD confirmed as 86495ed05152ca8749cf801d59b802b55b8fb276; `git status --short`
+was empty before and after. Row: T-303 / T-306, a development measurement that does not close a row.
+Base 1fbeaceffc38fecb707cb7c71efc34de6ddb2626.
+
+## Scope of the increment
+
+`git diff --stat 1fbeacef..86495ed0` lists three files, all documentation: TASKS.md (+10 lines
+inserted at the top of the active queue, no other line changed), docs/evidence/coding-scoreboard.md
+(+33 lines appended, earlier prefix unchanged) and the new docs/evidence/t303-complete-31b-2026-11-12.md
+(+149). `git diff --name-only 974d2bb5..86495ed0` contains only TASKS.md, docs/evidence/* and
+docs/reviews/*. None of those paths is in the 2,283-file frozen repository input set. So the measured
+source is unchanged from the repaired source 974d2bb5, and no product source, prompt, profile,
+threshold, hidden test, permission or SBOM file changed.
+
+## Methods, commands and results
+
+1. `git diff --check 1fbeaceffc38fecb707cb7c71efc34de6ddb2626 --` → exit 0.
+2. Read all 78 lines of /lane/reviews/complete-31b-20261112-verify-archive.py before running it. It
+   streams the tarball (`r|gz`) and calls `extractfile` only into memory. It rejects absolute paths,
+   `..`, non-files, token or key filenames and `.gguf`. It hashes every member against the manifest. It
+   imports and executes no archived code. Command:
+   `python3 -B /lane/reviews/complete-31b-20261112-verify-archive.py` → `"status": "PASS"`,
+   verified_files 41467, repository_inputs 2283, private_inputs 16, tasks 30,
+   strict_ungraded_proposals 4, request_check_seconds 1632.392718867006,
+   reserved_job_wall_seconds 2174.622271095999, counter_coverage 30, observed input/output
+   215953/38865. Causes: edit 1, format 25, ungraded-proposal 4.
+3. Ran the requested bindings block with `python3 -B` →
+   `PASS: 16 retained bindings and three document hashes`. The bindings file hash is 7de03948…f9bd34b.
+4. Independent archive analysis. I copied the non-snapshot control and record files, and separately the
+   31B candidate tree (19,241 files, data only), from the tarball into a private scratch directory
+   outside the repository. I deleted that directory afterwards. No archived binary or script was
+   executed.
+   - Per-task table: I parsed all 30 rows of the evidence table and compared each one with record.json,
+     request.json (`max_tokens`), checked.json `error`, the backend-slice eval counters and
+     `generation_seconds` to 3 decimals. **0 mismatches.** For every task, input + allowance + 32 =
+     32768. The preflight rendered-input count equals the backend's prompt-eval count. The input sum is
+     215953. Inputs range from 3225 to 9734 and allowances from 23002 to 29511.
+   - Terminals: all 30 are `complete` with finish `stop`, and every request has `include_usage: false`
+     (this supports "API usage was not requested"). All 30 backend stops have `truncated = 0`, and every
+     observed output is below its allowance.
+   - Settings: all 15 batch reports show `response_mode: complete`, idle = total = 300000 ms,
+     `settings_revoked` set, `resource_guard_error` null and API SHA 41fa8967…26e (matches the evidence).
+     The model SHA is 05e0fa14…42a7 with 17,155,893,600 bytes. Launch flags include `--temp 0`,
+     `--seed 42`, q8_0 K/V caches, batch 256 / ubatch 128, threads 4 and `enable_thinking: false`.
+     These match the evidence. The served context is 32768.
+   - Platform: profile `platform_tuple.disposition` reads "changed since preparation; exact coding
+     campaign must re-evaluate". The nvidia package is xorg-x11-drv-nvidia-cuda-615.71.09-3.fc44.x86_64
+     and the model's `coding_qualification` is "not-qualified". The evidence file discloses all of this.
+     cleanup-31b.json shows `all_reported_platform_tuples_match: true`.
+   - Guard-only preflight refusals: gemma4-31b-06-reservation-resume2.log,
+     -08-reservation-resume4.log and -10-reservation-resume5.log contain only the build wait, the GPU
+     wait and "GPU baseline exceeds 4 GiB or hardware is ambiguous.". All three have the same SHA
+     67a4a981…, which matches resource-refusal-31b-resume{2,4,5}.json. Those files record 6, 8 and 10
+     completed tasks, no model or API start and no next directory. The refusals are not counted in
+     job wall: the 15 completed jobs' `reserved_work_seconds` add up to the published 2174.622.
+     The original run and resume1 and resume3 were queue-only stops of the builder's own process groups
+     before any GPU acquisition. They are documented in queue-only-31b-*.json, and their reservation
+     logs show only the build-slot wait. Each completed pair ran exactly once; no pair was replayed.
+   - 30-second pause: `diff controller_resume5_31b.py controller_resume6_31b.py` shows only the log
+     basename and a 30 × 1 s sleep. The sleep is placed after `subprocess.run([... build-slot ...
+     gpu-slot ... batch.py])` returns, so it is outside both reservations. It changes no guard, request
+     or budget. Resume6 began at first=10, which matches "after the ten-task checkpoint".
+   - Shared copies: the audit, cleanup and reproduction JSONs and the audit and verify-proposals scripts
+     in /lane/reviews are byte-identical (SHA-256) to their archived copies.
+   - Secrets: batch-report `settings` contain no key. Archive member names include no token or api-key
+     file (the verifier asserts this). A grep of the 31B records for bearer or key literals found none.
+5. Source snapshot: for each of the 2,283 entries in frozen-inputs-v2.json, compared
+   `git show 974d2bb55afa6be47bd58ffcf1dd30a6450f70cd:<path>` with the frozen hash → **0 mismatches**.
+6. Independent context/check reproduction. I copied the archived 24-line helper main.rs and Cargo.lock
+   into a scratch crate. Its path dependency points at this checkout's unchanged
+   capabilities/repository-map. Build:
+   `CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot cargo build --offline --locked --release`
+   → Finished (38.74 s). My helper's SHA is 41b83749…04ec, different from the builder's because the
+   build path differs; I did not use the builder's binary.
+   I then wrote my own script, using this checkout's scripts.coding_eval and coding_eval_suite
+   (development tasks and projection only; hidden tests are not loaded). For each of the 30 tasks it
+   checked: the log hashes against batch.json; the helper context equal to context.json; the request
+   messages equal to the context messages; the event text equal to answer.txt; the helper strict check
+   equal to checked.json; acceptance equal to `generation_succeeded`; and `read_candidate(...)` equal
+   to the base projection with the accepted change applied.
+   Result: **reproduced 30, accepted 4, all development tasks covered**. No candidate or test ran.
+7. `python3 -B scripts/local_agent_fast_gate.py --base 1fbeaceffc38fecb707cb7c71efc34de6ddb2626` →
+   git diff --check exit 0 and `--lint-untracked` exit 0. The markdownlint step exited 127 with
+   "Missing executable: node; no automatic download", so the gate reported **FAST GATE: FAIL**. Node is
+   not mounted in this lane (/lane/state/tooling is absent), and per the request I downloaded nothing.
+   **I could not run markdownlint myself.** Compensating checks:
+   - The builder's hash-bound logs show the initial missing-PATH failure (doc-gate.log) and the rerun
+     (doc-gate-node.log and doc-gate-final.log: "Linting: 3 files … 0 issues", FAST GATE: PASS).
+   - The recorded node SHA d1de76d8…bd932c is the same pinned binary accepted in earlier retained
+     reviews.
+   - A scripted check of the three files found no trailing spaces, tabs, repeated blank lines, missing
+     final newline, inconsistent table column counts or malformed headings. The repository's
+     .markdownlint-cli2.jsonc disables MD013, MD022, MD024 and MD060.
+8. Public hygiene: the added lines contain no host path, username, hostname, email, credential or
+   private project name. Model IDs (gemma4-31b) appear only as identifiers of the measured local
+   artefact, as in earlier PASSed entries, not as branding. No other agent product is named or compared.
+   I made no patent search.
+
+## Claim checks
+
+- 4/30 strict ungraded proposals; 25 format and 1 exact-edit refusals; does not fit: 0. Verified (steps
+  2, 4 and 6).
+- Request/check time 1632.393 s; GPU job wall 2174.622 s / 36.244 min (2174.622271/60 = 36.2437);
+  15 reservations; counters 215953 / 38865 with 30/30 coverage. Verified. The evidence states that
+  active kernel time was not measured.
+- First-attempt and within-budget task passes "Unavailable"; held-out "Not run". The audit summary
+  has `first_passes`/`within_budget_passes` null, and no record is graded, uses the native harness or
+  has retries (verifier asserts). Consistent.
+- MEASURE FIRST: the scoreboard has a dated line for this batch. It states the changed variables
+  (complete framing, idle 300 s instead of 60) and the context/output budgets with their formula.
+  Does-not-fit is counted apart from model failures, and every number traces to raw logs. The ledger
+  and the earlier scoreboard prefix are unchanged.
+- Evaluation integrity: no held-out run, hidden test or candidate execution. The source is unchanged
+  from the PASSed repair. No prompt or profile was tuned. The increment contains no task content beyond
+  IDs. Failures are counted, not dropped.
+- "Four prepared profiles remain before tuning": A4B and 31B of six are done. Consistent.
+
+## Findings
+
+High: none. Medium: none.
+
+- **L1 (low, backlog):** docs/evidence/coding-scoreboard.md:1310-1316 (the 31B changed-variables paragraph) does not mention
+  that the platform tuple changed since preparation and is not qualified for coding. The evidence file
+  says so at docs/evidence/t303-complete-31b-2026-11-12.md:44-46, and the A4B entry was amended for
+  this in its own scoreboard note (low L3 of the prior review). Fix: add one sentence to the 31B
+  scoreboard entry in a later additive note. No number changes.
+- **Review limitation (not a finding):** markdownlint was not run in this lane because Node is absent
+  (step 7). Lint is attested by the builder's hash-bound logs plus my scripted structural check.
+
+## Per-row result
+
+- T-303 / T-306 (development measurement that does not close a row): the measurement is supported and
+  reproduced independently, with no high or medium finding. The rows stay open, as claimed; nothing
+  closes or is ticked.
+
+Verdict: PASS
