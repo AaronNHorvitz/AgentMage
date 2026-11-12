@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The [A4B raw-JSON instruction repeat](docs/evidence/t303-raw-json-a4b-2026-11-12.md)
+completes all 30 frozen development tasks at source `a99fe467c72e2625022b639d8d38b72e845f612a`:
+1/30 strict ungraded proposals, with task grades unavailable. No candidate tests,
+retries or held-out tasks ran. This batch changes no product source; all six prepared model repeats are complete.
+Coding-loop measurement remains partial; task grades and retries remain unavailable.
+Largest individual current-source refusal: the A4B profile's 29 refusals (generation-refused:error:chat.transport.limit).
+Independent core review is required; T-303/T-306 remain open without new rows or ticks.
+
 The retained [independent E4B measurement review](docs/reviews/ed6dd3f62ae2-raw-json-e4b-measurement.txt)
 returns **Verdict: PASS** for exact commit
 `ed6dd3f62ae225367b08b0134e1b792cea5d6e31`, with no high or medium finding.

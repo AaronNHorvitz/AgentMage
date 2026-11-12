@@ -1137,3 +1137,34 @@ Counts and earlier entries remain unchanged. The additive A4B reporter uses
 "cause" for a single cause and "tied causes" only for a tie; sealed E4B scripts
 remain unchanged. Low L2's private-archive hygiene remains T-309 backlog.
 No row closes.
+
+## Raw JSON instruction A4B development repeat — 2026-11-12
+
+Source: `a99fe467c72e2625022b639d8d38b72e845f612a`. All 30 frozen development tasks ran once on `gemma4-26b-a4b`. **Partial path: Rust source selection and credential-owning chat, followed by strict edit checking only when a complete answer is available. First-attempt and within-budget task passes remain unavailable, not zero.** No candidate tests, feedback, retries, approvals, apply, commit, push or held-out tasks ran. Native executable trust and the absence of the expected original grading-controls receipt remain unresolved; no control is bypassed or reconstructed. Selection receives only the statement and editable frozen base file; full repository analysis and retrieval are not measured. A strict proposal is an ungraded edit, never a solved task.
+
+This is the sixth prepared model measured after the raw-JSON instruction change, with no intervening product change. Versus this profile's preceding complete repeat, the fixed generation instruction adds an original JSON syntax example and raw-object and string-escaping requirements. Source selection and strict checking stay unchanged. The profile retains empty template kwargs; runtime and model bytes, temperature zero, seed 42, 32768-token context, 32768-byte source selection, output formula `min(32768, 32768 - rendered_input_tokens - 32)`, 300/60-second total/idle, 310-second relay/client and byte ceilings are unchanged. 32K is the largest prepared context tested, not an exhaustive hardware maximum. The source-built effect-free helper uses the unchanged reviewed chat-only API binary. The product proposal route still caps output at 4096; this measurement adapter uses the existing chat allowance.
+
+| Date (UTC) | Model | Context tokens | Output-token allowance | First / within budget task passes | Strict ungraded proposals | Request/check s | Reserved job wall s | GPU work min |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | gemma4-26b-a4b | 32768 | 23004–29513 | unavailable / unavailable (30 tasks) | 1/30 | 4192.995 | 4734.106 | 78.902 |
+
+GPU work minutes mean reserved model-job wall/60, including verification, loading and cleanup, excluding queues and wrapper checks. Active GPU kernel time was not measured. Request/check time excludes preparation and preflight.
+
+| Outcome / cause | Tasks |
+| --- | --- |
+| `generation-refused:error:chat.transport.limit` | 29 |
+| `ungraded-proposal` | 1 |
+
+Does-not-fit tasks: 0. Complete answers reaching strict checking: 1/30. One attempt per task, zero retries. All 15 two-task reservations use both required wrappers, complete and release the shared slots; their model and API processes are reaped and temporary model keys/sockets removed. No model was downloaded.
+
+Unambiguous backend counters cover 1/30 tasks: 5395 input / 8344 output tokens. Other counters remain unknown; API usage was not requested.
+
+The 29 size-limit refusals report that the server response exceeded a size limit. The existing 4 MiB stream-body ceiling bounds these attempts before the published token allowance. Stop totals minus tokenizer preflight are available for 29/29 size-limit refusals and put their cut at about 16,195–16,270 generated tokens, without context truncation. This is a stream-size limit, not evidence of token exhaustion or an infrastructure fault. Changing the ceiling remains T-309 backlog unless a high/medium finding or a row completion requirement needs it.
+
+Strict ungraded proposals change from the preceding published full A4B measurement's 0/30 to 1/30 in this repeat. This new instruction repeat reports current-source observations, without isolating the instruction from changes to excerpt delivery or rendered output reservation. It establishes neither task correctness, generalization nor a model role. No new private comparison receipt is claimed.
+
+Across the six current-source published repeat lines (180 attempts), strict ungraded proposals total 69; task pass rates remain unavailable. The largest aggregate refusal cause is `generation-refused:error:chat.transport.limit` (48). These totals add the existing cause tables; they do not combine partial paths into a full coding workflow or qualify a model.
+
+Largest individual refusal count in this repeat: 29; cause: generation-refused:error:chat.transport.limit. Across the six current-source model repeats, the A4B profile's 29 refusals (generation-refused:error:chat.transport.limit) remain the largest individual refusal cause. All six prepared current-source repeats are complete. The next product work must address the largest observed failure cause, subject to high/medium review findings; these partial-path measurements do not complete coding-loop measurement. No profile or model role is adopted. Further limit, deadline, cancellation and bookkeeping features remain T-309 backlog unless an open high/medium finding or the row's own completion requirement needs them. T-303/T-306 remain open, without new rows, sub-rows or completion ticks.
+
+See [evidence](t303-raw-json-a4b-2026-11-12.md) for per-task observations, frozen bindings and reproduction.
