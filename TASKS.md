@@ -2,6 +2,16 @@
 
 ## Active queue: local agent mission
 
+The retained [raw-JSON measurement review](docs/reviews/52c3f10029e0-raw-json-generation-measurement.txt)
+returns **Verdict: FINDINGS** for `52c3f10029e0dfb786993f26e4c45b586ff5ffba`.
+Medium M1 is corrected by an additive, manifest-verified fence-shape receipt:
+all 25 format refusals begin with a JSON fence; 19 have a standalone closing
+fence and six join it to the last line. The evidence binding and wording are
+corrected; a dated scoreboard corrigendum preserves all earlier entries.
+Strict proposal/refusal counts do not change. Low L1 joins T-309 backlog:
+scrub the private helper dependency path before any public archive distribution.
+Independent re-review is required; neither T-303 nor T-306 closes.
+
 The [raw-JSON generation measurement](docs/evidence/t303-raw-json-generation-2026-11-12.md)
 completes all 30 development tasks on the 31B profile at source
 `a99fe467c72e2625022b639d8d38b72e845f612a`: 4/30 strict ungraded proposals,

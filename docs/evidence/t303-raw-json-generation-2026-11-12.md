@@ -94,7 +94,7 @@ Unambiguous backend counters cover 30/30 tasks: 215953 input / 38865 output toke
 
 Compared with the prior thinking-disabled 31B run, strict ungraded proposals change from 0/30 to 4/30. All 30 task statements and source outlines are unchanged; 19/30 user payloads and 19/30 excerpt selections are byte-identical. The longer instruction changes the remaining selections under the same message budget. Complete launch profiles match except the private state root. These observations do not isolate wording from changed source delivery or establish task correctness, generalization or a model role.
 
-Largest individual remaining refusal is `strict-edit-refused:code.proposal.format` (25). Syntax-only inspection classifies 19 of those answers as JSON code fences and six as other JSON-format failures; none exceeds the existing 64 KiB answer ceiling. This does not normalize a response, execute a candidate or change acceptance. No further limit, deadline, cancellation or bookkeeping feature is justified by these observations.
+Largest individual remaining refusal is `strict-edit-refused:code.proposal.format` (25). Corrected syntax-only inspection finds that all 25 format refusals begin with a JSON Markdown fence: 19 close it on its own line and six join the closing fence to the last line. None exceeds the existing 64 KiB answer ceiling. This does not normalize a response, execute a candidate or change acceptance. No further limit, deadline, cancellation or bookkeeping feature is justified by these observations.
 
 Only this prepared profile has completed the current-source repeat. The other five prepared profiles (qwen35-27b, gpt-oss, muse, gemma4-e4b and gemma4-26b-a4b) remain pending before further source work except high/medium review findings. No product profile or model role is adopted. T-303/T-306 remain open, without new rows, sub-rows or completion ticks.
 
@@ -149,7 +149,7 @@ No new native executable admission, candidate grading, model qualification, row 
 | Fresh source helper | `852cd7f57d414c03d337102752a678f4e8c7c62b89a9485a43f3ebfd2698e9ba` |
 | Unchanged chat API | `72ca684879583ce1d3e9abc6ab26db7d475d74e3ae6d1fc9b946269986de4965` |
 | Prior answer diagnosis | `4d7f36165dc307e017aa89d02e3d5875668703da64ffcd6579fed65f8467f939` |
-| Answer syntax observations | `5a7b358eb6456b82bd5f48bf87d06115baf4234a702b3941d7a3ca8a08f2a1d2` |
+| Answer syntax observations | `ff29a6ebbff46881c0fdd9ef4175ef034d557ab6c180ec762ad2335a0b1c3cf3` |
 | Audited results | `50025f31e3398ce06e1f9ba2a306d1841068e68c14816a28a427f55d7d8afd8a` |
 | Context/check reproduction | `a59a1704d992263651e956b3a2a1ab63eee28d627002969d8c10b0eb90a941f6` |
 | Prior-profile comparison | `3693d574b9f7e3e546823adfe83c2150a76bbf2ca0695d76137f3b3f863385e1` |
@@ -158,3 +158,11 @@ No new native executable admission, candidate grading, model qualification, row 
 | Corrected formatter check | `47bef728a6cc7e5e5ffb304eeb75b6ffc89cd2586dd7e5a44afa35db71747ded` |
 | Retained manifest | `76fda34c915e86fa89beae24f71a3e6f5fb0bebb2dd574f835e6d8025c8c43f2` |
 | Private archive | `5955f58866ffaf506f553f73ef9e7a92ee34f4bc559420a02cb518e7f12c2937` |
+
+## Review correction — 2026-11-12
+
+The retained [independent review](../reviews/52c3f10029e0-raw-json-generation-measurement.txt) returns **Verdict: FINDINGS** for exact commit `52c3f10029e0dfb786993f26e4c45b586ff5ffba`. Medium M1 identifies that the earlier classifier tested both opening and standalone closing fence placement together, incorrectly describing six fenced answers as other format failures. All 25 format refusals begin with a JSON fence; 19 close it on its own line and six join the closing fence to the last line. Strict proposals (4), format refusals (25) and exact-edit refusals (1) are unchanged. No candidate was regraded or accepted.
+
+The corrected Answer syntax observations binding above refers to the additive correction receipt, not the earlier archive member. The original classifier, output, manifest and archive remain byte-identical. The correction script reads the original hash-verified archive directly and verifies each of its 90 input files against that manifest; it separates opening and closing fence observations without extracting, normalizing or executing an answer. Its dated scoreboard corrigendum preserves all earlier scoreboard bytes. Independent re-review is required; neither parent row closes. Low L1 remains T-309 backlog: the private archive must have its helper dependency path scrubbed before any public distribution. No private archive is published.
+
+Correction script SHA-256: `63a1db388e08bf761744f2f35bb27d39f41382f0741269533b21d11aa9347503`. Corrected receipt SHA-256: `ff29a6ebbff46881c0fdd9ef4175ef034d557ab6c180ec762ad2335a0b1c3cf3`. Both are retained with the independent review inputs.

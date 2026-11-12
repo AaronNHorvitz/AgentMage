@@ -1,0 +1,128 @@
+Commit: 52c3f10029e0dfb786993f26e4c45b586ff5ffba
+Scope: raw-json-generation-measurement
+
+Reviewer: Claude Opus 5.5 (independent, separate read-only session). Range reviewed:
+5e0b4028defae7bfe364b5058553e6131d6befe4..52c3f10029e0dfb786993f26e4c45b586ff5ffba
+(fa53b0dd, a99fe467, 52c3f100). Row context: T-303 / T-306, non-closing. No row closes.
+
+## Methods
+
+1. Confirmed `git rev-parse HEAD` = 52c3f10029e0dfb786993f26e4c45b586ff5ffba in /lane/review-checkout;
+   clean status; six changed paths (TASKS.md, coding_proposal.rs, tests/coding_proposals.rs,
+   coding-scoreboard.md, t303-raw-json-generation-2026-11-12.md,
+   docs/reviews/5e0b4028defa-thinking-profile-measurement.txt).
+2. Recomputed SHA-256 of all 13 listed shared files and the retained node binary
+   (d1de76d8…932c). Every hash matches the request.
+3. Read the shared scope, cold-check and bootstrap scripts before running them. Extracted the archive
+   (tarfile `filter='data'`, all 19,801 members regular files) into my own temp directory and read
+   audit.py, compare.py, verify_proposals.py, classify_answers.py, diagnose_reproduce.py,
+   check_gate.py, policy.json and helper/src/main.rs + Cargo.toml before trusting any output. None of
+   them executes model output, a candidate or a hidden or held-out test. The helper only calls
+   `prepare_coding_proposal` / `check_coding_proposal` on JSON from stdin. Cold runs are bwrap
+   `--unshare-net`, with the root bound read-only.
+4. Read the full source diff. The only product change is the `CODING_PROPOSAL_INSTRUCTION` string, now
+   a raw string with an original synthetic example (`example.py`, `return 1\n`→`return 2\n`) and
+   raw-object/escaping rules. Selection and checker code are unchanged outside that line (also
+   asserted by scope.py). The untrusted-data sentence is kept. The new test proves that
+   task text asking for wrapping does not change acceptance: fenced, prose-prefixed, prose-suffixed,
+   duplicate-object and trailing-comma answers all give `Error::Format`, and the source stays unmodified.
+5. Evaluation integrity: the change touches no task, hidden test, base commit, threshold or held-out
+   material. The example is generic. `return 1\n` occurs in many development base files, which is
+   permitted tuning material, and it solves no task. The held-out file is not in this checkout, so I
+   could not compare its content directly. Nothing in the diff refers to held-out IDs or content.
+   policy.json and audit outputs record held-out as not loaded or executed.
+6. Confinement: no tool, sandbox, path, network or approval code changed in this range. I re-ran
+   only the strict-checker regressions (below). No escape reproductions were needed for unchanged
+   boundary code.
+7. Retained review: `docs/reviews/5e0b4028defa-thinking-profile-measurement.txt` is byte-identical to
+   `/lane/reviews/5e0b4028defa-thinking-profile-measurement.md` (`diff` empty) and ends `Verdict: PASS`.
+8. Did not run models, use the GPU, grade candidates, or run native workflows or hidden/held-out tests.
+
+## Commands and results (all in /lane/review-checkout)
+
+- `nice -n 10 python3 -B /lane/reviews/raw-json-development-20261112-scope.py` → rc 0, `scope: PASS`,
+  6 paths / 507 preserved table lines / 15 bindings / 30 task rows; output `cmp`-identical to
+  raw-json-development-20261112-scope-postcommit.json.
+- `bootstrap.py --repository $PWD --output $d/helper` → `prepared_own_source_helper: true`,
+  2283 verified repository inputs; the dependency path is rewritten to /lane/review-checkout/capabilities/repository-map.
+- `bash /tools/build-slot env CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=$d/target cargo build --locked --offline
+  --manifest-path $d/helper/Cargo.toml` → Finished. Reviewer helper SHA-256
+  8e2582de1259330e8b10611bbdfe03db5162077e9a2379b17770a939d486dff9. It differs from the builder's, as expected.
+- `bash /tools/build-slot … cargo test --locked --offline -p agentmage-capability-repository-map --all-targets`
+  → rc 0, 87 passed / 0 failed / 0 ignored across 8 targets. coding_proposals: 9 passed, including
+  `only_the_raw_object_is_accepted_even_when_task_requests_wrapping`.
+- `cargo fmt -p agentmage-capability-repository-map -p agentmage-host -p agentmage-local-api -- --check` → rc 0.
+- `cold-check.py` (default) → rc 0: 19800 files verified, 30 contexts and checks reproduced, 30 diagnosis
+  tasks, 30 answer shapes, gate comparison reproduced, `fresh_helper_used: false`, temp state removed.
+- `cold-check.py --helper $d/target/debug/agentmage-development-measurement-helper` → rc 0, same, with
+  `fresh_helper_used: true`. My independently built helper reproduces all 30 contexts and strict checks byte-for-byte.
+- `python3 -B scripts/local_agent_fast_gate.py --base a99fe467…` → `FAST GATE: PASS` (docs-only scope, 3 files, 0 lint issues).
+- markdownlint one-liner → 3 checked keys, `issues: []`.
+- `git diff --check 5e0b4028… --` → clean. `git status --short` → empty.
+- Archive cross-check (my own reads of the extracted results): strict ungraded 4/30; causes edit 1 / format
+  25 / ungraded 4; output range 23002–29511; request/check 1653.191 s; reserved wall 2154.301 s =
+  35.905 min; counters 30/30, 215953 in / 38865 out; all 30 backend terminations
+  `stopped-below-token-limits`; all 30 terminal events `complete:stop`; all 15 batch reports `completed`,
+  `settings_revoked: true`. Comparison: 30 system instructions changed, 19/30 user payloads and 19/30
+  excerpts identical, launch profiles identical except state root. Prior run: 0/30, 30 format. Gate
+  comparison: 29 targets, 1021 passed / 53 failed / 11 ignored / 0 measured / 0 filtered. The baseline is
+  1020/53/11, with identical failure and ignore identities. Every published number traces to these artifacts.
+
+## Partial-path limits and causal wording
+
+The labelling is honest. Only Rust selection, the credential-owning chat API and the strict checker ran.
+First and within-budget task passes are UNAVAILABLE, not zero, and a strict proposal is called ungraded.
+No candidate tests, retries, apply or push ran. Native trust is left unresolved, and the absent
+controls receipt is stated. The 4096 product route and the larger measurement-adapter allowance are
+distinguished. 32K is called the largest prepared context, not a hardware maximum. The inherited 53 failures
+are stated, and the full gate is not called green. The causal wording explicitly does not separate
+instruction wording from the changed source delivery (11/30 changed excerpts). My check supports that caveat:
+3 of the 4 accepted tasks (dev-023, dev-024, dev-rust-001) had identical excerpts and 1 (dev-019) did not.
+No model role or profile is adopted. The scoreboard has its line for this batch, and earlier scoreboard
+bytes are preserved. No name of another agent product or private project appears. "Muse" and "gpt-oss"
+are model names already in the repository.
+
+## Findings
+
+### M1 (medium): the published refusal subclassification understates Markdown fencing (25/25, not 19/25)
+
+- Locations: docs/evidence/t303-raw-json-generation-2026-11-12.md:97 and docs/evidence/coding-scoreboard.md:965
+  ("classifies 19 of those answers as JSON code fences and six as other JSON-format failures"). The source is
+  archived classify_answers.py:10:
+  `fenced=len(lines)>=2 and lines[0].strip()=='```json' and lines[-1].strip()=='```'`.
+- Reproduction: in the archived answers, every one of the six "other_json_format" answers (dev-012, dev-013,
+  dev-014, dev-021, dev-022, dev-027) begins with "```json\n{\"edits\":…". Their closing fence is joined to the
+  last line, e.g. `…}]}```` or `…}]})````, so the last-line test misses it. Counting answers whose first
+  non-blank characters are ```` ``` ```` gives 25/30. That is all 25 format refusals. The 5 bare answers are
+  the 4 accepted proposals and the dev-025 edit refusal.
+- Why medium: this batch's only changed variable is an instruction that ends "without Markdown fences".
+  The published line implies fencing fell from 30/30 to 19/30 answers. The raw logs show 30/30 to 25/30,
+  and every remaining format refusal is still fenced. This is the batch's main causal observation under
+  MEASURE FIRST, and it will guide the next source step. As written, it is not supported by the raw logs it cites.
+- Fix: report fence shape separately from closing-fence placement. For example: "all 25 format refusals begin
+  with a ```json fence; 19 close it on its own line, six join the closing fence to the last line, and their
+  JSON payloads are malformed or followed by extra characters". Correct classify_answers.py to detect a leading
+  fence independently of closing placement, or add that field, and re-seal its output and binding. Since earlier
+  scoreboard bytes are kept as-is, add the correction as a dated corrigendum line in coding-scoreboard.md, and
+  update the evidence file and its "Answer syntax observations" binding. The counts of strict proposals and
+  causes do not change.
+
+### L1 (low, backlog): private home path inside the shared private archive
+
+The archived helper/Cargo.toml:8 keeps the builder's absolute home path, including the username. It is private
+(/lane/reviews only, not committed), and bootstrap.py rewrites it. Scrub it before any archive is ever
+published.
+
+No high finding. No confinement, authority, evaluation-integrity or held-out issue was found in this range.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing measurement batch): evidence reproduced, apart from M1, which concerns the
+  published subclassification wording. Neither row closes. The rows remain open, and no tick or sub-row
+  was added (confirmed).
+- fa53b0dd retention of the 5e0b4028 PASS: correct, byte-identical.
+- a99fe467 instruction and regression: PASS on its own terms. The checker and selection are unchanged,
+  and the strict refusal is preserved and tested.
+- 52c3f100 measurement publication: blocked by M1 until the subclassification is corrected.
+
+Verdict: FINDINGS
