@@ -1348,3 +1348,43 @@ since preparation and remains unqualified for coding. The evidence already
 disclosed this. No measured count, sealed input or earlier entry changes.
 T-303/T-306 remain open; no task grade, retry, held-out result or row closure
 is claimed. This is review retention and clarification, not a new model run.
+
+## Complete-response 27B development repeat — 2026-11-12
+
+Source: `974d2bb55afa6be47bd58ffcf1dd30a6450f70cd`. All 30 development tasks
+complete on this profile; the measured coding path remains partial.
+
+| Date | Model | Context / output tokens | First-attempt task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU work min | Observed input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | qwen35-27b | 32768 / 24137–29804 | Unavailable | Unavailable | 29/30 | Not run | 1436.046 | 31.016 | 186402 / 34920 |
+
+Changed variables: complete upstream framing and explicitly chosen 300-second
+idle instead of 60; total stays 300 seconds. Output is
+`min(32768, 32768 - rendered input tokens - 32)`. All 30 inputs fit;
+does not fit: 0. The existing thinking-disabled profile, prompts, source
+selection, strict checker and byte ceilings stay unchanged. The source repair
+has an independent PASS for the exact commit; no row closes.
+The recorded GPU driver package is
+`xorg-x11-drv-nvidia-cuda-615.71.09-3.fc44.x86_64`; the platform tuple changed
+since preparation and remains unqualified for coding.
+
+Causes: 1 `generation-refused:error:chat.transport.timeout`, 29 `ungraded-proposal`.
+Dev-004 reaches the existing 300-second deadline with no visible text event;
+the terminal timeout code does not establish its root cause.
+
+GPU work means 1860.960 seconds of job wall inside
+15 separate reservations, including verification/load/cleanup and excluding
+queues and wrapper overhead; active kernel time was not measured. Backend
+counters cover 29/30 and include non-answer output.
+Tasks without counters: dev-004; totals exclude them.
+Missing counters are unavailable, not zero tokens. No
+candidate tests, feedback, retries, held-out tasks or task grades ran. The
+native artifact and original grading-control blockers remain; the available
+path is Rust source selection → credential-owning chat → strict checker.
+No whole-loop, model-role or quality-improvement claim is made.
+
+Full source/record audit, 30-context/check reproduction and archive verification
+pass. See [evidence](t303-complete-qwen-2026-11-12.md) for per-task results,
+exact input bindings and limits. Three prepared profiles still require the full
+repeat before tuning, except high/medium fixes. T-303/T-306 remain open;
+independent core review is required and no row closes.
