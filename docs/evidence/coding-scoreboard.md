@@ -1225,3 +1225,37 @@ only for a build slot and executed no task. The [evidence](t303-complete-respons
 retains the observations and their limits. All 30 tasks on every prepared model
 remain required on the repaired source before further tuning, except high or
 medium review fixes.
+
+## Complete-response A4B development repeat — 2026-11-12
+
+Source: `974d2bb55afa6be47bd58ffcf1dd30a6450f70cd`. This completes all 30 development tasks
+for this profile on the repaired source; the coding-loop path remains partial.
+
+| Date | Model | Context / output tokens | First-attempt task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU work min | Observed input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | gemma4-26b-a4b | 32768 / 23004–29513 | Unavailable | Unavailable | 2/30 | Not run | 5943.181 | 108.456 | 215893 / 743647 |
+
+Changed variables: complete upstream framing and explicitly chosen 300-second
+idle instead of 60; total remains 300 seconds. Output is
+`min(32768, 32768 - rendered input tokens - 32)`, within the current prepared
+32K policy. All 30 inputs fit; does not fit: 0. The original model profile,
+retrieval, prompts, checker and byte ceilings remain unchanged. The empty-answer
+repair preserves streaming's refusal rule; its independent re-review is pending.
+
+Causes: 26 incomplete refusals (`chat.response.incomplete`), 2 strict format
+refusals, 2 strict ungraded proposals. All 26 incomplete refusals emit no visible
+text and reach their output allowance. Backend counters cover all 30 attempts;
+output includes non-answer tokens. GPU work is 6507.374 seconds of measured job
+wall inside 15 separate reservations, including verify/load/cleanup and excluding
+queues and wrapper overhead; active kernel time is not measured.
+
+The measured path is existing Rust retrieval → credential-owning local chat
+API → original Rust strict checker. Native artifact admission and the original
+grading-controls receipt remain unresolved. No candidate test, feedback, retry,
+held-out task, native workflow, task grade or model role is claimed. Both
+reservation wrappers and all cleanup checks pass. Full source/record audit,
+30-context/check reproduction and the 21,845-file archive verification pass.
+The [evidence](t303-complete-a4b-2026-11-12.md) retains per-task budgets, tokens,
+time and raw-input bindings. Five prepared profiles still require the full
+repeat before further tuning, except high/medium review fixes. T-303/T-306
+remain open; independent core review is required and no row closes.

@@ -2,6 +2,17 @@
 
 ## Active queue: local agent mission
 
+The [repaired-source A4B complete-response repeat](docs/evidence/t303-complete-a4b-2026-11-12.md)
+finishes all 30 frozen development tasks at source
+`974d2bb55afa6be47bd58ffcf1dd30a6450f70cd`: 2 strict ungraded proposals,
+26 incomplete refusals and 2 strict format refusals. Task grades and retries
+remain unavailable; no candidate or held-out test ran. All inputs fit 32K.
+Five other prepared profiles still require the full repeat before further
+source tuning, except high/medium review fixes. Complete source/record audit,
+30-context/check reproduction and the 21,845-file archive verification pass.
+The source repair's independent re-review and this measurement's core review
+remain required. T-303/T-306 stay open; no row or completion tick changes.
+
 The retained [complete-response review](docs/reviews/05c53085b860-bounded-complete-model-responses.txt)
 returns **Verdict: FINDINGS** for exact commit
 `05c53085b86074ac461185c0027361230ec136e7`. Medium M1 identifies acceptance
