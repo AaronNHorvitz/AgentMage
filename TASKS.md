@@ -2,6 +2,13 @@
 
 ## Active queue: local agent mission
 
+The [thinking-disabled development experiment](docs/evidence/t303-thinking-profile-measurement-2026-11-12.md) completes both
+30-task profile repeats without task grades, retries or held-out execution.
+Largest observed failure in these 60 attempts is `strict-edit-refused:code.proposal.format` (30).
+Contexts, requests and unchanged model/runtime identities are compared against
+the prior reviewed campaign; no product profile or model role is adopted.
+T-303/T-306 remain open with independent review required. No row closes.
+
 The retained [independent timeout review](docs/reviews/e63165df3e05-timeout-diagnosis.txt)
 returns **Verdict: FINDINGS** for exact commit
 `e63165df3e05a2c78649bd9215db55bb4300ef68`: one medium finding, M1,

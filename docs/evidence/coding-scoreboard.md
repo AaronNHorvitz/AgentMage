@@ -873,3 +873,67 @@ boundaries. Further limit, deadline, cancellation or bookkeeping work stays in
 T-309 backlog unless an open high/medium finding or the row's done-when requires
 it. Native execution and original grading-control admission remain blocked;
 these observations do not replace end-to-end task measurements.
+
+## Thinking-disabled development experiment — 2026-11-12
+
+All 30 frozen development tasks ran once on each of two controlled model
+profiles at product source `42612ca9787f07e4df79402e6d92f39f578e5c67`.
+The measurement checkpoint is `f619ec3cdb681bc399bb779285f837332f76d3b2`;
+the intervening commits change documentation only. **Partial path: Rust source
+selection, credential-owning chat and strict edit checking. First-attempt and
+within-budget task passes remain unavailable, not zero.** Native Git executable
+ownership and missing original grading controls still block execution and grading.
+No candidate tests, feedback, retries, approvals, apply, commit, push or held-out
+tasks ran. Selection receives only the statement and editable base file; full
+repository analysis and retrieval are not measured. No control was bypassed or
+reconstructed. A strict proposal is an ungraded edit, never a solved task.
+
+Changed variable versus each profile's previous complete development measurement:
+`chat_template_kwargs` changes from `{}` to `{"enable_thinking":false}`.
+This is a candidate experiment; no product profile or model role is adopted.
+All 60 contexts and request bodies match their corresponding previous run except
+the output allowance computed from template-rendered input. Rendering and the
+resulting output reservation may change. Model/runtime bytes, decoding
+(temperature zero, seed 42), prompts, strict checker and safety remain unchanged.
+Context remains 32768 tokens, source-selection ceiling 32768 bytes, and output
+allowance `min(32768, 32768 - rendered_input_tokens - 32)`, including reasoning.
+32K is the largest prepared context tested, not an exhaustive hardware-limit
+search. The effect-free adapter uses the existing chat allowance; the product
+proposal route remains capped at 4096 output tokens. Total/idle time remains
+300/60 s, client/relay 310 s, and each two-task reservation 900 s. Unchanged
+4 MiB stream-body, 5 MiB wire and 1 MiB text ceilings can stop generation before
+the token allowance. The earlier timeout audit did not prove reasoning was the
+cause; this single repeat does not establish task-solving quality or generalization.
+
+| Date (UTC) | Model | Context tokens | Output-token allowance | First / within budget task passes | Strict ungraded proposals | Request/check s | Reserved job wall s | GPU work min |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | qwen35-27b | 32768 | 24150–29867 | unavailable / unavailable (30 tasks) | 30/30 | 1132.698 | 1462.580 | 24.376 |
+| 2026-11-12 | gemma4-31b | 32768 | 22996–29577 | unavailable / unavailable (30 tasks) | 0/30 | 1814.415 | 2337.099 | 38.952 |
+
+One attempt per task and zero retries. GPU work minutes mean reserved model-job
+wall/60, including verification, loading and cleanup, excluding queues and wrapper
+checks. Active GPU kernel time was not measured. Request/check time excludes
+preparation and preflight. All 30 two-task reservations completed and released
+both shared slots. No model was downloaded; no model or API process from this
+experiment remains.
+API usage was not requested; unambiguous backend counters are reported below.
+
+Largest individual failure in these 60 observations: `strict-edit-refused:code.proposal.format` (30).
+The next generation/proposal work follows this measured failure; further limits,
+deadlines, cancellation and bookkeeping remain T-309 backlog unless an open
+high/medium finding or the row's own completion requirement needs them.
+T-303/T-306 remain open, without new rows, sub-rows, model-role selection or ticks.
+
+`qwen35-27b` causes: `ungraded-proposal`: 30.
+Unambiguous counters cover 30/30 tasks: 188110 input / 35780 output tokens. API usage was not requested.
+
+`gemma4-31b` causes: `strict-edit-refused:code.proposal.format`: 30.
+Unambiguous counters cover 30/30 tasks: 214782 input / 47482 output tokens. API usage was not requested.
+
+See [evidence](t303-thinking-profile-measurement-2026-11-12.md) for per-task results, bindings and reproduction.
+
+Compared with the corresponding prior runs, timeouts change from 21/30 to 0/30
+on 27B and from 22/30 to 0/30 on 31B. Strict ungraded proposals change from
+8/30 to 30/30 and from 0/30 to 0/30, respectively. These are generation and
+format observations; task correctness remains unknown. No model role or product
+profile is adopted from this comparison.
