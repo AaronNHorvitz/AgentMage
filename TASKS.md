@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The retained [independent 27B timing re-review](docs/reviews/95616eb9f850-complete-response-qwen-timing-repair.txt)
+returns **Verdict: PASS** for exact reporting repair commit
+`95616eb9f85079819a3e089e6f30aad83fdc91ee`, resolving medium M1 with no
+high or medium finding. Low L1 is clarified additively: at the observed
+throughput, the total deadline would bind before every allowance in this
+profile. This is a throughput estimate, not a new measurement. Deadline
+changes remain T-309 backlog. Counts and sealed inputs stay unchanged;
+T-303/T-306 remain open and no row closes.
+
 The retained [independent 27B measurement review](docs/reviews/355e4616aedd-complete-response-qwen-measurement.txt)
 returns **Verdict: FINDINGS** for exact reporting commit
 `355e4616aedd135fa066d760480cc321d60545f5`. Medium M1 identifies a false

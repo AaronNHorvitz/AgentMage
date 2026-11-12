@@ -169,3 +169,22 @@ and confirms the unchanged aggregate totals. All 2,283 frozen repository
 inputs, 507 ledger table lines and earlier scoreboard entries remain unchanged.
 The review is retained byte-for-byte. No archived code, candidate or hidden
 test is executed by this check.
+
+## Independent 27B timing re-review — 2026-11-12
+
+The [independent core re-review](../reviews/95616eb9f850-complete-response-qwen-timing-repair.txt)
+returns **Verdict: PASS** for exact reporting repair commit
+`95616eb9f85079819a3e089e6f30aad83fdc91ee`, resolving medium M1 with no
+high or medium finding. It independently verifies the progress lower bound,
+missing final counters, unchanged totals and original archive bindings.
+The reviewer could not run Markdown lint because Node was absent; the bound
+builder log passes, and the review records compensating checks.
+
+Low L1 is clarified here additively: at the observed throughput of about
+45 tokens per second, the existing 300-second total deadline would cap
+output near 13,400 tokens, below every allowance in the profile's
+24,137–29,804 range. This is an estimate from observed throughput, not an
+additional measurement or a guarantee of constant generation speed. Any
+deadline change remains T-309 backlog. Measured counts, original sealed
+inputs and earlier entries stay unchanged. T-303/T-306 remain open; no task
+grade, retry, held-out result or row closure is claimed.

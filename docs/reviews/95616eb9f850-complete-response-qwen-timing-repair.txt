@@ -1,0 +1,111 @@
+Commit: 95616eb9f85079819a3e089e6f30aad83fdc91ee
+Scope: complete-response-qwen-timing-repair
+
+Reviewer: independent session (Claude Opus 5.5, extra-high effort). Read-only frozen checkout at
+/lane/review-checkout; `git rev-parse HEAD` and `git rev-parse 95616eb9f85079819a3e089e6f30aad83fdc91ee`
+both print 95616eb9f85079819a3e089e6f30aad83fdc91ee. Base 355e4616aedd135fa066d760480cc321d60545f5.
+Row T-303 / T-306: a reporting repair that does not close a row. I did not modify the repository. I
+extracted nothing to disk; all archive reads were streamed into memory.
+
+## Scope of the increment
+
+`git diff --stat 355e4616 HEAD` shows four files:
+- TASKS.md (+10). A paragraph is added at the top of the active queue.
+- docs/evidence/coding-scoreboard.md (+25/−4). The existing 27B entry is corrected and a dated
+  correction note is appended.
+- docs/evidence/t303-complete-qwen-2026-11-12.md (+43/−5). The dev-004 paragraph, the counter wording
+  and the dev-004 table cell are corrected, and a correction section is appended.
+- docs/reviews/355e4616aedd-complete-response-qwen-measurement.txt (new). `cmp` against
+  /lane/reviews/355e4616aedd-complete-response-qwen-measurement.md reports it byte-identical.
+
+Nothing else changed: no product source, prompt, profile, permission, hidden test, threshold, SBOM,
+sealed input or task row. The verifier's checks confirm this (below).
+
+## Methods, commands and results
+
+1. `git diff --check 355e4616aedd135fa066d760480cc321d60545f5 --` → exit 0.
+2. I read all of /lane/reviews/qwen-timing-repair-20261112-verify.py first.
+   - It pins the SHA-256 of the original archive (d476c2db…f6c2) and of the manifest (5a5421aa…9de8).
+   - It streams the archive (`r|gz`) and reads only four named members into memory, each checked
+     against the manifest's size and SHA.
+   - It imports and executes nothing from the archive and loads no hidden tests.
+   - The only subprocesses are `git diff`, `git ls-files` and `git show`.
+
+   `python3 -B /lane/reviews/qwen-timing-repair-20261112-verify.py` → exit 0, `"status": "PASS"`:
+   - progress_counters 98, observed lower bound 13220, last_progress_after_launch_seconds 298.310083,
+     final_counters_available false.
+   - timeout 1, strict ungraded proposals 29, aggregates 186402/34920 with coverage 29.
+   - Retained review byte-identical, 507 ledger table lines unchanged, earlier scoreboard prefix
+     unchanged, 2283 frozen repository inputs hash-equal.
+   - The four document SHAs match those in the bound verification JSON.
+3. I ran the requested bindings block with `python3 -B` → `PASS: three repair bindings and four current
+   document hashes`. The three bound files are the verify script, the verification JSON and the
+   doc-fast-gate log.
+4. Independent raw check with my own code, which does not use the builder's regexes. I streamed every
+   `qwen35-27b-02/collection/dev-004/` member of the original archive into memory. The five members
+   are backend-slice.log, context.json, events.ndjson, record.json and request.json.
+   - The slice has 100 lines: `get_availabl`, `launch_slot_` at 0.43.341.778 for task 742, then 98
+     `print_timing` lines.
+   - The first `print_timing` is n_gen 136 at 0.49.499.917. The last is n_gen 13220 at 5.41.651.861,
+     with tg 44.79 t/s and tg_3s 43.42 t/s.
+   - 341.651861 − 43.341778 = 298.310083 s.
+   - The strings `eval time`, `stop processing` and `truncated` are absent.
+   - In record.json, generation_seconds is 300.009371387001, requested_output_tokens is 29804 and
+     preflight input is 2932.
+
+   So every number in the corrected text traces to the raw log: 98 counters, 13,220, 298.310 s,
+   no final summary or stop line, and 13,220 < 29,804.
+   "Generation continued until the total deadline" is an inference, but a sound one. Counters arrive
+   about every 3 s, and the last one shows active generation 1.7 s before the 300.009 s client
+   deadline, with the next counter due after it.
+5. Consistency grep over the three documents. "no timing counters" now appears only where the text
+   quotes the false claim that M1 identified. No remaining "Unknown" or "without counters" wording
+   refers to dev-004.
+   - Both the scoreboard and the evidence say "final counters cover 29/30". Both keep 34,920 and
+     state that the 13,220 lower bound is not added to it.
+   - The timeout is still counted as a failure, and its cause is still not established.
+6. `python3 -B scripts/local_agent_fast_gate.py --base 355e4616aedd135fa066d760480cc321d60545f5`:
+   - git diff --check, `--lint-untracked` and `--lint-reviews` on the retained review all exit 0.
+   - markdownlint exits 127 with "Missing executable: node; no automatic download". Node is not on
+     PATH, and /lane/state/tooling does not exist in this lane. The gate therefore prints
+     **FAST GATE: FAIL here, and I could not run markdownlint myself.**
+   - Compensating evidence: the hash-bound builder log qwen-timing-repair-20261112-doc-fast-gate.log
+     has the same four-path, four-command plan. It shows markdownlint-cli2 v0.23.2 with 3 files and
+     0 issues, ending in FAST GATE: PASS.
+7. Public hygiene: the added lines contain no host path, username, hostname, email, credential, private
+   project name or other agent product. The commit author field is ordinary repository metadata, as in
+   earlier commits. I made no patent search.
+
+## Re-review of M1 (from 355e4616aedd-complete-response-qwen-measurement.md)
+
+**Resolved.** The false sentence is gone from both the evidence (lines 59-67) and the scoreboard
+entry. Its replacement matches the raw slice exactly, as shown in step 4. The table cell now reads
+"At least 13220; final unavailable". The lower bound is kept out of the 186402/34920 totals. The
+failure stays counted. The cause of the long output is explicitly not established. No count, sealed
+record or earlier entry changed.
+
+## Findings
+
+High: none. Medium: none.
+
+### L1 (low, carried backlog, partly addressed)
+The evidence now says that for dev-004 the total deadline binds before the 29,804-token allowance. It
+does not say that this holds for the whole profile. At about 45 tokens/s, the 300 s deadline caps every
+task near 13,400 tokens, below every allowance in the 24,137–29,804 range. The general allowance
+sentence at t303-complete-qwen-2026-11-12.md:33-34 is unchanged. This is low and a disclosure is
+present. Suggested fix: add a profile-wide sentence at the next evidence touch. Any deadline change
+remains T-309 backlog.
+
+### Review limitation (not a finding)
+I could not run markdownlint in this lane (step 6). The result is attested only by the hash-bound
+builder log plus the structural checks above.
+
+## Per-row result
+
+- T-303 / T-306, non-closing reporting repair: M1 is resolved, and every corrected claim traces to the
+  original sealed raw log. Evaluation integrity is intact: no model run, held-out use, hidden test,
+  candidate execution or tuning. No confinement, secret or hygiene issue was found. No open high or
+  medium finding remains for this batch's evidence. The rows remain open as claimed, and this verdict
+  closes no row.
+
+Verdict: PASS
