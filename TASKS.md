@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The [E4B raw-JSON instruction repeat](docs/evidence/t303-raw-json-e4b-2026-11-12.md)
+completes all 30 frozen development tasks at source `a99fe467c72e2625022b639d8d38b72e845f612a`:
+13/30 strict ungraded proposals, with task grades unavailable. No candidate tests,
+retries or held-out tasks ran. This batch changes no product source; one prepared
+model repeat remains pending before further source work except high/medium findings.
+The 31B profile's format refusals remain the largest current-source refusal cause.
+Independent core review is required; T-303/T-306 remain open without new rows or ticks.
+
 The retained [independent Muse measurement review](docs/reviews/fc035e714fdb-raw-json-muse-measurement.txt)
 returns **Verdict: PASS** for exact commit
 `fc035e714fdb8f30aba3e77f3d7d7c95e4cb4f7f`, with no high or medium finding.
