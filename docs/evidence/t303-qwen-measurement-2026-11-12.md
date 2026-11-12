@@ -69,8 +69,12 @@ This batch makes no fresh Rust-test or full-gate claim.
 
 The private package preserves every earlier sealed byte and manifest. The new
 manifest excludes 28 newly retired loopback authentication files from the resumed
-jobs; these are unnecessary for inert reproduction. Historical sealed credentials
-remain bound and private. Model weights are not packaged; raw prompts, answers,
+jobs; these are unnecessary for inert reproduction. The first pair
+newly seals two retired loopback tokens that were absent from earlier manifests.
+Those tokens belong to the reaped API with revoked settings and remain private.
+Earlier sealed credentials and every sealed manifest stay unchanged. Future
+packages must exclude all newly retired tokens, without a fixed task-index range.
+Model weights are not packaged; raw prompts, answers,
 candidates and host identities remain private. Shared inert inputs permit
 independent reproduction without launching models or reading hidden tests.
 

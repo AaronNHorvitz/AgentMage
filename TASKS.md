@@ -18,8 +18,11 @@ All six prepared current-source repeats are complete (180 attempts). Largest
 observed failure across that campaign:
 `generation-refused:error:chat.transport.timeout` (45);
 that generation failure is the next source-work priority under measure-first.
-Independent core review is required. T-303/T-306 remain open without new rows,
-sub-rows, model-role selection or completion ticks.
+The retained [independent measurement review](docs/reviews/0a412ad80b13-local-coding-qwen-measurement.txt)
+returns **Verdict: PASS** for exact commit
+`0a412ad80b13792477045da960b7bb9007b7990d`, with no high or medium finding.
+Its two low notes are corrected below; sealed inputs remain unchanged.
+T-303/T-306 remain open without new rows, sub-rows, model-role selection or completion ticks.
 
 The owner's [open memory-linking study](docs/decisions/0204-open-study-memory-linking.md)
 is recorded as planning only in T-315. It starts no earlier than the first
@@ -38,15 +41,15 @@ has **Verdict: PASS** for exact commit
 A fresh source build independently reproduces all 30 contexts and eight strict
 checks; the documentation gate and cold/additive restoration checks pass.
 Its low format finding is clarified: all eight complete answers contain
-Markdown fences forbidden by the existing prompt. The remaining model repeat
-and inherited T-309 backlog remain open. Neither T-303 nor T-306 closes.
+Markdown fences forbidden by the existing prompt. At that checkpoint, the
+remaining model repeat was pending; inherited T-309 backlog remains open. Neither T-303 nor T-306 closes.
 
 The [31B development measurement](docs/evidence/t303-31b-measurement-2026-11-11.md)
 runs all 30 frozen development tasks once at source
 `42612ca9787f07e4df79402e6d92f39f578e5c67`: 0/30 strict ungraded
 proposals; task pass rates unavailable. No tests, retries or held-out tasks ran.
-One other complete prepared-model repeat remains pending. Largest individual
-refusal: `generation-refused:error:chat.transport.timeout` (22); the other eight
+At that checkpoint, one other complete prepared-model repeat remained pending.
+Largest individual refusal: `generation-refused:error:chat.transport.timeout` (22); the other eight
 attempts fail strict format checking. The retained independent review above returns PASS.
 T-303/T-306 remain open without new rows, sub-rows or completion ticks.
 

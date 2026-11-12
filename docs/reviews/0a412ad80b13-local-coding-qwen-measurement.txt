@@ -1,0 +1,144 @@
+Commit: 0a412ad80b13792477045da960b7bb9007b7990d
+Scope: local-coding-qwen-measurement
+
+# Independent review — 27B current-source measurement, retained reviews, memory wording
+
+Reviewer: Claude Opus 5.5, separate read-only session, extra-high effort. Range reviewed:
+a72a492830b627dc3ae85fa4bacb01d020a0277c..0a412ad80b13792477045da960b7bb9007b7990d (812e5e95, bc58a42f,
+0a412ad8). Rows: T-303 / T-306 (non-closing), T-315 planning wording only. No model, candidate, hidden
+test or held-out task was launched; no GPU was used; the repository was not modified (`git status
+--short` empty at the end). The renderer and package scripts were read but not run.
+
+## Methods and exact commands
+
+All commands ran in /lane/review-checkout with `GIT_DIR` set to the checkout's absolute git dir and
+`AGENTMAGE_MEASURE_REPO=$PWD`. Output directory: /lane/state/tmp/qwen-measurement-review-yeZJ1S.
+/lane/state held only review-target and tmp beforehand, so every restore was cold.
+
+1. `git rev-parse HEAD` = 0a412ad80b13792477045da960b7bb9007b7990d. Read IP-POLICY.md, Decision 0204,
+   the top of TASKS.md and the full range diff (9 files, docs only).
+2. Pins: sha256sum of 0a412ad80b13-qwen-review-inputs.json = 71fc2ff8…37c4 (matches). Every one of the
+   14 listed files matches its byte count and SHA-256; none is a symlink.
+3. Before running them, I read the qwen and primary bootstraps, the primary archive's
+   verify_manifest.py (extracted to stdout first), the cold driver, audit.py, controller.py, collect.py,
+   measurement_chat.py, batch.py (timeouts/relay), verify_proposals.py, compare_qwen_contexts.py,
+   summarize_current_six.py, prepare_review_helper.py, helper/Cargo.toml + src/main.rs and
+   package-qwen-review.py. None of them executes a candidate or loads hidden tests. audit.py and
+   verify_proposals.py first check all 2,283 frozen repository hashes and import only the frozen
+   development-suite modules.
+4. `python3 -B …/42612ca9787f-qwen-prepare-ranges-review.py`: three prior-manifest PASS lines, then
+   `verified_files: 97972`, manifest e759f7d7…269d. `python3 -B …/42612ca9787f-prepare-ranges-review.py`:
+   19,633 files, 4a883ee5…4eb3.
+5. `bash /tools/build-slot python3 -B …/42612ca9787f-qwen-cold-check.py`: exit 0. It covers empty,
+   repeat (identical), additive over the 31B bootstrap (78,416 → 97,972), refusal of a conflicting
+   audit.py with the sentinel kept, refusal of a directory symlink at `helper` (a real archive
+   directory) with the outside directory left empty, and removal of the temporary state.
+6. My own escape attempts in network-disabled bwrap on a temporary /lane/state: (a) the root
+   `measure-five-20261111` as a symlink to an outside directory, refused with
+   `AssertionError: /lane/state/measure-five-20261111`; (b) a dangling leaf symlink at `audit.py`
+   pointing outside, refused with `AssertionError: …/audit.py`. In both cases the outside directory
+   stayed empty; the temporary state was removed.
+7. `bash /tools/build-slot python3 -B …/audit.py --models qwen35-27b > audit.json`; `cmp` with
+   qwen-results.json gives identical bytes; SHA e4cec6c6…a555 matches the "Audited results" binding.
+8. `prepare_review_helper.py "$PWD" helper`, then `CARGO_TARGET_DIR=…/target bash /tools/build-slot
+   cargo build --locked --offline --manifest-path helper/Cargo.toml`: the build succeeds from the frozen
+   checkout's repository-map crate. `verify_proposals.py --helper <my build> --models qwen35-27b` gives
+   `{"verified_tasks":{"qwen35-27b":30},"candidate_execution":false,"hidden_tests_loaded":false}`.
+   The script asserts each of the 30 contexts and all 8 strict-check outputs (the incomplete dev-017 has
+   no answer) against the retained bytes, along with the events→answer joins and the candidate trees. My
+   helper SHA (7ccd3226…) differs from the builder's adbc8794… as expected; I did not compare the two.
+9. `compare_qwen_contexts.py` and `summarize_current_six.py`: both outputs are byte-identical to the
+   retained files. Retained SHAs: reproduction 42f1b93c…, comparison 02ee792b…, six-summary c948a439…,
+   current manifest e759f7d7…, previous 31B manifest 0c64857b…. All match the evidence binding table.
+   Model sha 5ae89d67…, runtime manifest f007bf5a…, development 0c2a0624…, freeze 972c6947…, API
+   72ca6848… and original helper 0e06f7b8… match the audit model identity and frozen-inputs.json.
+10. `cmp` of both retained reviews in docs/reviews against /lane/reviews: identical.
+11. node v24.15.0 is the pinned binary from /lane/reviews; I read its licence notice.
+    `python3 -B scripts/local_agent_fast_gate.py --base a72a4928…` gives FAST GATE: PASS (git diff --check,
+    untracked lint, review-text lint on both .txt reviews, and markdownlint-cli2 "Linting: 7 files /
+    Summary: 0 issues in 0 files"). The direct markdownlint library call returns exactly 7 checked keys
+    and `issues: []`, byte-identical to the builder's direct-lint JSON. `git diff --check a72a4928… --`
+    gives exit 0.
+12. `git diff --name-only 42612ca9787f..HEAD` lists 21 paths, all under docs/, TASKS.md or the
+    roadmap/PRD; no product source changed since the freeze. All frozen repository hashes still match
+    at HEAD.
+
+## Independent checks of the published numbers
+
+- I parsed all 30 per-task rows in docs/evidence/t303-qwen-measurement-2026-11-12.md and compared
+  them with qwen-results.json. Preflight, allowance, request/check seconds (3 d.p.), observed
+  counters and cause all agree: 0 mismatches. The scoreboard line is present verbatim.
+- Sums: request/check 7666.469 s; reserved job wall 8072.425 s / 134.540 min; allowance 24114–29831;
+  preflight 2905–8622. Causes are 8 ungraded proposals, 21 `chat.transport.timeout` and 1
+  `chat.response.incomplete`, with 0 does-not-fit. Counters cover 9 tasks: 60348 / 52900.
+- Counter attribution: in each of the 9 covered slices there is exactly one prompt line, one eval line
+  and one stop line, and the observed input equals that task's own preflight. The stop `n_tokens`
+  equals input+output−1 (e.g. dev-006 8075+6261 → 14335), so no counter belongs to a neighbouring task.
+  All 21 timeout slices contain a cancel and their own stop line, so generation was cancelled inside
+  the slice; their counters are honestly reported as unknown.
+- dev-017: a single error event (`chat.response.incomplete`, partial) at 229.5 s, no text event and
+  8900 backend output tokens. It is counted as a generation failure, not dropped and not counted as
+  checked.
+- Six-model totals, recomputed per model (gpt-oss, muse, e4b, a4b, 31b, qwen): 180 attempts;
+  proposals 11+18+10+0+0+8 = 47; timeouts 2+22+21 = 45; transport.limit 8+29 = 37; format 32; edit 16;
+  incomplete 2; invalid 1. The largest failure is the timeout at 45. These match TASKS.md, the
+  scoreboard and the evidence.
+- Jobs: there are 15 batch reports, all `completed`, with settings revoked, the API reaped (exit −15,
+  lab shutdown), no api-key or model.sock left, no resource-guard error, peak GPU 18.4–19.3 GiB and
+  300000/60000 ms settings. Each reservation log ends with its status line; the controller only
+  continues after the slot wrappers return. Client and relay are 310 s; jobs are 900 s.
+  qwen-controller-20261111.log stops after pair 00. The resume log runs from pair 02 to 30/30 and ends
+  `COMPLETE`. Pair 00's archived mtimes (16:56 CST) predate the resume (17:09 CST) and it has a single
+  reservation log, so the first pair was not replayed.
+- Dates: the jobs ran 16:46–19:13 CST on Nov 11, which is 22:46 Nov 11 – 01:13 Nov 12 UTC. The claims
+  "spans Nov 11–12 UTC" and "completion Nov 12" are correct.
+- Measure-first: the batch adds the required scoreboard line with its context and output budgets and
+  the changed timeouts. Does-not-fit is counted apart (0). Every number traces to raw logs. No
+  held-out run took place, the audit reports `held_out: not run`, and no tuning input changed.
+- Evaluation integrity: no prompt, parser, task, hidden test or grading control changed in the range,
+  and task bases are covered by the frozen hashes. Failures are all counted.
+- Memory wording: Decision 0204 now reads "disabled together as a set without rewriting any stored fact
+  or link". The roadmap says graph retrieval "may improve context selection where the open linking
+  study demonstrates it". The T-315 evidence describes the CLI summary accurately. These fix prior
+  L-1/L-2/L-3; the question remains open, and no method is built or selected. The 31B L1 fenced-JSON
+  sentence was added to both the evidence and the scoreboard. No row tick changed (T-303, T-306 and
+  T-315 are all `[ ]`).
+- Public hygiene: no added line contains a host home path, username, hostname, e-mail or credential.
+  No added line names another agent product, a private project, a paper or a patent. Model-family
+  labels are presented as opaque artifact labels, not branding. /lane/… paths appear only inside the
+  retained review texts, matching 230 earlier review files.
+- Limitation: from my PID namespace I can see only my own sandbox, so I could not observe host-wide
+  that no model or API process remains. I rely on the reaped/exit/socket evidence in all 15 reports.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, backlog)**: /lane/state/measure-five-20261111/package-qwen-review.py:28-41 (private
+  material, not committed). The comment says new loopback credentials are retired and excluded, but
+  the loop covers only `range(2, 30, 2)`. The two retired tokens of the first pair,
+  `qwen35-27b-00/auth/{client,control}.token`, were never in any earlier manifest, yet they are newly
+  sealed in qwen-retained-manifest.json and the archive. The evidence sentence ("excludes 28 newly
+  retired … from the resumed jobs") is literally true, but the request's "earlier sealed credentials
+  remain unchanged" does not cover these two. Exposure is nil: the package is private and the tokens
+  belong to a reaped loopback API with revoked settings. Fix: in the next evidence or package note,
+  state that the first-pair retired tokens are newly sealed. Future packaging should exclude every
+  newly retired token, not a fixed index range. Do not rewrite the sealed manifest.
+- **L2 (low, backlog)**: TASKS.md:33-34 ("The remaining model repeat … remain open") and TASKS.md:40
+  ("One other complete prepared-model repeat remains pending") are still in the present tense. The
+  same commit's top paragraph (TASKS.md:9) says all six repeats are complete. Fix: reword both as
+  "At that checkpoint, …", as the A4B paragraph at TASKS.md:60 already does.
+- The inherited low notes stay open as already recorded: atomic restore preflight and the T-309
+  cancellation-position/transport-sublimit note. The 31B review's pending-qwen-repeat note is now
+  satisfied by this batch.
+
+## Per-row result
+
+- **T-303**: non-closing development measurement verified and independently reproduced from a fresh
+  source build. The numbers trace to raw logs. The row stays open; no task-solving improvement or
+  role selection follows.
+- **T-306**: non-closing. No loop, apply, test, commit or push path was exercised. The row stays open.
+- **T-315**: planning wording only. The three low wording fixes are accepted, the study remains open,
+  and the row stays open.
+
+Verdict: PASS
