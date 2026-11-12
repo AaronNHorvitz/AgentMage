@@ -790,3 +790,86 @@ or unrelated source work. T-303/T-306 remain open without role selection,
 new rows/sub-rows, completion ticks or native coding/release claims.
 See [evidence](t303-31b-measurement-2026-11-11.md) for exact bindings and per-task
 observations. These measurements do not establish task-solving improvement.
+
+## 27B current-source development measurement — 2026-11-12
+
+Source: `42612ca9787f07e4df79402e6d92f39f578e5c67`. All 30 frozen development tasks ran once on
+`qwen35-27b`, the retained label for the existing read-only artifact. The campaign
+spans November 11–12 UTC; the date below records completion. **Partial path:
+Rust source selection, credential-owning chat and strict edit checking. Task
+first-attempt and within-budget passes remain unavailable, not zero.** Native
+Git executable ownership and missing original grading controls still prevent
+native execution and task grading. No candidate tests, test feedback, retries,
+approvals, apply, commit, push or held-out tasks ran. Selection receives only the
+statement and editable base file; full repository analysis and retrieval are not
+measured. No admission control was bypassed or reconstructed. Strict proposals
+are ungraded edits, never solved tasks.
+
+Changed variables versus this artifact's November 10/11 run: complete source
+lines and merged excerpts with the exact-edit instruction; total/idle 300/60 s
+(was 120/30), client/relay 310 s (was 130), and two-task jobs 900 s (was 600).
+Context remains 32768 tokens and selection 32768 bytes. Output allowance is
+`min(32768, 32768 - rendered_input_tokens - 32)`, including reasoning. The private
+effect-free adapter uses the existing chat allowance; the product proposal route
+remains capped at 4096 output tokens. The unchanged 4 MiB stream-body, 5 MiB wire
+and 1 MiB text ceilings can stop generation before its token allowance. Strict
+refusals remain. Combined changes do not isolate causes. 32K is the largest
+prepared context tested, not an exhaustive hardware-limit search. Runtime,
+weights, temperature zero, seed 42 and template settings are unchanged. All 30
+contexts and request messages match the current-source primary run byte for byte;
+tokenization and output allowances differ by artifact.
+
+| Date (UTC) | Model | Context tokens | Output-token allowance | First / within budget task passes | Strict ungraded proposals | Request/check s | Reserved job wall s | GPU work min |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | qwen35-27b | 32768 | 24114–29831 | unavailable / unavailable (30 tasks) | 8/30 | 7666.469 | 8072.425 | 134.540 |
+
+Does-not-fit tasks: 0. One attempt per task, zero retries and no grade.
+Complete answers reaching strict checking: 8/30. GPU work minutes mean
+reserved model-job wall/60, including verification, loading and cleanup, excluding
+queue and wrapper checks. Active GPU kernel time was not measured. Request/check
+time excludes preparation and preflight. All 15 two-task jobs completed and
+released both shared reservations. The first pair remains unchanged; this session
+resumed at task 3 without rerunning or dropping an attempt. No model was downloaded.
+No model or API process remains.
+
+| Outcome / cause | Tasks |
+| --- | --- |
+| `generation-refused:error:chat.response.incomplete` | 1 |
+| `generation-refused:error:chat.transport.timeout` | 21 |
+| `ungraded-proposal` | 8 |
+
+Unambiguous backend counters cover 9/30 tasks:
+60348 input / 52900 output tokens.
+One counter-covered attempt has an incomplete API response and never reaches
+strict checking; only eight complete responses are checked.
+API usage was not requested; other counters remain unknown.
+Largest individual refusal: `generation-refused:error:chat.transport.timeout` (21).
+All six prepared backends now have complete current-source 30-task partial-path
+measurements. This establishes neither task-solving improvement nor model roles.
+T-303/T-306 remain open without new rows, sub-rows or completion ticks. See
+[evidence](t303-qwen-measurement-2026-11-12.md) for bindings and per-task observations.
+
+### Observed causes across the completed six-model campaign
+
+The same 30 development tasks contribute 180 one-attempt observations at source
+`42612ca9787f07e4df79402e6d92f39f578e5c67`. Each model's entry reports its own budgets, timing,
+counters and limitations. This summary covers only the available partial path;
+no task pass rate, retry result, held-out score or role selection is inferred.
+
+| Outcome / cause | Attempts |
+| --- | --- |
+| `generation-refused:error:chat.response.incomplete` | 2 |
+| `generation-refused:error:chat.response.invalid` | 1 |
+| `generation-refused:error:chat.transport.limit` | 37 |
+| `generation-refused:error:chat.transport.timeout` | 45 |
+| `strict-edit-refused:code.proposal.edit` | 16 |
+| `strict-edit-refused:code.proposal.format` | 32 |
+| `ungraded-proposal` | 47 |
+
+Largest observed failure: `generation-refused:error:chat.transport.timeout`
+(45). Under measure-first, the next
+source work targets that generation failure within existing safety and resource
+boundaries. Further limit, deadline, cancellation or bookkeeping work stays in
+T-309 backlog unless an open high/medium finding or the row's done-when requires
+it. Native execution and original grading-control admission remain blocked;
+these observations do not replace end-to-end task measurements.

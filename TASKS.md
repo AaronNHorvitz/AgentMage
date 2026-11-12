@@ -2,6 +2,17 @@
 
 ## Active queue: local agent mission
 
+The [27B development measurement](docs/evidence/t303-qwen-measurement-2026-11-12.md)
+completes all 30 frozen development tasks at source
+`42612ca9787f07e4df79402e6d92f39f578e5c67`: 8/30 strict ungraded
+proposals; task pass rates unavailable. No tests, retries or held-out tasks ran.
+All six prepared current-source repeats are complete (180 attempts). Largest
+observed failure across that campaign:
+`generation-refused:error:chat.transport.timeout` (45);
+that generation failure is the next source-work priority under measure-first.
+Independent core review is required. T-303/T-306 remain open without new rows,
+sub-rows, model-role selection or completion ticks.
+
 The owner's [open memory-linking study](docs/decisions/0204-open-study-memory-linking.md)
 is recorded as planning only in T-315. It starts no earlier than the first
 CAP-29 work and changes neither measure-first nor the coding-agent work order.
