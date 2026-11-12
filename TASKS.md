@@ -2,6 +2,19 @@
 
 ## Active queue: local agent mission
 
+The retained [complete-response review](docs/reviews/05c53085b860-bounded-complete-model-responses.txt)
+returns **Verdict: FINDINGS** for exact commit
+`05c53085b86074ac461185c0027361230ec136e7`. Medium M1 identifies acceptance
+of empty answer text in complete mode. The repair rejects it as incomplete,
+matching streaming; socket regressions cover both finishes and usage choices.
+Independent re-review is required. Two pre-fix development attempts are
+preserved as partial observations, not a framing comparison. A fresh complete
+development repeat remains required. Low L1–L3 remain T-309 backlog;
+T-303/T-306 remain open with no new row or completion tick.
+The repaired source's complete affected gate has 1,161 passed, the same 53
+inherited failed and 19 ignored tests over 30 targets; it remains failing.
+The five focused transport tests, formatting and Clippy pass.
+
 The [bounded complete-response source increment](docs/evidence/t303-complete-responses-2026-11-12.md)
 adds an optional trusted transport mode to measure stream framing overhead
 without increasing byte ceilings. Streaming remains the default. Six new tests

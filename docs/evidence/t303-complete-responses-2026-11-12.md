@@ -69,3 +69,75 @@ model job or executed a task. Only its verified queued process group was stopped
 no other worker was changed. The queue log and exit 143 are retained. This is
 not a model failure or a scoreboard run. All 30 tasks on every prepared model
 remain pending before further source tuning, except high/medium review fixes.
+
+## Independent review and empty-answer repair
+
+The retained [independent core review](../reviews/05c53085b860-bounded-complete-model-responses.txt)
+returns **Verdict: FINDINGS** for exact commit
+`05c53085b86074ac461185c0027361230ec136e7`. Medium M1 finds that the initial
+complete decoder accepts empty content, whereas streaming refuses it. The
+repair returns the same incomplete-response error before emitting text or
+publishing a completed exchange. Both `stop` and `length` are covered, with
+and without requested usage and with ignored non-answer metadata. The same
+socket matrix preserves successful nonempty text and its token-limit finish.
+Independent re-review is required; no row closes. Low L1 (null error key),
+L2 (preflight framing at the request-byte boundary) and L3 (response-buffer
+reallocation hygiene) remain T-309 backlog.
+
+Before the verdict arrived, two development attempts used the original binary
+from `7d860097edbf2e16cae279191b0fa7ac292b1283`. Both ended with empty visible
+text and `length`; the collector refused both. They produced no accepted edit,
+candidate test, task grade, retry or held-out observation. They are retained
+as pre-fix partial observations and cannot establish a framing comparison.
+The remaining campaign must use a newly built and frozen repaired binary;
+these attempts do not count toward that complete development repeat.
+
+The first launch never reached a task: its private Unix socket path was 109
+bytes and the client rejected it as too long. Its ordinary 180-second health
+deadline expired after the server loaded. The failed launch and cleanup are
+retained. An additive private adapter shortens only the state path; original
+scripts remain unchanged. All 2,299 input hashes matched at the post-pair
+audit. A hash-verified source snapshot preserves that state separately from
+the later M1 source repair. The corrected launch
+passed health in 21.298 seconds. Both starts used the required build and GPU
+reservations, and removed their own model key and socket at exit.
+
+| Pre-fix task | Input tokens | Output allowance | Observed output tokens | Terminal | Request/check s |
+| --- | --- | --- | --- | --- | --- |
+| dev-001 | 9502 | 23234 | 23234 | `complete:length` | 202.092 |
+| dev-002 | 9564 | 23172 | 23172 | `complete:length` | 176.503 |
+
+The pair reserved 410.633 seconds; the startup-only failure reserved another
+190.465 seconds. Combined reserved GPU work is 10.018 minutes, including
+verification, load and cleanup, excluding queues; active kernel time was not
+measured. First-attempt and within-budget task passes remain unavailable.
+The effect-free audit verifies both records, cleanup and the unchanged inputs;
+the original helper reproduces both contexts without executing candidates.
+The next pair waited only for a build slot and was stopped before any job or
+task started. Its queue receipt is preserved. No model/API process remains.
+
+The private retained archive verifies 3,759 files, including the exact 2,283-file
+source snapshot and all 16 frozen private inputs. It excludes both retired API
+tokens and contains no model weight. A streaming member/hash check reproduces
+the two backend token counters, terminal events, record bindings and cost sum;
+it extracts nothing and executes no candidate, test or model. The pre-fix
+context check also reproduces both contexts against the frozen snapshot. The
+archive and raw records stay private; the following digests identify them.
+
+| Pre-fix retained binding | SHA-256 |
+| --- | --- |
+| `complete-empty-fix-20261112-prefix-inputs.tar.gz` | `6f80743612288ab2b32fb42566a98c1adf948ae1c7eb9d8a0befd03c6d4a3d45` |
+| `complete-empty-fix-20261112-prefix-manifest.json` | `aff2e859a9e1a6b31fcedab876b2e251925d54509ff0034c80ddd41fc139c37d` |
+
+The repaired source's full affected gate completes all 30 targets:
+**1,161 passed, 53 failed, 19 ignored**, zero measured or filtered. All 53
+failure identities exactly match the retained prior gate. This remains a
+failing gate. All five focused complete-mode transport tests pass, including
+the new 16-case socket matrix. Formatting and Clippy with warnings denied
+pass. Direct Markdown lint checks all five changed Markdown files with zero
+issues; the CLI lint's zero-file result is not counted as direct coverage.
+All 507 ledger table lines and earlier scoreboard entries remain unchanged.
+Every compilation and project test uses the shared build reservation. No
+supply-chain output, hidden test, threshold or independent-review boundary is
+changed. The fresh development repeat still requires a new frozen API binary;
+no repaired-source model measurement or new model qualification is claimed.

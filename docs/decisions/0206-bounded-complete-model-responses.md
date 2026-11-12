@@ -21,6 +21,12 @@ transport. No server error, tool call, wrong model, malformed completion or
 incomplete HTTP response produces completed text or usage. The strict edit
 checker and its separate smaller answer ceiling remain unchanged.
 
+The independent review found that the initial complete decoder accepted empty
+answer text, unlike streaming. Empty content must return the same incomplete
+response error in either mode, for both `stop` and `length`, without text or a
+completed exchange. Non-answer metadata does not count as answer text. A
+nonempty answer cut at its token limit retains its visible finish reason.
+
 The versioned local API keeps its existing event contract. Complete mode emits
 at most one text event after upstream validation; it provides no intermediate
 progress. Existing idle and total deadlines still apply while waiting. Trusted

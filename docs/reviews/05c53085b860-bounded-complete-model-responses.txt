@@ -1,0 +1,160 @@
+Commit: 05c53085b86074ac461185c0027361230ec136e7
+Scope: bounded-complete-model-responses
+
+Reviewer: Claude Opus 5.5, separate read-only session (extra-high effort). Rows T-303 / T-306, non-closing, tier core.
+Range reviewed: 9c715ed2d1c264091ca5682c5f6124f4f903e4dd..05c53085b86074ac461185c0027361230ec136e7
+(9c3f551e, 7d860097, 05c53085; 13 paths, +891/-19).
+
+## Methods
+
+1. Confirmed `git rev-parse HEAD` = 05c53085b86074ac461185c0027361230ec136e7 in /lane/review-checkout; tree clean
+   before and after (`git status --short` empty).
+2. Read the source diff line by line, plus the surrounding transport code it relies on: `Wire::check/fill/headers/body`
+   (local_chat_transport.rs:917-1211), `chat_encoded` (632-718), `prepare_chat`/`prepare_chat_shared` (463-541),
+   `encode_chat_request` (local_chat.rs:197-257), `parse_chat_usage` (294-313), the new `decode_complete_chat`
+   (315-374) and the existing SSE codec `ChatStream::decode_event/collect_usage` (548-620). In local-api: `Settings`
+   (lib.rs:~670-680), GET/PUT `/v1/settings` (1938-1980), the `/v1/chat` route (2060-2140), proposal preflight
+   `prepare_proposal_messages` (1057-1081), `prepare_endpoint_coding_proposal` (1188-1241) and the proposal dispatch
+   and refusal classification (1285-1385).
+3. Compared complete mode against stream mode, rule by rule, for acceptance parity (finish, empty text, error key,
+   tool fields, usage, model, choice count/index, duplicate keys, byte/text ceilings, EOF, cancellation, owner stop).
+4. Read the documentation diff (TASKS.md, Decision 0206, scoreboard, both evidence files, API guide), the bound
+   queue receipts and the campaign policy JSON. Checked the committed diff for private paths, personal data and
+   product names.
+5. Ran the request's reproduction block. Because the gate takes a long time, I ran the block in two parts, unchanged.
+   I also wrote one reviewer-only test in a throwaway `git archive` copy outside the repository (described below).
+
+## Commands and results
+
+All builds used `CARGO_TARGET_DIR=/lane/state/review-target` through `/tools/build-slot`. No GPU, no model and no
+hidden or held-out task was used.
+
+- Bindings verifier (the request's VERIFY block): PASS, 17 bound files, sizes and SHA-256 match; the index hash is
+  cf7e401d00d98bc6c9aa4c0d4914527ebba19b67871f120919e441527ea43de6.
+- `cmp docs/reviews/9c715ed2d1c2-raw-json-a4b-measurement.txt /lane/reviews/9c715ed2d1c2-raw-json-a4b-measurement.md`:
+  identical. The retained file begins `Commit: 9c715ed2…` / `Scope: raw-json-a4b-measurement` and ends `Verdict: PASS`.
+- `git diff --check 9c715ed2d1c264091ca5682c5f6124f4f903e4dd --`: clean.
+- `bash /tools/build-slot env CARGO_BUILD_JOBS=2 cargo test --locked --offline -p agentmage-platform-linux-inference
+  --test local_chat_transport complete_mode -- --test-threads=2`: 4 passed, 0 failed, 31 filtered.
+- `bash /tools/build-slot env CARGO_BUILD_JOBS=2 cargo test --locked --offline -p agentmage-local-api --test
+  local_chat_api complete_respon -- --test-threads=2`: 2 passed, 0 failed, 43 filtered.
+- The GATE block (node checked against d1de76d8…932c, then `scripts/local_agent_fast_gate.py --base 9c715ed2…`), run
+  after reading the script: every assertion holds. Gate exit 1, `FAST GATE: FAIL`, no `error[E…]`, 30 result rows
+  totalling **1160 passed / 53 failed / 19 ignored / 0 measured / 0 filtered**. The 53 failure identities equal those
+  in `complete-responses-20261112-prior-gate.log`, and all six new tests are `ok`. `git diff --check`,
+  `--lint-untracked`, `--lint-reviews`, markdownlint-cli2 on the six changed Markdown files, `cargo fmt --check` and
+  `cargo clippy --all-targets -D warnings` (host, local-api, linux-inference) all exit 0. The only failing target is
+  `-p agentmage-host --lib` (the inherited failures). Direct markdownlint on the six files: `issues: []`, 6 files.
+  This is not a green gate, and the documents say so.
+- Reviewer reproduction (in a throwaway copy, not in the repository): I appended
+  `reviewer_empty_answer_parity_between_stream_and_complete` to a copy of `tests/local_chat_transport.rs`. It ran
+  through build-slot with `--nocapture`:
+
+  ```text
+  stream stop: Err(Chat(Incomplete))
+  stream length: Err(Chat(Incomplete))
+  complete stop: ok=true finish=Some(Stop) bytes=Some(0)
+  complete length: ok=true finish=Some(OutputTokenLimit) bytes=Some(0)
+  complete error-null: Ok(Stop)
+  ```
+
+  The gate log contains no `reviewer_` test, so the shared target directory did not leak this test into the
+  1160 count.
+
+## What holds
+
+- **Trusted-only selection.** `response_mode` is a field of the control-only `Settings`. A client token gets 403.
+  Invalid, null and duplicate values get 400 and leave settings unchanged. `/v1/chat` and `/v1/code/proposals`
+  bodies that carry `response_mode` get 400, and no upstream socket is opened (tested). The default is `Stream`,
+  GET reports null when unconfigured, and DELETE clears the mode.
+- **Immutability.** The mode is a field of the credential-owning `LocalChatTransport`, set by a consuming builder
+  before the transport is installed. Prepared requests (borrowed or `Arc`-shared) encode with, and execute against,
+  the same instance, so a later settings change cannot mix framings. The binding hashes the actual `stream:false`
+  body (tested against the bytes on the wire).
+- **Wire bounds.** Complete mode reuses the same `request`/`headers`/`body`. It requires `application/json`, keeps
+  the 4 MiB body and 5 MiB wire ceilings, refuses chunked plus Content-Length together, and requires actual EOF
+  after framing. `wire.check()` enforces total, idle, owner stop and cancellation on every read, after EOF and after
+  the callback. The text is emitted once, after decode, the 1 MiB check and the narrowed-limit check. Cancelling in
+  the callback revokes the completed observation (tested).
+- **Decoding.** Typed serde structs reject duplicate critical keys and trailing data. Non-null `tool_calls`,
+  `function_call` or `refusal`, a wrong model, more than one choice, a nonzero index, a non-assistant role, null
+  content and an unknown `finish_reason` are all refused. Requested usage is validated by the shared
+  `parse_chat_usage`; missing usage stays absent; unrequested usage is ignored. `stream_options` is not sent in
+  complete mode.
+- **Proposals.** An answer over 64 KiB still cancels in the callback and yields `code.proposal.limit` with no
+  completion. The strict checker is unchanged.
+- **Scope.** No retry or fallback, no new tool, command or file action, no network grant, and no change to native
+  launchers. Chat without a folder works. No second runtime, desktop interface or folder-requiring API shape is
+  added.
+- **Measurement honesty.** 05c53085 records zero model tasks. The receipts show the queue group stopped at the
+  build slot with `job_started:false` and `model_started:false`. The policy states the changed variables: complete
+  framing, and idle raised from 60 s to the existing 300 s maximum. The scoreboard section is labelled "not a
+  scoreboard run". No held-out or hidden-test use and no grades are claimed.
+- **Public-repository hygiene.** No private host path, username, credential or product branding in the committed
+  diff. The `/lane/...` paths in the retained review follow the established practice for committed reviews (241
+  earlier review files).
+
+## Findings
+
+### M1 (medium, protocol parity / measurement integrity): complete mode accepts an empty answer that stream mode refuses
+
+- Location: `platforms/linux-inference/src/local_chat.rs:352-374` (`decode_complete_chat` never checks for empty
+  `content`) and `platforms/linux-inference/src/local_chat_transport.rs:667-672` (empty content returns `Ok`). In
+  contrast, the stream codec refuses `[DONE]` when `text_bytes == 0` (`local_chat.rs:550-553`, `ChatError::Incomplete`).
+- Reproduction: see the output above. A reply whose `message.content` is `""` (here with an ignored
+  `reasoning_content`) and whose finish is `stop` or `length` becomes a completed `EndpointModelResult` with 0 bytes.
+  The equivalent empty SSE stream returns `Err(Chat(Incomplete))`.
+- Why it matters: Decision 0206 and the campaign policy state that the only changed variables are framing and the
+  idle budget. This silently changes an acceptance rule, and it does so for exactly the population the change
+  targets: A4B attempts that produced no visible answer, possibly because non-answer output used up the token
+  budget. In the next development repeat, these attempts would move from "transport refusal, no completed exchange"
+  to a completed exchange (`response_complete: true`, usage and attempt accounting kept). On the proposal route
+  that means `code.proposal.incomplete` (finish length) or a strict-checker format error (finish stop), see
+  lib.rs:1331-1385. Stream-versus-complete comparisons on the scoreboard would then conflate a validation change
+  with a framing change. The decision, evidence and API guide list the refused complete-mode cases, but none
+  mentions empty content.
+- Fix: in `decode_complete_chat`, return `ChatError::Incomplete` when `content.is_empty()`, matching the stream
+  rule. Add the empty-`stop` and empty-`length` cases to
+  `complete_mode_refuses_bad_envelopes_tools_counts_and_framing_without_emitting_text`. Alternatively, if accepting
+  empty answers is intended, state it in Decision 0206, the guide and the campaign policy as an additional changed
+  variable and count such attempts separately. Fix this before the queued campaign runs, since source is otherwise
+  frozen until then.
+
+### L1 (low, parity): `"error": null` is accepted in complete mode, but any `error` key is refused in stream mode
+
+- `local_chat.rs:338,346` (`error: Option<Value>` treats null as absent), versus `local_chat.rs:557`
+  (`event.get("error").is_some()`). Reproduced: `complete error-null: Ok(Stop)`. This is harmless in itself, but it
+  is a second, undocumented rule difference. Backlog, or fold it into the M1 fix with a presence check (for example
+  `Option<Option<Value>>` with `#[serde(default)]`).
+
+### L2 (low, preflight/dispatch mismatch): `/v1/chat` preflight encodes the stream body, but dispatch encodes the complete body
+
+- `platforms/local-api/src/lib.rs:2090-2097` validates with `encode_chat`/`encode_chat_with_usage` (`stream:true`).
+  The transport then encodes `stream:false`, which is one byte longer when usage is not requested. A message whose
+  stream encoding is exactly 262,144 bytes passes preflight and returns HTTP 200, then fails in `prepare_chat` with a
+  request error event instead of a 400. No connection, exchange or authority results. Proposal bodies are far below
+  the ceiling, so `prepare_proposal_messages` (1072-1076) is not affected in practice. Its comment says preflight and
+  dispatch share the complete construction, which is no longer strictly true. Backlog: preflight with
+  `config.transport`'s mode, or expose a mode-aware encoder.
+
+### L3 (low, private-data hygiene): reallocations of the complete-response buffer are not zeroized
+
+- `local_chat_transport.rs:650-654`: `Zeroizing<Vec<u8>>` grows by `extend_from_slice`, so earlier freed
+  allocations keep model output. The stream codec buffers are not zeroized at all, so this is not a regression.
+  Backlog: reserve `min(n, MAX_STREAM_BYTES)` for `Framing::Length(n)`, or use a fixed-capacity writer like the
+  request side's `PrivateRequestWriter`.
+
+No high or critical finding. Confinement is not affected: the change adds no tool, file, command or network path,
+and model output stays untrusted text that cannot grant permissions.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing): the source increment is correct on its security boundaries, and the
+  reproduction matches every claimed count. **M1 is open (medium)** and should be fixed before the queued
+  development repeat that will compare framings. No row closes, and none was requested to.
+- 9c3f551e (retained A4B review and additive clarifications): PASS on its own. The retained file is byte-identical,
+  and the counts and sealed scripts are unchanged.
+- 05c53085 (scheduling note): PASS on its own. It records zero tasks, is labelled as not a run and states its
+  changed variables. It should be updated if the M1 fix changes the frozen API binary.
+
+Verdict: FINDINGS

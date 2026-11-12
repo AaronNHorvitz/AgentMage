@@ -366,6 +366,9 @@ pub(super) fn decode_complete_chat(
         "length" => ChatFinish::Length,
         _ => return Err(ChatError::Protocol),
     };
+    if content.is_empty() {
+        return Err(ChatError::Incomplete);
+    }
     let usage = match (usage_limit, response.usage) {
         (Some(limit), Some(value)) => Some(parse_chat_usage(&value, limit)?),
         _ => None,

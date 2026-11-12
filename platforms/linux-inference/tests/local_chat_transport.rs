@@ -149,6 +149,72 @@ fn complete_mode_refuses_bad_envelopes_tools_counts_and_framing_without_emitting
 }
 
 #[test]
+fn complete_mode_empty_answers_match_stream_refusal_without_losing_nonempty_token_limits() {
+    use agentmage_kernel_contracts::EndpointModelFinish;
+
+    for mode in [ChatResponseMode::Stream, ChatResponseMode::Complete] {
+        for finish in ["stop", "length"] {
+            for content in ["", "answer"] {
+                for usage in [false, true] {
+                    let (endpoint, task) = server(move |mut socket| {
+                        let (media, body) = match mode {
+                            ChatResponseMode::Stream => (
+                                "text/event-stream",
+                                [text_frame(content), ending(finish)].concat(),
+                            ),
+                            ChatResponseMode::Complete => {
+                                let mut body = complete_body();
+                                body["choices"][0]["message"]["content"] = content.into();
+                                body["choices"][0]["message"]["reasoning_content"] =
+                                    "untrusted reasoning is not an answer".into();
+                                body["choices"][0]["finish_reason"] = finish.into();
+                                ("application/json", serde_json::to_vec(&body).unwrap())
+                            }
+                        };
+                        socket.write_all(&response(media, &body)).unwrap();
+                    });
+                    let (client, approval) = connection(endpoint, limits());
+                    let client = client.with_response_mode(mode);
+                    let prepared = client
+                        .prepare_chat(
+                            &approval,
+                            "test-model",
+                            &[ChatMessage {
+                                role: ChatRole::User,
+                                content: "synthetic task",
+                            }],
+                            16,
+                            usage,
+                        )
+                        .unwrap();
+                    let mut emitted = String::new();
+                    let result = prepared.execute_recorded(&ChatCancellation::default(), |text| {
+                        emitted.push_str(text);
+                    });
+                    if content.is_empty() {
+                        assert_eq!(result, Err(TransportError::Chat(ChatError::Incomplete)));
+                        assert!(emitted.is_empty());
+                    } else {
+                        let completed = result.unwrap();
+                        assert_eq!(emitted, content);
+                        assert_eq!(completed.response_text_bytes, content.len());
+                        assert_eq!(
+                            completed.finish,
+                            if finish == "stop" {
+                                EndpointModelFinish::Stop
+                            } else {
+                                EndpointModelFinish::OutputTokenLimit
+                            }
+                        );
+                    }
+                    task.join().unwrap();
+                }
+            }
+        }
+    }
+}
+
+#[test]
 fn complete_mode_preserves_body_and_narrowed_text_ceilings_and_callback_cancellation() {
     for mode in ["body", "text", "narrow", "cancel", "truncated", "media"] {
         let (endpoint, task) = server(move |mut socket| {

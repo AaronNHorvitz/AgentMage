@@ -136,6 +136,9 @@ the entire response and HTTP EOF. The local API still returns its usual NDJSON
 events; strict proposals remain unapplied and untested. Missing or invalid
 completion fields, tools, refusal, wrong model and invalid requested usage fail
 without emitted text. No automatic retry or streaming fallback occurs.
+Empty answer text also fails as incomplete, for either finish reason, matching
+streaming. Non-answer metadata does not count as answer text. Nonempty text
+cut short at the output-token limit retains its visible `length` finish.
 With `include_usage: true`, complete mode observes the response's ordinary usage
 field without sending stream-only options. Missing usage remains absent; counts
 remain unverified provider reports.

@@ -1195,3 +1195,33 @@ the explicitly chosen existing 300-second idle budget, unchanged 300-second
 total and unchanged byte/token ceilings. All 30 development tasks on every
 prepared profile remain pending before further source tuning, except fixes for
 high or medium findings. No task pass, improvement or model role is inferred.
+
+## Complete-response review and pre-fix partial observations — 2026-11-12
+
+The [independent core review](../reviews/05c53085b860-bounded-complete-model-responses.txt)
+returns **Verdict: FINDINGS** for exact commit
+`05c53085b86074ac461185c0027361230ec136e7`. Medium M1 identifies an acceptance
+change: complete mode accepts empty answer text that streaming refuses. The
+repair restores the incomplete-response refusal, with independent re-review
+required. Low L1–L3 remain T-309 backlog. No row closes.
+
+Before the verdict, source `7d860097edbf2e16cae279191b0fa7ac292b1283` ran only
+dev-001 and dev-002 on `gemma4-26b-a4b`, with 32,768-token context and output
+allowances 23,234 and 23,172. Both used their allowances and returned empty
+visible text with `length`; the collector refused both. Zero accepted edits;
+first-attempt and within-budget task passes remain unavailable. No candidate
+tests, feedback, retries or held-out task ran. This is **partial pre-fix
+progress, not a full development scoreboard run or a framing comparison**.
+
+Request/check time totals 378.595 seconds. The pair reserved 410.633 seconds;
+a separate startup-only failure reserved 190.465 seconds and reached no task.
+Combined reserved GPU work is 10.018 minutes, excluding queues and including
+verification, load and cleanup; active kernel time was not measured. The
+startup failure came from an overlong private socket path, corrected only in
+an additive private state-path adapter. Both runs used both reservation wrappers
+and cleaned up. All 2,299 input hashes matched at the post-pair audit; a frozen
+source snapshot preserves them separately from the M1 repair. A later pair waited
+only for a build slot and executed no task. The [evidence](t303-complete-responses-2026-11-12.md)
+retains the observations and their limits. All 30 tasks on every prepared model
+remain required on the repaired source before further tuning, except high or
+medium review fixes.
