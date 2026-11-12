@@ -1083,3 +1083,17 @@ Strict ungraded proposals change from the preceding published full Muse measurem
 Largest individual refusal count in this repeat: 4; tied causes: generation-refused:error:chat.transport.timeout, strict-edit-refused:code.proposal.format. Across the four current-source model repeats, the 31B profile's 25 format refusals remain the largest individual refusal cause. Two prepared current-source repeats (gemma4-e4b and gemma4-26b-a4b) remain pending before further source work except high/medium review findings. No profile or model role is adopted. Further limit, deadline, cancellation and bookkeeping features remain T-309 backlog unless an open high/medium finding or the row's own completion requirement needs them. T-303/T-306 remain open, without new rows, sub-rows or completion ticks.
 
 See [evidence](t303-raw-json-muse-2026-11-12.md) for per-task observations, frozen bindings and reproduction.
+
+## Independent Muse review clarification — 2026-11-12
+
+The [independent Muse measurement review](../reviews/fc035e714fdb-raw-json-muse-measurement.txt)
+returns **Verdict: PASS** for exact commit
+`fc035e714fdb8f30aba3e77f3d7d7c95e4cb4f7f`, with no high or medium finding.
+Low L1 clarifies the effective output limit: the 300-second total timeout cut
+four attempts at about 12,955–13,531 generated tokens, below their published
+token allowances. All four backend stops report cancellation without context
+truncation. At the observed rate, the time limit bounds this profile's effective
+output near 13.0–13.5K tokens; the token allowance alone overstates its room.
+The builder rechecked all four retained stop records and visible text sizes.
+Counts and earlier entries remain unchanged. A timeout change and low L2's
+private-archive hygiene remain T-309 backlog. No row closes.

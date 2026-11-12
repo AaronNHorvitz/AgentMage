@@ -81,3 +81,17 @@ No product source changed in this batch. The source batch's whole affected Rust 
 | Context/check reproduction | `35a4df98ed29d71405fb65aac9339733b2672b10d67c6095169c3755f4f4f715` |
 | Retained manifest | `92270a0c8ec148feea305c843cffb3ca82e3ab18ae8fc4f1e883be80249a0ce7` |
 | Private archive | `5f27e657019db58cad064a59311c1273af341e385d6372d8333b7aeb4c67123c` |
+
+## Independent review clarification — 2026-11-12
+
+The [independent Muse measurement review](../reviews/fc035e714fdb-raw-json-muse-measurement.txt)
+returns **Verdict: PASS** for exact commit
+`fc035e714fdb8f30aba3e77f3d7d7c95e4cb4f7f`, with no high or medium finding.
+Low L1 clarifies the effective output limit: the 300-second total timeout cut
+four attempts at about 12,955–13,531 generated tokens, below their published
+token allowances. All four backend stops report cancellation without context
+truncation. At the observed rate, the time limit bounds this profile's effective
+output near 13.0–13.5K tokens; the token allowance alone overstates its room.
+The builder rechecked all four retained stop records and visible text sizes.
+Counts and earlier entries remain unchanged. A timeout change and low L2's
+private-archive hygiene remain T-309 backlog. No row closes.

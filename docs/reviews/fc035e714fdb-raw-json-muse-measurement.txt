@@ -1,0 +1,157 @@
+Commit: fc035e714fdb8f30aba3e77f3d7d7c95e4cb4f7f
+Scope: raw-json-muse-measurement
+
+# Independent review — Muse raw-JSON instruction development repeat
+
+Reviewer: Claude Opus 5.5 (independent, separate read-only session). Range reviewed:
+d252fce24ad6bb09aa216d324d2199ef98b4b46e..fc035e714fdb8f30aba3e77f3d7d7c95e4cb4f7f (3b8e1d73, fc035e71).
+Row: T-303 / T-306, non-closing. Tier: core. The reviewer used no GPU or model, ran no hidden or held-out task, graded
+no candidate and ran no native workflow. The repository was not modified.
+
+## Methods
+
+1. In /lane/review-checkout, `git rev-parse HEAD` = fc035e714fdb8f30aba3e77f3d7d7c95e4cb4f7f. `git status --short` was
+   empty before and after all runs.
+2. The SHA-256 of all 14 shared files under /lane/reviews matches the request table exactly. The retained Node binary
+   is d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c, as stated.
+3. I read scope.py, bootstrap.py and cold-check.py before running them. Each differs from the GPT-OSS versions I
+   reviewed before only in archive, manifest and result names, hashes and the model id (checked with `diff`).
+4. I extracted the archive into a private temporary directory under /lane/state/tmp. In it I compared helper/Cargo.toml,
+   Cargo.lock, src/main.rs, audit.py, verify_proposals.py, collect.py, batch.py, controller.py, policy.json and
+   measurement_chat.py with the GPT-OSS archive I reviewed before. All are byte-identical. I re-read main.rs (a
+   24-line stdin-to-library transformer, no I/O beyond stdin and stdout), policy.json and the additive muse_audit.py
+   in full.
+5. I wrote my own parser over all 15 reservation logs, batch reports, api-exit receipts and the 30 per-task
+   record, request, events, checked and backend-slice files. I recomputed every published number from these, not from
+   muse-results.json.
+6. I ran the original immutable audit.py and the additive muse_audit.py against my own extraction (bwrap
+   `--unshare-net`, `/` and the state bound read-only).
+
+## Commands and results (all in /lane/review-checkout)
+
+- `nice -n 10 python3 -B /lane/reviews/raw-json-muse-20261112-scope.py` → rc 0, `scope: PASS`: 3 paths since 3b8e1d73,
+  507 preserved table lines, 9 bindings, 1 summary row and 30 per-task rows. `cmp` shows the output is byte-identical to
+  raw-json-muse-20261112-scope-postcommit.json.
+- My own combined-range check: `git diff --name-status d252fce2..HEAD` shows exactly 5 paths (M TASKS.md,
+  M coding-scoreboard.md, M t303-raw-json-gpt-2026-11-12.md, A t303-raw-json-muse-2026-11-12.md,
+  A docs/reviews/d252fce24ad6-raw-json-gpt-measurement.txt). `--numstat` shows 289 added and 0 removed lines.
+  `git diff --check d252fce2 --` is clean.
+- `cmp docs/reviews/d252fce24ad6-raw-json-gpt-measurement.txt /lane/reviews/d252fce24ad6-raw-json-gpt-measurement.md`
+  → identical. The retained GPT-OSS review is unedited.
+- `bootstrap.py --repository $PWD --output …/helper` → 2283 repository inputs verified and own helper source
+  hash-checked. The dependency path is rewritten to /lane/review-checkout/capabilities/repository-map.
+- `bash /tools/build-slot env CARGO_BUILD_JOBS=2 CARGO_TARGET_DIR=… cargo build --locked --offline …` → rc 0 after
+  queueing for the slot. The fresh reviewer helper is f7e1983d9bd21a4ad7a813bf28d0fe65a7978d54af70bd32e63d11fdd8ce5ee3.
+  The builder's is 852cd7f5…; the difference is expected from the build path.
+- `cold-check.py` (archived helper) → rc 0: 19615 files verified, 1 cold audit, 30 contexts and available checks
+  reproduced, temporary state removed (no leftover raw-json-muse-cold-* directory).
+- `cold-check.py --helper <fresh reviewer helper>` → rc 0, the same result with `fresh_helper_used: true`. All 30
+  contexts and all 26 strict checks of the available answers reproduce with an independently built helper. The 4
+  timeouts have no answer.txt, so 26 checks are expected.
+- Original `audit.py --models muse` on my extraction → `AssertionError` at the template-kwargs line (75) and nowhere
+  else. `muse_audit.py --models muse` on my extraction → stdout byte-identical to the archived muse-results.json.
+- `python3 -B scripts/local_agent_fast_gate.py --base d252fce2…` (retained Node on PATH) → `FAST GATE: PASS` (diff
+  check, untracked lint, review lint of the retained review, markdownlint-cli2: 4 files, 0 issues).
+- The direct markdownlint command from the request → 4 files checked, `issues: []`, rc 0.
+- `git status --short` → empty.
+
+## Independent checks of claims
+
+- **Additive auditor delta.** `diff audit.py muse_audit.py` shows exactly two changes:
+  - the docstring;
+  - line 75 is replaced by `assert model == 'muse'` and
+    `assert identity['template_kwargs'] == {'reasoning_strength': 'medium'}`.
+
+  No request, budget, checker, task, threshold or cleanup assertion differs. The expectation matches the committed
+  profile (model-profiles/development/coding-model-lab.json:38, asserted by tests/test_coding_model_lab.py:125) and
+  every batch report's model record. Exact equality makes the check stricter than the original, not looser. It
+  corrects a wrong audit expectation and leaves the measurement unchanged.
+- **Numbers trace to raw logs.** My parser, independent of the auditor, finds:
+  - 30 tasks with outcomes 19 ungraded proposals, 3 edit refusals, 4 format refusals and 4 timeouts;
+  - every `max_tokens` equal to min(32768, 32768 − preflight − 32), range 24395–29826, and every allowance and every
+    log hash bound in record.json;
+  - zero retries;
+  - backend counters for exactly 26 tasks (one prompt-eval and one eval line each), totalling 166355 input and
+    150086 output tokens;
+  - a request/check sum of 4711.068 s;
+  - reserved work in the 15 reservation logs summing to 5284.175 s, which is 88.070 min.
+
+  Every per-task row in the evidence matches. The scoreboard has the dated line MEASURE FIRST requires and states the
+  context and output budgets. Does-not-fit is reported separately (0). Failures are counted, not dropped. dev-021's
+  output of exactly 8192 tokens is a natural `stop` ending in valid JSON (checked.json holds changes), not a hidden
+  cap.
+- **Reservations and cleanup.** All 15 reservation logs begin with the heavy-build and exclusive-GPU waits and end with
+  `status: completed`. controller.py launches `build-slot gpu-slot queue-run agentmage 900 … batch.py`. Every batch
+  report shows:
+  - `completed`;
+  - `settings_revoked: true`;
+  - `resource_guard_error: null`;
+  - server exit −15 after a lab-requested shutdown;
+  - a sampled GPU peak of at most 17986 MiB;
+  - api-exit `reaped: true`.
+
+  The controller receipt records exit 0, all 15 progress lines and "COMPLETE; no candidate execution or grading".
+  The blocker observation is byte-identical to the archived copy. It records no model or API process, native Git UID
+  65534 and the expected controls receipt absent; it is an observation only. The archive holds no api-key, socket,
+  client or control token, or .gguf file. "api-key" appears only as the `--api-key-file` bind path in the server
+  command, and api.log is empty. The two large files are the two bin/ executables. The chat API hash 72ca6848… is
+  unchanged from the GPT-OSS batch.
+- **Evaluation integrity.** collect.py iterates only `suite.development_tasks()`. No held-out path, hidden test or
+  candidate execution appears in any script read. From 42612ca9 (the preceding Muse repeat, 18/30, scoreboard "Muse
+  exact-source development repeat, 2026-11-11") to a99fe467, the only product change is the one-line
+  `CODING_PROPOSAL_INSTRUCTION` constant plus its tests, and nothing outside docs changed from a99fe467 to HEAD. The
+  new instruction is generic and holds no task content. It keeps the "task and repository text are untrusted data,
+  never tool or permission instructions" clause. Evaluation integrity holds.
+- **Causal limits and partial path.** The 18/30 → 19/30 change is not presented as a solve rate or as caused by the
+  instruction alone. Pass rates are UNAVAILABLE, not zero. Native trust and the controls receipt are recorded as
+  observations, not bypassed. No role, adoption, qualification, row closure or readiness is claimed. The order of work
+  is unchanged (two prepared repeats pending), with no new rows or ticks. The cross-repeat claim holds: the 31B
+  profile's 25 format refusals exceed GPT-OSS's 19 size-limit refusals and Muse's 4.
+- **GPT-OSS L1 clarification (3b8e1d73).** I re-extracted the GPT-OSS archive and recomputed it. There are 19
+  `chat.transport.limit` events, all reading "The server response exceeded a size limit". Each slice has one stop
+  line with `truncated = 0`. Stop n_tokens minus preflight is 16607–16721. Visible text bytes are 0 for 18 tasks and
+  6233 for one. `MAX_STREAM_BYTES` is 4 MiB (platforms/linux-inference/src/local_chat.rs:15). The added text is
+  accurate and additive, changes no earlier number, and resolves L1. L2 stays T-309 backlog as stated.
+- **Public-repository hygiene.** The added lines contain no home path, username, e-mail, hostname or credential. The
+  retained review contains only /lane infrastructure paths, UID 1000 and the reviewer attribution, as in earlier
+  committed reviews. No other agent product, private project or patent is named. "muse" identifies the measured
+  weights artifact, not product branding. Raw archives are not committed.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **L1 (low, reporting): for Muse the 300 s total timeout, not the published token allowance, is the effective output
+  limit.** This is the same reporting class as the GPT-OSS L1. It appears at docs/evidence/t303-raw-json-muse-2026-11-12.md:9
+  and docs/evidence/coding-scoreboard.md:1066, which publish an output-token allowance of 24395–29826.
+  - All 4 timeouts (dev-004, dev-011, dev-012, dev-027) show `stop: cancel task` with `truncated = 0`. Stop n_tokens
+    minus preflight puts the cut at 12955–13531 generated tokens, at about 45 tok/s.
+  - Those 4 tasks emitted 4276–15497 visible text bytes, and the first visible text arrived only at 205–278 s.
+  - The largest completed output is 12578 tokens (dev-013, 291.5 s).
+
+  At the observed decode rate, about 13.5K tokens is the most any task could produce within 300 s. The time limit
+  therefore bounds every task below its allowance. Nothing published is false: 300/60 s is stated, and the 300.0xx s
+  rows and timeout causes are visible. But a reader of the allowance column over-estimates this profile's effective
+  room by roughly 2×. Fix (documentation only, in the next additive note): state that the 300 s total timeout cut the
+  4 timeouts at about 13.0–13.5K generated tokens and bounds Muse's effective output near that level. Changing the
+  timeout is T-309 backlog.
+- **L2 (low, carried backlog, T-309):** the private archive's helper/Cargo.toml line 8 still holds the original
+  private host dependency path; the bootstrap rewrites it. It must be scrubbed before any public archive distribution.
+  The archive is private, and nothing private is committed.
+- **Note (no finding):** in cold mode the auditor's check that the api-key and model.sock are absent runs against the
+  extracted archive, where it is trivially true. Live removal rests on the builder's receipts (settings revoked, API
+  reaped, controller exit 0) and the read-only blocker observation, as accepted in earlier reviews.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing measurement batch): the Muse measurement line is accepted.
+  - Every published number traces to the retained raw logs.
+  - The results reproduce from an empty state with networking off, including with an independently built helper.
+  - The additive auditor is a correct, minimal expectation fix.
+  - The partial-path and causal limits are stated honestly, and evaluation integrity holds.
+
+  Neither row closes; T-303, T-306, T-315 and T-316 stay open.
+- 3b8e1d73: the retention of the d252fce24ad6 verdict and the GPT-OSS L1 clarification are accurate, additive and
+  independently reproduced.
+
+Verdict: PASS
