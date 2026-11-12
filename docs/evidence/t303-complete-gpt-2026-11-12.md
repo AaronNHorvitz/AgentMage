@@ -146,3 +146,24 @@ role, qualification, release or owner-test readiness is claimed.
 
 Validation here is the reporting-only fast gate. The last affected-source gate
 recorded 53 inherited failures; it was not rerun for this documentation increment.
+
+## Independent review and additive clarifications — 2026-11-12
+
+The [independent core review](../reviews/62d675983c1b-complete-response-gpt-measurement.txt)
+returns **Verdict: PASS** for exact reporting commit
+`62d675983c1ba74d264c628a9ca38d6a79a1cf49`, with no high or medium finding.
+Every per-task table row and all 30 contexts and strict checks were
+independently reproduced. The reviewer could not run Markdown lint without
+Node; the passing bound builder log and reviewer structural checks are
+retained. No row closes.
+
+Low L1 clarifies an under-claim above: in complete mode, the incomplete
+response code comes from empty answer content. All 13 incomplete attempts
+exhausted their output allowances and returned no answer content; the cause
+of the model's empty answer content remains unestablished. Low L2 clarifies
+the controller history: pair 00 completed; the first controller then stopped
+while pair 02 was waiting for a build reservation, before any attempt for
+that pair started. The later controller skipped pair 00 and ran pairs
+02–28. No task attempt was replayed or replaced. Low L3's streaming-specific
+error wording for complete responses remains T-309 source backlog. Counts,
+sealed records and earlier entries stay unchanged.

@@ -1,0 +1,177 @@
+Commit: 62d675983c1ba74d264c628a9ca38d6a79a1cf49
+Scope: complete-response-gpt-measurement
+
+Reviewer: independent Claude Opus 5.5 session, read-only, pinned checkout /lane/review-checkout.
+Row: T-303 / T-306 (non-closing development measurement), tier core, base 87ece798452c.
+
+## Methods
+
+I did not modify the repository and did not use the GPU. My scratch copies are outside the repository:
+/tmp/rv-gpt holds the GPT-OSS records, the helper source and the controller files from the archive, and
+/tmp/rv-gpt-helper is my helper build tree.
+
+1. Commit identity and diff.
+   - `git rev-parse HEAD` returns 62d675983c1ba74d264c628a9ca38d6a79a1cf49.
+   - `git diff --stat 87ece798..HEAD` shows three documentation files only: TASKS.md (+10),
+     docs/evidence/coding-scoreboard.md (+39) and docs/evidence/t303-complete-gpt-2026-11-12.md
+     (+148, new). There are no deletions, so the ledger table lines, the earlier TASKS body and the
+     earlier scoreboard prefix are all unchanged.
+   - `git log 974d2bb55afa..HEAD --stat` shows that no product source has changed since the measured
+     source commit. Every intervening commit touches only docs/ or TASKS.md.
+2. `git diff --check 87ece798452c281cbd9b8dbeffa07ef62c84928c --` exits 0.
+3. I read the archive verifier source before running it. It opens the tar in stream mode and checks
+   each member: the path is relative with no `..`, the member is a regular file listed in the
+   manifest, no token or api-key name is present and no .gguf is present. It hashes every member in
+   memory. It writes nothing to disk and imports no archived code.
+   `python3 -B /lane/reviews/complete-gpt-20261112-verify-archive.py` → status PASS:
+   - 80,649 files verified; 2,283 repository inputs and 16 private inputs; 30 tasks.
+   - 5 strict ungraded proposals.
+   - Request/check 2743.8244774690393 s; job wall 2926.2779925819923 s.
+   - Counter coverage 30; 188,409 input / 539,597 output tokens.
+   - Causes: 13 incomplete, 8 edit, 4 format, 5 ungraded-proposal.
+4. Binding snippet from the request → `PASS:15 retained bindings and three current document hashes`.
+   The bindings file SHA matches 79fabc89…125f. The scope's three documentation hashes match the
+   checkout.
+5. Independent per-task cross-check. My own script read the archive in memory and parsed all 30 rows
+   of the evidence per-task table. For each task it compared:
+   - input tokens against `rendered_input_tokens_preflight` and against the backend `prompt eval`
+     count;
+   - output allowance against `requested_output_tokens`, against `max_tokens` in request.json and
+     against the formula `min(32768, 32768-input-32)`;
+   - observed output against the backend `eval time … / N tokens`;
+   - the cause against the record cause, the terminal event code and checked.json;
+   - request/check seconds against `generation_seconds`.
+
+   **30/30 rows match and there are 0 mismatches.** Exactly 13 tasks have observed output equal to the
+   allowance, and these are exactly the 13 `chat.response.incomplete` tasks. Each one has a backend
+   `stop processing: n_tokens = 32735, truncated = 0`. Every completed task has `finish: stop`. I also
+   compared every audit.json development row with the archived records, and they agree.
+6. Settings consistency across the 15 batch reports. The only fields that differ are per-job state
+   paths, the loopback port, the media marker and timing/peak fields. All 15 reports share the same
+   API SHA 41fa8967…626e, launcher, policy, profile and runtime-manifest hashes, `response_mode:
+   complete`, idle = total = 300000 ms, Q8 K/V, batch 256 / microbatch 128, 4 threads, temperature 0,
+   seed 42, `reasoning_effort: medium` and weight SHA 27cd6c43…5901 (12,109,566,624 bytes).
+   Requests carry `include_usage: false`. The model profile entry is labelled
+   `coding_qualification: not-qualified`.
+7. Interruption and replay check.
+   - controller-gpt.log shows pair 00 completed under controller_resume6_31b.py, then
+     `AssertionError: job failed: gpt-oss 2`.
+   - gpt-oss-02-reservation-resume6.log has one line, "Waiting for a shared heavy-build/test
+     reservation". So that job never reached the GPU reservation, model load or batch.py.
+   - controller_resume7.py differs from resume6 only in the log file name. It skips completed reports
+     and asserts `not directory.exists()` before starting a pair, and it then ran pairs 02–28. Every
+     reservation log except that one-line resume6 file ends `"status": "completed"`.
+   - No task attempt was dropped, replayed or replaced. Every job used both `build-slot` and
+     `gpu-slot` with `queue-run agentmage 900`, and the 30 s pauses ran outside both reservations.
+8. Independent context/check reproduction.
+   - I copied the archived helper main.rs, Cargo.lock and Cargo.toml and repointed the path
+     dependency to this checkout's capabilities/repository-map. Build command:
+     `CARGO_TARGET_DIR=/lane/state/review-target/gpt-helper bash /tools/build-slot cargo build --offline --locked --release`
+     → Finished (36.46 s).
+   - My helper's SHA is 41b83749…04ec, identical to the reviewer helpers from the 31B and 27B reviews.
+     It differs from the builder's 852cd7f5 only because the build paths differ.
+   - All 2,283 frozen repository entries match both this checkout and
+     `git show 974d2bb55afa…:<path>`, with **0 mismatches**.
+   - For each of the 30 tasks, using this checkout's `coding_eval.projection`, `read_candidate` and
+     `coding_eval_suite.development_tasks`:
+     - the log hashes match;
+     - the helper context equals context.json;
+     - the request messages equal the context messages;
+     - `max_tokens` equals the formula;
+     - the event text equals answer.txt;
+     - the helper strict check equals checked.json;
+     - acceptance equals `generation_succeeded`;
+     - the candidate tree equals the base projection plus the accepted change.
+   - Result: **reproduced 30, accepted 5.** No candidate was executed and no hidden test was loaded.
+9. `python3 -B scripts/local_agent_fast_gate.py --base 87ece798452c281cbd9b8dbeffa07ef62c84928c`:
+   - git diff --check and `--lint-untracked` exit 0.
+   - markdownlint exits 127 with "Missing executable: node; no automatic download", so the gate
+     reports **FAST GATE: FAIL in this lane**. /lane/state/tooling is not mounted here, and I
+     downloaded nothing. **I could not run markdownlint myself.**
+   - Compensating checks: the hash-bound builder doc-gate.log shows markdownlint-cli2 with 3 files,
+     0 issues and FAST GATE: PASS. The scope binds the same node SHA d1de76d8…932c accepted in
+     earlier reviews. My structural check found the following:
+     - All three files end with a single newline.
+     - There are no repeated blank lines and no tabs.
+     - Table column counts are consistent: 7 per row in the new evidence and 10 in the new
+       scoreboard table.
+     - MD013 is disabled in .markdownlint-cli2.jsonc.
+10. Evaluation integrity.
+    - All archived task directories are `dev-*` (30 unique), and the dev-set SHA 0c2a0624…1570 is
+      the same one used by earlier published measurements.
+    - audit.json reports `held_out_executed: false`, `hidden_tests_executed: false` and
+      `native_execution: false`.
+    - No prompt, profile, checker or threshold changed in this commit.
+11. Secrets and hygiene.
+    - The GPT-OSS directories hold no token or api-key files. The only "api-key" matches are the
+      `--api-key-file /run/agentmage/api-key` argument paths in the launch commands; no key values
+      appear.
+    - The 197 added lines contain no host path, username, hostname, email, credential, private
+      project name or agent-product name.
+    - `gpt-oss`/`GPT-OSS` names the measured model artefact, as in earlier PASSed entries. The
+      driver package name is a factual platform identifier.
+    - I made no patent search.
+12. Cleanup. `ps` in this lane shows no model, API or batch process. The live cleanup check against
+    the builder's /lane/state/mc1-20261112 root could not be re-run because that root is absent
+    here. That claim rests on the hash-bound cleanup.json (15/15 revoked, reaped, keys/sockets absent,
+    0 guard errors) and on the per-report `settings_revoked` and `api-exit.reaped` fields checked
+    in step 3.
+
+## Claim checks
+
+- These claims are verified by steps 3, 5 and 8:
+  - 5/30 strict ungraded proposals.
+  - 13 incomplete, 8 edit and 4 format refusals.
+  - Does not fit: 0. Context 32768. Inputs 2988–8517. Allowances 24219–29748 from the stated formula.
+- These numbers are verified by step 3:
+  - Request/check 2743.824 s.
+  - Job wall 2926.278 s across 15 reservations. 2926.278 / 60 = 48.771 GPU work minutes.
+  - Backend counters 188,409 / 539,597 tokens, with 30/30 coverage.
+- The "changed variables" statement matches the archived policy text and settings: complete framing
+  and idle 300 s instead of 60 s, with total 300 s and the byte ceilings unchanged. The preceding
+  GPT-OSS streaming repeat (t303-raw-json-gpt-2026-11-12.md) records 300/60 s total/idle.
+- The MEASURE FIRST scoreboard line is present. It states the context and output budgets and counts
+  does-not-fit (0) apart from model failures.
+- The platform-tuple-changed and not-qualified labels are present.
+- There is no row closure, completion tick or new sub-row.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog):** the incomplete-refusal cause is understated.
+  - Location: docs/evidence/t303-complete-gpt-2026-11-12.md:62-64 and coding-scoreboard.md:1449
+    say "the reason no completed answer was accepted is not established".
+  - Evidence: in complete mode, `chat.response.incomplete` comes only from the empty-content branch.
+    platforms/linux-inference/src/local_chat.rs:364-370 accepts both `stop` and `length`, then
+    returns `Incomplete` when `content.is_empty()`. The other `Incomplete` sites (local_chat.rs:479,
+    546-548; local_chat_transport.rs:715) belong to the streaming path.
+  - What the evidence therefore shows: all 13 attempts used their whole allowance (backend
+    output-cap, n_tokens 32735) and returned no answer content.
+  - This is an under-claim, not an over-claim, so it is not dishonest. Fix: say so in the next
+    GPT-OSS entry.
+- **L2 (low, backlog):** the controller interruption is not described in the evidence.
+  - The first controller stopped with `job failed: gpt-oss 2` while waiting for the build
+    reservation, and a second controller resumed it (step 7).
+  - No attempt was affected. However, the evidence says only that completed records are preserved,
+    not replayed.
+  - Fix: one sentence in future entries naming the interrupted, never-started pair and the resuming
+    controller.
+- **L3 (low, out of scope source, backlog):** the error text is wrong for complete mode.
+  platforms/linux-inference/src/local_chat_transport.rs:134 reports "The streamed answer was invalid
+  or incomplete" for complete-mode responses too.
+- **Limitation (not a finding):**
+  - Local markdownlint could not run because Node is absent. I relied on the bound builder log plus
+    my structural checks.
+  - The live cleanup check could not be re-run because the builder root is absent.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing development measurement, complete-response GPT-OSS repeat): **PASS**
+  for this reporting increment.
+  - Every published number traces to the archived raw logs.
+  - Evaluation integrity holds: development tasks only, no hidden test or held-out run, frozen source.
+  - Labelling is honest: partial path, ungraded proposals, unqualified platform.
+  - Neither row closes, and none is claimed to close. L1–L3 go to the T-309 backlog.
+
+Verdict: PASS

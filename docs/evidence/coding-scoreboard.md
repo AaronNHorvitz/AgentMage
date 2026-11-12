@@ -1463,3 +1463,26 @@ pass. See [evidence](t303-complete-gpt-2026-11-12.md) for per-task results,
 exact input bindings and limits. Two prepared profiles still require the full
 repeat before tuning, except high/medium fixes. T-303/T-306 remain open;
 independent core review is required and no row closes.
+
+## Independent GPT-OSS complete-response measurement review — 2026-11-12
+
+The [independent core review](../reviews/62d675983c1b-complete-response-gpt-measurement.txt)
+returns **Verdict: PASS** for exact reporting commit
+`62d675983c1ba74d264c628a9ca38d6a79a1cf49`, with no high or medium finding.
+It independently verifies every per-task row and reproduces all 30 contexts
+and strict checks, including the five accepted ungraded proposals. Markdown
+lint could not run in the review lane without Node; the review retains the
+bound passing builder log and its own structural checks.
+
+Low L1 is clarified additively: all 13 incomplete refusals exhausted their
+output allowances and returned empty answer content. This follows from the
+complete decoder's empty-content branch and the recorded token counters;
+why the model generated no answer content is not established. Low L2 is
+clarified here: the first controller stopped before pair 02 acquired a build
+reservation; the later controller skipped completed pair 00 and ran pairs
+02–28. No task attempt was replayed or replaced. Low L3, streaming-specific
+error wording used for complete responses, remains T-309 source backlog.
+
+No measured count, sealed input or earlier entry changes. This is review
+retention and clarification, not a new model run. T-303/T-306 remain open;
+no grade, retry, held-out result or row closure is claimed.
