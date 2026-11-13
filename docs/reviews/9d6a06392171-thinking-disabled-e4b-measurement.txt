@@ -1,0 +1,151 @@
+Commit: 9d6a063921714933a28f9b3fdb404df954e543c9
+Scope: thinking-disabled-e4b-measurement
+
+# Independent review: thinking-disabled E4B development measurement (reporting only)
+
+Reviewer: Claude Opus 5.5 (extra-high effort). Separate session, read-only. I worked only in
+the pinned checkout `/lane/review-checkout`. No GPU, model, candidate, hidden-test or held-out
+execution. I ran no archived helper and imported no archived code. I did not modify the repository.
+
+Row: T-303 / T-306, NON-CLOSING full development partial-path measurement. Base
+`f77c8f3eb00ac4b8a07e38acfcdd66b445610a83`, source `a896f055256e96baec09966c71c5d0a7f1714d96`.
+
+## Methods, commands and results
+
+1. Commit and diff scope
+   - `git rev-parse HEAD` gives `9d6a063921714933a28f9b3fdb404df954e543c9`, and `HEAD^` is the base.
+   - `git diff --check f77c8f3e… --` exits 0.
+   - `git diff --stat` shows exactly 3 paths, all additions (+136, -0): `TASKS.md`,
+     `docs/evidence/coding-scoreboard.md` and `docs/evidence/t303-thinking-disabled-e4b-2026-11-13.md`.
+     No source, prompt, checker, task, hidden-test, threshold, profile, permission or SBOM path changed.
+   - The source commit is an ancestor of HEAD.
+
+2. Bindings and post-commit receipt
+   - The two receipts have the declared SHA-256 values: bindings `16409b97…0ffb`, post-commit `7fbcd9c4…99`.
+   - I independently hashed and size-checked all 26 bound artifacts: 26/26 match.
+   - `git show HEAD:<path> | sha256sum` for the 3 committed blobs equals the receipt values
+     (`1991dd26…`, `a060b635…`, `bae8fc68…`).
+   - All 23 prior A4B capsule artifacts (bindings `8ab5960b…`) re-hash unchanged.
+
+3. Archive verifier
+   - I read `python3 -B /lane/reviews/thinking-disabled-e4b-20261113-verify.py` before running it. It streams the tar,
+     extracts nothing and executes nothing.
+   - Result: PASS, 2805 files, 2283 repository / 20 private, 30 tasks, 16 proposals. Causes are
+     {format 8, edit 6, ungraded-proposal 16}, tokens 215833/36730, coverage 30, and times
+     608.7926542009809 s / 728.9703722480044 s.
+   - My own in-memory recomputation over all 2805 members (every member hash checked, all regular files):
+     - All 30 task IDs are distinct.
+     - Output budgets range 23006–29515 and input preflight 3221–9730. Each budget equals
+       `min(32768, 32768-n-32)`.
+     - Sampled GPU peaks range 5345–6695 MiB.
+     - Reserved work sums to 728.970 s (12.150 min) and request/check time to 608.793 s.
+     - Usage in the 30 raw upstream response bodies sums to 215833 / 36730. All 30 have HTTP 200 and
+       `finish_reason: stop`, and every completion is below `max_tokens`. This matches the disclosed
+       `stopped-below-token-limits: 30`.
+     - The per-job `generation_succeeded` values in the 15 reservation logs sum to 16.
+   - Frozen and sealed hashes match the evidence text:
+     - frozen-inputs file `85dc3c08…abd`;
+     - API `ba623b92…c1` in every batch report;
+     - helper `852cd7f5…ba` in every batch summary;
+     - model sha `d35a3aa7…fe9f`, 5405170144 bytes;
+     - the actual copied E4B profile equals its frozen original, `69e6e0b3…`;
+     - Q8 caches, batch 256 / microbatch 128, temperature 0, seed 42 and 4 threads come from the audit
+       `model_identity`.
+   - Policy `source_hashes` equal the checkout's `suite.source_hashes()`.
+   - Timer semantics: in the archived private `batch.py`, `started` is set after frozen repository
+     and private validation (lines 65–72) and stopped in `finally` after the model and API context managers
+     exit (line 200). Queue waits run in the controller, outside the timer. This matches the stated scope.
+   - Independent outcome check, using the checkout's own `coding_eval_suite`/`coding_eval` rather than
+     archived code:
+     - For all 30 tasks, `task_sha256` equals the canonical digest, and the user message's `task` equals
+       the frozen statement. The context names the editable source.
+     - All 30 share one system prompt.
+     - The 16 proposals touch only `task['source']` and differ from base, and the archived candidate file
+       equals the checked change.
+     - The 14 refusals keep the exact base bytes.
+     - All 6 `code.proposal.edit` refusals have a defect I found independently: `new == old` (dev-010,
+       dev-012, dev-018) or an `old` not occurring exactly once (dev-020, dev-021, dev-025).
+     - All 8 `code.proposal.format` refusals violate the schema: extra top-level keys, a missing `new`,
+       or a stray key. No accepted proposal shows such a defect.
+
+4. Reporting fast gate
+   - Command: `PATH="$task_node_dir:$PATH" python3 -B scripts/local_agent_fast_gate.py --base f77c8f3e…`.
+   - Result: FAST GATE: PASS. markdownlint-cli2 reports "Linting: 3 files", 0 issues.
+
+5. Direct lint and render
+   - I read `/lane/reviews/42612ca9787f-a4b-node /lane/reviews/thinking-disabled-e4b-20261113-lint_render.mjs`
+     and then ran it. Result: PASS, 3 paths with 0 issues each, exactly 1 rendered table in the new
+     scoreboard section and 1 in the evidence file.
+   - Its config equals the repository `.markdownlint-cli2.jsonc`.
+   - I also parsed both tables with `marked.lexer`:
+     - The scoreboard has 11 columns and 1 row: 2026-11-13 | a896f055… | gemma4-e4b (30/30) |
+       32768 / 23006–29515 | Unavailable | Unavailable | 16/30 | Not run | 608.793 | 12.150 | 215833 / 36730.
+     - The evidence table has rows 6 / 8 / 16.
+     - All values equal my recomputation.
+
+6. Preservation
+   - All 507 `|` table lines of TASKS.md are byte-identical to the base.
+   - The TASKS diff removes no lines.
+   - The base scoreboard is an exact byte prefix of HEAD.
+   - No status or tick is promoted. The diff contains no held-out task content (`held-NNN` count 0).
+   - The retained `docs/reviews/2bee1e85ea25-thinking-disabled-a4b-measurement.txt` is byte-identical to
+     `/lane/reviews/2bee1e85ea25-thinking-disabled-a4b-measurement.md` (Verdict: PASS).
+   - Erratum check against raw policy: `chat_transport_binary_source` is `40cad647…` and `comparison`
+     describes the text-to-JSON-object change, so both are stale as disclosed.
+     - `source_commit` and `source_product_commit` are `a896f055…`.
+     - The API hash `ba623b92…` equals the hash in the reviewed thinking-control evidence.
+     - All 30 upstream bodies are exactly
+       `{model, messages, stream:false, max_tokens, n:1, response_format:{type:json_object}, chat_template_kwargs:{enable_thinking:false}}`.
+     - The server profile `chat_template_kwargs` is `{}` in every batch.
+     - The erratum is accurate and affects no number.
+
+7. Methods and receipts
+   - I read the bound `audit_repeat.py`, `reproduce_repeat.py`, `cleanup.py`/`.json`, `preservation.py`/`.json`,
+     `postcommit.py`, the retention receipt, the archive-verification receipt, and the controller2/controller3
+     scripts and launch receipts.
+   - `diff controller2.py controller3.py` differs only in the reservation-log suffix (`resume2` → `resume3`).
+   - The controller3 launch receipt records exact argv and start ticks, and records that it found no prior job
+     directory and preserved the old queue log.
+   - The old controller log is 0 bytes. The only resume2 job log holds a single build-slot wait line.
+   - All 15 resume3 job logs show the build-slot reservation, then the GPU-slot reservation, verification,
+     2 task records and `completed`.
+   - The 1167/53/19 source-gate figures match the retained `docs/reviews/8c14051a2d1b-…txt`.
+   - **Live root absent:** `/lane/state/id3/reproduce_repeat.py` does not exist in this review environment.
+     `/lane/state` contains only `review-target` and `tmp`, so I could not run the original helper
+     reproduction. As instructed, I did not run the archived helper. I independently recomputed the archived
+     data instead (item 3), but I did not rerun the Rust helper or strict checker on the archived
+     answers. As permitted, I did not repeat the 30 Rust targets.
+
+Privacy and IP: I scanned the added lines for host paths, usernames, `/lane`, credentials, email, private
+project names and other agent products. Nothing was found. Model identifiers are descriptive, not branding.
+Private paths appear only in the private capsule. The archive holds no `.gguf`, token or key files, and the
+30 API tokens are recorded as retired.
+
+MEASURE FIRST:
+- The batch has a scoreboard line.
+- Every number traces to the raw captures.
+- Context and output budgets are stated.
+- Tasks that do not fit (0) are reported apart from refusals.
+- The changed variable (thinking disabled) is stated.
+
+## Findings
+
+No critical, high or medium findings.
+
+- Low (backlog, wording):
+  - Location: `docs/evidence/t303-thinking-disabled-e4b-2026-11-13.md:66`.
+  - Issue: "its log records only a build-slot wait". The old controller stdout log
+    (`controller-e4b.log`) is empty. The build-slot wait line is in the per-job
+    `gemma4-e4b-00-reservation-resume2.log`.
+  - Impact: the claim is substantively true but names the wrong log.
+  - Fix: name the per-job reservation log.
+- Low (already disclosed, backlog T-309): the inherited stale policy labels. The erratum is accurate.
+
+## Per-row result
+
+- T-303 / T-306 NON-CLOSING E4B reporting increment: **PASS** with no high or medium finding. Each of the
+  three reporting paths is accurate, traceable to raw logs and honestly labelled: partial path, proposals
+  ungraded, no task passes, no held-out run, unqualified profile, no qualification, release or readiness
+  claim. Both rows remain OPEN, and this verdict closes neither.
+
+Verdict: PASS

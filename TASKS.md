@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The retained [independent E4B measurement review](docs/reviews/9d6a06392171-thinking-disabled-e4b-measurement.txt)
+returns **Verdict: PASS** for exact `9d6a063921714933a28f9b3fdb404df954e543c9`,
+with no high or medium finding. The low log-wording note joins the disclosed
+policy-label hygiene in T-309 backlog: the old per-job reservation log holds the
+build-slot wait; old controller stdout is empty. Counts and sealed inputs stay
+unchanged. T-303/T-306 remain open; this reporting review closes no row. Four
+profiles still need fresh post-change measurements before tuning; 31B is queued.
+
 The [thinking-disabled E4B repeat](docs/evidence/t303-thinking-disabled-e4b-2026-11-13.md)
 finishes all 30 frozen development tasks at source
 `a896f055256e96baec09966c71c5d0a7f1714d96`: 16/30 strict ungraded proposals. Task passes and retries remain
