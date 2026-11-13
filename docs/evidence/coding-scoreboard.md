@@ -1486,3 +1486,53 @@ error wording used for complete responses, remains T-309 source backlog.
 No measured count, sealed input or earlier entry changes. This is review
 retention and clarification, not a new model run. T-303/T-306 remain open;
 no grade, retry, held-out result or row closure is claimed.
+
+## Complete-response Muse development repeat — 2026-11-12
+
+Campaign date denotes its start day; attempts span 2026-11-12–13 UTC.
+
+Source: `974d2bb55afa6be47bd58ffcf1dd30a6450f70cd`. All 30 development tasks
+complete on this profile; the measured coding path remains partial.
+
+| Date | Model | Context / output tokens | First-attempt task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU work min | Observed input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-12 | muse | 32768 / 24395–29826 | Unavailable | Unavailable | 19/30 | Not run | 4755.558 | 88.812 | 174326 / 163130 |
+
+Changed variables: complete upstream framing and explicitly chosen 300-second
+idle instead of 60; total stays 300 seconds. Output is
+`min(32768, 32768 - rendered input tokens - 32)`. All 30 inputs fit;
+does not fit: 0. The existing medium-reasoning profile, prompts, source
+selection, strict checker and byte ceilings stay unchanged. The source repair
+has an independent PASS for the exact commit; no row closes.
+The recorded GPU driver package is
+`xorg-x11-drv-nvidia-cuda-615.71.09-3.fc44.x86_64`; the platform tuple changed
+since preparation and remains unqualified for coding.
+
+Causes: 3 `generation-refused:error:chat.transport.timeout`, 3 `strict-edit-refused:code.proposal.edit`, 5 `strict-edit-refused:code.proposal.format`, 19 `ungraded-proposal`.
+
+Existing deadlines and output ceilings remain unchanged; backend termination counts are reported separately in the evidence.
+
+Dev-004 has 99 progress counters, reaching a 13,407-token lower bound at
+299.919 seconds after slot launch, before its 29,805-token allowance.
+Dev-011 has 95 counters, reaching 12,517 at 297.552 seconds, before 26,793.
+Dev-012 has 94 counters, reaching 12,512 at 286.791 seconds, before 29,795.
+Their final token counters are unavailable; these lower bounds are excluded
+from aggregate totals. The four counters before dev-012's own slot launch
+belong to the preceding request and are excluded from its count.
+
+GPU work means 5328.730 seconds of job wall inside
+15 separate reservations, including verification/load/cleanup and excluding
+queues and wrapper overhead; active kernel time was not measured. Backend
+final counters cover 27/30 and include non-answer output.
+Tasks without final counters: dev-004, dev-011, dev-012; totals exclude them.
+Missing final counters are unavailable, not zero tokens. No
+candidate tests, feedback, retries, held-out tasks or task grades ran. The
+native artifact and original grading-control blockers remain; the available
+path is Rust source selection → credential-owning chat → strict checker.
+No whole-loop, model-role or quality-improvement claim is made.
+
+Full source/record audit, 30-context/check reproduction and archive verification
+pass. See [evidence](t303-complete-muse-2026-11-12.md) for per-task results,
+exact input bindings and limits. One prepared profile still requires the full
+repeat before tuning, except high/medium fixes. T-303/T-306 remain open;
+independent core review is required and no row closes.
