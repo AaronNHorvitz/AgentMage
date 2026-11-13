@@ -1,0 +1,161 @@
+Commit: f3500e7d3dfb732540df0217a36853a84efc0360
+Scope: json-object-a4b-measurement
+
+# Independent review: JSON-object A4B 30-task development repeat (non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Reviewed
+the pinned checkout `/lane/review-checkout` only. No GPU, model, candidate, hidden-test
+or held-out execution. Nothing in the repository was modified.
+
+Row: T-303 / T-306. This is a NON-CLOSING reporting review. It approves the reporting
+only. It does not approve row closure, a model role, native qualification, release or
+owner readiness.
+
+## Methods, commands and results
+
+1. Commit and diff
+   - `git rev-parse HEAD` → `f3500e7d3dfb732540df0217a36853a84efc0360` (matches the request).
+   - `git diff --check 7359960…` → exit 0.
+   - `git diff --stat/--numstat` → 3 files, 190 insertions, **0 deletions**:
+     `TASKS.md` (+9), `docs/evidence/coding-scoreboard.md` (+28),
+     new `docs/evidence/t303-json-object-a4b-2026-11-13.md` (+153). No source, prompt,
+     profile, task, threshold, permission or SBOM file is touched.
+
+2. Binding files and preservation
+   - `sha256sum` of `json-object-a4b-20261113-bindings.json` = `e05e8baa…b731e` and of
+     `…-post-commit-bindings.json` = `6446529a…a35fb0fb`. Both match the request.
+   - I wrote my own script to hash and size-check every listed artifact: 34/34 bound and
+     3/3 post-commit artifacts match, with 0 mismatches.
+   - Preservation record: 13 earlier binding files. For each one I checked that the
+     file's own SHA-256 equals the recorded value and that its actual `artifacts` list
+     equals the preserved list exactly (name, bytes, sha256). I then rehashed every
+     artifact: **257/257 intact, 0 bad**.
+   - Inputs archive `ec136475…` and manifest `8cb20492…` match the evidence table.
+
+3. Archive verifier (read first; it streams `r|gz`, uses `extractfile` in memory, does
+   not extract or import, and rejects absolute or `..` paths, token files and `.gguf`)
+   - `python3 -B /lane/reviews/json-object-a4b-20261113-verify.py` → **PASS**:
+     22422 files, 2283 repository and 16 private inputs, 30 tasks, 3 strict proposals,
+     causes {incomplete 26, ungraded-proposal 3, format 1}, input 215893, output 743394,
+     coverage 30, request/check 6052.757734929008 s, reserved 6527.87227447296 s.
+
+4. Live root
+   - `/lane/state/jo1-20261113/` is **absent** in the reviewer view, so `audit.py`,
+     `verify_proposals.py` and `cleanup_a4b3.py` could not be run live. As the request
+     allows, I recomputed from the archive with my own code (`/tmp/rv/recompute.py`),
+     not the builder's verifier:
+     - All 15 pair `batch-report.json` are `completed`, `settings_revoked`, API
+       `reaped`, no resource-guard error, peak GPU 19459–19850 MiB (≤ 22528).
+       Settings in every pair: `response_format json_object`, `response_mode complete`,
+       idle = total = 300000 ms.
+     - Every reservation log shows both wrappers (heavy-build and exclusive GPU).
+       Its final status line equals the report's `reserved_work_seconds`. Per pair:
+       334.8–486.5 s, all under the 900 s cap. Sum 6527.872 s = 108.798 min.
+     - Server command per pair: temp 0, seed 42, `--chat-template-kwargs {}`, q8_0 K/V,
+       batch 256, ubatch 128, threads 4, ctx 32768. Model SHA `a07f7222…` matches.
+     - Every upstream body has `stream:false`, `max_tokens = min(32768, 32768-n-32)` and
+       `response_format {"type":"json_object"}`. Preflight input equals the backend
+       prompt-eval count for all 30. Totals are 215893 / 743394, coverage 30/30.
+     - Terminals: all 26 `chat.response.incomplete` are API `error`s with observed output
+       equal to the allowance (backend `output-cap`). The 4 others (dev-010/014/016/026)
+       are `complete:stop` below the limits. This matches "26 reached, 4 stopped below".
+     - Base fallbacks: 27 rows have `candidate_is_base_fallback = true`, which is exactly
+       the set with `generation_succeeded = false`. The 3 proposals have one change each,
+       `after_sha256` ≠ `before_sha256`, and the content hash equals the candidate-tree
+       file in the manifest. dev-014's `checked.json` error is `code.proposal.format`.
+     - The proposal-verification and cleanup records in the archive equal the bound
+       `/lane/reviews` copies. The cleanup record shows 15/15 pairs revoked, reaped and
+       with key and socket absent. The manifest's model-state directories contain only
+       `report.json`, `server.log` and `gpu.lock`: no `api-key`, `model.sock`, token
+       file or weights. 30 retired tokens are excluded.
+     - Controller histories: a4b1 → `completed 2`; a4b2 → 4, 6; a4b3 → 8..30 by 2,
+       then `COMPLETE; no candidate execution or grading.` `controller_a4b3.py` skips
+       pairs whose report is `completed`, asserts that no partial directory exists
+       ("never replay silently"), opens each reservation log with `xb` (exclusive
+       create), runs `build-slot gpu-slot queue-run agentmage 900`, and sleeps 30 s
+       between pairs outside both reservations. The reservation log names
+       (00 → a4b1, 02/04 → a4b2, 06..28 → a4b3) are consistent with that.
+
+5. Reporting gate and rendering (retained Node v24.15.0 linked into a temporary PATH dir)
+   - `python3 -B scripts/local_agent_fast_gate.py --base 73599602…` → `git diff --check`
+     exit 0, `--lint-untracked` exit 0, markdownlint-cli2 on all 3 paths "0 issues in
+     0 files" → **FAST GATE: PASS**.
+   - `node /lane/reviews/json-object-a4b-20261113-render-tables.mjs` → PASS, with
+     scoreboard 1 table and evidence 4 tables.
+   - The bound direct CLI and API lint receipts each check all 3 paths with 0 issues.
+   - `git status` stayed clean after the runs.
+
+6. Per-task rows and the 180-attempt aggregate
+   - I parsed the evidence table: all 30 rows (input, allowance, observed output, cause,
+     request/check s to 3 dp) equal my archive recomputation exactly. Allowance range is
+     23004–29513, input range 3223–9732, and does not fit = 0.
+   - Prompts: `context.json` hashes for all 30 tasks are identical across the e4b, 31b,
+     qwen, gpt, muse and A4B manifests. Snapshot (2283 files), `policy.json`,
+     `frozen-inputs-v2.json`, API binary and helper binary are byte-identical to the e4b
+     run. There is no prompt or profile change.
+   - Aggregate: the six archived audits each hash-match the `…-audit.json` bound in that
+     profile's own binding file. All have source `40cad647…`, 30 tasks each and
+     `held_out_executed = false`. Sums: 180 attempts, 113 proposals; incomplete 36
+     (gpt 10 + A4B 26), timeout 5, edit 14, format 12. These match the evidence. The
+     largest refusal cause, incomplete 36, is stated correctly.
+   - Checkpoints are included, never added. All files for pairs 00 (21) and 00–04 (63),
+     plus 1418 and 4276 candidate files, are byte-identical to the sealed checkpoint1
+     and checkpoint6 manifests.
+
+7. Scope, privacy and retention
+   - TASKS.md has 507 table lines before and after. Deleting the 9 added lines
+     reproduces the base file byte-for-byte. The scoreboard base is an exact prefix of
+     the new file.
+   - Retained reviews `docs/reviews/08ae3ebd77f6-…checkpoint6.txt` and
+     `de8c204cbc52-…model-output.txt` exist unchanged (no deletions in the diff).
+   - Committed blob SHA-256s equal both the scope receipt and the post-commit receipt:
+     `9c47b7f7…`, `5fc4eb3c…`, `bf90cf40…`. The final-scan script hash `031d5570…`
+     matches the scan record.
+   - Privacy grep of the added lines (home paths, username, `/lane`, `/var`, `@`,
+     hostnames, credentials, other-product or other-model vendor names) found only
+     generic words ("token", "key/value caches") and the factual driver package
+     identifier. There are no private paths, usernames, credentials or sibling-project
+     names in committed text. Raw answers and candidates stay in the private archive.
+   - Held-out tasks: the 16 private inputs are harness scripts, profiles and helper
+     source only. There are no held-out task files. Every batch has
+     `held_out_executed = false`.
+   - Process scan: my sandbox sees only 4 PIDs. An exact-argument `/proc/*/cmdline`
+     scan matched only my own wrapper's read-only bind argument, not a running server.
+     I cannot see host processes, so I rely on the builder's bound final scan, which
+     reports no matching processes.
+
+## MEASURE FIRST and honest-claims checks
+
+- The scoreboard has the required line for this batch. The changed variable
+  (`json_object`) is stated. Context and output budgets and the formula are stated.
+  Does-not-fit is counted apart (0). GPU minutes are labelled as reserved job wall,
+  not kernel time. Missing counters are described as not zero.
+- Scores stay Unavailable, proposals are called ungraded, and T-303/T-306 stay open
+  with no row or tick. The driver tuple is disclosed as unqualified. The 53 inherited
+  failures in the last source gate are disclosed. No other agent product is named or
+  compared.
+
+## Findings
+
+No critical, high or medium findings.
+
+Observations (not findings; no action needed for this scope):
+- The controller-a4b3 launch record's `source_commit` field holds the repository HEAD
+  at launch (`08ae3ebd…`), while the measured source is `40cad647…`. This is harmless
+  because the API binary, helper binary, snapshot and policy are hash-bound to the
+  `40cad647` frozen inputs. A field name such as `repository_head_at_launch` would read
+  less ambiguously (backlog).
+- Method limit: I could not check base-fallback hashes against the private frozen task
+  bases. Instead I checked that the fallback set equals the non-success set, that
+  proposal before/after hashes differ, and that fallbacks agree with other profiles'
+  candidate files where those profiles also fell back.
+- The live root and host process table could not be observed. I verified cleanup from
+  archived and bound records only, as the request's fallback allows.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing reporting increment, all-30 A4B JSON-object repeat and
+  six-profile aggregate): **PASS for reporting.** The rows stay OPEN, and this review
+  closes nothing.
+
+Verdict: PASS

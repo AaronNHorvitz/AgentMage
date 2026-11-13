@@ -2,6 +2,13 @@
 
 ## Active queue: local agent mission
 
+The retained [independent full A4B measurement review](docs/reviews/f3500e7d3dfb-json-object-a4b-measurement.txt)
+returns **Verdict: PASS** for exact reporting commit
+`f3500e7d3dfb732540df0217a36853a84efc0360`, with no high or medium finding.
+Measured counts and sealed inputs remain unchanged. All six profile repeats are
+complete; the largest measured refusal cause is incomplete output (36/180).
+T-303/T-306 remain open, and this reporting review closes no row.
+
 The [JSON-object A4B repeat](docs/evidence/t303-json-object-a4b-2026-11-13.md)
 finishes all 30 frozen development tasks at source
 `40cad6472560e47314a55ddb1f45e2c4c22b1792`: 3/30 strict ungraded proposals.
