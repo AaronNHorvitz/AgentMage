@@ -2027,3 +2027,29 @@ generation before its own slot launch; cancellation latency stays T-309 backlog.
 Source/record audit, helper reproduction, cleanup and archive verification pass;
 see [evidence](t303-json-object-muse-2026-11-13.md). T-303/T-306 remain open;
 independent core review is required and no row closes.
+
+## A4B JSON-object checkpoint — 2026-11-13 (incomplete)
+
+Source: `40cad6472560e47314a55ddb1f45e2c4c22b1792`. **2/30 tasks attempted; 28 remain.**
+Available partial path: Rust source selection → credential-owning chat → unchanged
+strict checker. Full retrieval, native execution, tests and retries remain
+unavailable. These are ungraded proposals, not solved tasks.
+
+| Date | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU job min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | gemma4-26b-a4b (2/30 attempted) | 32768 / 23172–23234 | Unavailable | Unavailable | 0/2 | Not run | 373.350 | 6.770 | 19066 / 46406 |
+
+Changed variable: trusted JSON-object output request, verified in both upstream
+bodies. Complete framing, prompts, selection, checker, profiles, byte ceilings
+and 300-second idle/total deadlines stay fixed. Output remains
+`min(32768, 32768 - rendered input tokens - 32)`; does not fit: 0/2 attempted.
+Causes: 2 `generation-refused:error:chat.response.incomplete`. Final counters cover 2/2 and include
+non-answer output; missing counters are not zero. GPU minutes are reserved job
+wall including load, verification and cleanup; queues and wrapper overhead are
+excluded, active kernel time unmeasured. The controller checkpoint let the pair
+finish normally before stopping; no model or worker was signalled. Resume
+tasks 3–4 without replay. Audit, helper reproduction, cleanup and archive
+verification pass; see [evidence](t303-json-object-a4b-checkpoint-2026-11-13.md). No candidate tests, feedback,
+retries, hidden or held-out tasks ran; native admission and original grading
+controls remain blockers, driver unqualified. Finish A4B before tuning except
+high/medium fixes. T-303/T-306 remain open; independent core review is required.

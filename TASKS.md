@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The [A4B JSON-object checkpoint](docs/evidence/t303-json-object-a4b-checkpoint-2026-11-13.md)
+records **2/30 tasks attempted; 28 remain**, with 0/2 strict ungraded
+proposals. A graceful controller checkpoint let the pair and cleanup finish
+normally before stopping. Audit, helper reproduction, cleanup and archive
+verification pass. Resume tasks 3–4 without replay; task grades and retries
+remain unavailable. Finish A4B before tuning except high/medium review fixes.
+T-303/T-306 remain open; independent core review is required. No new row or tick.
+
 The retained [independent Muse measurement review](docs/reviews/fa116787d579-json-object-muse-measurement.txt)
 returns **Verdict: PASS** for exact reporting commit
 `fa116787d57905a775a5ac3af49837bd9acbba63`, with no high or medium finding.
