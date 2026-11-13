@@ -1701,3 +1701,10 @@ task-quality improvement is claimed. The five remaining profiles precede tuning.
 Source/record audit, helper reproduction, cleanup and archive verification pass;
 see [evidence](t303-json-object-e4b-2026-11-13.md). T-303/T-306 remain open;
 independent core review is required and no row closes.
+
+The [independent E4B review](../reviews/95a53df95d2b-json-object-e4b-measurement.txt)
+returns PASS for exact reporting commit
+`95a53df95d2bd26b45abeef46ea11ce7ab2f2357`, with no high or medium finding.
+Low L1 clarifies that only the GPU wrapper applies the 900-second execution
+cap; both resource wrappers are used. Counts and sealed inputs stay unchanged.
+T-303/T-306 remain open; the five remaining profile repeats still precede tuning.

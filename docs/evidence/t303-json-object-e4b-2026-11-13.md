@@ -125,3 +125,13 @@ five prepared profiles must finish their development repeats before further
 tuning, except high/medium review fixes. No task-quality improvement, native
 qualification, row closure, release or owner-test readiness is claimed.
 Independent core review of this measurement remains required.
+
+## Independent review retained — 2026-11-13
+
+The [independent review](../reviews/95a53df95d2b-json-object-e4b-measurement.txt)
+returns **Verdict: PASS** for exact commit
+`95a53df95d2bd26b45abeef46ea11ce7ab2f2357`, with no high or medium finding.
+Low L1 clarifies the resource-wrapper wording: jobs use both wrappers, and the
+GPU wrapper caps execution at 900 seconds; the build wrapper controls admission
+and has no execution timeout. Further reporting concision remains T-309 backlog.
+Counts, original evidence and seals stay unchanged. T-303/T-306 remain open.

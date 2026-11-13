@@ -1,0 +1,147 @@
+Commit: 95a53df95d2bd26b45abeef46ea11ce7ab2f2357
+Scope: json-object-e4b-measurement
+
+# Independent review — JSON-object E4B development measurement (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate session. I had read-only access to the pinned checkout
+/lane/review-checkout. Base: 869462af72755716f981119f26a6b8e084d3f582. Tier: core.
+
+## Scope of the commit
+
+`git diff --stat 869462af..95a53df9` shows additions only (163 lines; 0 lines removed from TASKS.md
+or the scoreboard):
+
+- TASKS.md: +9 lines, a queue note, with no new row and no tick.
+- docs/evidence/coding-scoreboard.md: +27 lines, a new section at line 1678 with one scoreboard line.
+- docs/evidence/t303-json-object-e4b-2026-11-13.md: new evidence file, 127 lines.
+
+There are no source, task, hidden-test, threshold, SBOM or status changes.
+
+## Methods, commands and results
+
+1. `git rev-parse HEAD` returned `95a53df95d2bd26b45abeef46ea11ce7ab2f2357`, so the checkout is the
+   requested commit.
+2. `git diff --check 869462af72755716f981119f26a6b8e084d3f582 --` exited 0.
+3. Bindings. `sha256sum json-object-e4b-20261113-bindings.json` returned
+   `304f7e709421017c5911f3f296504012f6dab70b6b496dae3e7718c636637159`, matching the request. All 10
+   bound artifacts match their recorded byte counts and SHA-256 values, which I recomputed. This covers
+   the archive `5b68853c…5703`, the manifest `cdbeae90…8179` and the verifier `c5e3db7e…76f4`.
+4. Verifier. I read `/lane/reviews/json-object-e4b-20261113-verify.py` in full before running it. It
+   streams the tar, hashes each member, extracts nothing to disk and imports or executes nothing from
+   the archive.
+   - Command: `python3 -B /lane/reviews/json-object-e4b-20261113-verify.py`. It exited 0 with status
+     PASS in 1.7 s.
+   - Totals: 21,935 files, 2,283 repository and 16 private inputs, 30 tasks, 24 strict ungraded
+     proposals.
+   - Causes: 4 `strict-edit-refused:code.proposal.edit`, 2 `strict-edit-refused:code.proposal.format`.
+   - Tokens: 215,893 input and 138,991 output, with counter coverage 30/30.
+   - Time: request/check 1363.7429459278937 s; reserved job wall 1484.899779297004 s.
+   - The output is identical to the bound verification.json.
+5. Fast gate. Command:
+   `PATH=/lane/state/tooling/node-v24.15.0-linux-x64/bin:$PATH python3 -B scripts/local_agent_fast_gate.py --base 869462af…`
+   - `git diff --check` exited 0 and `--lint-untracked` exited 0.
+   - markdownlint exited 127 with "Missing executable: node; no automatic download", so the gate
+     reports FAIL. This happened only because Node is absent from this lane, as the request
+     anticipated.
+   - I did not rerun lint and did not fetch tooling. The bound gate.log records markdownlint at
+     "0 issues in 0 files" over exactly the 3 changed paths, with FAST GATE: PASS.
+   - The bound direct-lint.json records 0 issues for each of the 3 paths.
+   - The bound scope.json path hashes match `sha256sum` of the three files at this commit
+     (d2d09266…, 8ea196c4…, 211e707f…).
+6. Committed numbers against the audit (my own script). I compared every row of the 30-row per-task
+   table in the evidence file with `audit-gemma4-e4b.json`: preflight input, output allowance,
+   observed output, cause and request/check seconds to 3 decimals. There were 0 mismatches.
+   - Column sums: 215,893 input, 138,991 output, 1363.746 s (the sum of rounded values).
+   - Ranges: input 3223–9732, allowance 23004–29513. The formula
+     `min(32768, 32768 − n − 32)` holds for every row.
+   - For every task, observed input equals preflight input.
+   - GPU minutes: 1484.899779297004 / 60 = 24.7483, as stated.
+7. Independent archive checks. I extracted all non-candidate, non-binary members to /tmp; the tool
+   checked each member path. I deleted the copy after use.
+   - **Source snapshot.** All 2,283 frozen repository hashes match the git blobs at
+     `40cad6472560e47314a55ddb1f45e2c4c22b1792` (`git ls-tree` plus `git cat-file`) and the archived
+     snapshot bytes. Mismatches: 0.
+   - **Only the output-format request changed.** I compared the frozen inputs with the prior
+     complete-response E4B archive (`complete-e4b-20261113-inputs.tar.gz`).
+     - Repository inputs differ only in the six chat-transport files covered by the retained
+       de8c204c source PASS.
+     - The helper bytes are unchanged.
+     - `request.json` `messages` are byte-identical for all 30 tasks, and no other request key
+       differs.
+     - The `batch.py` diff only does four things: changes the state paths, re-verifies all frozen
+       inputs before each job, records the upstream body (asserting
+       `response_format == {"type":"json_object"}`), and adds `response_format: json_object` to
+       settings and their check.
+     - `collect.py` changes only in paths. `measurement_chat.py` and the E4B profile are identical.
+     - The relay forwards the payload unmodified (batch.py `Relay.relay`). There are exactly 30
+       upstream bodies.
+   - **Held-out and hidden tests.** The tasks are dev-001..dev-029 plus dev-rust-001. The audit's
+     `development_sha256` equals `DEVELOPMENT_SHA256` in scripts/coding_eval_suite.py:33. No archive
+     path and no request contains held-out identifiers.
+     - For every task I checked the lines that are new in the reference commit, in both the hidden
+       test and the reference source. 0 hidden-test lines appear in any prompt.
+     - Six reference-source lines in four tasks matched prompt text. Every one of them is a substring
+       of the frozen base file, so nothing leaked from the reference.
+   - **Refusals.** The six refusal `checked.json` files carry exactly the error codes counted. The two
+     format refusals I opened (dev-004, dev-011) are valid JSON objects with an `edits` key. They were
+     refused by the strict checker's schema check, which supports counting them as model-output
+     refusals rather than transport failures.
+   - **Interruption and replay.**
+     - `controller-e4b.log` ends in an assertion failure on pair 0, and `queue-interruption-e4b.json`
+       records `task_attempts: 0`, `gpu_reservation_started: false` and `job_directory_absent: true`.
+     - `gemma4-e4b-00-reservation-resume8.log` holds only the build-reservation waiting line. It was
+       written by the original `controller.py`.
+     - `controller_resume1.py` differs only in the log name. It refuses to rerun any existing
+       directory ("never replay silently"), and its log runs uninterrupted from 2/30 to "COMPLETE".
+     - No completed attempt was replayed.
+   - **Pair-14 queue.** Pair 12 started at 20:18:24 and its reserved work took 145.0 s, followed by a
+     30 s pause. Pair 14's model state starts at 20:36:50, so the wait was about 15 minutes, as
+     claimed.
+8. Privacy and branding. I scanned all added lines for host paths, user names, e-mail addresses,
+   other product or model-vendor names, credentials and temporary paths. The only hit is the phrase
+   "API token files", in a statement that the files are excluded. All link targets exist.
+   `docs/reviews/de8c204cbc52-json-object-model-output.txt` is byte-identical to the original review
+   (`cmp`) and ends `Verdict: PASS`. `gemma4-e4b` is the model identifier already used 17 times in the
+   prior scoreboard, not product branding.
+9. Processes. Only my own sandbox launcher matched a search for campaign processes. My PID namespace
+   is isolated, so I cannot see the builder's lane. For process absence I relied on the bound
+   cleanup.json: 15/15 settings revoked, APIs reaped, model keys and sockets absent, and no matching
+   processes.
+
+## Evaluation integrity and MEASURE FIRST
+
+- No held-out task ran or was loaded, no hidden test was executed, and the task bases are frozen.
+  Failures are counted (6 of 30) and none are dropped. Scores re-run with one command (the verifier)
+  and agree with the raw logs.
+- The scoreboard line at coding-scoreboard.md:1678 has every field MEASURE FIRST asks for:
+  - date, source commit and model;
+  - context/output budget 32768 / 23004–29513, with "does not fit: 0" counted separately;
+  - first and within-budget passes, stated honestly as Unavailable;
+  - time, GPU minutes and failures by cause.
+- It states the changed variable (the trusted JSON-object request) and names the partial path and
+  the parts that did not run (full retrieval, native execution, tests, retries). It does not present
+  the partial path as the whole loop.
+- No strict proposal is presented as a solved task. There is no row closure, no model-role adoption
+  and no qualification claim.
+
+## Findings
+
+No critical, high or medium findings.
+
+- Low (wording, backlog): docs/evidence/t303-json-object-e4b-2026-11-13.md:58-59 says "each job uses
+  both resource wrappers with a 900-second cap". Only `/tools/gpu-slot queue-run … 900` applies the
+  900 s timeout; `/tools/build-slot` has no execution cap, only a 24 h acquisition deadline. The same
+  ambiguity appears in the request's "Both900s resource wrappers". Suggested fix in a later reporting
+  edit: "both resource wrappers; the GPU wrapper caps each job at 900 s".
+- Note (not a finding): I could not independently confirm the absence of builder-lane processes from
+  this PID namespace, and I did not rerun the original helper. The reproduction of the strict checks
+  rests on the bound proposals.json, which is consistent with the archived `checked.json` files and
+  the candidate hashes that the verifier checks.
+
+## Per-row result
+
+- T-303 / T-306, non-closing development measurement `json-object-e4b-measurement`: PASS. The
+  measurement is honest, traceable and integrity-preserving. Neither row closes and none is claimed
+  to.
+
+Verdict: PASS
