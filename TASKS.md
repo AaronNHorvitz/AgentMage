@@ -2,6 +2,16 @@
 
 ## Active queue: local agent mission
 
+The [cumulative Muse checkpoint](docs/evidence/t303-json-object-muse-checkpoint-2026-11-13-12-tasks.md)
+records **12/30 tasks attempted; 18 remain**, with 6/12 strict ungraded
+proposals. The next pair waited 836.680 seconds
+for a shared build reservation and checkpointed before GPU entry or a new attempt.
+Audit, helper reproduction, cleanup and archive verification pass. Resume tasks
+13–14 without replay; task grades and retries remain unavailable. This includes
+the earlier two-task prefix. Remaining Muse tasks and A4B precede tuning except
+high/medium fixes. T-303/T-306 remain open; independent core review is required,
+with no new row or completion tick.
+
 The retained [independent Muse checkpoint review](docs/reviews/8af9f066d621-json-object-muse-checkpoint.txt)
 returns **Verdict: PASS** for exact reporting commit
 `8af9f066d621b673d9c30f7e0505e5c4dcb4c111`, with no high or medium finding.
