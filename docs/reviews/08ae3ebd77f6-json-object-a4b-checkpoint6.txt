@@ -1,0 +1,145 @@
+Commit: 08ae3ebd77f64f9a4c91b83ff7ccb39bf4a2f5ee
+Scope: json-object-a4b-checkpoint6
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Pinned checkout
+/lane/review-checkout. No GPU, model, candidate, hidden-test or held-out execution. Nothing in the
+repository was modified. Rows: T-303 / T-306, NON-CLOSING partial development measurement (6/30).
+
+## Methods, commands and results
+
+1. **Commit and diff.**
+   `git rev-parse HEAD` → `08ae3ebd77f64f9a4c91b83ff7ccb39bf4a2f5ee` (matches the request).
+   `git diff --check 35a7b44190e146b747faa39eaef126ae3f0c4650 --` → exit 0.
+   `git diff --stat 35a7b441 HEAD` → 4 files: TASKS.md (+13), docs/evidence/coding-scoreboard.md
+   (+27/−1), the new 6-task evidence file (+100) and the retained review docs/reviews/35a7b44190e1-json-object-a4b-checkpoint.txt (+140).
+   No source, prompt, profile, task, threshold, permission or supply-chain file changed.
+
+2. **Bindings.** `sha256sum` →
+   `37ddd3d86a8ccccf0ebb2e9224666c29688aa9c1af23a641829141c4d1f89edf` (bindings) and
+   `7059f0ee4569d8d2e98b96e36fb7708aa20a0d9de255cbf743af0ebbc23feaf4` (post-commit bindings), both as
+   requested. With my own script I checked the size and SHA-256 of every listed artifact: 35/35 main, 3/3
+   post-commit (final process scan, render script, render receipt), 0 mismatches. Preservation record:
+   11 binding files, each with a matching SHA, and 219 artifact entries (207 unique files) with 0 missing and 0 mismatches.
+   Each bindings file's own artifact set equals its preservation entry. Evidence-table hashes:
+   inputs tar `eb3f0ccd…`, manifest `3b7f8abf…`, frozen-input manifest `79a130de…` (=
+   archived `frozen-inputs-v2.json` = audit `source_freeze_sha256`). All match.
+
+3. **Archive verifier.** I read it first. It streams the tar (`r|gz`), extracts nothing, imports
+   nothing from the archive, and rejects absolute paths, `..`, token names and `.gguf`.
+   `python3 -B /lane/reviews/json-object-a4b-checkpoint6-20261113-verify.py` → `PASS`, 7165 files,
+   2283 repository / 16 private inputs, 6 tasks, `measurement_complete: false`, remaining 24,
+   0 strict proposals, causes `{generation-refused:error:chat.response.incomplete: 6}`,
+   44811 / 151605 tokens, coverage 6, request/check 1202.847999807971 s, reserved
+   1282.7592666049604 s.
+
+4. **Live root.** `/lane/state/jo1-20261113` is **absent** here, so I could not run the audit,
+   verify_proposals or cleanup helpers. Instead I copied the non-source, non-candidate members (541
+   files) into a private temp directory outside the repository, plus the six fallback candidate files.
+   I recomputed everything myself without running any archived code:
+   - **Per-task rows** (dev-001…006, pairs 00/02/04, each task exactly once and in order): the preflight
+     inputs are 9502, 9564, 4752, 3223, 8460 and 9310. Allowances = min(32768, 32768 − n − 32) =
+     23234, 23172, 27984, 29513, 24276 and 23426. These equal `record.requested_output_tokens`,
+     `request.max_tokens` and upstream `max_tokens`. Every upstream body has `stream: false`, `n: 1` and
+     `response_format {"type":"json_object"}`. Every batch has idle = total = 300000 ms,
+     response_mode complete and response_format json_object. Each task has exactly one event, a terminal `error`
+     `chat.response.incomplete` (partial), and no text. Backend prompt/eval counters equal the
+     preflight input and the allowance, and every slice ends `stop processing: n_tokens = 32735`
+     (= input + allowance − 1), i.e. the output cap (audit `backend_terminations: {output-cap: 6}`).
+     The sums are 44811 / 151605. Request/check times 200.139, 173.211, 232.599, 216.040, 205.712 and
+     175.147 sum to 1202.848 s. Every row in the evidence table matches.
+   - **Reservations:** 406.176 + 472.442 + 404.141 = 1282.759 s, and /60 = 21.379 min. Every pair has
+     settings revoked, the API reaped, guard error null and a GPU peak of 19722–19793 MiB (≤ 22528).
+   - **Retries / fallbacks:** retries 0, graded false and native harness false for all six.
+     `candidate_is_base_fallback` is **true for all six**. collect.py defines it as `not
+     generation_succeeded`, so this is the expected bookkeeping for refusals, not a defect. Each
+     candidate hash maps to exactly one file. `git hash-object` maps each of those files to an existing
+     historical blob (6b5fd966, 28296f28, d72d83cf, 7413558d, bc5677b5, 8509bd73), so all six are
+     unmodified base files. "Zero base fallbacks" (request item 6) is therefore loosely worded. The
+     accurate statement is zero base fallbacks counted as proposals. The committed files make no claim
+     about fallbacks.
+   - **Pair 00 inclusion:** all 21 pair-00 manifest entries are byte-identical (by hash) to the first
+     checkpoint's archive, with no extra pair-00 files. The checkpoint is cumulative, and pair 00 is not
+     re-run or counted twice.
+   - **Controller histories:** `controller-a4b1.log` = `{completed:2,total:30}` only.
+     `controller-a4b2.log` = completed 4, then 6, with no `COMPLETE` line. `controller_a4b2.py` (sha `cea4b30c…`
+     = launch receipt) skips existing completed reports, and asserts that a pair directory without a report is absent
+     (no silent replay). It runs `build-slot` → `gpu-slot queue-run agentmage 900`, and its handler only
+     sets a flag. `subprocess.run` keeps waiting through the signal (PEP 475), and the loop exits at the
+     next check, which comes before pair 06.
+   - **Signal receipt:** `request_checkpoint_a4b2.py` checks that `/proc/235/cmdline` equals the launch argv
+     `python3 -B /lane/state/jo1-20261113/controller_a4b2.py --models gemma4-26b-a4b` and that pgid = 235.
+     It also checks that pair 06 and its reservation log are absent, pair 04 is present and pair 04 has no report.
+     It then sends `os.kill(pid, SIGTERM)`, which signals that PID only, not the process group.
+     Timeline (UTC): launch 15:12:26; pair-04 model state starts 15:29:34; SIGTERM 15:34:32, during the
+     second task (13 s load + 205.7 s + 175.1 s); confirmation and scan 15:36:33; final scan
+     15:39:16. The manifest has no `gemma4-26b-a4b-06*` or `-08*` entry.
+   - **Process-scan method:** `final_scan_a4b2.py` (sha `031d5570…`) is identical to the retained
+     `-final-scan.py`, and both receipts carry that sha. It matches individual `/proc/*/cmdline`
+     arguments exactly against batch.py / agentmage-local-api, a full-match controller regex, and a
+     model-socket prefix and suffix. batch.py opens the model through `model-state/…/model.sock`. Both receipts:
+     `matching_processes: []`. My own process view is a separate bwrap PID namespace, so it cannot
+     see the builder's processes; I rely on the bound receipts for process absence.
+   - **Settings and identity:** API `a8995c15…`, helper `852cd7f5…`, model `a07f7222…` / 17035039872
+     bytes, profile (threads 4, temp 0, seed 42, q8_0 K/V, batch 256, microbatch 128, empty kwargs),
+     cleanup (3 pairs revoked/reaped/socket absent, guard errors 0) and proposal verification (6 tasks,
+     no candidate execution, hidden tests not loaded) all match the evidence prose. Audit: native execution,
+     hidden tests and held-out runs are all false.
+
+5. **Fast gate and rendering** (Node from the retained binary via a temp symlink):
+   `PATH="$task_node_dir:$PATH" python3 -B scripts/local_agent_fast_gate.py --base 35a7b441…` →
+   `FAST GATE: PASS` (diff check, untracked lint, review lint of the retained review, markdownlint-cli2
+   on all 3 paths: 0 issues). `node …-render-tables.mjs` → PASS, with one table in each checkpoint
+   section. My direct `markdownlint/sync` API run on the 3 paths found 0 issues each. With `marked`, the evidence file
+   renders 2 tables. The scoreboard went from 60 tables plus 1 pipe-paragraph at the base to 62 tables and
+   0 pipe-paragraphs now, so the delimiter fix repaired the previously broken table, and the new section adds one table.
+   The new table has 10 header, delimiter and data cells.
+
+6. **Preservation of committed text.** TASKS.md: removing the 13 inserted lines after line 4 gives
+   the base file byte-for-byte, and the table lines are 507 → 507. Scoreboard: the base prefix differs only
+   at line 2039, the reviewed 11 → 10 delimiter cells, and the rest is an appended section. The retained review
+   `.txt` is `cmp`-identical to `/lane/reviews/35a7b44190e1-json-object-a4b-checkpoint.md`
+   (`Verdict: PASS`).
+
+7. **Reporting repair.** The archived `publish_a4b_checkpoint2.py` and the retained `-publish.py` differ
+   only in renaming `score` → `score_path` (3 lines). The failure receipt shows a `TypeError` at the
+   append, which comes after the evidence, review and delimiter writes. The archived finalizer is identical
+   to the retained `-initial-finalize.py`. The retained `-finalize.py` drops the verify/publish calls, asserts the
+   repair receipt and binds the completion script, repair receipt and initial finalizer. The completion script
+   rebuilds from the base in scratch. It asserts that the evidence and review bytes are equal, that the scratch
+   scoreboard has the repo's partial scoreboard as a prefix, and that TASKS equals the base. Only then does it
+   write TASKS and the scoreboard. The prepare, archive, scope, verify, confirm, request and launch scripts are identical between the archive and the retained copies.
+
+8. **Privacy and IP.** I grepped all 280 added lines for home paths, the username, email, hostnames, tokens,
+   keys, `.local` and agent-product, benchmark and model-vendor names. The only hits are generic
+   `/lane/…` paths and the reviewer line inside the retained review, both following the existing
+   retained-review convention, and the driver package identifier already in earlier evidence. None is a
+   private host path, a credential, personal data, a private project name or trademark branding. Raw answers,
+   candidates and paths stay in the private archive.
+
+9. **Evaluation integrity and measure-first.** Development split only, with `held_out_executed`
+   false in every batch and the audit. No hidden tests loaded. The measurement source `40cad647…` is
+   unchanged. All failures are counted (6/6 refusals), none dropped. Scores are Unavailable, does not fit is 0/6 and
+   counted separately, and the context/output budget and formula are stated. The scoreboard has a line for this batch
+   that traces to the raw logs. Tasks 7–30 remain to be run before any tuning.
+
+## Findings
+
+No critical, high, medium or new low findings.
+
+Informational (not findings):
+- The request's phrase "zero retries/base fallbacks" is loose: all six refusals carry
+  unmodified base-file fallbacks by definition. The committed files make no fallback claim, so nothing
+  needs to change.
+- Prior increment only: the first checkpoint's archive holds a pre-edit copy of
+  `finalize_report_a4b_checkpoint1.py`. The bound `json-object-a4b-checkpoint-20261113-finalize.py`
+  equals the later copy archived here, which adds three retention lines. This is already covered by that increment's
+  PASS, and it changes no measurement.
+
+## Per-row result
+
+- T-303: this reporting increment PASSES (6/30 non-closing checkpoint; row stays OPEN).
+- T-306: this reporting increment PASSES (row stays OPEN).
+This review approves no row closure, tuning, model role or release. Next: resume tasks 7–8 with a
+fresh controller log and no replay.
+
+Verdict: PASS
