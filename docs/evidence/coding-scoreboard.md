@@ -2171,3 +2171,36 @@ wrappers with 900-second caps and 30-second pauses outside reservations.
 Source review can run beside that measurement. Further tuning waits for the
 full development repeat. The other five profiles have no new result here.
 See [evidence](t303-thinking-control-2026-11-13.md); T-303/T-306 remain open.
+
+## Thinking-disabled A4B development repeat — 2026-11-13
+
+Source: `a896f055256e96baec09966c71c5d0a7f1714d96`. All 30 frozen development tasks ran through
+source selection → credential-owning chat → unchanged strict checker. The earlier
+2/30 API checkpoint is included, never added. This is the available partial path;
+full repository retrieval, native effects, tests, feedback and retries remain
+blocked by native admission and the original grading-control receipt.
+
+| Date | Source commit | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU reserved work min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | a896f055256e96baec09966c71c5d0a7f1714d96 | gemma4-26b-a4b (30/30) | 32768 / 23002–29511 | Unavailable | Unavailable | 16/30 | Not run | 1289.452 | 29.820 | 215953 / 111638 |
+
+Changed variable: trusted API `thinking_mode: disabled`; every captured request
+carries `chat_template_kwargs: {"enable_thinking": false}`, while the server keeps
+its default template arguments. Complete framing, JSON-object output, prompts,
+checker, profiles, 300-second idle/total deadlines and the output-budget formula
+remain fixed. Does not fit: 0. Outcomes: 16 ungraded proposals, 11 strict
+`code.proposal.format` refusals and 3 `complete:length` generation refusals.
+All three reach their output allowances; the other 27 backend stops are below
+limits. Counter coverage: 30/30. No incomplete empty-answer response occurred.
+
+Reserved work totals 1789.198 seconds; timers start after frozen-input
+validation and include model/runtime verification, loading and cleanup. Queues,
+wrapper/pre-entry overhead and session gaps are excluded. Active GPU kernel time
+and continuous end-to-end elapsed time across sessions are unmeasured. Each pair
+uses both resource wrappers with a 900-second cap and releases both; the resumed
+controller pauses 30 seconds outside reservations between jobs. All owners exit.
+No candidate, hidden or held-out test ran. First-attempt and retry task passes
+remain unavailable; the driver/profile is unqualified. The other five profiles
+still need fresh post-change measurements before tuning. See the
+[evidence and stale-policy-label erratum](t303-thinking-disabled-a4b-2026-11-13.md).
+T-303/T-306 remain open; independent core review is required.

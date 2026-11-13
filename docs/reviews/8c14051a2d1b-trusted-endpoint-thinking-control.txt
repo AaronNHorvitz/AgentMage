@@ -1,0 +1,168 @@
+Commit: 8c14051a2d1be63fb8382c9153df91a6d93f71d5
+Scope: trusted-endpoint-thinking-control
+
+# Independent core review: trusted endpoint thinking control and fixed first-pair API check
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Pinned checkout
+/lane/review-checkout at the exact commit. Base 9a6c9d20ce3981b78e59bd48f9339c393b539bba,
+source a896f055256e96baec09966c71c5d0a7f1714d96. Rows T-303/T-306: NON-CLOSING increment.
+
+## Methods and results
+
+1. Commit and diff
+   - `git rev-parse HEAD` -> 8c14051a2d1be63fb8382c9153df91a6d93f71d5.
+   - `git diff --check 9a6c9d20...` -> exit 0.
+   - `git diff --stat 9a6c9d20 HEAD` -> 11 paths: 6 Rust files plus TASKS.md, decision 0208, the
+     local-chat-api guide, the coding scoreboard and the new evidence file. 558 insertions, 11 deletions.
+   - `git diff a896f055 HEAD` touches only TASKS.md, the scoreboard and the evidence file. All 6 Rust
+     files are byte-identical between the source commit and this commit.
+   - All 11 committed blob SHA-256 values match the post-commit receipt
+     (thinking-control-20261113-post-commit.json).
+
+2. Capsule
+   - bindings.json has SHA-256 d5f11617… and post-commit.json has 7a5b790c…, both as stated.
+   - All 11 bound artifacts match their size and SHA-256. These include tar 77465ea8…, manifest
+     29b0860a… and verifier 89ad1c4a….
+   - I read verify.py before running it. It streams the tar, extracts nothing and only runs
+     `git show` in the checkout.
+   - `python3 -B /lane/reviews/thinking-control-20261113-verify.py` -> PASS, 4720 files, 6 source
+     changes, with exact committed Rust bytes at a896f055.
+   - Its recomputed numbers per pair:
+     - id1: 19066/46406 tokens, 0/0 answer bytes, 77214/77046 reasoning bytes, 385.558 s, reserved
+       408.306 s (6.805 min).
+     - id2: 19070/2893 tokens, 3490/5728 answer bytes, 54.061 s, reserved 76.891 s (1.282 min).
+     - id3: 19070/2893 tokens, 55.335 s, reserved 92.043 s (1.534 min).
+     - Failed startup: 191.567 s (3.193 min).
+   - Source gate log in the capsule: 1167/53/19 over 30 targets, with the same failure identities.
+
+3. Independent recomputation (my own read-only streaming scripts; no archived code run)
+   - Upstream request bodies:
+     - id3 request bytes == id2 request bytes with exactly
+       `,"chat_template_kwargs":{"enable_thinking":false}` inserted before the final `}`. This holds
+       for both tasks (+49 bytes).
+     - id1 and id2 differ only in max_tokens (the two template tokens). Neither carries the
+       extension.
+   - Responses:
+     - id1: finish `length`, content empty, reasoning 77214/77046 bytes, completion tokens equal to
+       allowances 23234/23172.
+     - id3: finish `stop`, content 3490/5728 bytes, no reasoning.
+   - Allowances recompute as 32768 − input − 32: 23234/23172/23232/23170.
+   - id3 batch report:
+     - Model `chat_template_kwargs` is `{}`, so the server kept its default template arguments.
+     - Settings report `thinking_mode: disabled`, complete framing, json_object output and
+       300000 ms idle/total deadlines.
+     - The relay in batch.py asserts the extension on every chat request before forwarding.
+     - Collection split `development`, `held_out_executed: false`, retries 0, `graded: false`.
+   - Every number in the evidence file, the two new scoreboard rows and TASKS.md traces to these
+     records.
+
+4. Source gate
+   - Command: `PATH="$task_node_dir:$PATH" python3 -B scripts/local_agent_fast_gate.py --base 9a6c9d20…`
+     (not wrapped again).
+   - FAST GATE: FAIL, as expected. diff-check, untracked lint, markdownlint (5 files), `cargo fmt --check`
+     and `cargo clippy --all-targets -D warnings` pass.
+   - `cargo test`: 30 result lines totalling 1167 passed, 53 failed, 19 ignored, 0 measured, 0 filtered.
+   - My 53 failure names are identical to the archived `prior-source-gate-comparison.json` list
+     (42 linux_coding_runtime, 10 linux_read, 1 linux_repository_map; all in `agentmage-host --lib`).
+     These failures are inherited and not touched by this diff.
+   - These new or changed tests pass:
+     - `thinking_control_is_trusted_explicit_and_cannot_be_injected_by_chat_or_proposals`
+     - `thinking_request_in_either_framing_never_promotes_reasoning_to_an_answer`
+     - `unsupported_thinking_control_is_an_error_without_fallback`
+     - `complete_mode_freezes_actual_body_and_reports_only_validated_text_and_optional_usage`
+     - `requests_bound_messages_tokens_and_encoded_size`
+   - Reporting-only gate `--base a896f055…` -> FAST GATE: PASS.
+
+5. Direct lint
+   - The markdownlint/sync script exactly as given -> all 5 paths present, 0 issues each, exit 0.
+   - Table structure: the 2 new scoreboard tables have 10 columns on every line, and the evidence
+     table has 8 columns on every line.
+
+6. Code inspection
+   - Codec, local_chat.rs:189-311:
+     - `ChatThinkingMode` defaults to `ProviderDefault`. The field is skipped when None, so the
+       default request bytes are unchanged.
+     - `Disabled` emits exactly `{"enable_thinking":false}`. No other value can be expressed.
+     - The exact-size boundary test covers all 16 combinations of usage, format, framing and
+       thinking mode.
+   - Transport, local_chat_transport.rs:472-513:
+     - The mode is held on the immutable transport and passed into `encode_chat_request` inside
+       `prepare_chat`.
+     - `request_body_sha256` hashes the actual body, so the extension is bound.
+     - The transport test checks the wire body hash for both modes.
+   - API settings, lib.rs:668-683 and 1954-1997:
+     - `Settings` is `deny_unknown_fields`. Derived serde rejects duplicate fields, and null or
+       invalid values give 400 before any state change.
+     - The `/v1/settings` route requires the control token (lib.rs:1436).
+     - An omitted mode on a new PUT resets to the default. DELETE yields null.
+     - Each PUT increments `settings_revision`, so source selections bound to an earlier revision
+       are invalidated.
+   - Client chat and proposal bodies containing `thinking_mode` return 400 with no upstream
+     connect (the test asserts `listener.accept()` is err).
+   - The CLI confirmation prompts already display the full settings JSON, so the requested mode is
+     visible before a share is approved.
+   - Decoder:
+     - Unchanged: the complete-mode `Message` struct has no reasoning field or alias.
+     - Empty content is `Incomplete` in both framings, whatever the finish reason
+       (local_chat.rs:431, 609-611). Reasoning therefore cannot become answer text or authority.
+     - No retry or fallback path exists. The unsupported-option test returns
+       `chat.transport.status`, and the one-shot upstream listener means any second attempt would
+       surface as a different error.
+   - Strict edit checker, authority paths and coding launchers are unchanged by the diff. Native
+     launchers keep the default because they never call `with_thinking_mode`.
+   - Escape and injection reasoning: the only writer of thinking mode is the control-token PUT.
+     Document, source, model-output and web text reach only message content or the strict checker,
+     so none of it can select the option or count as an approval.
+
+7. Preservation, privacy and claims
+   - TASKS.md has 507 table lines with an identical SHA-256 at base and HEAD (782ad57b…). The only
+     TASKS.md change is a prepended paragraph.
+   - The base scoreboard is a byte-exact prefix of the new scoreboard.
+   - The retained prior review `docs/reviews/f3500e7d3dfb-json-object-a4b-measurement.txt` is unchanged.
+   - Added lines contain no private host path, username, hostname, credential or other agent
+     product. Model names appear only as the model measured.
+   - Claims are honest:
+     - 2/30 included; 28 queued.
+     - Proposals are labelled ungraded and not task passes.
+     - The server-option diagnostic is kept separate from the API check, and both are separate from
+       the reviewed 180-attempt repeat.
+     - No held-out or hidden execution, and no row close, role, qualification or release claim.
+   - The order of work is unchanged: finish the repeat before further tuning, which fits MEASURE
+     FIRST. Changed context and output budgets are stated, and "does not fit" is reported as 0.
+   - The decision and guide state that conversations need no workspace or repository. No second
+     runtime and no engine memory store is added.
+
+8. Not run or not observable
+   - The live root /lane/state/id3 does not exist in this review environment. I did not run the
+     archived reproduce.py or api_check.py; I recomputed from the capsule instead (item 3).
+   - The continuing controller (PID 20661 in the builder's scan) is not visible from this host. I
+     did not interrupt or start anything.
+   - I cannot independently rebuild the API binary byte-for-byte to confirm SHA-256 ba623b92….
+     Two facts show it contains the new code:
+     - It accepted `thinking_mode` under `deny_unknown_fields`; a pre-change binary would return 400.
+     - Its captured upstream bodies carry the extension.
+   - No GPU use and no candidate, hidden or held-out execution by me.
+
+## Findings
+
+- LOW (backlog), private capsule only: runs/id3/policy.json and its copy in batch-report
+  `collector_policy`.
+  - What is wrong: two inherited labels are stale.
+    - `chat_transport_binary_source: 40cad6472560…` contradicts `source_commit`/`source_product_commit`
+      a896f055 and the bound API hash.
+    - The `comparison` text still describes the earlier text-to-json_object change, which
+      contradicts `changed_variable`.
+  - Impact: committed evidence is correct and the record numbers are unaffected.
+  - Fix: correct both fields in the controller's policy for later jobs, or record an erratum in the
+    full-repeat evidence. Do not edit the sealed capsule.
+
+No critical, high or medium finding.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing source increment and fixed 2/30 API checkpoint):
+  - Source increment PASS.
+  - Fixed first-pair checkpoint evidence PASS.
+  - Both rows stay open; this review closes nothing.
+
+Verdict: PASS

@@ -2,6 +2,17 @@
 
 ## Active queue: local agent mission
 
+The [thinking-disabled A4B repeat](docs/evidence/t303-thinking-disabled-a4b-2026-11-13.md)
+finishes all 30 development tasks at source
+`a896f055256e96baec09966c71c5d0a7f1714d96`: 16 strict ungraded proposals,
+11 format refusals and 3 length stops. Task grades and retries remain unavailable.
+The retained [source/first-pair independent review](docs/reviews/8c14051a2d1b-trusted-endpoint-thinking-control.txt)
+returns PASS for exact `8c14051a2d1be63fb8382c9153df91a6d93f71d5`, with no
+high or medium finding. Its low policy-label finding has a full-repeat erratum;
+later metadata hygiene remains T-309 backlog. Full reporting requires independent
+core review. The other five profiles need fresh post-change measurements before
+further tuning. T-303/T-306 remain open; no row or completion tick is added.
+
 The [real API thinking-control checkpoint](docs/evidence/t303-thinking-control-2026-11-13.md)
 includes 2/30 development tasks at source
 `a896f055256e96baec09966c71c5d0a7f1714d96`: 2/2 strict ungraded proposals.
