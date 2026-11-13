@@ -1,0 +1,140 @@
+Commit: 35a7b44190e146b747faa39eaef126ae3f0c4650
+Scope: json-object-a4b-checkpoint
+
+# Independent core review — A4B JSON-object checkpoint (2/30), non-closing
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Pinned checkout
+/lane/review-checkout. No GPU, model, candidate, hidden-test or held-out execution. Nothing in the
+repository was modified.
+
+## Scope and commit
+
+- `git rev-parse HEAD` → `35a7b44190e146b747faa39eaef126ae3f0c4650` (matches request).
+- `git diff --check 91b824b02cd7ea01dbadff1c44065b412dfa8c6a --` → exit 0.
+- `git diff --stat 91b824b0..HEAD`: TASKS.md +8, docs/evidence/coding-scoreboard.md +26, new
+  docs/evidence/t303-json-object-a4b-checkpoint-2026-11-13.md +93; 127 insertions, **0 deleted lines**.
+- Reporting only: no source, prompt, profile, task, threshold, permission, dependency or licence file
+  changes. The measured binary source `40cad647…` is an ancestor of the launch-time reporting commit
+  `fa116787` (`git merge-base --is-ancestor` true). This commit does not touch the plan, so the
+  2026-11-11 owner planning notes (one engine runtime, memory linking) do not apply here.
+
+## Methods, commands and results
+
+1. **Bindings package.** `sha256sum …-bindings.json` → `2c91d80a…1a8e8e` (matches).
+   Final scan → `694fb0a9…b283c0` (matches). I independently hashed and size-checked every listed
+   artifact with my own script: **26/26 OK** (archive 126,260,364 B → `f437d7dc…388c`, manifest
+   794,983 B → `adcca17d…fb25`; both match the evidence table). Retained Node and its licence are
+   bound. I also checked the 10 earlier binding groups listed in the preservation record: 10 binding
+   files and **193/193 earlier artifacts** hash- and size-match, and each group's artifact list
+   matches its binding file.
+2. **Archive verifier.** I read `json-object-a4b-checkpoint-20261113-verify.py` first. It streams
+   the tar (`r|gz`), rejects absolute and `..` names, non-files, token names and `.gguf`, hashes every
+   member against the manifest and imports no archived code. Then I ran
+   `python3 -B /lane/reviews/json-object-a4b-checkpoint-20261113-verify.py` → `PASS`: 4222 files,
+   2283 repository / 16 private inputs, 2 tasks, remaining 28, measurement_complete false,
+   0 strict proposals, causes `generation-refused:error:chat.response.incomplete: 2`,
+   input 19066 / output 46406, coverage 2, request/check 373.3500765969802 s,
+   reserved 406.1761323729879 s. Every value matches the request.
+3. **Live root.** `/lane/state/jo1-20261113` is **absent** in this review environment, so the
+   audit, `verify_proposals.py` and cleanup helpers were not run live. Instead I extracted the batch
+   directory, controller records, checkpoint records, audit and cleanup records into a private,
+   read-only temp directory outside the repository. I recomputed them myself without running any
+   archived code or candidate:
+   - **Budgets:** 32768−9502−32 = 23234 and 32768−9564−32 = 23172. These equal `record.requested_output_tokens`,
+     `request.max_tokens` and upstream `max_tokens`.
+   - **Upstream bodies:** for both tasks, `upstream-request-0{0,1}.json` = {model gemma4-26b-a4b,
+     2 messages identical to request/context, `stream: false`, `max_tokens` = budget, `n: 1`,
+     `response_format: {"type":"json_object"}`}. Batch settings: idle = total = 300000 ms,
+     response_mode complete, response_format json_object.
+   - **Events:** each task has exactly one event, a terminal `error`
+     `chat.response.incomplete` (partial true); there is no text event and no answer file.
+   - **Backend counters:** dev-001 has prompt eval 9502 tokens and eval 23234 tokens; dev-002 has
+     9564 and 23172. Both end with `stop processing: n_tokens = 32735, truncated = 0`
+     (= input + allowance − 1), so both hit the output cap. The sums are 19066 / 46406.
+   - **Times:** 200.139 + 173.211 = 373.350 s. 406.176 s / 60 = 6.770 GPU job minutes. Both match
+     the scoreboard and evidence.
+   - **Records:** retries 0, graded false, native harness false and `candidate_is_base_fallback`
+     true for both tasks. I extracted the two fallback `scripts/coding_harness.py` files, which are the only files
+     whose hash equals `candidate_sha256`. `git hash-object` maps each to an existing historical blob
+     (dev-001 → 6b5fd966, dev-002 → 28296f28), so they are unmodified base files, not model edits.
+   - **Run settings:** the audit's model identity, profile (threads 4, temperature 0, seed 42, q8_0 K/V
+     caches, batch 256, microbatch 128, empty template kwargs), API SHA `a8995c15…`, helper SHA
+     `852cd7f5…`, model SHA/size, driver package and frozen-input manifest `79a130de…` all match the
+     evidence prose.
+   - **Controller and checkpoint:** the launch argv is `python3 -B …/controller_a4b1.py --models
+     gemma4-26b-a4b` (pid = pgid 281). `controller_a4b1.py` differs from the generic `controller.py`
+     only in its reservation-log name. It runs `build-slot` → `gpu-slot queue-run agentmage 900`.
+     Its SIGTERM handler only sets a flag, and `subprocess.run` keeps waiting through the signal
+     (PEP 475), so the running pair is not interrupted. The controller log is exactly
+     `{"model":"gemma4-26b-a4b","completed":2,"total":30}`. The reservation log shows the build-queue
+     wait, then the GPU wait, load in 21.545 s, two task lines and
+     `status completed … error null`.
+   - **Timeline (UTC):** launch 14:51:20; model state starts about 15:00:10; SIGTERM request
+     15:03:20 (`completed_pairs_before_request: 0`, signal sent to the controller only); server log
+     ends about 15:06:46; confirmation 15:07:08, inside the 30-second settle loop; commit 15:08:23;
+     final scan 15:08:53. The signal therefore arrived during the pair and the exit came after it.
+   - **No next pair:** the manifest has no `gemma4-26b-a4b-02*` directory or reservation log, and
+     the confirmation receipt asserts both are absent.
+   - **Cleanup record:** settings revoked, API reaped, key and socket absent, guard errors 0, GPU peak
+     19793 MiB.
+4. **Fast gate.** Node is absent from PATH, so I used a temporary symlink to the retained binary:
+   `PATH="$task_node_dir:$PATH" python3 -B scripts/local_agent_fast_gate.py --base 91b824b0…` →
+   diff check 0, untracked lint 0, `markdownlint-cli2` "Linting: 3 files … 0 issues",
+   **FAST GATE: PASS**. I read the retained direct API lint receipt: 3 files checked, 0 issues each.
+5. **Preservation.** The first 148218 bytes of the scoreboard (the full base length) are byte-identical to the base
+   scoreboard (`cmp` against `git show 91b824b0:…`). Every `|` line in TASKS.md is identical to
+   the base (**507 lines**). The diff adds no `[x]` tick, no row and no sub-row.
+6. **Privacy and IP.** I grepped the added lines for home paths, the username, email, hostnames,
+   tokens, keys, `/lane/`, `.local` and other agent-product or benchmark names: no hits. The only
+   names in the added prose are the measured model id `gemma4-26b-a4b` and the driver package. Raw
+   records that contain private paths stay in the private archive and are not committed. No held-out
+   content is in the diff.
+7. **Rendering check.** I rendered the new sections with the repository's own `marked` and
+   `micromark` + `micromark-extension-gfm-table` (run with the retained Node). This produced the
+   finding below. The evidence file renders 2 tables, and the preceding scoreboard section renders 1.
+8. **Process absence.** My session's process view shows no python, llama or agentmage processes.
+   This sandbox has its own PID namespace, though, so it cannot see the builder's processes. Process
+   absence therefore rests on the builder's bound confirmation receipt, which directly checks
+   `controller_a4b1.py`, `batch.py`, the API and the model socket, and on the post-commit scan (empty
+   `matching_processes`).
+
+## Findings
+
+No critical, high or medium findings.
+
+- **LOW — the new scoreboard line does not render as a table.** `docs/evidence/coding-scoreboard.md:2039`
+  has an 11-cell delimiter row (`| --- |` ×11) under a 10-cell header (line 2038) and a 10-cell data
+  row (line 2040). GFM recognizes a table only when the header and delimiter cell counts match.
+  `marked` renders 0 tables for this section and shows the line as a `<p>| Date …` paragraph;
+  `micromark` with the GFM table extension also renders 0. Earlier scoreboard sections render
+  correctly, and an awk scan finds this is the only header/delimiter mismatch in the file.
+  markdownlint MD056 cannot see it because no table is parsed, so the fast gate and the direct lint
+  both report 0 issues. The numbers are present in the source text and are correct, so the
+  MEASURE FIRST line is not missing.
+  **Fix:** remove one `| --- ` from line 2039 in the next scoreboard commit. Backlog: have the fast
+  gate check that each table's header and delimiter cell counts match.
+- **LOW (backlog) — the post-commit process scan does not record its method.**
+  `/lane/reviews/json-object-a4b-checkpoint-20261113-final-process-scan.json` records only status,
+  commit, time and an empty `matching_processes`, not the patterns or script that produced it. The
+  claim that it "checks every controller" cannot be confirmed from the artifact. This does not affect
+  the outcome, because the bound `confirm_a4b_checkpoint1.py` receipt checks the actual controller.
+  The cleanup helper's stale `controller_a4b_checkpoint1.py` pattern is disclosed in the request.
+  **Fix:** bind the scan script, or record the matched patterns in the scan receipt.
+
+Observation, not a finding: the batch's `memory.peak` (15,033,458,688) slightly exceeds its
+`memory.high` (15,032,385,536), so cgroup reclaim pressure may have affected the published times.
+The times are published measurements, not gates.
+
+## Per-row result
+
+- **T-303 / T-306 (non-closing partial development measurement, A4B 2/30):** PASS for this exact
+  reporting increment. The scoreboard line exists and states context/output budgets, does-not-fit
+  0/2 counted separately from model failures, and causes. Every number traces to the archived raw
+  requests, events, backend counters and reservation records. Failures are counted, not dropped.
+  Retries are 0, and no hidden or held-out task or candidate test ran. Confinement-relevant behaviour
+  is unchanged: the signal reached the controller only, there was no replay, and both reservations
+  were released. Both rows remain **OPEN**. This review approves no row closure, model role, tuning
+  or release. Next step: resume tasks 3–4 with a fresh controller log, without replaying pair 00, and
+  fix the LOW table delimiter in that reporting commit.
+
+Verdict: PASS
