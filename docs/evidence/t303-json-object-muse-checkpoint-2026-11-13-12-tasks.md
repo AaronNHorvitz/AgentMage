@@ -112,3 +112,14 @@ profile, task, threshold, permission, supply-chain output or ledger row changes.
 Remaining Muse tasks and A4B precede tuning except high/medium fixes.
 No task-quality improvement, model qualification, row closure, release or
 owner-test readiness is claimed. Independent core review is required.
+
+## Independent review clarification — 2026-11-13
+
+The [independent core review](../reviews/dd19baea2e52-json-object-muse-checkpoint12.txt)
+returns PASS for exact reporting commit
+`dd19baea2e52f64a3d632c573c2ee1809fda0d98`, with no high or medium finding.
+Its low L1 notes that dev-012's 300.006-second request/check window included
+about 11 seconds of backend generation for cancelled dev-011 before its own
+slot launch. This is elapsed request/check time, not exclusively dev-012's
+backend work. Cancellation latency remains T-309 backlog. No measured count,
+sealed input, task outcome or row status changes.
