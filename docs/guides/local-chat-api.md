@@ -151,6 +151,23 @@ Invalid, duplicate or null mode values refuse without replacing settings or
 connecting. Chat/proposal bodies cannot set the mode. Native development
 launchers keep their separate default configuration.
 
+Optional `response_format` requests output syntax: `text` (the default) or
+`json_object`. Text omits the upstream format field; JSON-object mode sends
+`response_format: {"type":"json_object"}` to the chosen endpoint. It works
+with either response mode, including conversations without a workspace.
+Choose it explicitly for a server that supports it. Unsupported requests fail
+normally, without automatic fallback or retry. No prompt is added.
+
+The endpoint may ignore the syntax request. Chat output stays untrusted text;
+coding proposals still undergo the original strict edit checks. Fences,
+malformed JSON, duplicate keys and unsafe edits remain refusals. No output is
+repaired or granted authority. Request bindings include the actual format field;
+all byte ceilings, deadlines, approvals and token accounting remain in force.
+GET reports the effective format or null when unconfigured. Invalid, duplicate
+or null values refuse without replacing settings or opening a connection.
+Chat/proposal bodies cannot select it. Omitting it on a new settings choice
+restores text. Native development launchers keep their separate defaults.
+
 Settings and the model key are **not persisted**. Restart requires a fresh
 authenticated endpoint choice. API tokens persist in their private directory.
 Plain loopback HTTP authenticates the API caller by token, not the process

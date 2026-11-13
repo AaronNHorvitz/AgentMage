@@ -1616,3 +1616,22 @@ Across the 180 attempts: 72 strict ungraded proposals, 51 format refusals,
 39 incomplete responses, 14 edit refusals and 4 timeouts. Format refusal is
 the next source priority. No model role is selected from these counts, and
 held-out tasks remain unrun.
+
+## Independent E4B complete-response measurement review — 2026-11-13
+
+The [independent core review](../reviews/b826d82e0019-complete-response-e4b-measurement.txt)
+returns **Verdict: PASS** for exact reporting commit
+`b826d82e001980eafae7b9ae145a969dcfd14a8c`, with no high or medium finding.
+It independently recomputes every E4B task row, all costs and the six-profile
+aggregate from the retained raw inputs. The reviewer could not run Markdown
+lint without Node; the bound builder lint log and independent structural
+checks are retained.
+
+Low L1 is clarified additively: the preceding table's “Recorded refusals”
+means **non-proposal outcomes**. Its 108 outcomes include 39 incomplete
+responses and four timeouts as well as 65 strict edit/format refusals. The
+A4B profile's 28 comprise 26 incomplete responses and two format refusals.
+The repeated counter-coverage sentences remain historical reporting text;
+report concision joins T-309 backlog. Counts and sealed inputs stay unchanged.
+This is review retention, not a new model run. T-303/T-306 remain open;
+no task grade, retry, held-out result or row closure is claimed.

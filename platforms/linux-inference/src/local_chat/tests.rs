@@ -184,7 +184,15 @@ fn requests_bound_messages_tokens_and_encoded_size() {
             Err(ChatError::Request)
         );
     }
-    for include_usage in [false, true] {
+    for (include_usage, format, mode) in [false, true].into_iter().flat_map(|usage| {
+        [ChatResponseFormat::Text, ChatResponseFormat::JsonObject]
+            .into_iter()
+            .flat_map(move |format| {
+                [ChatResponseMode::Stream, ChatResponseMode::Complete]
+                    .into_iter()
+                    .map(move |mode| (usage, format, mode))
+            })
+    }) {
         let encode = |content: &str| {
             encode_chat_request(
                 "test-model",
@@ -194,7 +202,8 @@ fn requests_bound_messages_tokens_and_encoded_size() {
                 }],
                 1,
                 include_usage,
-                ChatResponseMode::Stream,
+                mode,
+                format,
             )
         };
         let overhead = encode("x").unwrap().len() - 1;

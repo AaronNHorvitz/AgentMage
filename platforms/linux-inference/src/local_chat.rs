@@ -174,6 +174,18 @@ pub enum ChatResponseMode {
     Complete,
 }
 
+/// Trusted upstream output request, separate from framing and edit validation.
+/// Servers may reject or ignore it; no output gains authority from this setting.
+#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ChatResponseFormat {
+    /// Ordinary conversation; omit the upstream format constraint.
+    #[default]
+    Text,
+    /// Request a JSON object from a supporting endpoint. Consumers still validate.
+    JsonObject,
+}
+
 /// Encodes a single-choice streaming request, with no implicit system prompt,
 /// tools, fallback or provider fields. Returned bytes are private conversation data.
 pub fn encode_chat(
@@ -181,7 +193,14 @@ pub fn encode_chat(
     messages: &[ChatMessage<'_>],
     max_tokens: u32,
 ) -> Result<Vec<u8>, ChatError> {
-    encode_chat_request(model, messages, max_tokens, false, ChatResponseMode::Stream)
+    encode_chat_request(
+        model,
+        messages,
+        max_tokens,
+        false,
+        ChatResponseMode::Stream,
+        ChatResponseFormat::Text,
+    )
 }
 
 /// Requests optional provider-reported token usage, without granting admission
@@ -191,7 +210,14 @@ pub fn encode_chat_with_usage(
     messages: &[ChatMessage<'_>],
     max_tokens: u32,
 ) -> Result<Vec<u8>, ChatError> {
-    encode_chat_request(model, messages, max_tokens, true, ChatResponseMode::Stream)
+    encode_chat_request(
+        model,
+        messages,
+        max_tokens,
+        true,
+        ChatResponseMode::Stream,
+        ChatResponseFormat::Text,
+    )
 }
 
 pub(super) fn encode_chat_request(
@@ -200,6 +226,7 @@ pub(super) fn encode_chat_request(
     max_tokens: u32,
     include_usage: bool,
     mode: ChatResponseMode,
+    format: ChatResponseFormat,
 ) -> Result<Vec<u8>, ChatError> {
     if !valid_model(model)
         || !(1..=32768).contains(&max_tokens)
@@ -227,10 +254,16 @@ pub(super) fn encode_chat_request(
         n: u8,
         #[serde(skip_serializing_if = "Option::is_none")]
         stream_options: Option<StreamOptions>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        response_format: Option<ResponseFormat>,
     }
     #[derive(Serialize)]
     struct StreamOptions {
         include_usage: bool,
+    }
+    #[derive(Serialize)]
+    struct ResponseFormat {
+        r#type: &'static str,
     }
     // Reserve the closed wire ceiling before any private bytes are written.
     // Reject overflow in the writer, rather than allowing Vec to reallocate
@@ -244,6 +277,9 @@ pub(super) fn encode_chat_request(
             stream: mode == ChatResponseMode::Stream,
             max_tokens,
             n: 1,
+            response_format: (format == ChatResponseFormat::JsonObject).then_some(ResponseFormat {
+                r#type: "json_object",
+            }),
             stream_options: (include_usage && mode == ChatResponseMode::Stream).then_some(
                 StreamOptions {
                     include_usage: true,

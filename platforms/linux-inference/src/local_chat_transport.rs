@@ -22,8 +22,9 @@ use sha2::{Digest, Sha256};
 use zeroize::{Zeroize, Zeroizing};
 
 use crate::local_chat::{
-    ChatError, ChatEvent, ChatFinish, ChatMessage, ChatResponseMode, ChatStream, ChatUsage,
-    LocalChatEndpoint, MAX_STREAM_BYTES, MAX_TEXT_BYTES, decode_complete_chat, encode_chat_request,
+    ChatError, ChatEvent, ChatFinish, ChatMessage, ChatResponseFormat, ChatResponseMode,
+    ChatStream, ChatUsage, LocalChatEndpoint, MAX_STREAM_BYTES, MAX_TEXT_BYTES,
+    decode_complete_chat, encode_chat_request,
 };
 
 const IO_TICK: Duration = Duration::from_millis(50);
@@ -248,6 +249,7 @@ pub struct LocalChatTransport {
     credential: Option<BearerKey>,
     limits: TransportLimits,
     response_mode: ChatResponseMode,
+    response_format: ChatResponseFormat,
 }
 
 /// Completion confirmed at HTTP and codec EOF. Counts remain server reports;
@@ -430,6 +432,7 @@ impl LocalChatTransport {
             credential,
             limits,
             response_mode: ChatResponseMode::Stream,
+            response_format: ChatResponseFormat::Text,
         })
     }
 
@@ -447,6 +450,21 @@ impl LocalChatTransport {
     #[must_use]
     pub const fn response_mode(&self) -> ChatResponseMode {
         self.response_mode
+    }
+
+    /// Request JSON-object output while constructing trusted immutable settings.
+    /// No prompt is added, bytes repaired, limits raised or retries introduced.
+    /// The endpoint may ignore the request; consumers retain their strict checks.
+    #[must_use]
+    pub fn with_response_format(mut self, format: ChatResponseFormat) -> Self {
+        self.response_format = format;
+        self
+    }
+
+    /// Requested output format; this is not proof of a valid model response.
+    #[must_use]
+    pub const fn response_format(&self) -> ChatResponseFormat {
+        self.response_format
     }
 
     fn authorized(&self, approval: &LocalChatApproval) -> Result<(), TransportError> {
@@ -475,6 +493,7 @@ impl LocalChatTransport {
             max_tokens,
             include_usage,
             self.response_mode,
+            self.response_format,
         )?);
         // Use the same serde message-array encoding as the frozen body. This
         // observes JSON bytes and roles, never a server's rendered prompt tokens.

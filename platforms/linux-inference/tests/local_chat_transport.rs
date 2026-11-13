@@ -8,7 +8,8 @@ use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
 use agentmage_platform_linux_inference::local_chat::{
-    ChatError, ChatFinish, ChatMessage, ChatResponseMode, ChatRole, LocalChatEndpoint,
+    ChatError, ChatFinish, ChatMessage, ChatResponseFormat, ChatResponseMode, ChatRole,
+    LocalChatEndpoint,
 };
 use agentmage_platform_linux_inference::local_chat_transport::{
     BearerKey, ChatCancellation, LocalChatApproval, LocalChatTransport, LocalProbeApproval,
@@ -26,14 +27,22 @@ fn complete_body() -> serde_json::Value {
 #[test]
 fn complete_mode_freezes_actual_body_and_reports_only_validated_text_and_optional_usage() {
     use sha2::{Digest, Sha256};
-    for usage in [false, true] {
+    for (usage, format) in [false, true].into_iter().flat_map(|usage| {
+        [ChatResponseFormat::Text, ChatResponseFormat::JsonObject]
+            .into_iter()
+            .map(move |format| (usage, format))
+    }) {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let endpoint =
             LocalChatEndpoint::parse(&format!("http://{}/v1", listener.local_addr().unwrap()))
                 .unwrap();
         let (client, approval) = connection(endpoint, limits());
         assert_eq!(client.response_mode(), ChatResponseMode::Stream);
-        let client = client.with_response_mode(ChatResponseMode::Complete);
+        assert_eq!(client.response_format(), ChatResponseFormat::Text);
+        let client = client
+            .with_response_mode(ChatResponseMode::Complete)
+            .with_response_format(format);
+        assert_eq!(client.response_format(), format);
         let (tx, rx) = mpsc::channel();
         let task = thread::spawn(move || {
             let (mut socket, _) = listener.accept().unwrap();
@@ -46,6 +55,13 @@ fn complete_mode_freezes_actual_body_and_reports_only_validated_text_and_optiona
             );
             let body: serde_json::Value = serde_json::from_slice(&request[start..]).unwrap();
             assert_eq!(body["stream"], false);
+            match format {
+                ChatResponseFormat::Text => assert!(body.get("response_format").is_none()),
+                ChatResponseFormat::JsonObject => assert_eq!(
+                    body["response_format"],
+                    serde_json::json!({"type":"json_object"})
+                ),
+            }
             assert!(body.get("stream_options").is_none());
             assert!(body.get("tools").is_none());
             tx.send((

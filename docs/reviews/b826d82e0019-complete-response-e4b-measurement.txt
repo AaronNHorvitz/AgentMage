@@ -1,0 +1,175 @@
+Commit: b826d82e001980eafae7b9ae145a969dcfd14a8c
+Scope: complete-response-e4b-measurement
+
+Reviewer: independent Claude Opus 5.5 session (extra-high effort), read-only, frozen checkout
+/lane/review-checkout. Row: T-303 / T-306 non-closing development measurement. Tier: core.
+Base: a26bc732513b5a4d19c07c5a7e5b302476dae225.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = b826d82e001980eafae7b9ae145a969dcfd14a8c. `git diff --stat` against the
+  base touches exactly three files: TASKS.md (+10), docs/evidence/coding-scoreboard.md (+61), and the new
+  docs/evidence/t303-complete-e4b-2026-11-13.md (151 lines). The diff only adds lines. TASKS.md gains one
+  commentary paragraph at the top of the active queue. The scoreboard gains one section appended after line
+  1557. No source, prompt, profile, hidden test, threshold, permission, SBOM, ledger table or row status
+  changed. `git diff --stat 974d2bb5..HEAD -- scripts/` is empty, so the measured scripts equal the
+  repaired source.
+- Read IP-POLICY.md, the MEASURE FIRST section of the builder brief, the top of TASKS.md and the whole
+  diff. Confirmed that the owner planning notes of 2026-11-11 were already recorded in earlier commits
+  (decisions 0204 and 0205). This commit adds nothing to the plan, so nothing further is due here.
+- Read the archive verifier source before running it. It streams the tarball with `tarfile` in `r|gz`
+  mode and refuses absolute paths, `..` parts, non-file members, token files and `.gguf` files. It hashes
+  every member, keeps selected JSON and log bytes in memory and writes nothing. It imports and executes no
+  archived code. Its only differences from the reviewed Muse verifier are the prefix, the model name and
+  the excluded-token count (150 → 180).
+- I ran my own checks against the raw archive, using my own parsers and not the builder's audit, progress
+  or publish scripts. I streamed the archive into a private 0700 scratch directory under /lane/state/tmp,
+  checked every member hash against the manifest, and deleted the directory afterwards.
+  1. Per-task rows: compared all 30 rows of the evidence table with the archived `record.json`,
+     `request.json`, `events.ndjson`, `checked.json` and per-task `backend-slice.log`. The fields compared
+     were input tokens, output allowance, observed output, cause and request/check seconds (rounded to 3
+     decimals). Each task slice has exactly one `launch_slot_` line. From that line on, it has exactly one
+     `prompt eval` counter, one `eval` counter and one `stop processing … truncated = 0` line. Every
+     prompt-eval count equals `rendered_input_tokens_preflight`. Each allowance equals
+     `min(32768, 32768-input-32)` and equals `request.max_tokens`. The concatenated event text equals
+     `answer.txt`, and each task has exactly one `complete` terminal event with finish `stop`.
+  2. Totals: 215893 input tokens, 138484 output tokens, 1372.591536 s request/check time, and causes
+     edit 2 / format 15 / ungraded-proposal 13. The 15 `reserved_work_seconds` values sum to
+     1499.878037 s = 24.998 min. Input range is 3223–9732 and allowance range is 23004–29513. All equal
+     the evidence, the scoreboard row and the audit.
+  3. Strict answers and candidates: I loaded only the non-test task fields (id, split, base, source,
+     base_sha256) from the frozen collection; hidden test content was not loaded. I read each frozen base
+     file with `git show <base>:<source>` and checked it against `base_sha256` (30/30). I wrote my own strict
+     checker: a JSON object whose only key is `edits`, a nonempty list, each item with exactly
+     path/old/new strings, path equal to the task source, nonempty `old` different from `new` that occurs
+     exactly once, no overlapping edits, and duplicate JSON keys refused. My checker agrees with all 30
+     recorded causes. dev-005 has a duplicate `edits` key and dev-017 an edit object with duplicate keys;
+     both are correctly refused as format errors. For the 13 accepted answers, the edited file equals
+     `checked.json` `changes[0].content` byte for byte. Each `record.candidate_sha256` and each manifest
+     hash of `gemma4-e4b-candidates/<task>/<source>` equals the base for the 17 refusals and the applied
+     proposal for the 13 acceptances.
+  4. Context integrity: every `context.json` has excerpts from the task's editable source path only. All
+     190 excerpts equal `base[start:end]` of the frozen base. Only the 30 development ids occur, all with
+     split `development`. The hidden-test file name appears in six contexts (dev-005, 009, 014, 017, 018,
+     026). In each case it is a string literal inside the editable base source, such as an evidence
+     script's artefact list, not test content. The contexts and requests contain no held-out reference.
+  5. Settings, cleanup and resources: all 15 batch reports show `completed`, response mode `complete`,
+     idle and total timeouts of 300000 ms, settings revoked, no resource-guard error and
+     `api_sha256` 41fa8967…626e (equal to the manifest's `bin/agentmage-local-api`). All `api-exit.json`
+     files show reaped. Each pair `backend-slice.log` matches its `backend_slice_sha256`, and each task
+     slice is a substring of its pair slice. `include_usage` is false in all 30 requests. The launch
+     command shows ctx 32768, threads 4, batch 256, ubatch 128, Q8 K/V, temp 0, seed 42 and
+     `--chat-template-kwargs {}`. The weight SHA d35a3aa7… is 5,405,170,144 bytes, matching the evidence.
+     The 15 reservation logs that contain jobs all show "Verifying gemma4-e4b and the pinned runtime".
+     cleanup.json shows PASS 15/15, a GPU peak of 5061–5433 MiB and no matching processes. The largest
+     job wall is 135.9 s, far below the 900 s cap.
+  6. Platform: all 15 batch reports carry the same platform tuple, with nvidia package
+     `xorg-x11-drv-nvidia-cuda-615.71.09-3.fc44.x86_64` and disposition "changed since preparation; exact
+     coding campaign must re-evaluate". The evidence and scoreboard disclose this and claim no
+     qualification.
+  7. Interruption and resume: `controller-e4b.log` shows progress lines 2/30 and 4/30, then a traceback
+     `job failed: gemma4-e4b 4`. This is consistent with `queue-interruption-e4b.json`: the owned waiter
+     was stopped after more than 12 minutes waiting for a build reservation. `gemma4-e4b-04-reservation-resume7.log`
+     contains only the single line "Waiting for a shared heavy-build/test reservation". There was no GPU
+     reservation, model verification or task. The continuation controller (`controller_resume8.py`,
+     read only, not executed) skips pairs whose `batch-report.json` is completed. It asserts that no
+     partial directory exists, so nothing can be replayed silently, and it opens a new `-resume8` log
+     with `xb`. Pair 04's only model-state directory is 20261112T183322, created under resume8.
+     `controller-e4b-resume1.log` shows 6/30 … 30/30 and COMPLETE. The six hashes in
+     `e4b-progress4-bindings.json` (the two batch reports and four records of pairs 00 and 02) equal the
+     final manifest, so the original four attempts are unchanged.
+  8. Prior seals and earlier profiles: all 115 entries in `e4b-prior-seals.json` still hash-match the
+     files in /lane/reviews. For each of the A4B, 31B, 27B, GPT-OSS and Muse profiles, every profile-prefixed
+     member of that profile's own retained manifest has the same SHA-256 in the E4B manifest (0
+     differences). The only extra members are two Muse gate logs.
+  9. Aggregate table: the six audits all have source 974d2bb5 and hash-match the manifest. Their causes
+     sum to 180 attempts: ungraded-proposal 72, format 51, incomplete 39, edit 14 and timeout 4. Each
+     row (proposals/refusals): a4b 2/28, 31b 4/26, qwen 29/1, gpt-oss 5/25, muse 19/11, e4b 13/17. Each
+     row matches `aggregate.json` and that profile's earlier published scoreboard row (lines 1236, 1309,
+     1359, 1435, 1499 and 1566). The largest non-proposal cause is format, 51.
+  10. Date: the 15 model-state stamps run from 20261112T181123 to 20261112T192040 host time, and the host
+      is on UTC−6. That is 2026-11-13 00:11–01:20 UTC. The commit time is 2026-11-12T19:25:15−06:00, which
+      is 01:25 UTC on 2026-11-13. The report date 2026-11-13 follows the UTC convention used in the earlier
+      repeats.
+  11. Public hygiene: I searched all added lines for usernames, home and lane paths, e-mail addresses,
+      credentials, hostnames, private project names and agent-product names; nothing matched. The private
+      paths appear only in the private raw records, which are not committed. The model profile ids are the
+      existing descriptive ids under model-profiles/, not branding.
+  12. Markdown: Node is absent in this environment (see below). My own structural check of the added
+      content found consistent table column counts, blank lines around tables and headings, no trailing
+      whitespace and a final newline. The repo config disables MD013, MD022, MD024 and MD060.
+- No GPU use and no model run. No candidate code, grading control or hidden test was executed. No UI is in
+  scope.
+
+## Exact commands and results (all in /lane/review-checkout)
+
+    test "$(git rev-parse HEAD)" = b826d82e001980eafae7b9ae145a969dcfd14a8c   -> true
+    git diff --check a26bc732513b5a4d19c07c5a7e5b302476dae225 --                -> exit 0, no output
+
+    python3 -B /lane/reviews/complete-e4b-20261113-verify-archive.py
+      -> "status": "PASS", verified_files 119863, repository_inputs 2283, private_inputs 16, tasks 30,
+         strict_ungraded_proposals 13, counter_coverage 30, observed 215893 / 138484,
+         request_check_seconds 1372.5915358039783, reserved_job_wall_seconds 1499.8780369270098,
+         causes {edit 2, format 15, ungraded-proposal 13}, candidate_execution false,
+         hidden_tests_loaded false  (5.6 s). Identical to the bound archive-verification.json.
+
+    PATH=/lane/state/tooling/node-v24.15.0-linux-x64/bin:$PATH python3 -B scripts/local_agent_fast_gate.py \
+        --base a26bc732513b5a4d19c07c5a7e5b302476dae225
+      -> git diff --check exit 0; --lint-untracked exit 0; markdownlint "Missing executable: node; no
+         automatic download" exit 127; FAST GATE: FAIL.
+         /lane/state/tooling does not exist in the reviewer environment, and no node binary is on the
+         system. The failure comes only from the missing Node. I did not download Node, and I do not claim
+         a green lint. The bound builder log complete-e4b-20261113-doc-gate.log (hash verified below)
+         records markdownlint-cli2 v0.23.2 on the same three files: "Summary: 0 issues in 0 files", FAST
+         GATE: PASS.
+
+    Binding/document check from the request
+      -> PASS:18 retained artifacts and three exact document hashes
+
+    Six-audit aggregate check from the request
+      -> PASS:all six frozen audits;180 attempts,72 proposals;largest refusal format51
+         (models: gemma4-26b-a4b, gemma4-31b, gemma4-e4b, gpt-oss, muse, qwen35-27b)
+
+Independent recomputation (methods 1–3) found 0 mismatches over the 30 rows, the totals, the candidates
+and the checked contents.
+
+Evaluation integrity: only development tasks ran. The held-out set was neither loaded nor run, and no
+hidden test was loaded or run. Task bases are frozen and hash-verified. No prompt, profile or source
+changed. The counts re-run from the bound archive with one command and agree with the raw logs. Failures
+are counted, not dropped: all 17 refusals appear in the table and in the causes. MEASURE FIRST: this
+batch has its scoreboard line. Context and output budgets and the changed variables are stated.
+"Does not fit: 0" is reported separately. The partial path and the blockers (native artifact admission,
+missing original grading controls) are named, with no reconstruction claimed. The largest cause names
+the next work, and no role is selected.
+
+## Findings
+
+High: none.
+Medium: none.
+
+Low L1 (labelling, backlog). In the six-profile table, the column "Recorded refusals" counts all non-proposal
+outcomes. Of the 108 counted, 39 are `chat.response.incomplete` and 4 are `chat.transport.timeout`, not
+strict-edit refusals. For example, gemma4-26b-a4b's "28/30" is 26 incomplete responses plus 2 format
+refusals.
+Location: docs/evidence/coding-scoreboard.md:1606.
+The sentence under the table gives the split, and the cause taxonomy prefixes these with
+`generation-refused`, so no number is wrong. A reader of the table alone could still take the column as
+edit/format refusals.
+Fix: rename the column "Non-proposal outcomes", or split it into strict refusals and generation
+incomplete/timeout.
+Editorial note in the same backlog item: the counter-coverage sentence appears three times in the
+scoreboard section (lines 1584, 1590 and the "Backend final counters cover 30/30" sentence) and twice in
+the evidence (lines 66 and 75). Removing the repeats would make both easier to read.
+
+Environment limitation (not a finding): markdownlint could not run without Node; see above.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing development measurement): the reporting increment is accurate. Every
+  published per-task number, total, cost and aggregate traces to the raw archive and was recomputed
+  independently. The queue-only interruption and resume are as described, and the four original attempts
+  are unchanged. Labelling is honest: the path is partial, nothing is graded, the platform tuple has
+  changed and is not qualified, and the blockers are kept. There is no new row, tick or closure, and both
+  rows stay open, as claimed. No high or medium finding.
+
+Verdict: PASS

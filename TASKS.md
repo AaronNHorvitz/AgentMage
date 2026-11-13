@@ -2,6 +2,23 @@
 
 ## Active queue: local agent mission
 
+The [JSON-object output increment](docs/evidence/t303-json-object-output-2026-11-13.md)
+addresses the largest measured refusal cause by requesting structured output
+from a supporting endpoint through trusted settings. Strict edit acceptance,
+prompts and limits remain unchanged. Three new API socket tests pass; the full
+affected gate has 1,164 passed, the same 53 inherited failures and 19 ignored,
+and remains failing. Independent core review and a fresh development repeat
+are required before further tuning. T-303/T-306 remain open with no new row
+or completion tick.
+
+The retained [independent E4B measurement review](docs/reviews/b826d82e0019-complete-response-e4b-measurement.txt)
+returns **Verdict: PASS** for exact reporting commit
+`b826d82e001980eafae7b9ae145a969dcfd14a8c`, with no high or medium finding.
+Low L1 is clarified additively: the aggregate table counts non-proposal
+outcomes, including incomplete responses and timeouts. Reporting concision
+joins T-309 backlog. Counts and sealed inputs stay unchanged; neither parent
+row closes. Format refusals select the next source work.
+
 The [E4B complete-response repeat](docs/evidence/t303-complete-e4b-2026-11-13.md)
 finishes all 30 frozen development tasks at source
 `974d2bb55afa6be47bd58ffcf1dd30a6450f70cd`: 13/30 strict ungraded proposals.
