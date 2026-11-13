@@ -2,6 +2,12 @@
 
 ## Active queue: local agent mission
 
+The retained [independent thinking-disabled A4B measurement review](docs/reviews/2bee1e85ea25-thinking-disabled-a4b-measurement.txt)
+returns **Verdict: PASS** for exact `2bee1e85ea2571936ababb13ae9eda474d4491e0`,
+with no findings. Measured counts and sealed inputs remain unchanged. T-303/T-306
+remain open; this reporting review closes no row. Fresh measurements for the
+other five profiles precede further tuning.
+
 The [thinking-disabled A4B repeat](docs/evidence/t303-thinking-disabled-a4b-2026-11-13.md)
 finishes all 30 development tasks at source
 `a896f055256e96baec09966c71c5d0a7f1714d96`: 16 strict ungraded proposals,

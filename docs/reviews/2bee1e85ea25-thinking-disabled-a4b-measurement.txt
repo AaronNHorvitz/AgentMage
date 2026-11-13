@@ -1,0 +1,143 @@
+Commit: 2bee1e85ea2571936ababb13ae9eda474d4491e0
+Scope: thinking-disabled-a4b-measurement
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Pinned checkout
+/lane/review-checkout at the exact commit. Base 8c14051a2d1be63fb8382c9153df91a6d93f71d5, source
+a896f055256e96baec09966c71c5d0a7f1714d96. Row: T-303 / T-306, a full development partial-path
+measurement that closes no row. No GPU, model, candidate, hidden-test or held-out execution by me.
+
+## Methods, commands and results
+
+1. Commit and scope
+   - `git rev-parse HEAD` -> 2bee1e85ea2571936ababb13ae9eda474d4491e0. Working tree clean.
+   - `git diff --check 8c14051a… --` -> exit 0.
+   - `git diff --stat 8c14051a… HEAD` -> exactly 4 paths, 334 insertions, 0 deletions: TASKS.md (+11),
+     docs/evidence/coding-scoreboard.md (+33), docs/evidence/t303-thinking-disabled-a4b-2026-11-13.md
+     (+122), docs/reviews/8c14051a2d1b-trusted-endpoint-thinking-control.txt (+168). No source, prompt,
+     checker, task, hidden test, threshold, profile, permission or SBOM path changed.
+2. Bindings and receipts
+   - sha256 of bindings.json = 8ab5960b…1f9 and post-commit.json = 21b4712d…a82, as declared.
+   - I re-hashed and size-checked all 23 bound artifacts myself (Python streaming sha256): 23/23 match,
+     including the 926853120-byte inputs.tar (0a361699…f55) and manifest (b3c1e23e…0e0).
+   - Post-commit receipt: commit 2bee1e85…, clean true, bindings_sha256 8ab5960b…. `git show HEAD:<path> |
+     sha256sum` for all 4 committed blobs equals the receipt's 4 values (544e11ae…, 8fbe52ff…, f579a0e9…,
+     c7df8720…).
+   - Prior capsule unchanged: thinking-control-20261113-bindings.json = d5f11617…1f2 and
+     post-commit.json = 7a5b790c…51a. I re-hashed its 11 bound artifacts: 11/11 match.
+3. Standalone verifier
+   - I read /lane/reviews/thinking-disabled-a4b-20261113-verify.py before running it. It streams the tar
+     with `r|`, rejects absolute paths, `..`, non-files, token/key names and .gguf, hashes every member
+     against the manifest, and buffers only selected JSON/log members in memory. It runs only `git diff
+     --name-only` and `git show` against the source commit. It imports nothing from the archive and
+     executes nothing from it.
+   - `python3 -B /lane/reviews/thinking-disabled-a4b-20261113-verify.py` -> status PASS, 2796 files,
+     2283 repository and 20 private inputs, 30 tasks, 16 proposals, causes 16/11/3, tokens 215953/111638,
+     coverage 30, request/check 1289.4524653239641 s, reserved 1789.1984816950862 s.
+   - Independent recomputation: I extracted only the measurement/, candidate-sources/ and actual-inputs/
+     members (493 files) into /tmp with `filter='data'`, then wrote my own script over the raw
+     batch-report.json, batch.json, upstream request/response captures and checked.json files:
+     - 30 unique tasks over 15 pairs. 16 ungraded-proposal, 11 strict-edit-refused with checked.json
+       error `code.proposal.format`, and 3 generation-refused (dev-006/007/008).
+     - Response usage sums to 215953 prompt / 111638 completion tokens. Preflight input ranges
+       3225–9734. Budget ranges 23002–29511, and input + budget + 32 = 32768 for all 30.
+     - The 3 `length` finishes have completion tokens equal to their allowance (23424/23424,
+       23002/23002, 23362/23362). The other 27 finish `stop` below their allowance. No response has
+       empty content; all 30 statuses are 200.
+     - Every upstream request carries `chat_template_kwargs: {"enable_thinking": false}`. Every
+       batch-report has `thinking_mode: disabled` and model `chat_template_kwargs {}`.
+     - Reserved work sums to 1789.1984816950862 s = 29.819974694918105 min. Sampled GPU peaks range
+       19534–20307 MiB.
+     - All 15 batch reports carry the same policy sha256 and API sha256 ba623b92…, matching the
+       evidence.
+     - Inspection of the length stops (for example pair 06, response 00) shows runaway repetitive
+       content of about 80k characters. It is correctly counted as a generation refusal, not as a
+       proposal.
+4. Reporting fast gate (run once, unwrapped, as instructed)
+   - `PATH="$task_node_dir:$PATH" python3 -B scripts/local_agent_fast_gate.py --base 8c14051a…` ->
+     the 4 expected paths; `git diff --check`, `--lint-untracked`, `--lint-reviews <retained review>` and
+     markdownlint-cli2 over the 3 Markdown paths ("0 issues in 0 files"). FAST GATE: PASS.
+5. Direct lint and render
+   - I read lint_render_repeat.mjs before running it. Its rule config (MD013/MD022/MD024/MD060 off) equals
+     the repository's .markdownlint-cli2.jsonc. It uses the installed node_modules markdownlint/sync and
+     marked.
+   - Running it with the bound node binary -> PASS, 0 issues in each of the 3 files, exactly 1 rendered
+     table in the new scoreboard section and 1 in the new evidence.
+   - My own marked render of the scoreboard table: 11 header columns and 1 data row. The cells are
+     2026-11-13, source a896f055…, gemma4-26b-a4b (30/30), 32768 / 23002–29511, Unavailable,
+     Unavailable, 16/30, Not run, 1289.452, 29.820 and 215953 / 111638. All match the recomputation.
+   - The evidence table has 3 rows (16/11/3) and matches the recomputation.
+6. Preservation and the retained review
+   - The 507 `|`-prefixed TASKS.md lines are identical between base and HEAD (`diff` empty).
+   - The receipt's ledger hash 411531e7… reproduces as sha256 of the 507 lines joined by "\n" without a
+     trailing newline. My grep-based hash 782ad57b… differs only by that trailing newline.
+   - TASKS.md change is a pure prepend: everything from the previous first paragraph onward is unchanged.
+     No row, status or tick is promoted.
+   - Base scoreboard (158567 bytes) is an exact byte prefix of HEAD (160993 bytes).
+   - `cmp` of docs/reviews/8c14051a2d1b-trusted-endpoint-thinking-control.txt with
+     /lane/reviews/8c14051a2d1b-trusted-endpoint-thinking-control.md -> identical (c7df8720…). It ends
+     `Verdict: PASS`. Its only finding is LOW (backlog), and it states "No critical, high or medium
+     finding".
+   - Erratum against the raw policy.json: `chat_transport_binary_source` = 40cad647… (stale). `comparison`
+     describes the text-to-json_object change (stale). `source_commit` and `source_product_commit` =
+     a896f055…. `changed_variable` = "trusted API thinking_mode disabled; server template arguments remain
+     default". `thinking_mode` = disabled.
+   - The stale field is present in all 15 batch-report policy copies (15/15), as the erratum says. All 30
+     request bodies carry the thinking-disabled option. The erratum is accurate. The frozen policy is not
+     edited; the archived copy matches its manifest hash.
+7. Controller, cleanup and other receipts (read only)
+   - controller.py vs controller2.py: `diff` shows exactly one change, the reservation-log suffix
+     (`-reservation.log` -> `-reservation-resume2.log`).
+   - controller2 skips pairs that have a completed report, refuses to replay a partial directory, and
+     runs each pair as `build-slot` -> `gpu-slot queue-run agentmage 900 batch.py`. It sleeps 30 s after
+     each job, outside both reservations.
+   - Old controller.log is empty. Old gemma4-26b-a4b-02-reservation.log contains only the build-queue
+     wait line.
+   - controller2.log reports completed 4..30 in steps of 2, then COMPLETE. Every resume2 log shows both
+     the build and GPU waits.
+   - Model-state timestamps are local time (pair00 12:49 vs checkpoint scan 18:58Z gives UTC-6). Pair02
+     model-state 13:19 local = 19:19Z, after controller2 launch at 19:15:52Z. This is consistent with
+     pair02 having been run only by the resumed controller.
+   - cleanup-repeat.json: 15/15 settings revoked, APIs reaped, keys/sockets absent, no matching
+     processes. 28 retired token files (pairs 02–28 × control/client). It uses an exact-argv method and
+     makes no global-idle claim.
+   - actual-profile-bindings, preservation-repeat, reproduction-repeat (30 tasks, candidate_execution
+     false, hidden_tests_loaded false), retention-repeat and archive-verification-repeat are consistent
+     with the above.
+   - The live root /lane/state/id3 does not exist in this review namespace (`ls` -> No such file), so I
+     did not run reproduce_repeat.py. The request makes this step conditional. I read the method; it runs
+     only the fixed Rust helper and reads candidates without executing them. I ran no archived helper.
+     For this reporting-only diff, the retained source review already covers the source gate
+     (1167/53/19, 53 inherited failures disclosed).
+8. Privacy, naming and scope of added lines
+   - I grepped the added lines for home paths, the user name, email, token/key patterns and other
+     product names: no private host path, username, hostname or credential.
+   - The /lane/... paths are generic lane paths, as in 265 already committed review files. "Claude"
+     appears only in the retained review's reviewer attribution line, not as branding. gemma4 is the
+     measured model's name, already used 49 times in the scoreboard.
+   - No other agent product is named or compared.
+9. Evaluation integrity and measure-first
+   - No hidden or held-out task or test was run or loaded. The manifest asserts candidate_execution
+     false and held_out false; the verifier checks this and batch.json `held_out_executed` is false.
+   - No tuning input changed in this commit.
+   - The scoreboard line is present for this batch and states the changed variable, context/output
+     budgets and the fixed deadlines. Does-not-fit 0 is counted apart from refusals.
+   - Every number traces to the raw captures (step 3). Failures are counted, not dropped (11 + 3
+     refusals listed). First and within-budget passes are labelled Unavailable, not zero.
+
+## Findings
+
+No critical, high, medium or low finding against this commit.
+
+Backlog, not new: the inherited stale private policy labels (`chat_transport_binary_source`,
+`comparison`) are correctly disclosed by the erratum and stay T-309 backlog, as the retained review
+recorded.
+
+## Per-row result
+
+- T-303 / T-306 thinking-disabled A4B full development measurement (reporting increment): PASS.
+  The TASKS preface, scoreboard entry, evidence and retained review match the raw retained data.
+  Labels are honest (partial path, ungraded proposals, unqualified driver, no other-profile result).
+  No row closure or status promotion is claimed.
+- Both rows stay open; this review closes nothing.
+
+Verdict: PASS
