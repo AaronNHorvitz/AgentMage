@@ -102,3 +102,23 @@ No credential or weight is included.
 | --- | --- |
 | `json-object-source-queue-20261113-inputs.tar.gz` | `46c0856bc7de694ec39ba0e5ab541081c24e082ec305fed16af9a36c4810f73d` |
 | `json-object-source-queue-20261113-manifest.json` | `74d9cfb6bb7af54ad1db43af30217dd301a7eddffecfae619d7abedad102e693` |
+
+## Independent source review retained — 2026-11-13
+
+The [independent core review](../reviews/de8c204cbc52-json-object-model-output.txt)
+returns **Verdict: PASS** for exact commit
+`de8c204cbc52c7b090f8039a4bfaf15666854852`, with no high or medium finding.
+It reproduces the refusal classification, source and archive bindings, default
+behavior and unchanged 53 gate failure identities, and reruns the five focused
+tests successfully. Markdown lint was unavailable in the review lane; the
+reviewer checked the retained builder logs and did not download tooling.
+
+Low L1 records that preflight size checks use Stream/Text while the eventual
+transport honors the configured mode and format. A JSON-object request near
+the ceiling can therefore receive an error event after chat headers rather
+than a pre-dispatch 400. It fails closed with no upstream I/O; proposals still
+refuse before dispatch. Format-aware preflight and a boundary test join T-309
+backlog. Explicit mode/format record fields are a non-finding backlog option.
+No source, frozen input, threshold or row status changes. The new development
+repeat remains required before further tuning; source acceptance alone gives
+no task score or native qualification.

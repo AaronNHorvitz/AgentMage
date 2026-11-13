@@ -1663,3 +1663,14 @@ Existing native artifact and original grading-control blockers still limit
 measurement to the partial path; no candidate tests, retries or held-out run
 are authorized by this checkpoint. Independent core review of the source
 increment remains required. T-303/T-306 remain open; no row closes.
+
+## Independent JSON-object source review — 2026-11-13
+
+The [independent core review](../reviews/de8c204cbc52-json-object-model-output.txt)
+returns **Verdict: PASS** for exact commit
+`de8c204cbc52c7b090f8039a4bfaf15666854852`, with no high or medium finding.
+Low L1's format-aware size preflight joins T-309 backlog; current behavior
+fails closed. Explicit mode/format record fields remain a later backlog option.
+This retains a source verdict, not a new measurement. The frozen E4B repeat is
+running; all six profiles precede further tuning. No task grade, retry,
+held-out result, model role or row closure is claimed.

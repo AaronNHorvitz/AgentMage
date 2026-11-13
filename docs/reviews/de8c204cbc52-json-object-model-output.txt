@@ -1,0 +1,134 @@
+Commit: de8c204cbc52c7b090f8039a4bfaf15666854852
+Scope: json-object-model-output
+
+Reviewer: independent Claude Opus 5.5 session (extra-high effort), read-only, frozen checkout
+/lane/review-checkout. Row: T-303 / T-306 non-closing source increment. Tier: core.
+Base: b826d82e001980eafae7b9ae145a969dcfd14a8c. Source commit under the checkpoint: 40cad6472560e47314a55ddb1f45e2c4c22b1792.
+
+## Methods
+
+- Confirmed the commit, read IP-POLICY.md, the top of TASKS.md, decision 0207, the guide section,
+  the new evidence file, the scoreboard additions and the full source diff b826d82e..de8c204c
+  (13 files; source changes only in platforms/linux-inference and platforms/local-api).
+- Traced the setting end to end in the source: `Settings` (lib.rs:666-681, `deny_unknown_fields`,
+  serde `#[serde(default)]` on `response_format`), the control-token gate for every `/v1/settings`
+  method (lib.rs:1434), PUT building an immutable transport and bumping `settings_revision`
+  (lib.rs:1951-1993), GET reporting it (lib.rs:1936-1950), DELETE clearing it, the transport field
+  and builder (local_chat_transport.rs:249-252, 432-468), and the body encoder
+  (local_chat.rs:177-292). `prepare_chat` (local_chat_transport.rs:480-535) encodes the body with the
+  configured mode and format before any socket and hashes exactly those bytes into
+  `request_body_sha256`, so the binding includes the format field. Text omits the field
+  (`skip_serializing_if`), so default bytes are unchanged from the base.
+- Checked reachability from model-facing or client surfaces: `ChatResponseFormat` is deserialized
+  only in `Settings`; chat and proposal bodies remain `deny_unknown_fields`; coding_mcp.rs and the
+  coding CLI only read settings; native development launchers construct `LocalChatTransport` with
+  the Text default. No document, page, tool result or model output can choose the format or gain
+  authority from it. Nothing new requires a workspace, repository or project folder; no second
+  runtime, desktop interface or memory store is added.
+- Checked strict validation is untouched: no prompt, parser, checker, threshold or ceiling changed
+  in the diff; the new API test shows fenced, empty and outside-path answers still refuse under
+  JSON-object mode in both framings.
+- Checked the proposal path's ordering: the configured-format `prepare_chat` happens in
+  `prepare_endpoint_coding_proposal` (lib.rs:1190-1240) before dispatch and, for repair, before
+  anything is spent, so a format-induced encode failure is a clean 400 with no upstream I/O.
+- Independently reproduced the refusal classification: streamed `complete-e4b-20261113-inputs.tar.gz`
+  in memory (no extraction to disk), read the 51 listed `answer.txt` members, confirmed each SHA-256,
+  and classified them myself (fence prefix; else full parse failure; else duplicate keys; else
+  missing field): **27 / 21 / 2 / 1**, matching every row. All 102 answer/check digests occur in the
+  earlier complete-response manifests. All 51 records are `dev-*` development tasks; per-profile
+  counts (31B 25, E4B 15, Muse 5, GPT-OSS 4, A4B 2, 27B 0) sum to the scoreboard's 51.
+- Read the queue verifier before running it: it only streams and hashes, keeps four JSON files in
+  memory, extracts nothing and imports or executes nothing archived. I also read the archived
+  `policy.json`, audit, interruption record, controllers and the `batch.py` settings lines in memory.
+  The batch PUTs `response_mode: complete` and `response_format: json_object` through the control
+  token, checks the result with GET, and asserts the upstream body carries `{"type":"json_object"}`.
+  The policy records 32,768 context, the unchanged `min(32768, 32768 - input - 32)` output formula,
+  0 retries, no held-out tasks and no controls.
+- Public hygiene: grepped every added line for host paths, usernames, e-mail, hostnames,
+  credentials and agent-product names. Only `/lane/...` lane paths appear, inside the retained
+  b826 review that is byte-identical to the reviewed file. No product name, private project, paper
+  or patent appears. Model profile names are licensed model names, not branding.
+- Evaluation integrity: the diff has no task, prompt, hidden-test or held-out content; the
+  classification inspected development answers only; no frozen task, threshold or grading input
+  changed.
+
+## Exact commands and results (all in /lane/review-checkout, CARGO_TARGET_DIR=/lane/state/review-target)
+
+    test "$(git rev-parse HEAD)" = de8c204cbc52c7b090f8039a4bfaf15666854852      -> true
+    git diff --check b826d82e001980eafae7b9ae145a969dcfd14a8c --                  -> exit 0
+    bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo test --locked --offline -p agentmage-local-api --test local_chat_api json_object
+        -> 3 passed, 0 failed (trusted settings/default/reset; strict proposal validation in stream and
+           complete; unsupported endpoint -> chat.transport.status, no proposal)
+    bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo test --locked --offline -p agentmage-platform-linux-inference --test local_chat_transport complete_mode_freezes_actual_body
+        -> 1 passed
+    bash /tools/build-slot env CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=4 cargo test --locked --offline -p agentmage-platform-linux-inference --lib requests_bound_messages_tokens_and_encoded_size
+        -> 1 passed (codec size-bound matrix: usage x format x mode; my own extra run)
+    PATH=/lane/state/tooling/node-v24.15.0-linux-x64/bin:$PATH python3 -B scripts/local_agent_fast_gate.py --base b826d82e001980eafae7b9ae145a969dcfd14a8c
+        -> FAST GATE: FAIL (expected). diff-check 0, lint-untracked 0, lint-reviews 0,
+           markdownlint exit 127 (no Node in the review lane), fmt 0, clippy -D warnings 0,
+           cargo test exit 101: 30 targets, 1164 passed, 53 failed, 19 ignored, 0 measured, 0 filtered.
+    python3 -B /lane/reviews/json-object-source-queue-20261113-verify.py
+        -> {"status":"PASS","files":2307,"repository_inputs":2283,"private_inputs":16,"task_attempts":0,
+            "gpu_jobs":0,"candidate_execution":false,"archive_extraction":false}
+    sha256sum /lane/reviews/json-object-*-20261113-*
+
+Gate failure identities: I parsed my log, the builder's `json-object-output-20261113-fast-gate.log`
+and the earlier `complete-empty-fix-20261112-gate.log` (SHA-256 ec939aa9…, the gate-comparison's
+prior gate). All three have the **same 53 failure names**: 42 linux_coding_runtime, 10 linux_read,
+1 linux_repository_map. They are host sandbox manifest (`InvalidManifest`) and Git artifact
+(`InvalidGitArtifact`) verification failures, unrelated to this change. Passed count is 1164 in mine
+and the builder's, 1161 at the prior gate (+3 new API tests).
+
+Markdown lint: I could not run it because Node is absent here; I did not download tooling.
+The retained `json-object-output-20261113-direct-lint.json` (six docs) and
+`json-object-source-queue-20261113-direct-lint.json` (three docs) each report 0 issues, and the
+retained doc-gate log shows "Linting: 3 files … 0 issues". Only those builder records cover lint.
+
+Bindings (all recomputed, sizes and hashes match):
+- `json-object-output-20261113-bindings.json` SHA-256 14aac92a…fa39a; its 7 artifacts match.
+- `json-object-source-queue-20261113-bindings.json` SHA-256 81518262…f2c7; its 6 artifacts match,
+  including the archive 46c0856b…0f73d (121,940,530 bytes) and the manifest 74d9cfb6…e693.
+- The source scope file's 13 path hashes match `git show 40cad647:<path>` exactly. The checkpoint
+  scope file's 3 document hashes match de8c204c. `git diff 40cad647 de8c204c` touches only those 3
+  documents, so the source is unchanged from 40cad.
+- The committed b826 review is byte-identical to /lane/reviews/b826d82e0019-complete-response-e4b-measurement.md.
+- The scoreboard and TASKS diffs only add lines (no existing line removed or changed), and add no
+  row, sub-row or completion tick.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **Low L1 (backlog): preflight encoders ignore the configured mode and format.**
+  platforms/local-api/src/lib.rs:1074-1077 (`prepare_proposal_messages`) and lib.rs:2095-2098
+  (`/v1/chat`) check the size with `encode_chat`/`encode_chat_with_usage`, which always use Stream +
+  Text. JSON-object mode adds 41 bytes (`,"response_format":{"type":"json_object"}`) under the
+  256 KiB writer ceiling. So for `/v1/chat`, a request within 41 bytes of the ceiling passes
+  preflight, sends `200` NDJSON headers, and then fails in `prepare_chat` with an error event
+  instead of a clean `400`. Behaviour is fail-closed: there is no upstream connection, and
+  proposals still refuse with 400 before dispatch. Fix: preflight through the configured transport's
+  `encode_chat_request(.., mode, format)`, or call `prepare_chat` before writing headers. Add a
+  boundary test for JSON-object mode.
+- **Note (not a finding):** the run-record binding shows the format only through the body hash and
+  size; neither mode nor format is an explicit field. This matches how mode is already handled, and
+  the measurement policy records both. If explicit fields are wanted, put them in T-309 backlog.
+
+MEASURE FIRST: this batch changes what the model is asked to produce, and the scoreboard has a line
+for it. That line is explicitly a pending 0/30 checkpoint, not a measurement. It states the changed
+variable, context and output budget, and keeps the queue wait apart from task failures. That
+satisfies the line requirement for this source increment. The fresh development repeat must land
+before any further source tuning. A later tuning batch without it would be a medium finding.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing source increment, json-object-model-output): the source increment is
+  accepted. The setting can be chosen only through control-token settings. It is encoded and hashed
+  into the exact upstream body, Text stays the default with byte-identical requests, and it works
+  without folders. There is no fallback, retry or repair, and strict edit validation is unchanged.
+  The classification is independently reproduced, the bindings and checkpoint provenance verify,
+  the 53 inherited failure identities are unchanged, and the zero-attempt, zero-GPU status is
+  reported truthfully. No row closes. This qualifies no model, scores no task, and admits no native
+  executable or grading control. Markdown lint was not run in this lane (no Node); I relied on the
+  retained builder records. The partial-path development repeat is still outstanding.
+
+Verdict: PASS
