@@ -1,0 +1,116 @@
+Commit: 0da28fb268053e1f063d041d36cc4ed0f63db402
+Scope: json-object-muse-checkpoint24
+
+# Independent review — cumulative 24-task Muse JSON-object checkpoint (reporting only)
+
+Reviewer: Claude Opus 5.5, separate session, read-only. Checkout: /lane/review-checkout (pinned).
+Row: T-303 / T-306, non-closing development checkpoint. Base: 648220bfa2fed1db7d0cd48df219db452b65d8ea.
+No GPU, model, candidate, hidden-test or held-out execution by the reviewer. No repository modification.
+
+## Methods, commands and results
+
+1. Commit and diff
+   - `git rev-parse HEAD` → `0da28fb268053e1f063d041d36cc4ed0f63db402` (matches request).
+   - `git diff --check 648220bf… --` → exit 0.
+   - `git diff --numstat 648220bf… HEAD` → `TASKS.md 10/0`, `docs/evidence/coding-scoreboard.md 29/0`,
+     `docs/evidence/t303-json-object-muse-checkpoint-2026-11-13-24-tasks.md 142/0`. Only additions, in exactly
+     three paths, so the earlier scoreboard prefix, the ledger table lines and the earlier TASKS text are
+     preserved byte for byte. No checkbox or row tick in the added lines. No source, prompt, profile, task,
+     threshold, permission or supply-chain path is touched. The plan is not touched, so the 2026-11-11 owner
+     notes on planning do not apply.
+   - Source commit `40cad6472560e47314a55ddb1f45e2c4c22b1792` ("Request JSON-object output through trusted
+     local model settings") is an ancestor of HEAD.
+
+2. Bindings
+   - `sha256sum …checkpoint9-20261113-bindings.json` → `3767366791c88398f3ea6e5c2f87138c939b4ffe3d5f2348d8180a8d3fe8b215` (matches).
+   - I hashed all 25 listed artifacts independently, streaming and checking byte counts: 25/25 match. The
+     archive is 162,256,585 bytes, `eaf2ec60…e4fe`. The manifest is `34e304f8…a60`.
+   - I checked the preservation file's 8 earlier binding groups: each bindings file's hash matches, and all
+     **145** earlier artifacts match in hash and byte count. 0 bad, 0 missing.
+
+3. `python3 -B /lane/reviews/json-object-muse-checkpoint9-20261113-verify.py` → PASS: 18678 files,
+   2283 repository / 16 private inputs, 24 tasks, remaining 6, next_pair_first 24, 16 proposals,
+   counter coverage 21, input 138192 / output 122753, request/check 3773.161077734956 s,
+   reserved 4113.321086027048 s, candidate_execution false, hidden_tests_executed false. All values are as
+   expected. I read the verifier in full: it streams and hashes the archive and extracts nothing to disk. It
+   rejects absolute paths, `..`, non-files and token, api-key and gguf names. It does not import or execute
+   any archived code.
+
+4. Live builder root `/lane/state/jo1-20261113` is **not mounted** in this review environment, so the live
+   `audit_muse_checkpoint9.py` and `verify_proposals.py --partial` commands were unavailable. Instead I wrote
+   my own recomputation, `/tmp/rv24/indep.py`, separate from the builder's verifier. It streams the bound
+   archive, reads each task's `record.json`, `request.json`, `upstream-request-NN.json`,
+   `backend-slice.log`, `events.ndjson` and `checked.json`, and derives the following:
+   - All 24 rows (dev-001…dev-024) match the public table exactly: preflight input, output allowance,
+     observed output, cause and request/check seconds. Three timeouts (dev-004, dev-011, dev-012) have no
+     counters, and the table marks them "Unavailable".
+   - Counters cover 21/24: Σinput 138192, Σoutput 122753. Σrequest/check is 3773.161077734956 s.
+     Σreserved_work_seconds is 4113.321086027048 s, which is 68.555 min.
+   - Input range is 2910–8341 and allowance range is 24395–29826. Every allowance equals
+     `min(32768, 32768 − input − 32)`. Does not fit: 0/24.
+   - Causes: 16 ungraded-proposal, 3 `generation-refused:error:chat.transport.timeout`,
+     3 `strict-edit-refused:code.proposal.format`, 2 `strict-edit-refused:code.proposal.edit`.
+     There are 16 generation successes.
+   - Every upstream body carries `response_format: {"type":"json_object"}`, with messages equal to the
+     request. Every task has one slot launch, retries 0 and graded false. Batch `held_out_executed` is false
+     for pair 22.
+   - Archive names contain no held-out set and no hidden tests. The only "hidden" match is the tracked
+     repository script `scripts/hidden_network_surface_evidence.py`, copied in candidate snapshots. There
+     are 0 token, api-key or gguf files, and the manifest records 24 excluded retired tokens.
+
+5. Reporting fast gate, with the retained Node symlinked in a temp dir because no Node is on PATH:
+   `PATH="$task_node_dir:$PATH" python3 -B scripts/local_agent_fast_gate.py --base 648220bf…` →
+   `git diff --check` exit 0, `--lint-untracked` exit 0, markdownlint-cli2 v0.23.2 on exactly the three files
+   "0 issues in 0 files", **FAST GATE: PASS**, rc 0. The working tree stayed clean afterwards. The bound
+   direct-lint receipt shows exit 0 and 0 issues for each of the three files separately.
+
+6. Scope and consistency
+   - My SHA-256 of the three current paths equals `…-scope.json`: TASKS `00b0d80d…`, scoreboard `4a5b5ba7…`,
+     evidence `e98949e7…`.
+   - Rows 1–22 of the new table equal the 22-task evidence table line for line. Rows 1–12 equal the 12-task
+     table. The diff adds only dev-023 and dev-024.
+   - API, helper and Muse SHA-256, the Muse byte size, the driver string, the profile and the
+     source-review reference are the same as in the 22-task evidence. The manifest hashes of
+     `frozen-inputs-v2.json` (`79a130de…`), `bin/agentmage-local-api` (`a8995c15…`) and the helper
+     (`852cd7f5…`) match the published values.
+   - Controller histories, from the archived queue checkpoints and launch receipts: completed_tasks
+     2, 4, 12, 22, 24, 24, 24, 24, 24. Build waits (`next_reservation_log_age_seconds`) are 733.337, 454.539,
+     836.680, 911.025, 569.440, 666.229, 386.389, 584.815 and **509.793**, all equal to the published table.
+     Every checkpoint has `gpu_wrapper_entered` false, `model_attempt_started` false, the next job directory
+     absent and `remaining_live_processes` [] (empty). No `muse-24/` directory exists, so there was no
+     replay and no task 25 attempt.
+   - Timeline: the 22-task report commit 1340b789 was at 06:04:27 (-06:00). Controller 5 launched at
+     06:07:40, ran pair 22 (tasks 23–24) and checkpointed at 06:26:48. Controllers 6–9 only waited, and the
+     ninth checkpointed at 07:46:41. This commit is at 07:47:55. So the earlier 22-task report was accurate
+     when it was made, and the claim "previously completed tasks 23–24 now reported, no new attempt this
+     session" is supported.
+   - Cleanup receipt: 12 settings revoked, 12 APIs reaped, 12 model keys and sockets absent, 0 resource-guard
+     errors, no matching processes, GPU peak range 17620–17788 MiB.
+   - `checkpoint.py` argv guard: it pauses the owned process group (pgid == pid, not its own group), then
+     checks the job directory again. It allows exactly three argv shapes: the controller, the exact
+     build-slot→gpu-slot→batch.py `muse 24` line, and `sleep 1`. Zombies are tolerated, and any other
+     process, including flock, fails the assertion, so the `finally` block resumes the group and writes an
+     abort receipt. It requires the reservation log to still read "Waiting…" and the completed batch reports
+     to be unchanged before SIGTERM. The receipt's processes_at_checkpoint shows only those three shapes,
+     with empty remaining processes.
+   - Privacy and naming scan of the added lines found no host path, username, email, credential, tool or
+     product name. Every relative link in the added text resolves.
+   - MEASURE FIRST: the scoreboard line for this batch is present. It states context and output budgets,
+     counts does-not-fit separately from failures (0/24) and marks task passes Unavailable. Missing counters
+     are not counted as zero, cost exclusions are stated and no total is summed across checkpoints.
+   - Evaluation integrity: the changed paths contain only documentation and no held-out content. Held-out is
+     "Not run" and no hidden tests or retries ran. No score or qualification is claimed.
+
+## Findings
+
+None at critical, high, medium or low severity for this reporting increment.
+
+## Per-row result
+
+- T-303: non-closing checkpoint is accurate and traceable; row stays OPEN (correctly not ticked).
+- T-306: non-closing checkpoint is accurate and traceable; row stays OPEN (correctly not ticked).
+
+Limitation: the live builder-root audit and proposal commands were unavailable (path not mounted). My
+independent archive recomputation replaced them, and it agrees on every published number.
+
+Verdict: PASS
