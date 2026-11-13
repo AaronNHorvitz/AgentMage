@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The [JSON-object A4B repeat](docs/evidence/t303-json-object-a4b-2026-11-13.md)
+finishes all 30 frozen development tasks at source
+`40cad6472560e47314a55ddb1f45e2c4c22b1792`: 3/30 strict ungraded proposals.
+Task grades and retries remain unavailable; no candidate or held-out test ran.
+Source/record audit, helper reproduction, cleanup and archive verification pass.
+All six prepared profiles have completed this partial-path repeat; next work
+follows review findings and the largest measured refusal cause. T-303/T-306 remain open; core review is required,
+with no new row or completion tick.
+
 The retained [independent six-task A4B checkpoint review](docs/reviews/08ae3ebd77f6-json-object-a4b-checkpoint6.txt)
 returns **Verdict: PASS** for exact reporting commit
 `08ae3ebd77f64f9a4c91b83ff7ccb39bf4a2f5ee`, with no findings.

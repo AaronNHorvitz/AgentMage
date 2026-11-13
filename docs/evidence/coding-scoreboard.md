@@ -2079,3 +2079,31 @@ verification pass; see [evidence](t303-json-object-a4b-checkpoint-2026-11-13-6-t
 retries, hidden or held-out tasks ran; native admission and original grading
 controls remain blockers, driver unqualified. Finish A4B before tuning except
 high/medium fixes. T-303/T-306 remain open; independent core review is required.
+
+## JSON-object A4B development repeat — 2026-11-13
+
+Source: `40cad6472560e47314a55ddb1f45e2c4c22b1792`. Available partial path:
+Rust source selection → credential-owning chat → unchanged strict checker;
+full repository retrieval, native execution, tests and retries remain unavailable.
+
+| Date | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU job min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | gemma4-26b-a4b | 32768 / 23004–29513 | Unavailable | Unavailable | 3/30 | Not run | 6052.758 | 108.798 | 215893 / 743394 |
+
+Changed variable: trusted JSON-object output request, verified in all 30 upstream
+bodies. Complete framing, prompts, source selection, strict checker, profiles,
+byte ceilings and 300-second idle/total deadlines stay unchanged. Output remains
+`min(32768, 32768 - rendered input tokens - 32)`; does not fit: 0.
+Causes: 26 `generation-refused:error:chat.response.incomplete`, 1 `strict-edit-refused:code.proposal.format`, 3 `ungraded-proposal`.
+
+Final backend counters cover 30/30 and include non-answer output.
+GPU minutes are reserved job wall, including load/verification/cleanup and
+excluding queues, wrapper overhead and pauses; active kernel time is not measured.
+The changed driver tuple remains unqualified. No candidate tests, feedback,
+retries or held-out tasks ran; native artifact and original grading-control
+blockers remain. A strict proposal is not a solved task. No model role or
+task-quality improvement is claimed. All six prepared profiles have completed this partial-path repeat.
+The largest observed refusal cause selects the next work after review findings.
+Source/record audit, helper reproduction, cleanup and archive verification pass;
+see [evidence](t303-json-object-a4b-2026-11-13.md). T-303/T-306 remain open;
+independent core review is required and no row closes.
