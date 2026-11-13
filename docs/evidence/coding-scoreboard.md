@@ -1555,3 +1555,64 @@ latency joins T-309 backlog. No published count or cause changes; all sealed
 inputs remain unchanged. This is review retention, not a new model run.
 T-303/T-306 remain open; no task grade, retry, held-out result or row closure
 is claimed.
+
+## Complete-response E4B development repeat — 2026-11-13
+
+Source: `974d2bb55afa6be47bd58ffcf1dd30a6450f70cd`. All 30 development tasks
+complete on this profile; the measured coding path remains partial.
+
+| Date | Model | Context / output tokens | First-attempt task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU work min | Observed input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | gemma4-e4b | 32768 / 23004–29513 | Unavailable | Unavailable | 13/30 | Not run | 1372.592 | 24.998 | 215893 / 138484 |
+
+Changed variables: complete upstream framing and explicitly chosen 300-second
+idle instead of 60; total stays 300 seconds. Output is
+`min(32768, 32768 - rendered input tokens - 32)`. All 30 inputs fit;
+does not fit: 0. The existing profile, prompts, source
+selection, strict checker and byte ceilings stay unchanged. The source repair
+has an independent PASS for the exact commit; no row closes.
+The recorded GPU driver package is
+`xorg-x11-drv-nvidia-cuda-615.71.09-3.fc44.x86_64`; the platform tuple changed
+since preparation and remains unqualified for coding.
+
+Across all six repaired-source repeats (180 development attempts), the largest observed refusal is `strict-edit-refused:code.proposal.format` (51/180). The next source work follows that cause, subject to high/medium review findings and existing blockers. These are partial-path refusal counts, not task pass rates or model-role selection.
+
+Causes: 2 `strict-edit-refused:code.proposal.edit`, 15 `strict-edit-refused:code.proposal.format`, 13 `ungraded-proposal`.
+
+Existing deadlines and output ceilings remain unchanged; backend termination counts are reported separately in the evidence.
+
+Final token counters are available for every attempt.
+
+GPU work means 1499.878 seconds of job wall inside
+15 separate reservations, including verification/load/cleanup and excluding
+queues and wrapper overhead; active kernel time was not measured. Backend
+final counters cover 30/30 and include non-answer output.
+Final counters are available for every attempt; totals cover all 30. No
+candidate tests, feedback, retries, held-out tasks or task grades ran. The
+native artifact and original grading-control blockers remain; the available
+path is Rust source selection → credential-owning chat → strict checker.
+No whole-loop, model-role or quality-improvement claim is made.
+
+Full source/record audit, 30-context/check reproduction and archive verification
+pass. See [evidence](t303-complete-e4b-2026-11-13.md) for per-task results,
+exact input bindings and limits. All six prepared profiles have completed
+the full repeat, with task grades unavailable. T-303/T-306 remain open;
+independent core review is required and no row closes.
+
+The six repeats at the source above total 180 development attempts, each using
+32,768-token context and the same output-budget formula. These are strict
+proposal counts only; task passes and passes with retries remain unavailable.
+
+| Model profile | Strict ungraded proposals | Recorded refusals |
+| --- | --- | --- |
+| gemma4-26b-a4b | 2/30 | 28/30 |
+| gemma4-31b | 4/30 | 26/30 |
+| qwen35-27b | 29/30 | 1/30 |
+| gpt-oss | 5/30 | 25/30 |
+| muse | 19/30 | 11/30 |
+| gemma4-e4b | 13/30 | 17/30 |
+
+Across the 180 attempts: 72 strict ungraded proposals, 51 format refusals,
+39 incomplete responses, 14 edit refusals and 4 timeouts. Format refusal is
+the next source priority. No model role is selected from these counts, and
+held-out tasks remain unrun.
