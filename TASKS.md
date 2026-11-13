@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The retained [independent GPT-OSS checkpoint review](docs/reviews/77cd9eefb3c2-json-object-gpt-checkpoint.txt)
+returns **Verdict: PASS** for exact reporting commit
+`77cd9eefb3c2f9ed2d4d51df2bf7478dbdb7cbd8`, with no high or medium finding.
+Low L1 (bind the reporting scope script) and L2 (capture preparation stderr)
+join T-309 backlog and inform the next evidence package. Counts and sealed
+inputs stay unchanged. This approves the four-task checkpoint report only;
+T-303/T-306 remain open while the remaining GPT-OSS tasks resume. No row closes.
+
 The [GPT-OSS JSON-object checkpoint](docs/evidence/t303-json-object-gpt-checkpoint-2026-11-13.md)
 records **4/30 tasks attempted; 26 remain**, with 0/4 strict ungraded proposals.
 The next pair waited 404.835 seconds for a shared build reservation and was

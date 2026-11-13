@@ -1,0 +1,134 @@
+Commit: 77cd9eefb3c2f9ed2d4d51df2bf7478dbdb7cbd8
+Scope: json-object-gpt-checkpoint
+
+# Independent review: GPT-OSS JSON-object four-task checkpoint (reporting only)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only.
+Checkout: /lane/review-checkout at the pinned commit. Base: 9c98dcbc939c7f7618a9f8d57c79535b1cc9b31a.
+Row: T-303 / T-306 (non-closing, incomplete development measurement checkpoint). No GPU use,
+candidate execution, hidden test or held-out work by the reviewer. Nothing extracted from the archive
+to disk; nothing archived was imported or executed.
+
+## Methods, commands and results
+
+1. `git rev-parse HEAD` -> 77cd9eefb3c2f9ed2d4d51df2bf7478dbdb7cbd8 (matches request).
+   `git diff --stat base HEAD`: 3 files, 129 insertions, 0 deletions (TASKS.md +8,
+   docs/evidence/coding-scoreboard.md +31, new docs/evidence/t303-json-object-gpt-checkpoint-2026-11-13.md +90).
+   No product source, prompt, profile, task, threshold or permission file changes.
+2. `git diff --check 9c98dcbc939c7f7618a9f8d57c79535b1cc9b31a --` -> exit 0.
+3. Read `json-object-gpt-partial-20261113-verify.py` before running it: it streams the tar with
+   `r|gz`, rejects absolute/`..`/non-file/unexpected/duplicate members, token names and `.gguf`,
+   hashes every member against the manifest, keeps selected JSON/log bytes in memory only, and
+   performs count/bound assertions. No extraction to disk, no import or execution of archived content.
+   `python3 -B /lane/reviews/json-object-gpt-partial-20261113-verify.py` -> exit 0, `status: PASS`,
+   5322 files, 2283 repository / 16 private inputs, 4 tasks, 26 remaining, `measurement_complete: false`,
+   `next_pair_first: 4`, 0 strict ungraded proposals, causes {strict-edit-refused:code.proposal.edit: 1,
+   generation-refused:error:chat.response.incomplete: 3}, 23752 input / 89272 output tokens, counter
+   coverage 4, 452.9181209449889 s request/check, 480.55911392503185 s reserved work. Output is
+   identical in content to the bound `-verification.json`.
+4. `sha256sum -bindings-final.json` -> d3e13fbd10cca468d3597d194c080994570892f17cebf2a43f38f9251b5b7a60
+   (matches request). All 14 bound artifacts match their recorded SHA-256 and byte size. Only
+   unbound prefix files are the two bindings files themselves.
+5. Aggregate and per-task cross-check: the evidence task table (4 rows: task, input, allowance,
+   observed output, cause, request/check s) matches `-audit.json` `development` exactly (seconds within
+   5e-4). Scoreboard/evidence aggregates match `audit.models[0]`: context 32768, output allowance range
+   24497–29748, input range 2988–8239, 0/4 proposals, first/within-budget passes null ("Unavailable"),
+   held-out "not run", backend terminations output-cap 3 / stopped-below-token-limits 1, 452.918 s,
+   480.559 s = 8.009 GPU job minutes (480.5591/60 = 8.00932), profile identity (4 threads, temp 0,
+   seed 42, q8_0 K/V, batch 256, microbatch 128, reasoning_effort medium, model SHA-256 27cd6c43…,
+   12,109,566,624 bytes). Each incomplete response's observed output equals its allowance; dev-001
+   stopped below the limit at 6640 tokens and failed the strict edit check. Budgets all > 0, so
+   "does not fit: 0/4" is correct. `checkpoint.json` and `checkpoint-audit.json` agree with the
+   claims (4 tasks, 2 pairs, next pair first 4, job directory absent, GPU wrapper not entered, no
+   attempt started, PIDs 235/4996/6344 reaped, no live processes). `proposals.json` helper SHA-256
+   equals the archived `bin/agentmage-development-measurement-helper` entry. `cleanup.json`: 2 pairs,
+   settings revoked, API reaped, key/socket absent, 0 resource-guard errors.
+6. In-memory archive provenance inspection (no extraction): `controller-gpt2.log` (two progress lines,
+   then the queue-cancellation `AssertionError: job failed: gpt-oss 4`), `gpt-oss-00/02` reservation
+   logs (reserved_work 178.056 + 302.503 = 480.559 s; both under the 900 s GPU-wrapper cap),
+   `gpt-oss-04-reservation-gpt2.log` containing only the shared-build wait line, `policy.json`
+   (response_format json_object, complete mode, unchanged framing, held_out "not loaded or executed"),
+   all four `upstream-request-*.json` bodies carry `response_format: {"type":"json_object"}`, the
+   earlier zero-attempt `queue-checkpoint-gpt1.json`, `checkpoint_gpt2_pair04.py`, `controller_gpt2.py`,
+   `cleanup_gpt_partial2.py`, `archive_gpt_partial2.py`, `frozen-inputs-v2.json`. No `gpt-oss-04/`
+   member exists. `gpt-oss-candidates/` holds base-fallback copies for the four tasks only.
+7. Earlier seals: `earlier-seals-gpt2.json` (from the archive) lists 3 bindings files and 33 artifacts
+   for E4B/31B/27B; I re-hashed all of them in /lane/reviews: all bindings hashes and all 33
+   artifact hashes/sizes match. No file under docs/reviews changed in this commit.
+8. Independent scope checks (my own script, since the script that produced `scope-final.json` is not
+   bound — see L1): TASKS.md `|` table lines 507 before and after, identical; numstat deletions 0 for
+   all three files; scoreboard at HEAD starts with the base scoreboard byte-for-byte; added text has
+   no host path, username, hostname, e-mail, URL, IP, key or token pattern; links
+   (`docs/evidence/t303-…md` from TASKS.md, relative from the scoreboard) resolve. `scope-final.json`
+   `path_sha256` values equal the committed files' SHA-256 values; initial `scope.json` differs only in
+   the evidence-file hash (pre-clarification wording), consistent with the binding note.
+9. `PATH=/lane/state/tooling/node-v24.15.0-linux-x64/bin:$PATH python3 -B scripts/local_agent_fast_gate.py --base 9c98dcbc…`
+   -> git diff --check exit 0; `--lint-untracked` exit 0; markdownlint `Missing executable: node;
+   no automatic download` exit 127; `FAST GATE: FAIL`. **Limitation:** the stated Node path does not
+   exist in this environment and `node` is not on PATH, so I could not rerun markdownlint and do not
+   claim a rerun passed. As instructed, I inspected the bound `gate-final.log` (all three steps exit 0,
+   markdownlint 0 issues in 3 files, FAST GATE: PASS) and `direct-lint.json` (each file 0 issues), and
+   did structural checks myself: MD013 is disabled in `.markdownlint-cli2.jsonc`; the task table has a
+   consistent 7-pipe shape on all 6 lines, the binding table 3 pipes on all 5 lines, the scoreboard
+   table 11 pipes on all 3 lines; final newline present; no trailing whitespace (`git diff --check`).
+
+## Review against the requested checks
+
+- **Incomplete labelling:** every surface (TASKS.md paragraph, scoreboard heading "(incomplete)" and
+  row "gpt-oss (4/30 attempted)", evidence title/first line) states 4/30 attempted, 26 remain, 0/4 is
+  strict ungraded proposals and not a pass rate, grades unavailable, not a complete measurement or
+  solved-task score, no row closes. Accurate.
+- **Causes, counters, budgets, costs:** all trace to raw records via the verifier and the audit (item 5).
+  The output-budget formula and context are stated; non-answer output is included in counters and
+  this is disclosed; the cause of long output is explicitly not established. GPU minutes are labelled
+  reserved job wall, not kernel time, with queues/pauses excluded. MEASURE FIRST: a scoreboard line
+  exists for this batch, states the changed variable and budgets, and counts does-not-fit (0/4)
+  separately from model failures.
+- **Queue-only checkpoint and safe resumption:** `checkpoint_gpt2_pair04.py` checks the launch PID/PGID
+  and exact controller cmdline, requires exactly pairs 00/02 to exist with completed reports, SIGSTOPs
+  only the owned group, re-checks after the stop that no new job directory exists and the reservation
+  log still shows only the shared-build wait (so the GPU wrapper was not entered), allows only the
+  controller/build-slot/sleep/flock processes, verifies completed reports byte-unchanged, then
+  terminates and reaps the group, with an abort record path on any failed guard. `controller_gpt2.py`
+  skips any pair with a completed report and refuses (`assert not directory.exists()`) to replay a
+  partial directory, so pairs 00/02 cannot be silently replayed on resume; because it opens the
+  reservation log with `xb`, a resume needs a fresh controller/log name rather than reusing gpt2 —
+  this fails closed, not open. Queue cancellation is correctly not counted as a model failure or GPU work.
+- **Privacy:** no private path, username, hostname or credential in committed text. Four retired API
+  token files are excluded from the archive (manifest and verifier check); no weights packaged.
+- **Evaluation integrity:** no prompt, task, checker, profile or source change; policy and batch
+  records show held-out not loaded or executed, hidden tests not loaded, no candidate execution,
+  retries 0, graded false. No tuning occurs in this increment; the plan keeps remaining GPT-OSS,
+  Muse and A4B before any tuning.
+- **Authority:** no permission, approval or confinement code touched; nothing weakened. The prompt
+  continues to state task and repository text are untrusted data.
+- **Claims:** no task grade, row closure, qualification, readiness or release claimed; no other agent
+  product, private project or patent named. Model names appear only as model identifiers.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog) — scope script for this report is not bound.** `/lane/reviews/json-object-gpt-partial-20261113-scope-final.json`
+  is bound, but the script that produced it is not among the 14 bound artifacts, and the archived
+  `scope_gpt2.py` targets `docs/evidence/t303-json-object-gpt-2026-11-13.md`, `audit-gpt-oss.json`
+  and 30 rows, so it cannot have produced the 4-row result. I reproduced every scope property
+  independently (item 8), so no claim is unsupported. Fix: bind the reporting scope script alongside
+  its output in future checkpoints.
+- **L2 (low, backlog) — failed archive-preparation guard is only narrated.** The evidence says the first
+  archive preparation guard refused the traceback and was corrected before archive creation.
+  `archive-retention-gpt-partial2.jsonl` and `-fixed.jsonl` are 0-byte inside the archive, so the
+  failure itself is not evidenced; the archived `archive_gpt_partial2.py` does contain the corrected
+  traceback check, consistent with the account, and no model attempt depends on it. The sentence
+  "the corrected verifier is retained" loosely refers to the archive script's corrected check. Fix:
+  capture stderr of preparation steps, or drop the narrative.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing incomplete development measurement checkpoint, reporting only): PASS for
+  this commit's scope. Labelling, counters, budgets, costs, queue-only checkpoint, resumability,
+  privacy, earlier seals and evaluation integrity are verified. Rows remain open; nothing closes.
+  Limitation: markdownlint could not be rerun (Node absent); relied on bound gate-final.log and
+  direct-lint.json plus my own structural checks.
+
+Verdict: PASS

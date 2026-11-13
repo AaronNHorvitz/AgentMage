@@ -1813,3 +1813,15 @@ The driver remains unqualified. No native execution, grading, retry, hidden or
 held-out test ran. The remaining GPT-OSS tasks, Muse and A4B precede tuning,
 except high/medium fixes. T-303/T-306 stay open; independent core review is
 required and no row closes.
+
+## Independent GPT-OSS checkpoint review retained — 2026-11-13
+
+The [independent core review](../reviews/77cd9eefb3c2-json-object-gpt-checkpoint.txt)
+returns **Verdict: PASS** for exact checkpoint commit
+`77cd9eefb3c2f9ed2d4d51df2bf7478dbdb7cbd8`, with no high or medium finding.
+Low L1 (bind the reporting scope script) and L2 (capture preparation stderr)
+join T-309 backlog. Counts and sealed inputs remain unchanged; this is a
+reporting verdict, not another measurement. The reviewer could not rerun
+Markdown lint because Node was absent and relied on bound builder logs and
+independent structural checks. The remaining GPT-OSS tasks are resuming;
+T-303/T-306 remain open and no task grade or row closure is claimed.
