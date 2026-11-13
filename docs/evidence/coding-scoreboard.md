@@ -1741,3 +1741,33 @@ returns **Verdict: PASS** for exact reporting commit
 `ebf1db8defc74ef4d49fe4c840ef8551f39cca36`, with no findings at any severity.
 Counts, earlier entries and sealed inputs remain unchanged. T-303/T-306 stay
 open; no task grade or row closure is claimed.
+
+## JSON-object 27B development repeat — 2026-11-13
+
+Source: `40cad6472560e47314a55ddb1f45e2c4c22b1792`. Available partial path:
+Rust source selection → credential-owning chat → unchanged strict checker;
+full repository retrieval, native execution, tests and retries remain unavailable.
+
+| Date | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU job min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | qwen35-27b | 32768 / 24137–29804 | Unavailable | Unavailable | 29/30 | Not run | 1434.814 | 30.778 | 186402 / 34920 |
+
+Changed variable: trusted JSON-object output request, verified in all 30 upstream
+bodies. Complete framing, prompts, source selection, strict checker, profiles,
+byte ceilings and 300-second idle/total deadlines stay unchanged. Output remains
+`min(32768, 32768 - rendered input tokens - 32)`; does not fit: 0.
+Causes: 1 `generation-refused:error:chat.transport.timeout`, 29 `ungraded-proposal`.
+
+Final backend counters cover 29/30 and include non-answer output.
+
+dev-004 reaches the existing total deadline. Its backend slice retains 98 progress counters, reaching an observed lower bound of 13,012 output tokens at 298.319 seconds after its own slot launch. Its final eval summary and stop line are absent, so its final input/output totals remain unavailable. The lower bound is not added to the final-counter totals; missing final counters are not zero tokens. The cause of the long output is not established. Deadline changes remain T-309 backlog.
+
+GPU minutes are reserved job wall, including load/verification/cleanup and
+excluding queues, wrapper overhead and pauses; active kernel time is not measured.
+The changed driver tuple remains unqualified. No candidate tests, feedback,
+retries or held-out tasks ran; native artifact and original grading-control
+blockers remain. A strict proposal is not a solved task. No model role or
+task-quality improvement is claimed. The three remaining profiles precede tuning.
+Source/record audit, helper reproduction, cleanup and archive verification pass;
+see [evidence](t303-json-object-qwen-2026-11-13.md). T-303/T-306 remain open;
+independent core review is required and no row closes.

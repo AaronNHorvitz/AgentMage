@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The [JSON-object 27B repeat](docs/evidence/t303-json-object-qwen-2026-11-13.md)
+finishes all 30 frozen development tasks at source
+`40cad6472560e47314a55ddb1f45e2c4c22b1792`: 29/30 strict ungraded proposals.
+Task grades and retries remain unavailable; no candidate or held-out test ran.
+Source/record audit, helper reproduction, cleanup and archive verification pass.
+Three prepared profiles still require this repeat before further tuning, except
+high/medium review fixes. T-303/T-306 remain open; core review is required,
+with no new row or completion tick.
+
 The retained [independent JSON-object 31B review](docs/reviews/ebf1db8defc7-json-object-31b-measurement.txt)
 returns **Verdict: PASS** for exact reporting commit
 `ebf1db8defc74ef4d49fe4c840ef8551f39cca36`, with no findings at any severity.
