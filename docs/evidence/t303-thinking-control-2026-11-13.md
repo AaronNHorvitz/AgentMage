@@ -90,3 +90,70 @@ The real API extension check and the full post-change development repeat remain
 pending at this source checkpoint. The two-pair diagnostic above used the old
 API and a server-side option. No claim about the new option's real endpoint
 behavior follows from synthetic tests alone.
+
+## Real API check and resumable repeat
+
+The real endpoint check at source
+`a896f055256e96baec09966c71c5d0a7f1714d96` includes **2/30 development tasks**.
+The remaining 28 are queued under one existing resumable controller. Unlike the
+server-configuration diagnostic, the server retains default template arguments
+and both captured upstream requests carry the new API extension. Effective
+trusted settings report `thinking_mode: disabled`. Preflight passes the same
+option to template rendering; its counts agree with the backend counters.
+
+Both tasks produce the same answer bytes as the server-configuration diagnostic
+and pass the unchanged strict checker: 2/2 ungraded proposals, normal stops,
+no task grades. They use 19,070 input / 2,893 output tokens, request/check
+55.335 seconds and reserved GPU job wall 92.043 seconds / 1.534 minutes.
+Output allowances are 23,170–23,232; does not fit is zero. Context and prompts
+are byte-identical across all three pairs. No candidate test, feedback, retry,
+hidden or held-out execution occurred. This establishes the option's behavior
+for these two attempts only. The other five profiles have no fresh result here.
+
+The built API SHA-256 is
+`ba623b925414e0b390533b18c59b060ad7058c8996d44741420a29b433d05ac1`.
+The source freeze SHA-256 is
+`85dc3c08ba406fc4fae5cc3c49bcad9684bd1fe27c1743c5aa05b0acfea85abd`,
+binding 2,283 repository and 20 private inputs. The unchanged helper remains
+`852cd7f57d414c03d337102752a678f4e8c7c62b89a9485a43f3ebfd2698e9ba`.
+The original helper reproduces all six diagnostic source selections and strict
+checks without candidate execution. Each completed pair's API and model exited,
+settings were revoked, model keys/sockets are absent, and six retired API token
+files were removed. The exact-argument process scan covers only those completed
+owners; it explicitly records the continuing controller. It makes no claim that
+the lane is idle. Later jobs and their mutable logs are outside this checkpoint.
+
+The controller skips the completed pair, refuses silent replay of partial jobs,
+uses separate two-task GPU jobs through both resource wrappers with 900-second
+caps, and pauses 30 seconds outside both reservations. Shared queues are waited
+normally. Do not start another controller. Finish the repeat before further
+tuning, except required high/medium review fixes. Source review runs alongside
+that measurement under the owner's review workflow. No source, prompt, task,
+profile, threshold, permission or supply-chain change follows this source commit.
+
+## Review retention
+
+The private review capsule retains all six diagnostic attempts, the failed
+zero-task startup, both 2,283-file source snapshots, all private input bindings,
+the source gate and reproducible methods. It excludes weights, credentials,
+complete candidate trees and later jobs' mutable data. Only the selected
+candidate source files are retained for hash comparison; none is executed.
+
+- `thinking-control-20261113-inputs.tar` SHA-256:
+  `77465ea8ae4a0dd3261dccd42ca010fbf714945192c4d0afea1d4c3ceb17799c`.
+- `thinking-control-20261113-manifest.json` SHA-256:
+  `29b0860a26ffb5df282a1115587ba630f3fe7d5a9fbfb52d0d65978bb9c22267`.
+
+The read/hash-only verifier passes all **4,720 files**. It streams the archive,
+extracts nothing, executes no archived code, checks every hash and size, compares
+the six changed Rust sources with their exact committed bytes, and independently
+recomputes response counters, candidate source hashes and the unchanged source
+gate failure identities. The capsule is an uncompressed streamed copy; no build
+or GPU reservation is used for file retention. The archive's earlier queued
+packaging attempt was retired before execution. Measurement still uses both
+required resource wrappers. No prior sealed artifact is changed.
+
+Independent core review covers the source increment and this fixed checkpoint;
+it cannot close T-303/T-306. The remaining 28 development tasks continue under
+the existing controller while review runs. No further tuning is authorized by
+this checkpoint; finish the repeat and publish its full results first.

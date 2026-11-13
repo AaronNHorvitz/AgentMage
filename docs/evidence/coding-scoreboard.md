@@ -2139,3 +2139,35 @@ was too long. That failed reservation is separate from both rows. No resource
 limit was raised. The driver tuple remains unqualified. A two-task diagnostic
 establishes no model role or task-quality improvement. The full post-change
 development repeat remains pending; T-303/T-306 stay open.
+
+## Trusted API thinking-control checkpoint — 2026-11-13 (2/30)
+
+Source: `a896f055256e96baec09966c71c5d0a7f1714d96`. This checkpoint includes
+**2/30 development tasks; the remaining 28 are queued under one resumable
+controller**. It is a real check of the new API setting, separate from the
+server-configuration diagnostic above. The available path remains source
+selection → credential-owning chat → unchanged strict checker.
+
+| Date | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU job min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | gemma4-26b-a4b (2/30 included) | 32768 / 23170–23232 | Unavailable | Unavailable | 2/2 | Not run | 55.335 | 1.534 | 19070 / 2893 |
+
+Changed variable: trusted API `thinking_mode: disabled`, encoded as
+`chat_template_kwargs: {"enable_thinking": false}` in both upstream requests.
+The server retains empty default template arguments. Complete framing,
+JSON-object output, prompts, strict checks, 300-second idle/total deadlines,
+32K context and the output-budget formula remain fixed. Token preflight uses
+the same template option; backend input counters agree. Does not fit: 0.
+Both attempts stopped normally and produced strict ungraded proposals; no
+incomplete response occurred in this pair. Counters cover 2/2 and include all
+output. GPU minutes are reserved job wall, including load/verification/cleanup
+and excluding queues and wrapper overhead; active kernel time is unmeasured.
+
+No candidate tests, feedback, retries or held-out tasks ran. Native artifact
+admission and original grading controls remain blockers. The driver remains
+unqualified. No model role, task-quality improvement or row closure follows.
+The completed first pair is skipped on resume; later pairs use both resource
+wrappers with 900-second caps and 30-second pauses outside reservations.
+Source review can run beside that measurement. Further tuning waits for the
+full development repeat. The other five profiles have no new result here.
+See [evidence](t303-thinking-control-2026-11-13.md); T-303/T-306 remain open.

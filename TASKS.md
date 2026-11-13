@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The [real API thinking-control checkpoint](docs/evidence/t303-thinking-control-2026-11-13.md)
+includes 2/30 development tasks at source
+`a896f055256e96baec09966c71c5d0a7f1714d96`: 2/2 strict ungraded proposals.
+The remaining 28 are queued under one existing controller; finish the repeat
+before further tuning. Task grades remain unavailable. Independent core review
+covers the source increment and this fixed checkpoint while measurement continues.
+T-303/T-306 remain open; no row or completion tick is added.
+
 The [trusted thinking-control decision](docs/decisions/0208-trusted-endpoint-thinking-control.md)
 responds to the largest measured refusal cause. Two development diagnostics
 observe empty answers with output-limit reasoning; disabling the server's
