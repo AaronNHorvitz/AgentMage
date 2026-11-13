@@ -1,0 +1,142 @@
+Commit: 19300085342d37c119ed2a606fc2eea9141d2fc6
+Scope: complete-response-muse-measurement
+
+Reviewer: independent Claude Opus 5.5 session (extra-high effort), read-only, frozen checkout
+/lane/review-checkout. Row: T-303 / T-306 non-closing development measurement. Tier: core.
+Base: 66e4022bd33fd11078b99b7da07430c83138417c.
+
+## Methods
+
+- Confirmed `git rev-parse HEAD` = 19300085342d37c119ed2a606fc2eea9141d2fc6. `git diff --stat` against
+  the base touches exactly three files: TASKS.md (+10), docs/evidence/coding-scoreboard.md (+50),
+  docs/evidence/t303-complete-muse-2026-11-12.md (new, 161 lines). The diff only adds lines. No source,
+  prompt, profile, hidden test, threshold, permission, SBOM or row-status change.
+- Read IP-POLICY.md, the top of TASKS.md and the whole diff. Read the archive verifier source before running
+  it. It streams the tarball, hashes every member and keeps only selected JSON and log bytes in memory. It
+  writes nothing to disk and imports or executes no archived code.
+- Ran the requested commands, plus my own checks against the raw archive. These used my own parsers in
+  memory, not the builder's audit or progress scripts:
+  1. Compared every one of the 30 per-task table rows in the evidence with the archived `record.json`,
+     `events.ndjson`, `checked.json` and own-launch `backend-slice.log`. The compared fields were input
+     tokens, output allowance, observed output, cause and request/check seconds.
+  2. Recomputed the totals, the causes and the allowance formula `min(32768, 32768-input-32)` for all 30
+     tasks. Checked that the prompt-eval counter equals the preflight input count for the 27 tasks with
+     final counters.
+  3. Recounted the timeout progress counters, lower bounds and seconds after slot launch for dev-004,
+     dev-011 and dev-012, and counted dev-012's pre-launch counters.
+  4. Wrote my own checker for the strict edit rules: JSON object with only `edits`, path equals the task
+     source, nonempty `old` that differs from `new` and occurs exactly once, no overlapping edits. I applied
+     it to all 27 archived answers. It refused the 3 edit refusals and the 5 format refusals, and accepted
+     the 19 proposals. All 19 applied results equal `checked.json` `changes[0].content` byte for byte.
+  5. Checked that the manifest hash of each archived candidate source file (`muse-candidates/<task>/<source>`)
+     equals the base file for the 11 refused or timed-out tasks and the checked proposal for the 19
+     accepted ones. All 30 match.
+  6. Checked that every `context.json` references only the task's editable source path. Two sources contain
+     "test" in their path (dev-010 and dev-012, `scripts/rust_test_ownership.py`); both are the editable
+     product script, not the hidden test. Only the 30 development tasks appear, and no held-out content
+     appears in the contexts or the docs.
+  7. Checked the settings in all 15 batch reports: complete response mode, idle and total timeouts of
+     300000 ms, settings revoked, API reaped, no resource-guard error. Checked that the API SHA and helper
+     SHA in the evidence equal the manifest entries. Checked that the driver package string matches the
+     batch reports. Checked that the model identity (SHA, bytes, threads, temperature, seed, Q8 caches,
+     batch, microbatch, reasoning strength) matches the audit summary.
+  8. Date span: the 15 launch-directory stamps run from 20261112T160348 to 20261112T175938 in host local
+     time. The host is on UTC-6 (`date` shows CST), so the launches ran from 22:03:48 to 23:59:38 UTC on
+     2026-11-12. The last pair finished after midnight UTC. The claim "attempts span 2026-11-12–13 UTC" is
+     correct.
+  9. `controller-muse.log` shows 15 monotonic progress lines (2/30 … 30/30) and one COMPLETE line, with no
+     resume or replay. This is consistent with "no controller interruption or replay".
+  10. Public hygiene: I searched the full new evidence file and all added lines for private paths,
+      usernames, hostnames, e-mail addresses, credentials and other agent-product names; nothing matched.
+      "muse" is the existing descriptive profile id already used under model-profiles/, not branding.
+  11. Markdown structure check, because Node was not available: consistent table column counts, blank lines
+      around tables and headings, no trailing spaces, and a final newline. MD013 is disabled in the repo
+      config.
+- No GPU use, no model run, no candidate or hidden-test execution. No UI is in scope.
+
+## Exact commands and results (all in /lane/review-checkout)
+
+    git diff --check 66e4022bd33fd11078b99b7da07430c83138417c --
+      -> exit 0, no output
+
+    python3 -B /lane/reviews/complete-muse-20261112-verify-archive.py
+      -> "status": "PASS", verified_files 100248, repository_inputs 2283, private_inputs 16, tasks 30,
+         strict_ungraded_proposals 19, request_check_seconds 4755.557991264999,
+         reserved_job_wall_seconds 5328.7298258709925, counter_coverage 27,
+         observed_input_tokens 174326, observed_output_tokens 163130,
+         causes {timeout 3, code.proposal.edit 3, code.proposal.format 5, ungraded-proposal 19},
+         candidate_execution false, hidden_tests_loaded false  (5.7 s)
+
+    python3 -B <bindings snippet from the request>
+      -> PASS:16 retained bindings and three current document hashes
+         (bindings file SHA 28bbfc63…abe0. All 16 sizes and SHA-256 values match. The current SHA-256 of
+         TASKS.md, coding-scoreboard.md and the new evidence match scope.json)
+
+    python3 -B scripts/local_agent_fast_gate.py --base 66e4022bd33fd11078b99b7da07430c83138417c
+      -> git diff --check exit 0. --lint-untracked exit 0. markdownlint: "Missing executable: node; no
+         automatic download", exit 127. FAST GATE: FAIL, only because Node is absent in the reviewer
+         environment.
+         I did not download Node and I do not claim green lint. The bound builder log
+         complete-muse-20261112-doc-gate.log (hash verified above) records markdownlint-cli2 v0.23.2 on
+         the same three files: "Summary: 0 issues in 0 files", FAST GATE: PASS. My structural checks
+         (item 11) found no issue.
+
+Independent recomputation results:
+- 30/30 per-task table rows equal my values from the raw archive. There were no mismatches.
+- Totals: 174326 input and 163130 output tokens over 27 tasks; request/check 4755.557991264999 s; 19/30
+  accepted. All equal the evidence, the scoreboard and the audit.
+- Timeouts, own-launch parsing: dev-004 has 99 counters, last 13407 at 299.919 s. dev-011 has 95, last 12517
+  at 297.552 s. dev-012 has 94, last 12512 at 286.791 s, plus 4 pre-launch counters (12649–13051, backend
+  task 0) excluded. All equal the documents. No stop line appears in any own-launch slice of a timed-out task.
+- Backend terminations: 27 tasks have exactly one final prompt/eval/stop triple with `truncated = 0`, and
+  3 are unobserved. This matches `{'stopped-below-token-limits': 27, 'unobserved-or-ambiguous': 3}`.
+- GPU work: the 15 values of reserved_work_seconds sum to 5328.730 s, which is 88.812 min. These are job
+  wall times, as labelled, not kernel time.
+- Cleanup: cleanup.json shows PASS, 15/15 settings revoked, 15/15 API processes reaped, model key and
+  socket absent 15/15, 0 guard errors and no matching processes. All batch reports show `completed`.
+
+Evaluation integrity: only development tasks were used, the held-out set was not loaded, hidden tests were
+untouched, and no prompt, profile or source changed. The counts can be re-run from the bound archive with
+one command and match the raw logs. Failures are counted, not dropped: the 3 timeouts and 8 strict
+refusals all appear in the table and the cause counts. Requirements of MEASURE FIRST: the scoreboard line
+for this batch is present, the context and output budgets and the changed variables are stated, and
+"does not fit: 0" is counted separately. The claim that one profile (E4B) remains before tuning matches
+the six-model policy list; five of the six now have a complete repeat.
+
+## Findings
+
+High: none.
+Medium: none.
+
+Low L1. dev-012's 300 s window overlapped about 11 s of abandoned dev-011 generation, and the documents do
+not say so.
+Location: docs/evidence/t303-complete-muse-2026-11-12.md lines 75–80, and the same paragraph in
+docs/evidence/coding-scoreboard.md.
+Evidence, from backend-slice.log in pair muse-10:
+- dev-011 launched at backend time 0.54.928 and hit the API timeout after 300.011 s, so the API stopped
+  waiting by about 5.54.94.
+- The backend nevertheless kept generating the abandoned request to n_gen 13051. It logged
+  "stop: cancel task" only at 6.05.950.
+- dev-012's own slot launch is at 6.05.969, so its 300.009 s request/check time includes about 11 s of
+  waiting behind the cancelled request. That is why its last counter is at 286.791 s rather than about
+  299 s.
+
+The documents correctly exclude the four pre-launch counters, but they do not say that the next task's
+deadline window was partly consumed by the previous request, or that complete-mode timeout cancellation
+reached the backend about 11 s late. No published count or cause changes: at 44.19 tokens/s, about 13
+extra seconds would add roughly 575 tokens, giving about 13.1K, far below the 29,795 allowance.
+Fix: add one note that dev-012's window included about 11 s of backend generation for the cancelled
+dev-011 request before its own launch. Put the cancellation-latency question (complete-mode timeout not
+promptly cancelling upstream generation) in T-309 backlog. Backlog; it does not block.
+
+Environment limitation (not a finding): markdownlint could not run without Node. See above.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing development measurement): the reporting increment is accurate. Every
+  published number traces to the raw archive and was recomputed independently. Labelling is honest: the
+  path is partial, nothing is graded, the weights are not packaged, the platform is not qualified, and the
+  fixtures and blockers are stated. There is no new row, tick or closure, and both rows stay open, as
+  claimed. No high or medium finding.
+
+Verdict: PASS
