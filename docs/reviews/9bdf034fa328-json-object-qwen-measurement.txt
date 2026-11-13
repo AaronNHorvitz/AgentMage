@@ -1,0 +1,102 @@
+Commit: 9bdf034fa32856ee173e46a9e0c2d2873aa2b30d
+Scope: json-object-qwen-measurement
+
+Reviewer: independent Claude Opus 5.5 session (extra-high effort), read-only, pinned checkout
+/lane/review-checkout. Base: 431e7e6fb88cffa3ccfea12e0879c70e39e31eff. Row: T-303 / T-306,
+non-closing development measurement. No GPU used; no candidate, hidden test or held-out task executed.
+
+## Methods and commands
+
+1. `git rev-parse HEAD` and `git rev-parse 9bdf034f…` both return
+   9bdf034fa32856ee173e46a9e0c2d2873aa2b30d. `git diff --stat` against the base touches exactly three files:
+   TASKS.md (+9), docs/evidence/coding-scoreboard.md (+30), and the new
+   docs/evidence/t303-json-object-qwen-2026-11-13.md (+138). The diff only adds lines (0 removed lines in
+   TASKS.md and the scoreboard).
+2. `git diff --check 431e7e6f… --` exits 0.
+3. `sha256sum` of every artifact in the binding manifest matches it:
+   bindings.json a9ce184a…6fd, inputs.tar.gz d31ae0ba…a71a, manifest.json fea48d01…523a,
+   verify.py 675fcbb5…3032, and audit, proposals, cleanup, verification, gate, gate-initial, direct-lint,
+   scope, preservation and checkpoint-inspection, all equal to the bound values (13/13).
+4. I read `json-object-qwen-20261113-verify.py` before running it. It streams the tar with `r|gz`, rejects
+   absolute and `..` paths, non-regular members, token files and `.gguf` files, hashes every member, and keeps
+   only selected JSON/log text in memory. It extracts nothing to disk and imports or executes no archived code.
+   `python3 -B /lane/reviews/json-object-qwen-20261113-verify.py` → status PASS: 22,007 files, 2,283 repository
+   and 16 private inputs, 30 tasks, 29 strict ungraded proposals, causes {ungraded-proposal: 29,
+   generation-refused:error:chat.transport.timeout: 1}, 186,402 input / 34,920 output tokens, counter coverage
+   29, dev-004 partial: 98 samples, lower bound 13,012, 298.31873 s after slot launch, no final eval summary or
+   stop line, not added to totals. Request/check 1434.8143669880228 s; reserved job wall 1846.6596713809995 s.
+   The output is identical to the bound verification.json.
+5. `PATH=/lane/state/tooling/node-v24.15.0-linux-x64/bin:$PATH python3 -B scripts/local_agent_fast_gate.py
+   --base 431e7e6f…`: `git diff --check` exit 0 and `--lint-untracked` exit 0. The markdownlint step returned
+   127 (`Missing executable: node; no automatic download`), so the gate reports FAIL here. That Node directory
+   does not exist in this environment and there is no `node` on PATH. I fetched no tooling and do not claim a
+   lint rerun. Instead I inspected the bound gate.log (markdownlint-cli2 v0.23.2, three paths, "0 issues in 0
+   files", FAST GATE: PASS) and gate-initial.log (the one issue the builder disclosed, then fixed). Bound
+   direct-lint.json reports 0 issues for each file. My own checks of the three files found no trailing
+   whitespace, no tabs, consistent table column counts, and a blank line before every table. The repository
+   config disables MD013/MD022/MD024/MD060, so the long dev-004 paragraph does not violate it. After the run,
+   `git status --porcelain` is empty.
+
+## Additional independent checks
+
+- **Public table and audit.** I parsed all 30 per-task rows in the evidence document and compared them with
+  the bound audit's `development` entries for preflight input, output allowance, observed output, cause and
+  request/check seconds (±0.0006 s). Zero mismatches. Every allowance equals `min(32768, 32768 - input - 32)`.
+  Input range is 2932–8599 and allowance range 24137–29804, as stated. Summing the 29 rows with counters gives
+  186,402 / 34,920. The seconds column sums to 1434.817 from 3-decimal rounding; the unrounded value is
+  1434.814. The audit's backend terminations {stopped-below-token-limits: 29, unobserved-or-ambiguous: 1}
+  match the document. Scope.json's path hashes match the committed files (53290c9b…, 6b22587d…, 1de97f09…).
+- **Profile and binary claims, from records read by streaming without extraction.** Archived pair reports
+  show API SHA-256 a8995c15…dc2 and helper 852cd7f5…9ba (both also in the manifest), and frozen-input
+  manifest 79a130de…ab3 as tabled. They also show model SHA-256 5ae89d67…985c at 16,547,400,032 bytes;
+  threads 4, temperature 0, seed 42, q8_0 K/V caches, batch 256 / microbatch 128, `enable_thinking: false`;
+  idle and total timeouts of 300,000 ms; n_ctx 32768; nvidia package
+  `xorg-x11-drv-nvidia-cuda-615.71.09-3.fc44.x86_64`; and coding_qualification `not-qualified`. The archived
+  controller.py confirms the GPU wrapper's 900-second cap, the 30-second sleep outside both reservations
+  between jobs, and that a partial job directory is refused rather than replayed. batch.py verifies every
+  frozen repository and private input before each job and starts the work timer after that verification.
+- **Source identity.** `git diff de8c204c… 40cad647…` touches only three documentation files, so the measured
+  source equals the source under the retained independent PASS
+  (docs/reviews/de8c204cbc52-json-object-model-output.txt, "Verdict: PASS", present at this commit).
+  development_sha256 0c2a0624… and source_freeze_sha256 79a130de… equal those in the bound E4B and 31B audits,
+  so the task set and freeze are unchanged.
+- **The 23–24 checkpoint inspection.** checkpoint-inspection.json records a SIGSTOP/SIGCONT of the owned group
+  223 with no TERM or KILL and no checkpoint. Its timestamp (00:47:15 local) falls about 69 s after pair 22's
+  model-state directory was created (20261113T004606), so the pause could have overlapped pair 22's timer.
+  I bounded its effect two ways:
+  - For dev-023 and dev-024, request/check time equals backend prompt+eval time to within about 0.1 s
+    (39.86 vs 39.84 s and 22.25 vs 22.22 s), so no pause fell inside a request.
+  - Pair 22's unexplained overhead (reserved minus load minus generation) is 14.78 s. Pairs 24 to 28 run
+    11.56–15.68 s, so any pause counted in reserved wall is a few seconds at most, under 0.2% of 1846.66 s.
+  The evidence document discloses the event, and the scoreboard's "pauses" exclusion is accurate for the
+  30-second scheduler pauses. This is an observation, not a finding.
+- **Evaluation integrity.** The commit adds no task statement, hidden test or held-out content. Policy and
+  audit record that the held-out set was not loaded or executed and no hidden tests ran. Every task record
+  shows retries 0 and graded false. The one timeout is counted as a failure cause, not dropped. Its partial
+  counter is reported apart from the final totals and is not treated as zero tokens. Does-not-fit is 0 and
+  counted separately.
+- **MEASURE FIRST.** The batch adds the required scoreboard line. Changed variable (JSON-object request),
+  context (32768), and per-task output allowance are stated, fit failures are counted apart from model
+  failures, and every number traces to the bound raw records via the verifier and my cross-checks.
+- **Public-repository check.** The added lines contain no host path, username, hostname, email, credential,
+  private sibling project or other product name. The private home path and the source model file name appear
+  only in the private archive. `qwen35-27b` is the existing profile identifier, not branding. TASKS.md adds a
+  paragraph only: no new row, no completion tick, no reordering of the work, and no claim that anything is
+  built.
+- Confinement, UI and supply chain: this is a reporting-only commit with no source, permission, dependency or
+  UI change, so there is no boundary to re-test.
+
+## Findings
+
+None at any severity.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing development measurement): the reporting increment is accurate, traceable and
+  honestly labelled. Strict proposals are not presented as solved tasks, task passes are "Unavailable", and
+  the driver is unqualified. The rows stay open, as the commit itself states. This verdict closes no row.
+
+Limit: markdownlint could not be rerun here because Node is absent. The bound builder logs and my manual
+structural checks were used instead, as the request allows.
+
+Verdict: PASS

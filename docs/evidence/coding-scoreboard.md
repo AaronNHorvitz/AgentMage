@@ -1771,3 +1771,14 @@ task-quality improvement is claimed. The three remaining profiles precede tuning
 Source/record audit, helper reproduction, cleanup and archive verification pass;
 see [evidence](t303-json-object-qwen-2026-11-13.md). T-303/T-306 remain open;
 independent core review is required and no row closes.
+
+## Independent JSON-object 27B review retained — 2026-11-13
+
+The [independent core review](../reviews/9bdf034fa328-json-object-qwen-measurement.txt)
+returns **Verdict: PASS** for exact reporting commit
+`9bdf034fa32856ee173e46a9e0c2d2873aa2b30d`, with no findings at any severity.
+Counts and sealed inputs stay unchanged. The reviewer could not rerun Markdown
+lint because Node was absent; bound builder logs and independent structural
+checks were used. This retains a reporting verdict, not a new measurement.
+The GPT-OSS repeat is queued; all three remaining profiles precede further
+tuning. No task grade, retry, held-out result, model role or row closure is claimed.
