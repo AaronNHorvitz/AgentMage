@@ -2,6 +2,17 @@
 
 ## Active queue: local agent mission
 
+The [thinking-disabled E4B repeat](docs/evidence/t303-thinking-disabled-e4b-2026-11-13.md)
+finishes all 30 frozen development tasks at source
+`a896f055256e96baec09966c71c5d0a7f1714d96`: 16/30 strict ungraded proposals. Task passes and retries remain
+unavailable; no candidate, hidden or held-out test ran. Audit, original-helper
+reproduction, cleanup and archive verification pass. Four profiles still need
+fresh post-change measurements before tuning. The retained
+[A4B reporting review](docs/reviews/2bee1e85ea25-thinking-disabled-a4b-measurement.txt)
+returns PASS for exact `2bee1e85ea2571936ababb13ae9eda474d4491e0`, with no findings;
+it closes no row. This E4B reporting increment requires independent core review.
+T-303/T-306 remain open; no row or completion tick is added.
+
 The retained [independent thinking-disabled A4B measurement review](docs/reviews/2bee1e85ea25-thinking-disabled-a4b-measurement.txt)
 returns **Verdict: PASS** for exact `2bee1e85ea2571936ababb13ae9eda474d4491e0`,
 with no findings. Measured counts and sealed inputs remain unchanged. T-303/T-306
