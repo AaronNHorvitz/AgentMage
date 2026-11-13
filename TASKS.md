@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The [Muse JSON-object checkpoint](docs/evidence/t303-json-object-muse-checkpoint-2026-11-13.md)
+records **2/30 tasks attempted; 28 remain**, with 1/2 strict ungraded
+proposals. The next pair waited 733.337 seconds
+for a shared build reservation and checkpointed before GPU entry or a new attempt.
+Audit, helper reproduction, cleanup and archive verification pass. Resume tasks
+3–4 without replay; task grades and retries remain unavailable. Remaining Muse
+tasks and A4B precede tuning except high/medium fixes. T-303/T-306 remain open;
+independent core review is required, with no new row or completion tick.
+
 The [JSON-object GPT-OSS repeat](docs/evidence/t303-json-object-gpt-2026-11-13.md)
 finishes all 30 frozen development tasks at source
 `40cad6472560e47314a55ddb1f45e2c4c22b1792`: 12/30 strict ungraded proposals.

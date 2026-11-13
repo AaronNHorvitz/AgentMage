@@ -1852,3 +1852,29 @@ task-quality improvement is claimed. The two remaining profiles precede tuning.
 Source/record audit, helper reproduction, cleanup and archive verification pass;
 see [evidence](t303-json-object-gpt-2026-11-13.md). T-303/T-306 remain open;
 independent core review is required and no row closes.
+
+## Muse JSON-object checkpoint — 2026-11-13 (incomplete)
+
+Source: `40cad6472560e47314a55ddb1f45e2c4c22b1792`. **2/30 tasks attempted; 28 remain.**
+Available partial path: Rust source selection → credential-owning chat → unchanged
+strict checker. Full repository retrieval, native execution, tests and retries
+remain unavailable; this is not a solved-task score or a completed measurement.
+
+| Date | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU job min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | muse (2/30 attempted) | 32768 / 24509–24616 | Unavailable | Unavailable | 1/2 | Not run | 326.925 | 5.900 | 16347 / 14067 |
+
+Changed variable: trusted JSON-object output request, verified in both upstream
+bodies. Complete framing, prompts, selection, strict checker, profiles, byte
+ceilings and 300-second idle/total deadlines stay fixed. Output remains
+`min(32768, 32768 - rendered input tokens - 32)`; does not fit: 0/2 attempted.
+Causes: 1 `strict-edit-refused:code.proposal.edit`, 1 `ungraded-proposal`. Final counters cover 2/2 and include
+non-answer output. GPU minutes are reserved job wall including load/verification/
+cleanup, excluding queues, wrapper overhead and pauses; kernel time is unmeasured.
+The next pair's 733.337-second shared-build
+wait ended before GPU entry or a new attempt. Resume tasks 3–4 without replay.
+Audit, helper reproduction, cleanup and archive verification pass; see the
+[checkpoint evidence](t303-json-object-muse-checkpoint-2026-11-13.md). No candidate tests, feedback, retries, hidden or
+held-out tests ran; native admission and original-control blockers remain. The
+driver remains unqualified. Remaining Muse tasks and A4B precede tuning except
+high/medium fixes. T-303/T-306 stay open; independent core review is required.
