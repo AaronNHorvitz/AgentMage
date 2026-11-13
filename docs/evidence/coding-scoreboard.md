@@ -1782,3 +1782,34 @@ lint because Node was absent; bound builder logs and independent structural
 checks were used. This retains a reporting verdict, not a new measurement.
 The GPT-OSS repeat is queued; all three remaining profiles precede further
 tuning. No task grade, retry, held-out result, model role or row closure is claimed.
+
+## GPT-OSS JSON-object checkpoint — 2026-11-13 (incomplete)
+
+Source: `40cad6472560e47314a55ddb1f45e2c4c22b1792`. **4/30 tasks attempted;
+26 remain.** Available partial path: Rust source selection → credential-owning
+chat → unchanged strict checker. Native execution, tests and retries remain
+blocked; this is not a complete development measurement or a solved-task score.
+
+| Date | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU job min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | gpt-oss (4/30 attempted) | 32768 / 24497–29748 | Unavailable | Unavailable | 0/4 | Not run | 452.918 | 8.009 | 23752 / 89272 |
+
+Changed variable: trusted JSON-object output request, verified in all four
+upstream bodies. All other measurement settings stay fixed: complete framing,
+prompts, selection, checker, profiles, byte ceilings and 300-second idle/total
+deadlines. Output remains `min(32768, 32768 - rendered input tokens - 32)`;
+does not fit: 0/4 attempted. Causes: one `strict-edit-refused:code.proposal.edit`
+and three `generation-refused:error:chat.response.incomplete`. Each incomplete
+response exhausted its output allowance; final counters cover all four attempts
+and include non-answer output. The cause of the long output is not established.
+
+GPU minutes are reserved job wall, including verification/load/cleanup, excluding
+queues, wrapper overhead and scheduler pauses; active kernel time is unmeasured.
+The next pair's 404.835-second build wait was checkpointed before GPU entry or
+any attempt. Resume tasks 5–6; preserve the four completed attempts. Audit,
+helper reproduction, cleanup and read/hash archive verification pass; see the
+[checkpoint evidence](t303-json-object-gpt-checkpoint-2026-11-13.md).
+The driver remains unqualified. No native execution, grading, retry, hidden or
+held-out test ran. The remaining GPT-OSS tasks, Muse and A4B precede tuning,
+except high/medium fixes. T-303/T-306 stay open; independent core review is
+required and no row closes.

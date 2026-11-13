@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The [GPT-OSS JSON-object checkpoint](docs/evidence/t303-json-object-gpt-checkpoint-2026-11-13.md)
+records **4/30 tasks attempted; 26 remain**, with 0/4 strict ungraded proposals.
+The next pair waited 404.835 seconds for a shared build reservation and was
+checkpointed before GPU entry or a new attempt. Both completed pairs are
+verified and preserved; resume at tasks 5–6 without replay. Task grades remain
+unavailable. GPT-OSS, Muse and A4B still precede tuning; T-303/T-306 remain
+open, with no new row or completion tick. Independent core review is required.
+
 The retained [independent JSON-object 27B review](docs/reviews/9bdf034fa328-json-object-qwen-measurement.txt)
 returns **Verdict: PASS** for exact reporting commit
 `9bdf034fa32856ee173e46a9e0c2d2873aa2b30d`, with no findings at any severity.
