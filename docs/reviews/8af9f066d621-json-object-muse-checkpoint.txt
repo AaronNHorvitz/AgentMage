@@ -1,0 +1,142 @@
+Commit: 8af9f066d621b673d9c30f7e0505e5c4dcb4c111
+Scope: json-object-muse-checkpoint
+
+# Independent review — Muse JSON-object two-task checkpoint (T-303 / T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate read-only session. Checkout: /lane/review-checkout.
+`git rev-parse HEAD` and `git rev-parse 8af9f066d621b673d9c30f7e0505e5c4dcb4c111` both return
+`8af9f066d621b673d9c30f7e0505e5c4dcb4c111`. Working tree clean. Base
+`be161e975746f8f00ff9c3b7843904d334c4b1db`. One commit in range ("Record the resumable two-task
+Muse measurement checkpoint"). No GPU, model run, candidate execution, hidden/held-out test,
+archive extraction to disk or import/execution of archived code by this reviewer.
+
+## Change under review
+
+`git diff --numstat` base..commit: TASKS.md +9/-0, docs/evidence/coding-scoreboard.md +26/-0,
+docs/evidence/t303-json-object-muse-checkpoint-2026-11-13.md +90/-0 (new). Additions only, reporting
+only. `git diff --name-only 40cad6472560e47314a55ddb1f45e2c4c22b1792 8af9f066…` limited to
+non-`docs/`, non-TASKS.md paths is empty: the measured source equals the current non-document tree.
+
+## Commands run and results
+
+1. `git diff --check be161e97… 8af9f066… --` → exit 0, no output.
+2. `python3 -B scripts/local_agent_fast_gate.py --lint-untracked` → exit 0 (silent on success by
+   design; `main()` returns 0 after `untracked_whitespace`).
+3. `/lane/reviews/42612ca9787f-a4b-node node_modules/.bin/markdownlint-cli2 ./TASKS.md
+   ./docs/evidence/coding-scoreboard.md ./docs/evidence/t303-json-object-muse-checkpoint-2026-11-13.md`
+   → markdownlint-cli2 v0.23.2 (markdownlint v0.41.1), "Linting: 3 files / Summary: 0 issues in 0 files",
+   exit 0. The retained Node binary was available and its hash is within the verified bindings.
+4. `python3 -B /lane/reviews/json-object-muse-checkpoint-20261113-verify.py` → exit 0, status PASS:
+   3945 verified files, 2283 repository / 16 private inputs, 2 tasks, 1 strict ungraded proposal,
+   causes `strict-edit-refused:code.proposal.edit` 1 and `ungraded-proposal` 1, 16347 input / 14067 output
+   tokens, counter coverage 2, request/check 326.92474495398346 s, reserved job wall
+   353.9724631260033 s, next_pair_first 2, measurement_complete false. Output is identical to the
+   bound verification receipt (exit 0, empty stderr).
+5. The 23-artifact binding check from the request → `PASS 23 artifact bindings`.
+6. Also run: full reporting gate `python3 -B scripts/local_agent_fast_gate.py --base be161e97…`.
+   Its diff check and untracked lint pass. Its markdownlint step exits 127 because `node` is not on
+   this sandbox's PATH ("Missing executable: node; no automatic download"). That is a property of the
+   environment, not a defect; step 3 runs the same lint with the bound Node binary and passes. The
+   builder's bound gate log (`-gate.log`, 39 lines) ends `FAST GATE: PASS`.
+
+## Independent checks (beyond the builder's verifier)
+
+The builder's verifier checks the archive against the builder's own manifest and audit. I did not
+rely on it alone. Instead I streamed the bound archive in memory (tarfile `r|gz`, nothing written,
+nothing executed) and checked:
+
+- **Per-task numbers against raw backend logs.** The llama-server slices `muse-00/collection/dev-00{1,2}/backend-slice.log`
+  show `prompt eval … / 8120 tokens` and `eval … / 8203 tokens` (dev-001), and `/ 8227` and `/ 5864`
+  (dev-002). The sums 16347/14067 match. The record.json values are: dev-001 `strict-edit-refused`,
+  preflight 8120, max_tokens 24616 = 32768−8120−32, generation_seconds 191.6456; dev-002
+  `ungraded-proposal`, 8227, 24509 = 32768−8227−32, 135.2791. Both show retries 0 and graded false.
+  The sum is 326.9247 s. dev-001's checked.json is `{"error":"code.proposal.edit"}`. dev-002's
+  checked.json has one change to `scripts/coding_harness.py`. Every number in both public tables
+  and in TASKS.md traces to these raw files. The dev-001 answer is 4079 bytes against 8203 output
+  tokens, which is consistent with the stated "including non-answer output".
+- **Reserved job wall.** batch.py sets `reserved_work_seconds = time.monotonic() - started` inside the
+  wrapper chain. `muse-00-reservation-muse1.log` shows the build wait, then the GPU wait, then
+  verification, load (16.036 s), the two tasks and `reserved_work_seconds 353.9724631260033`.
+  353.972/60 = 5.8995 min. The command is `build-slot … gpu-slot queue-run agentmage 900 …`, so both
+  wrappers were used with a 900 s cap. Timeline: launch 1794561589.07, checkpoint 1794562760.07
+  (1171.0 s) = muse-02 wait 733.34 + pair and 30 s pause 383.97 + ≈53.7 s first queue/wrapper. This
+  is consistent.
+- **Settings.** The batch report shows context 32768 (observed `n_ctx`), threads 4, temperature 0,
+  seed 42, q8_0 K/V caches, batch 256, ubatch 128, `reasoning_strength: medium`, idle/total timeouts
+  300000 ms, and `response_format: json_object`. Both captured upstream bodies are exactly
+  `{model, messages, stream:false, max_tokens:budget, n:1, response_format:{type:json_object}}`. The
+  model is 16,756,683,904 bytes with SHA `4cc57c0f…`. The driver is
+  `xorg-x11-drv-nvidia-cuda-615.71.09-3.fc44.x86_64`, disposition "changed since preparation". The
+  model server ran under bwrap `--unshare-all --clearenv --cap-drop ALL`, with the model read-only and
+  a private socket. The evidence text matches all of these.
+- **Frozen inputs.** For all 2283 `frozen-inputs-v2.json` repository entries, the hash equals both the
+  archived snapshot file and `git show 40cad647…:<path>`. There are 0 mismatches and 2283 snapshot
+  files. The development-set hash `0c2a0624…` is the same one published for earlier frozen runs, for
+  example docs/evidence/t303-a4b-measurement-2026-11-11.md:96. The API `a8995c15…`, helper
+  `852cd7f5…` and frozen-inputs `79a130de…` hashes in the evidence match the manifest. The archive
+  `66b85753…` and manifest `ff972042…` hashes match sha256sum.
+- **Evaluation integrity.** The archive has no held-out paths. The only "hidden" names are the repository
+  scripts `hidden_network_surface_evidence.py` and its test. Neither context contains held-out or
+  hidden-test text. The audit has held_out_executed, hidden_tests_executed and native_execution all
+  false, and first/within-budget passes null (reported as "Unavailable"). Both attempted tasks are
+  counted, including the refusal; none is dropped. Does-not-fit is 0/2 and is kept apart from
+  causes. No prompt, profile, task, threshold or source changed.
+- **Checkpoint safety.** I read checkpoint.py and its receipt. It asserts that the launch pgid equals the
+  pid and differs from its own group, and that the controller's exact cmdline matches. It asserts that
+  only `muse-00` exists, that the log holds only the completed-2 line, and that the muse-02 reservation
+  log holds only the build-wait line. It then sends SIGSTOP to the owned group, waits until every member
+  is stopped, and rechecks that no job directory appeared. It allows only the exact controller,
+  build-slot/gpu-slot/batch.py, `sleep 1` or `flock -n` command lines, and rechecks that the completed
+  report bytes are unchanged. Only then does it send SIGTERM and SIGCONT to the owned pgid, and it waits
+  for all members to exit. A `finally` block resumes the group and writes an abort receipt if any guard
+  fails. The receipt lists pids 218/3653/6075, all stopped, with exactly those command lines. In the
+  archive, the controller log ends `AssertionError: job failed: muse 2`. controller_muse1.py shows this
+  is the `returncode==0` assertion after the terminated build-slot wait, a queue-only termination. No
+  `muse-02/` entry exists. The prepared controller_muse2.py skips completed reports, refuses an existing
+  partial directory ("never replay silently") and uses a fresh `-muse2.log` opened with `xb`.
+- **Cleanup and preparation receipts.** preparation.jsonl covers audit, verify_proposals `--partial`,
+  cleanup and archive: all exit 0 with empty stderr. verify_proposals ran the unchanged helper
+  `852cd7f5…` and returned `verified_tasks muse 2`, `candidate_execution false`,
+  `hidden_tests_loaded false`. Cleanup returned PASS with settings revoked, the API reaped, key and
+  socket absent, no matching processes and a GPU peak of 17788 MiB. I cannot see host processes from
+  this PID namespace, so "no process remains" rests on the bound cleanup and checkpoint receipts.
+- **Scope and preservation.** Running my own scope checks gives: 507 TASKS.md table lines identical,
+  the ledger body from `## Current Delivery Amendment (2026-09-24)` identical, and the old scoreboard
+  as an exact prefix. My path SHA-256 values match the bound scope.json. scope.py and its stdout,
+  stderr and exit receipt are bound, which addresses the earlier L1/L2 lows. I re-hashed all 5 earlier
+  binding files and all 68 artifacts in preservation.json: all match, including the be161e97 GPT full
+  measurement. The 5 retained docs/reviews `.txt` files are byte-identical to their /lane/reviews
+  originals.
+- **Public-repository hygiene.** I grepped added lines for host paths, the username, credentials, key
+  material, e-mail addresses and agent-product names: no hits. "Muse" is the model under evaluation.
+  It has been used descriptively in committed evidence since the baseline commits, and is not used as
+  branding. The NVIDIA driver package name is a factual package identifier. Private archive contents
+  that contain host paths are not committed. The linked `docs/reviews/de8c204cbc52-json-object-model-output.txt`
+  exists.
+- **Claims.** Nothing is claimed as built, closed, qualified, adopted or release-ready. The doc says
+  "explicitly incomplete" and "not a solved-task score". The order of work is unchanged: remaining
+  Muse tasks and A4B come before tuning. No new row and no tick. MEASURE FIRST: the scoreboard has the
+  dated line, with context/output allowance, does-not-fit counted apart, causes, time and counters.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low L1 (backlog, T-309)**: docs/evidence/t303-json-object-muse-checkpoint-2026-11-13.md:57 prints a
+  Python dict repr (`{'stopped-below-token-limits': 2}`) in public prose. It is accurate but reads as a
+  debugging artefact. Fix: write "both attempts stopped below token limits", or use JSON quoting.
+- **Low L2 (backlog, T-309)**: /lane/reviews/json-object-muse-checkpoint-20261113-checkpoint.py:54 writes
+  `remaining_live_processes: []` as a literal instead of a fresh `group()` scan of non-zombie members.
+  It is effectively guaranteed by the loop just before it, which waits until every member is a zombie
+  or gone and otherwise fails the assertion. A recorded post-condition is still better evidence. Fix:
+  record `[v for v in group() if v['state']!='Z']` and assert that it is empty.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing development measurement checkpoint): the reporting commit is accurate,
+  traceable to raw logs, honestly labelled as 2/30 incomplete, and preserves all frozen inputs, earlier
+  seals, the ledger and the scoreboard prefix. Evaluation integrity, the confinement of the measured
+  path (no candidate execution) and the queue-checkpoint safety are supported by the bound evidence.
+  PASS for this checkpoint report only. No row closes, and this verdict closes none.
+
+Verdict: PASS
