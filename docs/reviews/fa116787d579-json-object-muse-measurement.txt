@@ -1,0 +1,65 @@
+Commit: fa116787d57905a775a5ac3af49837bd9acbba63
+Scope: json-object-muse-measurement
+
+Reviewer: independent session, Claude Opus 5.5, extra-high effort, read-only. Tier: core.
+Row: T-303 / T-306, NON-CLOSING full development partial-path measurement. Base: 76772f57552ea3a3457becd9f6b83d35dfc44f59.
+
+## Methods
+
+I worked only in /lane/review-checkout. I did not modify the repository and did not use the GPU, a model, a candidate, a hidden test or the held-out set. I extracted no archived code and imported or executed none of it. I streamed archive members into memory in a temporary directory outside the repository and deleted that directory afterwards. The live builder root /lane/state/jo1-20261113 is not mounted in this session (`ls` reports "No such file or directory"). So audit.py, verify_proposals.py and cleanup_muse10.py could not be rerun. Instead I independently recomputed the bound archived raw records, as the request allows.
+
+## Commands and results
+
+1. `git rev-parse HEAD` returns fa116787d57905a775a5ac3af49837bd9acbba63. The working tree is clean.
+   `git diff --check 76772f57… --` exits 0.
+   `git diff --stat` shows 3 files and +191/−0: TASKS.md +9, docs/evidence/coding-scoreboard.md +32, docs/evidence/t303-json-object-muse-2026-11-13.md +150 (new). `--numstat` shows 0 deletions, so all 507 ledger table lines and the earlier scoreboard prefix are preserved. docs/reviews is unchanged, and no source, prompt, profile, task, threshold or permission file changed.
+2. `sha256sum` of the bindings file gives f4160efe9dad82d7ed584ae7c6a5d5963f14338801df2fb857bf6836db012f55, as stated. The final process scan gives 95a4c986d56b2e5a3934a441b1177e77566f808c08a1d02efd0cfb9ac2f24536, as stated. That scan reports PASS for this commit with an empty `matching_processes` list.
+   I hashed and size-checked all 23 bound artifacts myself: 23 of 23 match, and none is a symlink. These include the 171,355,373-byte archive, the 4,310,066-byte manifest, the verifier, audit, proposals, cleanup, gate, both lint files, the scope script, receipt and JSON, publisher and receipt, archive/prepare/finalize scripts, preservation, preparation, the Node binary and the Node licence.
+3. I read `python3 -B /lane/reviews/json-object-muse-20261113-verify.py` first. It reads the tar stream with `r|gz`, uses no extraction, imports and no subprocess, and rejects absolute paths, `..`, non-files, token or key names and .gguf files. It prints PASS with:
+   - 22,362 files, 2,283 repository inputs and 16 private inputs
+   - 30 tasks and 19 strict ungraded proposals
+   - causes: edit 3, format 4, timeout 4, ungraded 19
+   - tokens 174,326 in / 163,130 out, counter coverage 27
+   - request/check 4716.746531825978 s, reserved 5131.158806022053 s
+   This is exactly the expected output.
+4. The live builder root is absent (see Methods). I wrote my own recomputation, which differs from the builder's. It does the following:
+   - It re-streams the archive and rehashes every member against the manifest: 22,362 of 22,362 match, with no duplicates, no missing files and only regular files.
+   - It reads each batch's `batch.json`, `record.json`, `request.json`, `events.ndjson`, `checked.json`, `upstream-request-NN.json` and `backend-slice.log`.
+   - Its counter parser is a different method: it takes the last `launch_slot_` task id in each slice and then that task id's own `prompt eval time` / `eval time` lines.
+   Results:
+   - All 30 published per-task rows (input tokens, output allowance, observed output, cause, request/check to 3 decimals) match exactly, with 0 differences. The last task is dev-rust-001, and there are 30 unique tasks.
+   - Totals match: 19/4/3/4, 174,326 / 163,130, coverage 27, 4716.747 s, 5131.159 s = 85.519 GPU job minutes. Input ranges 2910–8341 and allowance 24395–29826. Allowance equals `min(32768, 32768 - n - 32)` for every task, and does-not-fit is 0.
+   - Every upstream body has exactly the keys {model, messages, stream:false, max_tokens, n:1, response_format:{"type":"json_object"}}. Its messages equal request.json, and max_tokens equals the record's requested output. Every task has a single turn, one terminal event and `retries` 0, and is ungraded. There are 2 upstream requests per pair, so no repair, retry or replay.
+   - All 19 proposals: the SHA-256 of the checked change content equals the record's candidate_sha256 and the manifest's muse-candidates entry, with no base fallback. The 7 strict refusals and 4 timeouts carry base fallbacks. All 26 answer.txt files equal the concatenated text events.
+   - Only dev-004/011/012 lack final counters. Dev-027 (timeout) has 13,044 final output counters, and its prompt counter of 7971 equals its preflight count.
+   - Across all 15 pairs, the profile, policy, launcher, preparation script, runtime manifest, API hash, model record and backend command are each identical. Only the loopback endpoint port, the state root, the memory peak and the media marker vary. Settings are json_object, complete, 300000 ms idle and total. The GPU peak ranges 17620–17937 MiB, resource_guard_error is null everywhere, settings are revoked, and api-exit is reaped in all 15.
+   - The backend sandbox is `bwrap --unshare-all --disable-userns --clearenv --cap-drop ALL`. The server listens on a Unix socket only, with `--offline`, a read-only model and runtime, and n_ctx 32768. The driver tuple is xorg-x11-drv-nvidia-cuda-615.71.09-3.fc44.x86_64, marked "changed since preparation".
+   - Controller histories (all ten logs and launches, nine queue checkpoints):
+     - Controller 1 completed pair 00, 2 completed 02, 3 completed 04–10, 4 completed 12–20 and 5 completed 22. Controllers 6–9 started no task. Controller 10 alone logged completions 26, 28 and 30 and then "COMPLETE; no candidate execution or grading."
+     - Every checkpoint reports next_job_directory_absent, no GPU wrapper entered, no model attempt started and no remaining live processes.
+     - The nine queue waits (733.337, 454.539, 836.680, 911.025, 569.440, 666.229, 386.389, 584.815 and 509.793 s) equal each checkpoint's `next_reservation_log_age_seconds`.
+     - controller_muse10.py skips completed pairs, asserts that no partial directory exists ("never replay silently"), runs each pair through build-slot → gpu-slot with a 900 s cap, and sleeps 30 s outside both reservations. resume_muse10.py asserts that muse-24 is absent before launch and that controllers 1–10 have no live processes.
+   - The bound verify, publish, finalize, prepare, archive and scope scripts byte-match the archived `*_muse10.py` variants and not the `*_muse9.py` ones. prepare_helpers_muse10.py derives them by text substitution and writes them with `open('x')`. Nothing indicates that the old full-helper9 set ran.
+   - Dev-012 timing: in muse-10's dev-012 slice, dev-011's task 0 keeps generating until `cancel task` at 5.16.941. Dev-012 launches at 5.16.946, and the slice ends near 10.06 (about 300 s window). This leaves about 10–11 s of cancelled dev-011 generation inside dev-012's window, which matches the note and the linked checkpoint-12 review.
+   - Cleanup: I read the archived cleanup_muse10.py. It checks reports, revocation, reaping, absence of api-key/model.sock and a /proc scan. Its bound receipt shows PASS for all 15 pairs. My own `ps` scan shows no llama-server, local API, controller, batch.py or gpu-slot process. Only this review's shell and its sandbox are running.
+5. Node is absent from PATH. Using a symlink to the retained binary (v24.15.0) and `CARGO_TARGET_DIR=/lane/state/review-target`, I ran `python3 -B scripts/local_agent_fast_gate.py --base 76772f57…`. It printed `FAST GATE: PASS`: `git diff --check` exit 0, `--lint-untracked` exit 0, and markdownlint-cli2 "Linting: 3 files … 0 issues", on exactly the 3 changed files. The bound direct CLI and API lint receipts each cover exactly the same 3 files with 0 issues.
+6. The current SHA-256 values of TASKS.md (177556f7…), coding-scoreboard.md (0531aca0…) and the evidence file (cca21ba8…) equal the bound scope JSON and `git show HEAD:`. Other checks:
+   - All four added relative links resolve.
+   - The retained docs/reviews copies of 0da28fb26805-…checkpoint24, de8c204cbc52-…model-output and dd19baea2e52-…checkpoint12 are byte-identical to their /lane/reviews originals. The de8c204 review ends `Verdict: PASS`.
+   - Owner notes 2026-11-11 are already recorded (decisions 0204 and 0205, with retained reviews), and this commit does not touch the plan.
+
+Privacy and IP: the added lines contain no host path, username, hostname, credential, endpoint, private sibling project or other product name, and no patent reference. Pre-existing licensor/author attribution in LICENSE, README and similar files is intentional and outside this diff. The bound archive does contain the private host home path in its bwrap command and profile, but it lives in /lane/reviews and is not committed. The 30 retired auth tokens are excluded and no weights are packaged; the manifest flags confirm this.
+
+Evaluation integrity: no held-out task was loaded or executed (`held_out_executed` is false in all 15 batches, and the audit and policy say so). No candidate, hidden test or native execution occurred. No feedback or retry happened, and no tuning change is in this commit. The scoreboard keeps "Unavailable" for both pass columns and labels 19/30 as strict ungraded proposals, not solved tasks. Failures are counted: 11 non-proposals stay in the denominator, and does-not-fit (0) is reported separately. The MEASURE FIRST line is present for 2026-11-13 and states the context/output allowances, the changed variable and the cause breakdown. Each number traces to raw logs as recomputed above.
+
+## Findings
+
+No critical, high or medium findings.
+
+- Low (backlog, T-309 cancellation/deadline bookkeeping): docs/evidence/t303-json-object-muse-2026-11-13.md:62–64 and the dev-027 row at :97. In muse-26/collection/dev-027/backend-slice.log the backend releases the slot without any `cancel task` line: `stop processing: n_tokens = 21014, truncated = 0`, with total time 299977.56 ms. The client timeout fires at 300.013 s, so the backend finished about 35 ms before the deadline, but the result was recorded as `chat.transport.timeout`. The report's "transport outcomes alone do not establish root cause" is accurate, so this is not mislabelled. However, a near-deadline completion counted as a transport timeout matters when weighing the 300 s total deadline in later tuning. Suggested fix, not required here: note the near-deadline completion in the audit's per-task backend-termination detail.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing measurement increment, json-object-muse-measurement): PASS for this exact reporting commit. The rows correctly remain OPEN, and no tick or closure is claimed. This verdict closes no row and approves no tuning, model role or release.
+
+Verdict: PASS
