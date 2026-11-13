@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The [JSON-object GPT-OSS repeat](docs/evidence/t303-json-object-gpt-2026-11-13.md)
+finishes all 30 frozen development tasks at source
+`40cad6472560e47314a55ddb1f45e2c4c22b1792`: 12/30 strict ungraded proposals.
+Task grades and retries remain unavailable; no candidate or held-out test ran.
+Source/record audit, helper reproduction, cleanup and archive verification pass.
+Two prepared profiles still require this repeat before further tuning, except
+high/medium review fixes. T-303/T-306 remain open; core review is required,
+with no new row or completion tick.
+
 The retained [independent GPT-OSS checkpoint review](docs/reviews/77cd9eefb3c2-json-object-gpt-checkpoint.txt)
 returns **Verdict: PASS** for exact reporting commit
 `77cd9eefb3c2f9ed2d4d51df2bf7478dbdb7cbd8`, with no high or medium finding.
