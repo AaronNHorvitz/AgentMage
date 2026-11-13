@@ -1938,3 +1938,31 @@ Cancellation latency remains T-309 backlog. Counts and sealed inputs stay
 unchanged; this approves only the cumulative 12/30 partial-path report.
 Muse is resuming, with A4B next before tuning except high/medium fixes.
 T-303/T-306 stay open and no row closes.
+
+## Muse JSON-object cumulative checkpoint — 2026-11-13 (22 of 30 tasks)
+
+Source: `40cad6472560e47314a55ddb1f45e2c4c22b1792`. **22/30 tasks attempted; 8 remain.**
+This includes the earlier two-task and 12-task prefixes; do not add checkpoint lines.
+Available partial path: Rust source selection → credential-owning chat → unchanged
+strict checker. Full repository retrieval, native execution, tests and retries
+remain unavailable; this is not a solved-task score or a completed measurement.
+
+| Date | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU job min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | muse (22/30 attempted) | 32768 / 24395–29826 | Unavailable | Unavailable | 14/22 | Not run | 3607.273 | 65.515 | 125470 / 115890 |
+
+Changed variable: trusted JSON-object output request, verified in all 22 upstream
+bodies. Complete framing, prompts, selection, strict checker, profiles, byte
+ceilings and 300-second idle/total deadlines stay fixed. Output remains
+`min(32768, 32768 - rendered input tokens - 32)`; does not fit: 0/22 attempted.
+Causes: 3 `generation-refused:error:chat.transport.timeout`, 2 `strict-edit-refused:code.proposal.edit`, 3 `strict-edit-refused:code.proposal.format`, 14 `ungraded-proposal`. Final counters cover 19/22 and include
+non-answer output; missing counters are not zero tokens. GPU minutes are reserved
+job wall including load/verification/cleanup, excluding queues, wrapper overhead
+and pauses; kernel time is unmeasured. The next pair's
+911.025-second shared-build wait ended before
+GPU entry or a new attempt. Resume tasks 23–24 without replay. Audit, helper
+reproduction, cleanup and archive verification pass; see the
+[checkpoint evidence](t303-json-object-muse-checkpoint-2026-11-13-22-tasks.md). No candidate tests, feedback, retries, hidden or
+held-out tests ran; native admission and original-control blockers remain. The
+driver remains unqualified. Remaining Muse tasks and A4B precede tuning except
+high/medium fixes. T-303/T-306 stay open; independent core review is required.
