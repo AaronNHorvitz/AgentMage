@@ -1,0 +1,120 @@
+Commit: ebf1db8defc74ef4d49fe4c840ef8551f39cca36
+Scope: json-object-31b-measurement
+
+Reviewer: independent session (Claude Opus 5.5, extra-high effort), read-only. Pinned checkout
+/lane/review-checkout. Base 2c533ee8ab3e9c3aaf185107558047fe1c782cbd. Row: T-303 / T-306
+non-closing development measurement, tier core. GPU not used by the reviewer.
+
+## Methods and commands
+
+1. Commit identity and diff.
+   - `git rev-parse HEAD` returned ebf1db8defc74ef4d49fe4c840ef8551f39cca36.
+   - `git diff --check 2c533ee8ab3e9c3aaf185107558047fe1c782cbd --` returned exit 0.
+   - `git diff --stat 2c533ee8..HEAD` showed three files, all additions only (163 lines added, 0 removed):
+     TASKS.md (+9), docs/evidence/coding-scoreboard.md (+27, appended after line 1710),
+     docs/evidence/t303-json-object-31b-2026-11-13.md (new file, 127 lines). No source, task, hidden test,
+     threshold, SBOM, review file or status line changed. The scoreboard's earlier content is unchanged.
+   - `sha256sum` of the three files matches `path_sha256` in the bound scope.json
+     (6ee7dddc…, 6d8332c0…, 93556668…).
+   - Source lineage: 40cad647 is an ancestor of de8c204c, and de8c204c is an ancestor of HEAD.
+     `git diff --stat 40cad647 de8c204c` touches only TASKS.md, the scoreboard and one evidence file. The
+     source PASS for de8c204c therefore covers the measured product source 40cad647.
+
+2. Bindings. `sha256sum /lane/reviews/json-object-31b-20261113-bindings.json` returned
+   8f2d7084aa0873df26c97b7e7304d04a95d1ca5fed33a2611bb055fd572df9ed, matching the request. I recomputed
+   the size and SHA-256 of all 10 bound artifacts: all match. That includes archive ef690d06… and
+   manifest 45720aad…. The 10 earlier E4B bindings also still match their manifest, so those artifacts
+   are unchanged.
+
+3. Verifier. I read `/lane/reviews/json-object-31b-20261113-verify.py` (97 lines, sha 506b65ae…, bound)
+   in full before running it. It streams the archive with `tarfile` mode `r|gz` and `extractfile()` into
+   memory only. It rejects absolute paths, `..` parts, non-regular members, token files and `.gguf` files.
+   It parses only JSON and regex text and imports or executes nothing from the archive.
+   - `python3 -B /lane/reviews/json-object-31b-20261113-verify.py` exited 0 in 1.8 s with
+     status PASS: 21950 files, 2283 repository + 16 private inputs, 30 tasks, 26 strict ungraded
+     proposals, causes {ungraded-proposal 26, strict-edit-refused:code.proposal.format 1,
+     strict-edit-refused:code.proposal.edit 3}, 215953 / 31604 tokens, counter coverage 30,
+     request/check 1395.988649751962 s, reserved job wall 1958.2986642219475 s. The output is identical
+     to the bound verification.json.
+   - The verifier enforces, per task: the upstream body equals exactly
+     `{model, messages, stream:false, max_tokens:budget, n:1, response_format:{"type":"json_object"}}`;
+     budget = min(32768, 32768 − preflight − 32); preflight equals the backend prompt-eval count; one
+     slot launch per backend slice; zero retries; ungraded; candidate hashes bound; the 300 s idle and
+     total deadlines; settings revoked and APIs reaped.
+
+4. My own checks beyond the verifier, all streamed in memory with nothing extracted to disk:
+   - Per-task table. I parsed all 30 rows of the evidence table and compared each with
+     audit.json `development`: preflight input, allowance, observed input/output, cause and seconds (to
+     ±0.0005). There are 0 mismatches. The columns sum to 215953 input, 31604 output and 1395.9886 s.
+     Ranges are input 3225–9734 and allowance 23002–29511. 32.638 equals 1958.299 / 60.
+   - Terminations. All 30 `events.ndjson` files have exactly one terminal event:
+     `{"type":"complete","finish":"stop"}` ×30. Every observed output is below its allowance, and the
+     backend logs show `truncated = 0`. This supports "stopped-below-token-limits: 30".
+   - JSON mode. All 30 `answer.txt` files parse as JSON. The capture relay in `batch.py` (lines
+     ~116-121) asserts `response_format == {"type":"json_object"}` on every forwarded body before it
+     records the body. So the field is added by trusted API settings, and the capture is of the
+     actual upstream body.
+   - Secrets. A credential-pattern scan of the upstream bodies, events and answers hit only repository
+     source text (`preauthorization_*` identifiers). Bodies contain no headers. 30 retired token files are
+     excluded (manifest `excluded_retired_auth_tokens: 30`) and no `.gguf` file is present.
+   - No hidden replay. The E4B manifest, archived before this run, contains no `gemma4-31b-NN` job
+     directory. All 15 31B job directories have only a `-reservation-resume1.log`.
+     `controller_resume1.py` refuses to replay a partial directory
+     (`assert not directory.exists()`). The controller log runs 2→30 and ends with
+     `COMPLETE; no candidate execution or grading.`
+   - Held-out integrity. `collect.py` iterates only `suite.development_tasks()`. audit
+     `development_sha256` 0c2a0624… equals `DEVELOPMENT_SHA256` at scripts/coding_eval_suite.py:33.
+     `batch.py` is documented as having "No hidden-test entry". The audit records
+     held_out_executed=false and hidden_tests_executed=false. This commit changes only documents, so no
+     tuning content is introduced.
+   - Claimed identities match the archive. API a8995c15… and helper 852cd7f5… match the manifest. The
+     model sha 05e0fa14… is 17155893600 bytes. Threads 4, temp 0, seed 42, q8_0 KV, batch 256/128 and
+     `enable_thinking:false` match the launch command and `model_identity`. The platform tuple's
+     `nvidia_package` is `xorg-x11-drv-nvidia-cuda-615.71.09-3.fc44.x86_64`, with disposition "changed
+     since preparation" and `coding_qualification: not-qualified`. The controller command uses both
+     `/tools/build-slot` and `/tools/gpu-slot … 900`, matching the wrapper wording. The bound cleanup.json
+     reports 15/15 settings revoked, APIs reaped and keys/sockets absent, no matching processes, and
+     GPU peak 20195–20777 MiB.
+   - Prior repeat comparison. policy.json `comparison` states that only the output-format request
+     changes. `response_mode: complete`, retries 0, `test_feedback: false`. The disclosure that prior
+     controls are unavailable is carried into the evidence.
+
+5. Fast gate.
+   `PATH=/lane/state/tooling/node-v24.15.0-linux-x64/bin:$PATH python3 -B scripts/local_agent_fast_gate.py --base 2c533ee8…`
+   ran with `git diff --check` exit 0 and `--lint-untracked` exit 0. The markdownlint step returned 127
+   (`Missing executable: node; no automatic download`), so the gate reports FAIL here. The node directory
+   does not exist in this review environment. I did not fetch tooling, and I do not claim the lint was
+   rerun. Instead I inspected the bound gate.log, which shows markdownlint-cli2 v0.23.2 with "0 issues in
+   0 files", FAST GATE: PASS, and the same three paths. The bound direct-lint.json reports 0 issues for
+   each of the three documents. As a manual check under the repository config (MD013 disabled), every
+   table in the two touched evidence documents has consistent column counts.
+
+6. Public-repository scan of all added lines for private paths, usernames, e-mail, hostnames,
+   `/lane/`, credentials, private sibling projects and other agent products: no hits. The archive does
+   contain private host paths, but it is private lane state and nothing from it is committed. Model names
+   are used descriptively, consistent with earlier accepted rows.
+
+## Assessment against the brief
+
+- Honest labelling. The documents call the proposals "strict ungraded proposals", say outright that a
+  proposal is not a solved task, give first-attempt and within-budget passes as Unavailable, mark held-out
+  as Not run, describe GPU minutes as reserved job wall and not kernel time, and call the driver tuple
+  unqualified. They claim no role, quality improvement, closure or release.
+- MEASURE FIRST. The scoreboard gets a new dated line. The changed variable (JSON-object request) is
+  stated, along with context 32768 and output allowances 23002–29511 with their formula. Does-not-fit
+  (0) is counted apart from refusals (3 edit, 1 format). Every number traces to the raw records (see 3–4).
+- Evaluation integrity: no violation found (see 4).
+- Order of work. The commit adds no new row, sub-row or tick. The remaining four profile repeats still
+  precede tuning, consistent with the base text ("five remaining" after E4B).
+- Confinement: no tool or loop code changes in this commit. The measurement executed no candidate.
+
+## Findings
+
+None at high, medium or low severity.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing development measurement, json-object-31b-measurement): PASS for this
+  reporting commit. The rows stay open, as the commit itself states. This verdict closes no row.
+
+Verdict: PASS

@@ -1735,3 +1735,9 @@ task-quality improvement is claimed. The four remaining profiles precede tuning.
 Source/record audit, helper reproduction, cleanup and archive verification pass;
 see [evidence](t303-json-object-31b-2026-11-13.md). T-303/T-306 remain open;
 independent core review is required and no row closes.
+
+Independent [31B measurement review](../reviews/ebf1db8defc7-json-object-31b-measurement.txt)
+returns **Verdict: PASS** for exact reporting commit
+`ebf1db8defc74ef4d49fe4c840ef8551f39cca36`, with no findings at any severity.
+Counts, earlier entries and sealed inputs remain unchanged. T-303/T-306 stay
+open; no task grade or row closure is claimed.
