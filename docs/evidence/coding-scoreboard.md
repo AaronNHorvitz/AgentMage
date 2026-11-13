@@ -1878,3 +1878,13 @@ Audit, helper reproduction, cleanup and archive verification pass; see the
 held-out tests ran; native admission and original-control blockers remain. The
 driver remains unqualified. Remaining Muse tasks and A4B precede tuning except
 high/medium fixes. T-303/T-306 stay open; independent core review is required.
+
+## Independent GPT-OSS measurement review retained — 2026-11-13
+
+The [independent core review](../reviews/be161e975746-json-object-gpt-measurement.txt)
+returns **Verdict: PASS** for exact reporting commit
+`be161e975746f8f00ff9c3b7843904d334c4b1db`, with no findings at any severity.
+Measured counts and sealed inputs remain unchanged; this is a reporting verdict,
+not another measurement or a solved-task score. Muse is resuming and A4B follows
+before further tuning, except high/medium fixes. T-303/T-306 remain open and no
+row closes.

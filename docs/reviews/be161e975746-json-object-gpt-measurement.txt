@@ -1,0 +1,144 @@
+Commit: be161e975746f8f00ff9c3b7843904d334c4b1db
+Scope: json-object-gpt-measurement
+
+Reviewer: independent session, Claude Opus 5.5 at extra-high effort, with read-only access to the repository.
+Frozen checkout: /lane/review-checkout. Base: 7121089bb3b267b12e55b8d9963012a82e6fe572.
+Row: T-303 / T-306, a non-closing development measurement. I did not use the GPU, run a model, execute a
+candidate, run hidden or held-out tests, extract the archive or import archived code.
+
+## Methods, commands and results
+
+- `git rev-parse HEAD` and `git rev-parse be161e97…` both return be161e975746f8f00ff9c3b7843904d334c4b1db.
+  `git diff --stat` against the base touches only TASKS.md (+9), docs/evidence/coding-scoreboard.md (+27)
+  and docs/evidence/t303-json-object-gpt-2026-11-13.md (+139, new). Zero lines are removed.
+- `git diff --check 7121089b… be161e97… --` exits 0.
+- `python3 -B scripts/local_agent_fast_gate.py --lint-untracked` exits 0.
+- `/lane/reviews/42612ca9787f-a4b-node node_modules/.bin/markdownlint-cli2 ./TASKS.md
+  ./docs/evidence/coding-scoreboard.md ./docs/evidence/t303-json-object-gpt-2026-11-13.md` runs on
+  Node v24.15.0 and markdownlint-cli2 v0.23.2 / markdownlint v0.41.1. Result: "Linting: 3 files. Summary:
+  0 issues in 0 files", exit 0. The binary's SHA-256 is d1de76d8…932c, which matches its binding. I reran
+  the lint myself; this is not a reliance on logs.
+- The binding check (the snippet from the request) prints "PASS 21 artifact bindings". The bindings'
+  source_commit is 40cad647….
+- `bash /tools/build-slot python3 -B /lane/reviews/json-object-gpt-20261113-verify.py` exits 0 after
+  11m54s and reports:
+  - 22,065 verified files, with 2,283 repository and 16 private inputs;
+  - 30 tasks and 12 strict ungraded proposals;
+  - causes: 10 `generation-refused:error:chat.response.incomplete`, 4 `strict-edit-refused:code.proposal.edit`,
+    4 `…format` and 12 `ungraded-proposal`;
+  - tokens 188409 / 475158, counter coverage 30;
+  - request/check 2396.3386961109645 s and reserved wall 2571.144068595022 s;
+  - candidate_execution false and hidden_tests_executed false.
+  Before running it I read the whole script. It streams the tar archive (`r|gz`), hashes every member,
+  rejects absolute paths, `..`, non-files, token files and `.gguf` files, keeps selected records in memory,
+  and imports or executes nothing from the archive. Its output equals the bound verification.json and
+  verification-receipt.json (exit 0, empty stderr).
+
+## Additional independent checks
+
+- **Public table against the audit.** I parsed all 30 per-task rows in the evidence document and compared
+  them with the bound audit's `development` entries: input, allowance, observed output, cause and seconds
+  to 3 decimals. Zero mismatches.
+  - Preflight input equals observed input for every task.
+  - Every allowance equals `min(32768, 32768 - input - 32)`. Input range is 2988–8517 and allowance range
+    24219–29748, as stated.
+  - Column sums are 188409 / 475158, and the unrounded seconds sum is 2396.3386961109645.
+  - Backend terminations are 10 output-cap and 20 stopped below the token limit. Output-cap holds exactly
+    where observed output equals the allowance, and exactly for the 10 incomplete responses. The verifier
+    takes observed output from the raw backend slices, so the split traces to raw logs.
+  - Does not fit: 0.
+- **Scope hashes.** scope.json's path_sha256 values (641b6483…, 1681e34e…, 6cc8638b…) equal `git show
+  HEAD:<path> | sha256sum` for all three files.
+- **Bound outputs against archived copies.** The bound audit, proposals and cleanup files are
+  byte-identical to the archived audit-gpt-oss.json, proposal-verification-gpt.json and cleanup-gpt-oss.json.
+  The bound archive.py, prepare.py and publish.py are byte-identical to the archived archive_gpt4.py,
+  prepare_report_gpt4.py and publish_gpt4.py.
+  - preparation.jsonl records argv, timing, exit 0, stdout and empty stderr for the audit,
+    verify_proposals, cleanup_gpt4 and archive_gpt4 steps. Checkpoint low L1 (stderr and exit capture) is
+    addressed.
+  - scope.py is bound next to scope.json, and scope-receipt.json records exit 0 with empty stderr.
+    Checkpoint low L2 is addressed.
+- **Helper reproduction.** The archived verify_proposals.py, audit.py and batch.py, the helper binary
+  (852cd7f5…), the API binary (a8995c15…), policy.json and frozen-inputs-v2.json (79a130de…) are all
+  byte-identical to the copies in the previously reviewed 27B and four-task-checkpoint archives. The source
+  snapshot has zero differing files against either. development_sha256 (0c2a0624…) and the freeze hash equal
+  those in the 31B and 27B audits.
+  - `git diff de8c204c… 40cad647…` touches only three documentation files, so the measured source is the
+    one under the retained PASS (docs/reviews/de8c204cbc52-json-object-model-output.txt, "Verdict: PASS").
+  - 40cad647 is an ancestor of HEAD.
+- **Raw-log tracing from a second read-only streaming pass.** I kept the small control files in memory
+  only; temporary copies outside the repository have since been deleted.
+  - The final `reserved_work_seconds` lines in the 15 reservation logs equal each pair's
+    batch-report.json. Pairs 00 and 02 come from the gpt2 controller and pairs 04–28 from gpt4.
+  - Those lines sum to 2571.144068595022 s, which is 42.85240114325037 min.
+  - The logs list 30 task lines and 30 unique tasks.
+  - Every pair report has the nvidia package `xorg-x11-drv-nvidia-cuda-615.71.09-3.fc44.x86_64`, disposition
+    "changed since preparation", n_ctx 32768, temperature 0, seed 42, 4 threads, q8_0 K/V, batch 256 /
+    microbatch 128, `reasoning_effort: medium`, model SHA-256 27cd6c43… at 12,109,566,624 bytes,
+    coding_qualification not-qualified, and response_format json_object.
+- **Controller behaviour.** controller_gpt4.py skips completed pairs. It refuses a partial job directory
+  ("never replay silently"), runs each pair under build-slot → gpu-slot with the 900 s cap, and sleeps
+  30 × 1 s outside both reservations between jobs. controller-gpt4.log ends with "COMPLETE; no candidate
+  execution or grading." controller-gpt4-launch.json records resume_first 4.
+- **Queue cancellations.**
+  - queue-checkpoint-gpt2.json: next_reservation_log_age_seconds 404.835.
+  - queue-checkpoint-gpt3.json: 618.869.
+  - Both record completed_tasks 4, next_pair_first 4, next_job_directory_absent true, gpu_wrapper_entered
+    false, model_attempt_started false and remaining_live_processes [].
+  - Both pair-04 reservation logs contain only the build-queue wait line. batch.py creates the job
+    directory before any model start, so its absence confirms that no attempt was made.
+  - The gpt1 checkpoint (411.9 s queued, zero attempts, job directory absent) is likewise attempt-free.
+  - None of this time enters the audit's causes or the reserved wall.
+- **Cleanup.** cleanup_gpt4.py checks all 15 reports for completed status, revoked settings, a reaped API,
+  no resource-guard error and an absent api-key and model.sock. It also checks for identical platform
+  tuples and for no matching controller, batch or API processes in /proc. Its bound output is PASS with
+  GPU peaks of 13584–13840 MiB, under the 22528 MiB ceiling.
+- **Archive packaging.** archive.py refuses symlinks and model weights (`.gguf`). It excludes exactly 30
+  retired token files under `/auth/` and asserts that none is named `api-key`. The manifest records
+  excluded_retired_auth_tokens 30, model_weights false and candidate_execution false.
+- **Preservation.** For each of the 4 earlier bindings in preservation.json (E4B, 31B, 27B and the GPT
+  partial), I re-hashed the bindings file and every listed artifact. All 47 are unchanged.
+  - The five retained earlier reviews under docs/reviews/*.txt are byte-identical to their originals in
+    /lane/reviews: de8c204cbc52, 95a53df95d2b, ebf1db8defc7, 9bdf034fa328 and 77cd9eefb3c2.
+  - The four-task checkpoint evidence and its scoreboard entry are untouched.
+- **Ledger.** TASKS.md has 507 table lines, identical before and after. The body from "## Current Delivery
+  Amendment (2026-09-24)" onward is identical. The base scoreboard is an exact prefix of the new one. The
+  TASKS.md addition is one prose paragraph, with no new row, completion tick or reordering.
+- **Public scope and privacy.** I scanned the added lines for host paths (/home, /var, /lane, /tmp), the
+  username, email, hostnames, credentials and URLs with userinfo, and found none.
+  - Model identifiers (GPT-OSS, E4B, 31B, 27B) and the distribution package name are descriptive profile
+    and package identifiers, not branding.
+  - The added text names no other agent product, private project or future product. Private home paths
+    and source model names appear only inside the private archive.
+- **Evaluation integrity.** The commit adds no task content, hidden test or held-out material. The policy
+  and audit record that the held-out set was not loaded, no hidden tests ran, retries are 0 and graded is
+  false. All 30 outcomes are counted, and failures are kept in the count rather than dropped.
+- **MEASURE FIRST.** The required scoreboard line is present. The changed variable, context 32768 and
+  output allowance 24219–29748 are stated. Does-not-fit (0) is counted separately from model failures.
+  Every number traces to raw records through the verifier and the checks above.
+- **Owner notes.** The commit does not change the plan, the order of work or the MEASURE FIRST sequence.
+  It claims nothing as built and names no other product. The one-runtime decision (0205) already exists.
+- **Not applicable.** This is a reporting-only commit with no source, permission, dependency or UI change,
+  so there is no confinement boundary, UI screen or supply-chain input to re-test.
+
+## Observation (not a finding)
+
+batch.py starts `reserved_work_seconds` after hashing the 2,283 + 16 frozen inputs, and that hashing runs
+inside the GPU reservation. "Including verification" in the evidence therefore covers model and runtime
+verification, not input hashing. The input hashing falls under the stated exclusion of "wrapper overhead".
+The earlier 27B review recorded the same. No change is needed for this row.
+
+## Findings
+
+None at any severity.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing development measurement): the completed 30-task GPT-OSS report is accurate,
+  traceable to raw records and honestly labelled.
+  - Strict proposals are not presented as solved tasks, task passes are "Unavailable", and GPU time is
+    reserved job wall, not kernel time.
+  - The driver is unqualified, and native admission and the grading-control blockers are disclosed.
+  - No row closes, and this verdict closes none.
+
+Verdict: PASS
