@@ -1966,3 +1966,32 @@ reproduction, cleanup and archive verification pass; see the
 held-out tests ran; native admission and original-control blockers remain. The
 driver remains unqualified. Remaining Muse tasks and A4B precede tuning except
 high/medium fixes. T-303/T-306 stay open; independent core review is required.
+
+## Muse JSON-object cumulative checkpoint — 2026-11-13 (24 of 30 tasks)
+
+Source: `40cad6472560e47314a55ddb1f45e2c4c22b1792`. **24/30 tasks attempted; 6 remain.**
+This includes the earlier 2-, 12- and 22-task checkpoints; never add their totals.
+Tasks 23–24 were already complete; no new attempt started in this reporting session.
+Available partial path: Rust source selection → credential-owning chat → unchanged
+strict checker. Full retrieval, native execution, tests and retries remain
+unavailable; this is not a solved-task score or a completed measurement.
+
+| Date | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU job min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | muse (24/30 attempted) | 32768 / 24395–29826 | Unavailable | Unavailable | 16/24 | Not run | 3773.161 | 68.555 | 138192 / 122753 |
+
+Changed variable: trusted JSON-object output request, verified in all 24 upstream
+bodies. Complete framing, prompts, selection, checker, profiles, byte ceilings and
+300-second idle/total deadlines stay fixed. Output remains
+`min(32768, 32768 - rendered input tokens - 32)`; does not fit: 0/24 attempted.
+Causes: 3 `generation-refused:error:chat.transport.timeout`, 2 `strict-edit-refused:code.proposal.edit`, 3 `strict-edit-refused:code.proposal.format`, 16 `ungraded-proposal`. Final counters cover 21/24 and include
+non-answer output; missing counters are not zero tokens. GPU minutes are reserved
+job wall including load, verification and cleanup; queues, overhead and pauses
+are excluded and active kernel time is unmeasured. The latest queue checkpoint
+waited 509.793 seconds for a shared build
+slot without GPU entry or a new attempt. Audit, helper reproduction, cleanup and
+archive verification pass; see [evidence](t303-json-object-muse-checkpoint-2026-11-13-24-tasks.md). No candidate tests, retries,
+hidden or held-out tests ran. Native admission and original-control blockers
+remain; driver unqualified. Resume tasks 25–26 without replay. Remaining Muse
+and A4B precede tuning except high/medium fixes. T-303/T-306 remain open;
+independent core review is required and no row closes.
