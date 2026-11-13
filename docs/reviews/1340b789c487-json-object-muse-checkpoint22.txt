@@ -1,0 +1,124 @@
+Commit: 1340b789c48741a2eacc6f780aba9f550cd7724e
+Scope: json-object-muse-checkpoint22
+
+# Independent review — cumulative 22/30 Muse JSON-object checkpoint (reporting only)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only, in the frozen checkout
+/lane/review-checkout. Base: f5ffa7e934c3f31066324e3866314099bded5d35. Row: T-303 / T-306
+(non-closing development measurement checkpoint). No GPU or model was used by the reviewer.
+
+## Scope confirmed
+
+- `git rev-parse HEAD` = 1340b789c48741a2eacc6f780aba9f550cd7724e (parent f5ffa7e9).
+- `git diff --stat base HEAD`: only TASKS.md (+10), docs/evidence/coding-scoreboard.md (+28) and
+  docs/evidence/t303-json-object-muse-checkpoint-2026-11-13-22-tasks.md (+129, new). 0 removed lines.
+- `git diff --name-only 40cad647… HEAD -- . ':!docs' ':!TASKS.md'` is empty. No source, prompt,
+  profile, task, threshold, permission or supply-chain file changed since the measured source.
+
+## Commands and results
+
+1. `git diff --check f5ffa7e9… --` → exit 0.
+2. `sha256sum /lane/reviews/json-object-muse-checkpoint4-20261113-bindings.json` →
+   65e7fc9114bc2566b1d7ff032548fb3e7cea9e46c792ac213cb7ac0ce769ebdb (matches request).
+   I hashed all 25 bound artifacts with my own script: 25/25 match on both SHA-256 and byte count,
+   including the 158,625,665-byte archive, the 3,295,408-byte manifest, the Node binary and its licence.
+   No unbound checkpoint4 file is present apart from the bindings file itself.
+3. `python3 -B /lane/reviews/json-object-muse-checkpoint4-20261113-verify.py` → PASS: 17,120 files,
+   2,283 repository and 16 private inputs, 22 unique tasks, 8 remaining, next_pair_first 22,
+   14 proposals, counters 19/22 (125,470 / 115,890), request/check 3607.273 s,
+   reserved 3930.899 s, no candidate execution or hidden tests. I read the verifier in full. It
+   streams the tar with no extraction and imports no archived code. It rejects absolute paths, `..`,
+   token or key files and GGUF files, binds every member to the manifest and all frozen inputs to the
+   manifest, and reconstructs all four controller logs, launches and queue checkpoints. For each task
+   it checks the upstream body equals messages plus `max_tokens = min(32768, 32768 - n - 32)` plus
+   `response_format: json_object`. It checks candidate hashes and recomputes counters from the raw
+   backend slices.
+4. Independent recomputation (my own parser, not the builder's): from the archive's raw
+   record.json, checked.json and backend-slice.log I get 22 records, 22/22 upstream bodies with
+   json_object, 125,470 input / 115,890 output, coverage 19 (missing dev-004, dev-011, dev-012),
+   request/check sum 3607.273 s and causes 14 / 2 edit / 3 format / 3 generation-refused. All agree
+   with the public text.
+5. Public table vs audit: all 22 rows in the evidence file match the archived
+   `audit-muse-checkpoint4.json`, which is byte-identical to the bound audit.json, on input, allowance,
+   observed output (Unavailable where null), cause and seconds. Ranges match: input 2910–8341 and
+   allowance 24395–29826. Model identity matches: SHA, bytes, 4 threads, temperature 0, seed 42,
+   q8_0 K/V, batch 256, microbatch 128, reasoning_strength medium. The API, helper and frozen-input
+   hashes in the evidence equal the manifest entries.
+6. Prefix integrity: the 2-task and 12-task evidence tables are byte-equal to the first 2 and 12
+   rows of the 22-task table. The scoreboard at HEAD starts with the exact base file. TASKS.md has
+   507 `|` lines at base and at HEAD, identical, so the old ledger body is unchanged. Every
+   addition is new prose at the top of the queue. The scoreboard states the checkpoint lines must not
+   be added together.
+7. Path hashes of the 3 changed files equal scope.json `path_sha256`.
+8. Preservation: all 7 earlier binding files match their recorded SHA-256 and their artifact lists.
+   All 120 earlier artifacts (10+10+13+14+21+23+29) match on hash and byte count, including
+   checkpoint12 (checkpoint3-…-bindings-final.json).
+9. Queue checkpoint:
+   - I read checkpoint.py. It acts only on the owned PGID 223 (= the controller PID; it asserts this
+     is not its own group) and verifies the controller command line first.
+   - After SIGSTOP it requires every group member to be in state T or Z and the job-directory set to
+     be still muse-00..muse-20.
+   - It allows only exact controller, build-slot→gpu-slot→batch.py 22, `sleep 1` and flock argv.
+     It requires that a build-slot member exists and that the 11 completed batch reports are
+     byte-unchanged. Only then does it send SIGTERM/SIGCONT to the owned group, and it waits for
+     no non-zombie member.
+   - checkpoint.json shows the 3 stopped owned processes, an empty remaining_live_processes and
+     next_reservation_log_age 911.025 s. The archived queue-checkpoint-muse4.json is byte-identical.
+   - The archived muse1–3 checkpoints give 733.337 / 454.539 / 836.680 s, as published.
+   - The manifest has no `muse-22/` path, only the one-line reservation log.
+10. Per-job reserved times are 124.1–625.1 s, all under the 900 s cap, and they sum to 3930.899 s
+    (65.515 min). cleanup.json: 11/11 settings revoked, APIs reaped, keys and sockets absent,
+    0 resource-guard errors, no matching processes, platform tuples consistent.
+11. The `/lane/state/tooling` mount is absent. I symlinked the bound Node v24.15.0
+    (/lane/reviews/42612ca9787f-a4b-node) into a /tmp PATH directory and ran
+    `python3 -B scripts/local_agent_fast_gate.py --base f5ffa7e9…` → FAST GATE: PASS (diff check,
+    untracked lint, markdownlint-cli2 v0.23.2 on 3 files, 0 issues).
+    Direct `markdownlint-cli2` on the 3 files → 0 issues. Direct `markdownlint/sync` API lint
+    (same config as the bound receipt) → 0 issues in each of the 3 files. The working tree is clean.
+12. Requested steps 4–5 (live audit_muse_checkpoint4.py, verify_proposals.py --partial): **not run**
+    because /lane/state/jo1-20261113 is not mounted in this session. I covered them instead with the
+    archived audit (byte-equal to the bound audit) and my own raw-log recomputation (item 4).
+13. Privacy and naming: a scan of the added lines for host paths, home directories, the username,
+    e-mail addresses, credential words, hostnames, held-out identifiers and agent or vendor product
+    names found nothing. Model aliases (Muse, A4B) and the distribution driver package name
+    are factual identifiers already used in reviewed files, not branding.
+    Links resolve: the source review de8c204cbc52, the checkpoint12 review dd19baea2e52 and the new
+    evidence file. Retained reviews in docs/reviews are unchanged (0 diff lines).
+
+## Evaluation integrity and honest-claim checks
+
+- Held-out: not run. The audit has `held_out_executed: false` and every batch has
+  `held_out_executed: false`. No source change exists, so nothing can have been tuned on held-out
+  content in this commit. The 22 manifest paths containing "hidden" are copies of the repository
+  file scripts/hidden_network_surface_evidence.py inside candidate trees, not hidden tests.
+- Failures counted, not dropped: 3 timeouts and 5 strict refusals appear in the rows and the cause
+  totals. Does-not-fit is 0/22 and is stated apart from model failures, with no claim about the
+  remaining 8. Missing counters are explicitly "not zero".
+- Labelling: every file says partial path, ungraded proposals, task passes Unavailable, no native
+  execution, no candidate, hidden or held-out tests, driver unqualified, and that the earlier
+  checkpoints are included and must not be summed. GPU minutes are described as reserved job wall
+  with kernel time unmeasured. The 911 s wait is described as queue checkpointing, not model failure
+  or GPU time. The checkpoint12 low L1 timing note is carried accurately (about 11 s of cancelled
+  dev-011 generation inside dev-012's window), and cancellation latency stays on the T-309 backlog.
+- MEASURE FIRST: a dated scoreboard line exists for this batch. It states context and output
+  budgets and the changed variable (json_object, verified in 22/22 bodies). The order of work stays
+  remaining Muse tasks and A4B before tuning. No row, tick or readiness is claimed.
+- Confinement surfaces: no code changed; nothing to reproduce for this reporting commit.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low (backlog)**: the flock allowlist in json-object-muse-checkpoint4-20261113-checkpoint.py
+  (the `flock=bool(a) and a[0]=='flock' and '-n' in a` line) accepts any `flock` argv containing `-n`
+  inside the owned group, rather than the exact build-slot flock command. This had no effect here:
+  no flock process was present, and signals go only to the owned PGID. Fix: compare against the exact
+  expected flock argv in future checkpoint helpers.
+
+## Per-row result
+
+- T-303 / T-306: the cumulative 22/30 development checkpoint report is accurate, traceable to raw
+  logs and honestly labelled. **PASS for this reporting commit only.** Both rows stay open, and no
+  row closes or is ticked by this verdict.
+
+Verdict: PASS
