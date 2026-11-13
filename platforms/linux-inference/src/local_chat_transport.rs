@@ -23,7 +23,7 @@ use zeroize::{Zeroize, Zeroizing};
 
 use crate::local_chat::{
     ChatError, ChatEvent, ChatFinish, ChatMessage, ChatResponseFormat, ChatResponseMode,
-    ChatStream, ChatUsage, LocalChatEndpoint, MAX_STREAM_BYTES, MAX_TEXT_BYTES,
+    ChatStream, ChatThinkingMode, ChatUsage, LocalChatEndpoint, MAX_STREAM_BYTES, MAX_TEXT_BYTES,
     decode_complete_chat, encode_chat_request,
 };
 
@@ -250,6 +250,7 @@ pub struct LocalChatTransport {
     limits: TransportLimits,
     response_mode: ChatResponseMode,
     response_format: ChatResponseFormat,
+    thinking_mode: ChatThinkingMode,
 }
 
 /// Completion confirmed at HTTP and codec EOF. Counts remain server reports;
@@ -433,6 +434,7 @@ impl LocalChatTransport {
             limits,
             response_mode: ChatResponseMode::Stream,
             response_format: ChatResponseFormat::Text,
+            thinking_mode: ChatThinkingMode::ProviderDefault,
         })
     }
 
@@ -467,6 +469,20 @@ impl LocalChatTransport {
         self.response_format
     }
 
+    /// Select an optional endpoint thinking control in trusted configuration.
+    /// No prompt, response validation, limit, approval or retry policy changes.
+    #[must_use]
+    pub fn with_thinking_mode(mut self, mode: ChatThinkingMode) -> Self {
+        self.thinking_mode = mode;
+        self
+    }
+
+    /// Requested thinking control, not proof that the endpoint honored it.
+    #[must_use]
+    pub const fn thinking_mode(&self) -> ChatThinkingMode {
+        self.thinking_mode
+    }
+
     fn authorized(&self, approval: &LocalChatApproval) -> Result<(), TransportError> {
         if self.endpoint != approval.0 {
             return Err(TransportError::Approval);
@@ -494,6 +510,7 @@ impl LocalChatTransport {
             include_usage,
             self.response_mode,
             self.response_format,
+            self.thinking_mode,
         )?);
         // Use the same serde message-array encoding as the frozen body. This
         // observes JSON bytes and roles, never a server's rendered prompt tokens.

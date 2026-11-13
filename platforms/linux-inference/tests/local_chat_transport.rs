@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 
 use agentmage_platform_linux_inference::local_chat::{
     ChatError, ChatFinish, ChatMessage, ChatResponseFormat, ChatResponseMode, ChatRole,
-    LocalChatEndpoint,
+    ChatThinkingMode, LocalChatEndpoint,
 };
 use agentmage_platform_linux_inference::local_chat_transport::{
     BearerKey, ChatCancellation, LocalChatApproval, LocalChatTransport, LocalProbeApproval,
@@ -27,10 +27,17 @@ fn complete_body() -> serde_json::Value {
 #[test]
 fn complete_mode_freezes_actual_body_and_reports_only_validated_text_and_optional_usage() {
     use sha2::{Digest, Sha256};
-    for (usage, format) in [false, true].into_iter().flat_map(|usage| {
+    for (usage, format, thinking) in [false, true].into_iter().flat_map(|usage| {
         [ChatResponseFormat::Text, ChatResponseFormat::JsonObject]
             .into_iter()
-            .map(move |format| (usage, format))
+            .flat_map(move |format| {
+                [
+                    ChatThinkingMode::ProviderDefault,
+                    ChatThinkingMode::Disabled,
+                ]
+                .into_iter()
+                .map(move |thinking| (usage, format, thinking))
+            })
     }) {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let endpoint =
@@ -39,10 +46,13 @@ fn complete_mode_freezes_actual_body_and_reports_only_validated_text_and_optiona
         let (client, approval) = connection(endpoint, limits());
         assert_eq!(client.response_mode(), ChatResponseMode::Stream);
         assert_eq!(client.response_format(), ChatResponseFormat::Text);
+        assert_eq!(client.thinking_mode(), ChatThinkingMode::ProviderDefault);
         let client = client
             .with_response_mode(ChatResponseMode::Complete)
-            .with_response_format(format);
+            .with_response_format(format)
+            .with_thinking_mode(thinking);
         assert_eq!(client.response_format(), format);
+        assert_eq!(client.thinking_mode(), thinking);
         let (tx, rx) = mpsc::channel();
         let task = thread::spawn(move || {
             let (mut socket, _) = listener.accept().unwrap();
@@ -63,6 +73,15 @@ fn complete_mode_freezes_actual_body_and_reports_only_validated_text_and_optiona
                 ),
             }
             assert!(body.get("stream_options").is_none());
+            match thinking {
+                ChatThinkingMode::ProviderDefault => {
+                    assert!(body.get("chat_template_kwargs").is_none());
+                }
+                ChatThinkingMode::Disabled => assert_eq!(
+                    body["chat_template_kwargs"],
+                    serde_json::json!({"enable_thinking":false})
+                ),
+            }
             assert!(body.get("tools").is_none());
             tx.send((
                 request.len() - start,

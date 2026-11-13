@@ -79,8 +79,8 @@ use agentmage_platform_linux::{
 };
 
 use agentmage_platform_linux_inference::local_chat::{
-    ChatFinish, ChatMessage, ChatResponseFormat, ChatResponseMode, ChatRole, LocalChatEndpoint,
-    encode_chat, encode_chat_with_usage,
+    ChatFinish, ChatMessage, ChatResponseFormat, ChatResponseMode, ChatRole, ChatThinkingMode,
+    LocalChatEndpoint, encode_chat, encode_chat_with_usage,
 };
 use agentmage_platform_linux_inference::local_chat_transport::{
     BearerKey, ChatCancellation, ChatCompletion, EndpointChatBinding, LocalChatApproval,
@@ -678,6 +678,8 @@ struct Settings {
     response_mode: ChatResponseMode,
     #[serde(default)]
     response_format: ChatResponseFormat,
+    #[serde(default)]
+    thinking_mode: ChatThinkingMode,
 }
 
 fn default_total_timeout_ms() -> u64 {
@@ -1945,7 +1947,8 @@ fn handle(
                     "total_timeout_ms":state.configured.as_ref().map(|c| c.limits.total.as_millis()),
                     "idle_timeout_ms":state.configured.as_ref().map(|c| c.limits.idle.as_millis()),
                     "response_mode":state.configured.as_ref().map(|c| c.transport.response_mode()),
-                    "response_format":state.configured.as_ref().map(|c| c.transport.response_format())}),
+                    "response_format":state.configured.as_ref().map(|c| c.transport.response_format()),
+                    "thinking_mode":state.configured.as_ref().map(|c| c.transport.thinking_mode())}),
             )
         }
         ("PUT", "/v1/settings") => {
@@ -1976,7 +1979,8 @@ fn handle(
             };
             let transport = transport
                 .with_response_mode(input.response_mode)
-                .with_response_format(input.response_format);
+                .with_response_format(input.response_format)
+                .with_thinking_mode(input.thinking_mode);
             let mut state = state.lock().map_err(|_| ApiError::Io)?;
             if state.active.is_some() || state.runtime_excludes_manual() {
                 return error(socket, 409);

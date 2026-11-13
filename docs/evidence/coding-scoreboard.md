@@ -2107,3 +2107,35 @@ The largest observed refusal cause selects the next work after review findings.
 Source/record audit, helper reproduction, cleanup and archive verification pass;
 see [evidence](t303-json-object-a4b-2026-11-13.md). T-303/T-306 remain open;
 independent core review is required and no row closes.
+
+## A4B thinking diagnostic — 2026-11-13 (two tasks per configuration)
+
+Source: `40cad6472560e47314a55ddb1f45e2c4c22b1792`, using the previously frozen
+API and helper. These are additional diagnostic attempts on dev-001/dev-002,
+separate from the completed 180-attempt repeat. They do not form another full
+suite or measure the newly added API thinking setting.
+
+| Date | Model / server template option | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU job min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | gemma4-26b-a4b / default | 32768 / 23172–23234 | Unavailable | Unavailable | 0/2 | Not run | 385.558 | 6.805 | 19066 / 46406 |
+| 2026-11-13 | gemma4-26b-a4b / enable_thinking:false | 32768 / 23170–23232 | Unavailable | Unavailable | 2/2 | Not run | 54.061 | 1.282 | 19070 / 2893 |
+
+Changed variable: the server template option only. JSON-object output, complete
+framing, prompts, strict checks, 300-second idle/total deadlines and output formula
+`min(32768, 32768 - rendered input tokens - 32)` stay fixed. The template choice
+adds two rendered input tokens per task; does not fit: 0 in either pair.
+Baseline causes: 2 `chat.response.incomplete`, both empty answers with separate
+reasoning and output-limit termination. Disabled causes/outcomes: 2 strict
+ungraded proposals, both normal stops. Counters cover all four attempts and
+include non-answer output. No candidate tests, feedback, retries or held-out
+execution ran. Native admission and original grading controls remain blockers.
+
+GPU minutes are reserved job wall, including load, verification and cleanup,
+excluding queues and wrapper overhead; active kernel time is unmeasured. Each
+pair used a separate 900-second GPU reservation through both resource wrappers,
+with both released between pairs. An earlier diagnostic startup used another
+191.567 seconds / 3.193 GPU job minutes and ran zero tasks: its Unix socket path
+was too long. That failed reservation is separate from both rows. No resource
+limit was raised. The driver tuple remains unqualified. A two-task diagnostic
+establishes no model role or task-quality improvement. The full post-change
+development repeat remains pending; T-303/T-306 stay open.

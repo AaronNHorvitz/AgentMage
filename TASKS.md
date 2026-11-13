@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The [trusted thinking-control decision](docs/decisions/0208-trusted-endpoint-thinking-control.md)
+responds to the largest measured refusal cause. Two development diagnostics
+observe empty answers with output-limit reasoning; disabling the server's
+thinking option yields 2/2 strict ungraded proposals, not task passes.
+The API adds an explicit trusted option; independent core review and a full
+post-change development repeat remain required. T-303/T-306 remain open.
+No new row, completion tick, grading control or held-out change is introduced.
+
 The retained [independent full A4B measurement review](docs/reviews/f3500e7d3dfb-json-object-a4b-measurement.txt)
 returns **Verdict: PASS** for exact reporting commit
 `f3500e7d3dfb732540df0217a36853a84efc0360`, with no high or medium finding.

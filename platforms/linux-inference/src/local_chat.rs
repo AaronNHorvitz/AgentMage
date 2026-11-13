@@ -186,6 +186,18 @@ pub enum ChatResponseFormat {
     JsonObject,
 }
 
+/// Trusted request for a supporting endpoint's optional thinking control.
+/// It changes generation only; the endpoint can ignore or reject the extension.
+#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ChatThinkingMode {
+    /// Omit the extension and retain the endpoint's own default.
+    #[default]
+    ProviderDefault,
+    /// Request `chat_template_kwargs: {"enable_thinking": false}`.
+    Disabled,
+}
+
 /// Encodes a single-choice streaming request, with no implicit system prompt,
 /// tools, fallback or provider fields. Returned bytes are private conversation data.
 pub fn encode_chat(
@@ -200,6 +212,7 @@ pub fn encode_chat(
         false,
         ChatResponseMode::Stream,
         ChatResponseFormat::Text,
+        ChatThinkingMode::ProviderDefault,
     )
 }
 
@@ -217,6 +230,7 @@ pub fn encode_chat_with_usage(
         true,
         ChatResponseMode::Stream,
         ChatResponseFormat::Text,
+        ChatThinkingMode::ProviderDefault,
     )
 }
 
@@ -227,6 +241,7 @@ pub(super) fn encode_chat_request(
     include_usage: bool,
     mode: ChatResponseMode,
     format: ChatResponseFormat,
+    thinking: ChatThinkingMode,
 ) -> Result<Vec<u8>, ChatError> {
     if !valid_model(model)
         || !(1..=32768).contains(&max_tokens)
@@ -256,6 +271,8 @@ pub(super) fn encode_chat_request(
         stream_options: Option<StreamOptions>,
         #[serde(skip_serializing_if = "Option::is_none")]
         response_format: Option<ResponseFormat>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        chat_template_kwargs: Option<TemplateOptions>,
     }
     #[derive(Serialize)]
     struct StreamOptions {
@@ -264,6 +281,10 @@ pub(super) fn encode_chat_request(
     #[derive(Serialize)]
     struct ResponseFormat {
         r#type: &'static str,
+    }
+    #[derive(Serialize)]
+    struct TemplateOptions {
+        enable_thinking: bool,
     }
     // Reserve the closed wire ceiling before any private bytes are written.
     // Reject overflow in the writer, rather than allowing Vec to reallocate
@@ -277,6 +298,11 @@ pub(super) fn encode_chat_request(
             stream: mode == ChatResponseMode::Stream,
             max_tokens,
             n: 1,
+            chat_template_kwargs: (thinking == ChatThinkingMode::Disabled).then_some(
+                TemplateOptions {
+                    enable_thinking: false,
+                },
+            ),
             response_format: (format == ChatResponseFormat::JsonObject).then_some(ResponseFormat {
                 r#type: "json_object",
             }),

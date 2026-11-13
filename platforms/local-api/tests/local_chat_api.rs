@@ -22,6 +22,172 @@ const CLIENT: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 const CONTROL: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
 #[test]
+fn thinking_control_is_trusted_explicit_and_cannot_be_injected_by_chat_or_proposals() {
+    let api = Api::new();
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let endpoint = format!("http://{}/v1", listener.local_addr().unwrap());
+    let settings = || {
+        let (status, body) = api.call("GET", "/v1/settings", CONTROL, None);
+        assert_eq!(status, 200);
+        serde_json::from_slice::<Value>(&body).unwrap()
+    };
+    assert_eq!(settings()["thinking_mode"], Value::Null);
+    api.configure(&endpoint);
+    assert_eq!(settings()["thinking_mode"], "provider_default");
+    let choice =
+        json!({"endpoint":endpoint,"approve_conversations":true,"thinking_mode":"disabled"});
+    assert_eq!(
+        api.call("PUT", "/v1/settings", CLIENT, Some(choice.clone()))
+            .0,
+        403
+    );
+    assert_eq!(settings()["thinking_mode"], "provider_default");
+    assert_eq!(
+        api.call("PUT", "/v1/settings", CONTROL, Some(choice.clone()))
+            .0,
+        200
+    );
+    let accepted = settings();
+    assert_eq!(accepted["thinking_mode"], "disabled");
+    for invalid in [
+        json!("enabled"),
+        json!(true),
+        json!(0),
+        Value::Null,
+        json!({"enable_thinking":false}),
+    ] {
+        let mut bad = choice.clone();
+        bad["thinking_mode"] = invalid;
+        assert_eq!(api.call("PUT", "/v1/settings", CONTROL, Some(bad)).0, 400);
+        assert_eq!(settings(), accepted);
+    }
+    let duplicate = format!(
+        "{{\"endpoint\":{endpoint:?},\"approve_conversations\":true,\"thinking_mode\":\"disabled\",\"thinking_mode\":\"provider_default\"}}"
+    );
+    assert_eq!(
+        split(api.raw(&api.bytes("PUT", "/v1/settings", CONTROL, duplicate.as_bytes(), ""))).0,
+        400
+    );
+    assert_eq!(settings(), accepted);
+    for route in ["/v1/chat", "/v1/code/proposals"] {
+        let mut input = if route == "/v1/chat" {
+            chat()
+        } else {
+            coding_request()
+        };
+        input["thinking_mode"] = json!("disabled");
+        assert_eq!(api.call("POST", route, CLIENT, Some(input)).0, 400);
+    }
+    assert!(
+        listener.accept().is_err(),
+        "refused settings and bodies cannot connect"
+    );
+    api.configure(&endpoint);
+    assert_eq!(settings()["thinking_mode"], "provider_default");
+    assert_eq!(api.call("DELETE", "/v1/settings", CONTROL, None).0, 200);
+    assert_eq!(settings()["thinking_mode"], Value::Null);
+}
+
+#[test]
+fn thinking_request_in_either_framing_never_promotes_reasoning_to_an_answer() {
+    for mode in ["stream", "complete"] {
+        for answer_present in [false, true] {
+            let api = Api::new();
+            let (endpoint, task) = upstream(move |mut socket| {
+                let raw = incoming(&mut socket);
+                let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
+                let input: Value = serde_json::from_slice(&raw[start..]).unwrap();
+                assert_eq!(
+                    input["chat_template_kwargs"],
+                    json!({"enable_thinking":false})
+                );
+                assert_eq!(input["stream"], mode == "stream");
+                assert!(input.get("tools").is_none());
+                let answer = if answer_present {
+                    coding_answer()
+                } else {
+                    String::new()
+                };
+                let finish = if answer_present { "stop" } else { "length" };
+                if mode == "complete" {
+                    reply(
+                        &mut socket,
+                        "application/json",
+                        &json!({"model":"fixture","choices":[{
+                        "index":0,"message":{"role":"assistant","content":answer,
+                        "reasoning_content":"untrusted reasoning"},"finish_reason":finish}]})
+                        .to_string(),
+                    );
+                } else {
+                    let body = format!(
+                        "data: {}\n\ndata: {}\n\ndata: [DONE]\n\n",
+                        json!({"model":"fixture","choices":[{"index":0,"delta":{"content":answer,"reasoning_content":"untrusted reasoning"},"finish_reason":null}]}),
+                        json!({"model":"fixture","choices":[{"index":0,"delta":{},"finish_reason":finish}]})
+                    );
+                    reply(&mut socket, "text/event-stream", &body);
+                }
+            });
+            assert_eq!(api.call("PUT", "/v1/settings", CONTROL, Some(json!({
+                "endpoint":endpoint,"approve_conversations":true,"response_mode":mode,"thinking_mode":"disabled"
+            }))).0, 200);
+            let (status, body) =
+                api.call("POST", "/v1/code/proposals", CLIENT, Some(coding_request()));
+            assert_eq!(status, 200);
+            let rows = events(&body);
+            let last = rows.last().unwrap();
+            if answer_present {
+                assert_eq!(last["type"], "proposal");
+                assert_eq!(last["applied"], false);
+                assert_eq!(last["tested"], false);
+            } else {
+                assert_eq!(last["type"], "error");
+                assert_eq!(last["code"], "chat.response.incomplete");
+                assert!(!rows.iter().any(|row| row["type"] == "proposal"));
+            }
+            task.join().unwrap();
+        }
+    }
+}
+
+#[test]
+fn unsupported_thinking_control_is_an_error_without_fallback() {
+    let api = Api::new();
+    let (endpoint, task) = upstream(move |mut socket| {
+        let raw = incoming(&mut socket);
+        let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
+        let input: Value = serde_json::from_slice(&raw[start..]).unwrap();
+        assert_eq!(
+            input["chat_template_kwargs"],
+            json!({"enable_thinking":false})
+        );
+        socket
+            .write_all(
+                b"HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+            )
+            .unwrap();
+    });
+    assert_eq!(
+        api.call(
+            "PUT",
+            "/v1/settings",
+            CONTROL,
+            Some(json!({
+                "endpoint":endpoint,"approve_conversations":true,"thinking_mode":"disabled"
+            }))
+        )
+        .0,
+        200
+    );
+    let (status, body) = api.call("POST", "/v1/code/proposals", CLIENT, Some(coding_request()));
+    assert_eq!(status, 200);
+    let rows = events(&body);
+    assert_eq!(rows.last().unwrap()["code"], "chat.transport.status");
+    assert!(!rows.iter().any(|row| row["type"] == "proposal"));
+    task.join().unwrap();
+}
+
+#[test]
 fn json_object_format_requires_trusted_settings_and_resets_to_text() {
     let api = Api::new();
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();

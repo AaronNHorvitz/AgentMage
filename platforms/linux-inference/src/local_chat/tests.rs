@@ -184,13 +184,20 @@ fn requests_bound_messages_tokens_and_encoded_size() {
             Err(ChatError::Request)
         );
     }
-    for (include_usage, format, mode) in [false, true].into_iter().flat_map(|usage| {
+    for (include_usage, format, mode, thinking) in [false, true].into_iter().flat_map(|usage| {
         [ChatResponseFormat::Text, ChatResponseFormat::JsonObject]
             .into_iter()
             .flat_map(move |format| {
                 [ChatResponseMode::Stream, ChatResponseMode::Complete]
                     .into_iter()
-                    .map(move |mode| (usage, format, mode))
+                    .flat_map(move |mode| {
+                        [
+                            ChatThinkingMode::ProviderDefault,
+                            ChatThinkingMode::Disabled,
+                        ]
+                        .into_iter()
+                        .map(move |thinking| (usage, format, mode, thinking))
+                    })
             })
     }) {
         let encode = |content: &str| {
@@ -204,6 +211,7 @@ fn requests_bound_messages_tokens_and_encoded_size() {
                 include_usage,
                 mode,
                 format,
+                thinking,
             )
         };
         let overhead = encode("x").unwrap().len() - 1;

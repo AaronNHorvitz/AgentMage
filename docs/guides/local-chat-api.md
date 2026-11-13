@@ -300,3 +300,24 @@ files. A real local-model conversation through the GPU slot is T-302.4.
 The [terminal coding client](coding-terminal.md) provides explicit source selection,
 read/search, streamed proposals, previews and typed exact-write approvals over
 these routes. Worktrees, project tests, retries and durable runs remain open.
+
+## Optional endpoint thinking control
+
+Trusted settings accept `thinking_mode: provider_default | disabled`. The default
+omits the thinking extension. Disabled sends
+`chat_template_kwargs: {"enable_thinking": false}` to an endpoint that supports
+that option. Choose it explicitly for that endpoint; the API does not discover
+support or guarantee that the server honored the request. Rejection is reported
+normally, without retry or fallback. It works with either response framing and
+output format, including chat without a workspace.
+
+GET settings reports the requested mode, or null when unconfigured. Invalid,
+null or duplicate modes refuse without replacing settings or connecting.
+Ordinary chat and proposal bodies cannot select the mode. Omitting the setting
+on a new trusted choice restores `provider_default`. Native development launchers
+retain their separate defaults. Prepared requests bind the actual upstream body.
+
+This changes generation only. Reasoning metadata is never treated as an answer,
+instruction or approval. An ignored option with empty answer content still
+returns `chat.response.incomplete`. Existing prompts, strict edits, permissions,
+response ceilings, deadlines and settings-revision checks remain in force.
