@@ -1674,3 +1674,30 @@ fails closed. Explicit mode/format record fields remain a later backlog option.
 This retains a source verdict, not a new measurement. The frozen E4B repeat is
 running; all six profiles precede further tuning. No task grade, retry,
 held-out result, model role or row closure is claimed.
+
+## JSON-object E4B development repeat — 2026-11-13
+
+Source: `40cad6472560e47314a55ddb1f45e2c4c22b1792`. Available partial path:
+Rust source selection → credential-owning chat → unchanged strict checker;
+full repository retrieval, native execution, tests and retries remain unavailable.
+
+| Date | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU job min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | gemma4-e4b | 32768 / 23004–29513 | Unavailable | Unavailable | 24/30 | Not run | 1363.743 | 24.748 | 215893 / 138991 |
+
+Changed variable: trusted JSON-object output request, verified in all 30 upstream
+bodies. Complete framing, prompts, source selection, strict checker, profiles,
+byte ceilings and 300-second idle/total deadlines stay unchanged. Output remains
+`min(32768, 32768 - rendered input tokens - 32)`; does not fit: 0.
+Causes: 4 `strict-edit-refused:code.proposal.edit`, 2 `strict-edit-refused:code.proposal.format`, 24 `ungraded-proposal`.
+
+Final backend counters cover 30/30 and include non-answer output.
+GPU minutes are reserved job wall, including load/verification/cleanup and
+excluding queues, wrapper overhead and pauses; active kernel time is not measured.
+The changed driver tuple remains unqualified. No candidate tests, feedback,
+retries or held-out tasks ran; native artifact and original grading-control
+blockers remain. A strict proposal is not a solved task. No model role or
+task-quality improvement is claimed. The five remaining profiles precede tuning.
+Source/record audit, helper reproduction, cleanup and archive verification pass;
+see [evidence](t303-json-object-e4b-2026-11-13.md). T-303/T-306 remain open;
+independent core review is required and no row closes.
