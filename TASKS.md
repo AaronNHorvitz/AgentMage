@@ -8,8 +8,12 @@ from a supporting endpoint through trusted settings. Strict edit acceptance,
 prompts and limits remain unchanged. Three new API socket tests pass; the full
 affected gate has 1,164 passed, the same 53 inherited failures and 19 ignored,
 and remains failing. Independent core review and a fresh development repeat
-are required before further tuning. T-303/T-306 remain open with no new row
-or completion tick.
+are required before further tuning. Its new API and measurement inputs are
+frozen at `40cad6472560e47314a55ddb1f45e2c4c22b1792`. The first development
+pair could not acquire the shared build reservation and was checkpointed with
+zero attempts and no GPU/model launch. The repeat resumes first; its pending
+scoreboard line is not a model measurement. T-303/T-306 remain open with no
+new row or completion tick.
 
 The retained [independent E4B measurement review](docs/reviews/b826d82e0019-complete-response-e4b-measurement.txt)
 returns **Verdict: PASS** for exact reporting commit

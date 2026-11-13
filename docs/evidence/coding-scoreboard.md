@@ -1635,3 +1635,31 @@ The repeated counter-coverage sentences remain historical reporting text;
 report concision joins T-309 backlog. Counts and sealed inputs stay unchanged.
 This is review retention, not a new model run. T-303/T-306 remain open;
 no task grade, retry, held-out result or row closure is claimed.
+
+## JSON-object repeat queued — 2026-11-13
+
+Source: `40cad6472560e47314a55ddb1f45e2c4c22b1792`. This is a scheduling
+checkpoint, **not a model measurement or pass-rate entry**. The new API binary
+and 2,283 repository plus 16 private measurement inputs are hash-frozen.
+Changed variable: trusted JSON-object output request; complete framing, prompts,
+strict checker, profiles, byte ceilings and deadlines remain unchanged.
+
+| Date | First planned profile | Development attempts | First / within-budget passes | Held-out | GPU job min | Outcome |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-13 | gemma4-e4b | 0/30 | Unavailable / unavailable | Not run | 0 | Shared build reservation unavailable; no model launched |
+
+Planned context is 32,768 tokens; planned output remains
+`min(32768, 32768 - rendered input tokens - 32)`. No new input preflight,
+fit classification, model failure, token counter or task grade exists. The
+owned waiter was checkpointed after at least 467 seconds queued, before any
+GPU reservation or job directory. All owned processes exited. This wait is
+excluded from GPU work and is not a failed task attempt. A fresh resumable
+controller preserves the original queue log; no completed attempt can be
+replayed because none began.
+
+The complete 30-task development repeat remains first work on resumption,
+followed by the other five prepared profiles before further source tuning.
+Existing native artifact and original grading-control blockers still limit
+measurement to the partial path; no candidate tests, retries or held-out run
+are authorized by this checkpoint. Independent core review of the source
+increment remains required. T-303/T-306 remain open; no row closes.
