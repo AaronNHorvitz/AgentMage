@@ -2233,3 +2233,32 @@ passes remain unavailable and the driver/profile is unqualified. Four other
 profiles still need fresh post-change measurements before tuning. See the
 [evidence and metadata erratum](t303-thinking-disabled-e4b-2026-11-13.md).
 T-303/T-306 remain open; independent core review is required.
+
+## Thinking-disabled 31B development repeat — 2026-11-13–14 UTC
+
+Source: `a896f055256e96baec09966c71c5d0a7f1714d96`. All 30 frozen development tasks ran through statement/editable-base
+source selection → credential-owning chat → unchanged strict checker. This is the
+available partial path; native admission and the original grading-control receipt
+still block full retrieval, native effects, tests, feedback and retries.
+
+| Date | Source commit | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU reserved work min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-13–14 | a896f055256e96baec09966c71c5d0a7f1714d96 | gemma4-31b (30/30) | 32768 / 23002–29511 | Unavailable | Unavailable | 26/30 | Not run | 1417.912 | 33.005 | 215953 / 31604 |
+
+Changed variable: trusted API `thinking_mode: disabled`, encoded in every upstream
+request as `chat_template_kwargs: {"enable_thinking": false}`; the prepared
+server template retains its existing `enable_thinking: false`. Complete framing, JSON-object output, prompts,
+checker, profiles, 300-second idle/total deadlines and the output-budget formula
+remain fixed. Does not fit: 0. Outcomes: `{"strict-edit-refused:code.proposal.edit": 3, "strict-edit-refused:code.proposal.format": 1, "ungraded-proposal": 26}`.
+Backend counters cover 30/30; per-task times/tokens and raw captures are retained.
+
+Reserved work totals 1980.295 seconds, starting after frozen-input validation;
+it includes load, verification, calls and cleanup. Queues, wrapper/pre-entry
+overhead and session gaps are excluded. Active GPU kernel time and continuous
+end-to-end elapsed time are unmeasured. Each two-task job uses both wrappers
+with a 900-second execution cap after GPU admission and releases both, followed by a 30-second pause outside
+reservations. All owners exit. No candidate, hidden or held-out test ran; task
+passes remain unavailable and the driver/profile is unqualified. Three other
+profiles still need fresh post-change measurements before tuning. See the
+[evidence and metadata erratum](t303-thinking-disabled-31b-2026-11-13.md).
+T-303/T-306 remain open; independent core review is required.
