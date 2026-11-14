@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The retained [independent 31B measurement review](docs/reviews/7be347d40945-thinking-disabled-31b-measurement.txt)
+returns **Verdict: PASS** for exact `7be347d40945357b601f4cc29c4ae43aa01936f5`,
+with no high or medium finding. Low metadata notes join T-309 backlog: the old
+launch receipt's absence field refers to the next job, and individual pairs
+have no UTC timestamps. The reported date range is bounded by launch and
+cleanup receipts. Measured counts and sealed inputs stay unchanged. T-303/T-306
+remain open; this reporting review closes no row. Three profiles still need
+fresh post-change measurements before tuning; the next is queued.
+
 The [thinking-disabled 31B repeat](docs/evidence/t303-thinking-disabled-31b-2026-11-13.md)
 finishes all 30 frozen development tasks at source
 `a896f055256e96baec09966c71c5d0a7f1714d96`: 26/30 strict ungraded proposals. Task passes and retries remain

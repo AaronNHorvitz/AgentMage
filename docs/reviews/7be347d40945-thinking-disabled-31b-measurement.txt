@@ -1,0 +1,188 @@
+Commit: 7be347d40945357b601f4cc29c4ae43aa01936f5
+Scope: thinking-disabled-31b-measurement
+
+Reviewer: independent session (Claude Opus 5.5, extra-high effort). Read-only, pinned checkout
+/lane/review-checkout. No GPU, model, candidate, hidden or held-out execution. No repository
+modification.
+
+Row: T-303 / T-306. This is a NON-CLOSING full-development partial-path measurement report. Base
+94a1d6c7191a98fc8aa8b0b44018dad03fc6d089, source a896f055256e96baec09966c71c5d0a7f1714d96.
+
+## Methods, commands and results
+
+1. Commit identity and diff scope
+   - `git rev-parse HEAD` → 7be347d40945357b601f4cc29c4ae43aa01936f5 (matches request). Worktree clean.
+   - `git diff --check 94a1d6c7… --` → exit 0.
+   - `git diff --name-status 94a1d6c7… HEAD` → M TASKS.md, M docs/evidence/coding-scoreboard.md,
+     A docs/evidence/t303-thinking-disabled-31b-2026-11-13.md. That is exactly 3 reporting paths, with
+     no source, prompt, checker, task, hidden test, threshold, profile, permission or SBOM change.
+   - TASKS.md diff is a pure 11-line insertion at the top of the active queue (0 removed lines).
+
+2. Bindings and post-commit receipt
+   - sha256 of the bindings file = 14ad9873…5e (matches request); sha256 of the post-commit
+     receipt = a6e3cc26…ae772 (matches).
+   - I re-hashed and size-checked all 27 bound artifacts myself: 27/27 match, 0 mismatches.
+   - Committed blobs (`git show HEAD:<path> | sha256sum`) and working files equal the post-commit
+     receipt: TASKS.md d1ebb021…, scoreboard d78198d4…, evidence 06eee47d…
+   - All 26 prior E4B capsule artifacts (thinking-disabled-e4b-20261113-bindings.json) re-hash
+     unchanged: 26/26.
+
+3. Archive verifier (read before running; it streams the tar, extracts nothing and imports
+   nothing archived)
+   - `python3 -B /lane/reviews/thinking-disabled-31b-20261113-verify.py` → status PASS:
+     2810 verified files, 2283 repository + 20 private inputs, 30 tasks, 26 proposals, causes
+     {ungraded-proposal 26, strict-edit-refused:code.proposal.format 1,
+     strict-edit-refused:code.proposal.edit 3}, tokens 215953/31604, coverage 30, request/check
+     1417.9122716370039 s, reserved 1980.2952784080408 s.
+   - Independent recomputation (my own script, /tmp only) streamed the tar, re-hashed every
+     non-snapshot member against the manifest and derived the following straight from raw
+     upstream responses and records:
+     - outcome counts: identical to the verifier;
+     - response `usage` totals: prompt 215953, completion 31604;
+     - input range 3225–9734 and output allowance range 23002–29511, with
+       max_tokens = min(32768, 32768 − prompt − 32) for all 30 tasks;
+     - termination: finish_reason `stop` 30/30, completion < max_tokens 30/30 (supports
+       "stopped-below-token-limits: 30");
+     - no reasoning_content or thinking markers in any response;
+     - answer.txt equals the response content for all 30;
+     - reserved work: Σ 1980.295 s = 33.005 min;
+     - request/check: Σ 1417.912 s;
+     - sampled GPU peaks: 20716–21757 MiB;
+     - model sha256 05e0fa14… and 17155893600 bytes; API ba623b92…; helper 852cd7f5…;
+       source freeze 85dc3c08…. All match the evidence text.
+   - Independent strict-outcome check. I loaded the 30 development tasks from the checkout's
+     `scripts/coding_eval_suite.py` (read-only import, `-B`) and took each base file from git at
+     the task base, with the base hash verified. I confirmed:
+     - each context's task text equals the frozen statement;
+     - each file identity equals base_sha256;
+     - every excerpt is a substring of the base (30/30).
+     I then applied the stated proposal rules (exact keys, old in an excerpt, unique in the
+     original, no overlap) independently:
+     - 26 apply, and each resulting file hash equals the recorded candidate_sha256;
+     - dev-020, dev-021 and dev-022 fail (old absent from the base) → `code.proposal.edit`;
+     - dev-014 repeats the `old`/`new` keys inside its one edit object, which the typed serde
+       parse in capabilities/repository-map/src/coding_proposal.rs:416–417 refuses →
+       `code.proposal.format`.
+     30/30 agree with the recorded strict outcomes.
+
+4. Changed variable
+   - All 30 upstream request bodies equal {model, messages, stream:false, max_tokens, n:1,
+     response_format:{type:json_object}, chat_template_kwargs:{enable_thinking:false}}.
+   - All 15 batch reports carry settings.thinking_mode = "disabled".
+   - Comparison with the preceding 31B (json-object) capsule shows:
+     - the llama-server argv after the runtime path is byte-identical, including
+       `--chat-template-kwargs {"enable_thinking": false}`, `--n-predict 32768`, ctx 32768,
+       q8_0 caches, batch 256/128, temp 0, seed 42 and 4 threads;
+     - profile_sha256 and model identity are equal;
+     - the earlier settings lacked thinking_mode and its upstream body lacked
+       chat_template_kwargs.
+   - The driver (batch.py, bound as launcher_sha256 ad045620…, the same hash as in the reviewed
+     A4B/E4B/thinking-control capsules) differs from the json-object driver only in state paths,
+     an assertion on the upstream encoding, response capture, and adding `thinking_mode: disabled`
+     to the trusted settings. This supports "changed variable is the trusted API option and its
+     upstream encoding; server template arguments stay {enable_thinking:false}".
+   - Erratum check: the raw policy.json still has chat_transport_binary_source 40cad647… and a
+     `comparison` text describing the json_object change, exactly as the erratum discloses. The
+     batch reports' source_commit is a896f055 for all 15 pairs, and the API hash equals the
+     archived binary. The erratum is accurate and affects no number.
+
+5. Reporting fast gate (not wrapped again)
+   - `task_node_dir=$(mktemp -d); ln -s /lane/reviews/42612ca9787f-a4b-node "$task_node_dir/node";
+     PATH="$task_node_dir:$PATH" python3 -B scripts/local_agent_fast_gate.py --base 94a1d6c7…`
+     → git diff --check exit 0, --lint-untracked exit 0, markdownlint-cli2 v0.23.2 "Linting: 3 files,
+     Summary: 0 issues in 0 files", **FAST GATE: PASS**, rc 0. This lint pass covered the 3 changed
+     paths, not zero files.
+
+6. Direct lint and render (script read first; its disabled rules MD013/MD022/MD024/MD060 equal the
+   repository's .markdownlint-cli2.jsonc)
+   - `/lane/reviews/42612ca9787f-a4b-node /lane/reviews/thinking-disabled-31b-20261113-lint_render.mjs`
+     → PASS, lint 0/0/0 on the 3 paths, rendered tables: scoreboard section 1, evidence 1.
+   - I read the cells myself. The scoreboard table has 11 columns (Date, Source commit, Model,
+     Context/output allowance, First task passes, Within-budget task passes, Strict ungraded
+     proposals, Held-out, Request/check s, GPU reserved work min, Input/output tokens) and one row:
+     2026-11-13–14 | a896f055… | gemma4-31b (30/30) | 32768 / 23002–29511 | Unavailable |
+     Unavailable | 26/30 | Not run | 1417.912 | 33.005 | 215953 / 31604. All values match the
+     recomputation. The evidence table's 3 cause rows (3/1/26) match.
+
+7. Ledger, scoreboard and retained review
+   - TASKS ledger table lines: 507 at base, 507 at HEAD, byte-identical. No status or tick change.
+   - The base scoreboard (163213 bytes) is an exact byte prefix of HEAD (165503 bytes): append only.
+   - The retained docs/reviews/9d6a06392171-thinking-disabled-e4b-measurement.txt is
+     byte-identical (`cmp`) to the original /lane/reviews/9d6a06392171-…md and ends with
+     `Verdict: PASS`. It is unchanged by this commit.
+   - The 1167/53/19 source-gate statement matches the retained source review; no green-gate
+     claim is made. I did not re-run the 30 Rust targets; the request does not require it for a
+     reporting-only change.
+   - Profile count: the base says "four profiles … 31B is queued", and HEAD says "Three". This
+     is consistent.
+
+8. Run control, cleanup and preservation receipts (read)
+   - controller3 → controller4 diff: exactly one line (reservation-log suffix resume3 → resume4).
+     Controller4 skips completed pairs, refuses partial job directories and opens each
+     reservation log with 'xb'.
+   - The logs match the narrative:
+     - controller3 log: completed 2/30;
+     - pair-02 resume3 reservation log: only the build-slot wait line;
+     - controller4 log: completed 4…30, then COMPLETE;
+     - one resume4 reservation log per pair 02–28. A duplicate controller would have failed on
+       the 'xb' open.
+   - The resume4 launch receipt records the unexplained post-spawn argv assertion and its
+     unproven cause, as disclosed.
+   - cleanup.json (2026-11-14T00:30Z):
+     - 15 completed pairs, with settings revoked, API reaped and keys/sockets absent 15/15;
+     - 30 retired token files, no matching processes;
+     - scope limited to this PID namespace, with no global-idle claim.
+   - preservation.json shows 507 ledger lines, an exact scoreboard prefix, an exact retained
+     review, a privacy scan PASS and 26 older artifacts unchanged. This agrees with my own checks.
+
+9. Original-helper reproduction
+   - The live root /lane/state/id3 is **absent** from this environment, so
+     `python3 -B /lane/state/id3/reproduce_repeat.py --models gemma4-31b` could not be run.
+     As instructed, I did not run archived helpers.
+   - I read the bound reproduction method (4a910470…) and its receipt (verified_tasks 30, helper
+     852cd7f5…).
+   - The archived data was recomputed independently instead (item 3): context identity, excerpt
+     provenance, strict outcomes, candidate hashes, tokens and times.
+
+10. Privacy, IP and integrity
+    - The added lines contain no host path, username, hostname, credential, e-mail, private
+      sibling-project name or other-agent-product name. I grepped for /var/home, /home/, the
+      user name, /lane, muse, api-key/token/password patterns and agent-product names.
+    - Model identifiers (gemma4-31b) are descriptive, as in prior lines; they are not branding.
+    - Held-out: no held-out run. All 30 task IDs are development tasks (dev-001…029,
+      dev-rust-001), and the commit touches no prompt, task or checker.
+    - The system instruction captured in the archive treats task and repository text as
+      untrusted data. Proposals are unapplied and untested, and the documents label them "not
+      solved tasks".
+    - Confinement: this commit changes no tool, sandbox or permission code, so no confinement
+      escape is in scope for this increment.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (backlog, T-309 metadata hygiene):
+- L1: thinking-disabled-31b-20261113-controller-31b-resume4-launch.json has the field
+  `"no_prior_job_directory": true`, although gemma4-31b-00 already existed (it was completed and
+  skipped). The committed evidence says, correctly, "No next job directory existed".
+  - Fix: name the field for the next job (for example `next_job_directory_absent`) in future
+    receipts.
+  - This affects no number and no committed text.
+- L2 (observation, not a defect): archive members have zeroed mtimes, and per-task records carry
+  no wall-clock timestamps. So the "2026-11-13–14 UTC" date range is bounded only by the launch
+  receipts (21:40Z and 22:11Z on 11-13) and the cleanup receipt (00:30Z on 11-14). It is
+  consistent with them, but no individual pair can be placed on a date.
+  - Fix: optionally record the UTC start and end in each batch report.
+- The inherited policy-label staleness (`chat_transport_binary_source`, `comparison`) is already
+  disclosed by an erratum and stays in T-309 backlog.
+
+## Per-row result
+
+- T-303 (NON-CLOSING measurement report): PASS for this reporting increment. It stays OPEN and
+  takes no tick. The numbers trace to raw captures. Context and output budgets are stated, does
+  not fit (0) is counted apart, and the line follows the batch as MEASURE FIRST requires.
+- T-306 (NON-CLOSING): PASS for this reporting increment. It stays OPEN and takes no tick.
+- The live original-helper reproduction could not be repeated (live root absent); it was
+  replaced by an independent recomputation from the archive, as the request permits.
+
+Verdict: PASS
