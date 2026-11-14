@@ -2304,3 +2304,34 @@ now names `collector_policy.changed_variable`, and the single timeout uses
 singular wording. All numbers and sealed inputs remain unchanged. T-303/T-306
 stay open; this reporting review closes no row. GPT-OSS and Muse still need
 fresh post-change repeats before tuning.
+
+## Thinking-disabled GPT-OSS development repeat — 2026-11-14 UTC
+
+Source: `a896f055256e96baec09966c71c5d0a7f1714d96`. All 30 frozen development tasks ran through statement/editable-base
+source selection → credential-owning chat → unchanged strict checker. This is the
+available partial path; native admission and the original grading-control receipt
+still block full retrieval, native effects, tests, feedback and retries.
+
+| Date | Source commit | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU reserved work min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-14 | a896f055256e96baec09966c71c5d0a7f1714d96 | gpt-oss (30/30) | 32768 / 24219–29748 | Unavailable | Unavailable | 11/30 | Not run | 2287.191 | 41.378 | 188409 / 431625 |
+
+Changed variable: trusted API `thinking_mode: disabled`, encoded in every upstream
+request as `chat_template_kwargs: {"enable_thinking": false}`; the prepared
+server template retains `reasoning_effort: medium`. This records the requested
+option without claiming model support. Complete framing, JSON-object output,
+prompts, checker, profiles, 300-second idle/total deadlines and budget formula
+remain fixed. Does not fit: 0. Outcomes: `{"generation-refused:error:chat.response.incomplete": 8, "strict-edit-refused:code.proposal.edit": 8, "strict-edit-refused:code.proposal.format": 3, "ungraded-proposal": 11}`.
+Backend counters cover 30/30 including non-answer output; response captures
+cover 30/30. Missing response captures: `[]`.
+Unavailable final counters are never zero or reconstructed.
+
+Reserved work totals 2482.685 seconds after frozen-input validation, including
+verification, loading, calls and cleanup. Queues, wrapper/pre-entry overhead and
+pauses are excluded. Active GPU kernel time and continuous end-to-end elapsed
+time are unmeasured. Each two-task job uses both wrappers with a 900-second cap
+after GPU admission and releases both before its 30-second pause. All owners
+exit. No candidate, hidden or held-out test ran; task passes remain unavailable.
+One profile still needs a fresh repeat before tuning. See the
+[evidence and metadata erratum](t303-thinking-disabled-gpt-2026-11-14.md).
+T-303/T-306 remain open; independent core review is required.
