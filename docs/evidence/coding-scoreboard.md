@@ -2293,3 +2293,14 @@ passes remain unavailable and the driver/profile is unqualified. Two other
 profiles still need fresh post-change measurements before tuning. See the
 [evidence and metadata erratum](t303-thinking-disabled-qwen-2026-11-14.md).
 T-303/T-306 remain open; independent core review is required.
+
+## Independent Qwen-label measurement review retained — 2026-11-14
+
+The [independent core review](../reviews/bd1249c0b5a7-thinking-disabled-qwen-measurement.txt)
+returns **Verdict: PASS** for exact reporting commit
+`bd1249c0b5a782c2fbdc0cacb4cd7cb2798174ae`, with no high or medium finding.
+Two low documentation findings are corrected: the evidence's metadata erratum
+now names `collector_policy.changed_variable`, and the single timeout uses
+singular wording. All numbers and sealed inputs remain unchanged. T-303/T-306
+stay open; this reporting review closes no row. GPT-OSS and Muse still need
+fresh post-change repeats before tuning.

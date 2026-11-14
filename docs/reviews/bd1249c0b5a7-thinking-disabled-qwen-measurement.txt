@@ -1,0 +1,136 @@
+Commit: bd1249c0b5a782c2fbdc0cacb4cd7cb2798174ae
+Scope: thinking-disabled-qwen-measurement
+
+# Independent core review: thinking-disabled Qwen-label development measurement (non-closing)
+
+Reviewer: Claude Opus 5.5, separate session, read-only. Pinned checkout `/lane/review-checkout`.
+Base `8361e09b17534628bbb2dd3c3f4dbc4bb466ee6c`; measured source `a896f055256e96baec09966c71c5d0a7f1714d96`.
+Row: T-303 / T-306, non-closing reporting increment. No GPU, model, candidate, hidden or held-out
+execution by the reviewer. No archived code was imported or executed. No repository file was modified.
+
+## Methods, commands and results
+
+1. Identity and diff
+   - `git rev-parse HEAD` -> `bd1249c0b5a782c2fbdc0cacb4cd7cb2798174ae`; worktree clean.
+   - `git diff --check 8361e09b... --` -> exit 0.
+   - `git diff --stat 8361e09b... HEAD` -> exactly `TASKS.md` (+9), `docs/evidence/coding-scoreboard.md` (+31),
+     `docs/evidence/t303-thinking-disabled-qwen-2026-11-14.md` (+120, new). The diff only adds lines.
+   - `git diff --name-only a896f055... HEAD` outside `TASKS.md`/`docs/` -> empty. No source, prompt, checker,
+     task, hidden-test, threshold, profile, permission or SBOM change since the measured source.
+2. Bindings
+   - `sha256sum` bindings -> `4c011fa8b448aefe227115b98709aaba9731058a80701eaa23d7a1dfd4269242`, post-commit ->
+     `2ad54a3e265a592fbe9aee8c2c9c96673eb4588aaab7693730cda72986233d58`, both as stated.
+   - My own hash/size loop over all 34 bound artifacts -> 34 checked, 0 mismatches (including the 927,109,120-byte tar).
+   - The committed blobs (`git show HEAD:<path> | sha256sum`) and the worktree files all equal the post-commit
+     receipt's `committed_sha256` values (`296e4543...`, `78bddb94...`, `560debf9...`).
+   - The prior 31B bindings (`14ad9873...`) still hash correctly, and all 27 of its artifacts are unchanged.
+3. Builder verifier (read and run). The code is read/hash-only: it streams the tar without extracting, rejects
+   absolute and `..` paths, tokens and `.gguf` files, and runs only `git diff`/`git show`.
+   `python3 -B /lane/reviews/thinking-disabled-qwen-20261114-verify.py` -> PASS: 2818 files, 2283/20 inputs,
+   30 tasks, 29 proposals, causes `{ungraded-proposal:29, generation-refused:error:chat.transport.timeout:1}`,
+   186402/34920 tokens, coverage 29, missing captures `["dev-004"]`, 1427.1693383600796 s / 1846.468857742031 s.
+4. Independent recomputation (my own scripts in /tmp; the archive was read in memory only)
+   - From the per-job `batch-report.json` and `batch.json` files plus the per-task backend slices, I recomputed:
+     outcomes 29 proposals + 1 timeout; request/check 1427.1693 s; reserved work 1846.4689 s = 30.7745 min;
+     preflight input range 2932–8599; output budgets 24137–29804, each equal to
+     `min(32768, 32768-n-32)` (0 deviations); sampled GPU peaks 18990–19864 MiB; backend counters
+     186402/34920 over 29/30. All match the scoreboard, the evidence and the audit (`backend_terminations`
+     29 stopped-below-limits, 1 unobserved-or-ambiguous).
+   - Strict checker re-check, written independently: for all 29 answers I checked that the answer is a JSON object
+     whose only key is `edits`. Each edit has exactly path/old/new, the path is the supplied file, `old` is
+     nonempty, differs from `new`, lies in a supplied excerpt and occurs exactly once in the base, and the edits do
+     not overlap. Applying the edits reproduces `checked.json` content and `candidate_sha256`. For the 11
+     multi-excerpt tasks I rebuilt the base by reversing the edits. Each rebuilt base matched the supplied file's
+     byte length and SHA-256, and every excerpt matched it at its byte offsets. Result: 18 full-excerpt and 11
+     partial-excerpt tasks agree, 0 mismatches. dev-004 has no answer, and its base-fallback candidate hash
+     equals the supplied file hash.
+   - Raw timeout inspection (dev-004, job `qwen35-27b-02`, second position). `events.ndjson` has a single
+     `error chat.transport.timeout` at 300.0068 s. There is no `upstream-response-01` capture, body or
+     `answer.txt`. The backend slice shows non-streaming generation still running at n_gen 12661 (< budget 29804),
+     with no final `eval time` line. So the counters are genuinely unavailable. They are excluded from the token
+     totals, not counted as zero, and nothing was reconstructed. Because it was the last task of its job, no later
+     task could be affected by the uncancelled backend generation. The timeout is counted as a failure, not dropped.
+   - Changed variable. I streamed the preceding `json-object-qwen-20261113` archive. All 15 of its batch reports
+     already had server `chat_template_kwargs {enable_thinking:false}`, and its upstream requests had no
+     `chat_template_kwargs`. In the present run every upstream request equals
+     `{model, messages, stream:false, max_tokens, n:1, response_format:{type:json_object},
+     chat_template_kwargs:{enable_thinking:false}}` (the verifier checks this). Message hashes and `max_tokens`
+     are identical for all 30 tasks across the two repeats. Prompts and budgets were frozen, the only change was
+     the request encoding, and the evidence discloses that the template state was already disabled.
+5. Controllers and launches
+   - `diff controller4.py controller{5,6,7}.py` -> each differs only on line 27, the reservation-log suffix.
+     The controller uses `build-slot -> gpu-slot queue-run agentmage 900`, skips completed reports, refuses
+     partial directories (`assert not directory.exists()`), opens the log `xb` (exclusive) and pauses 30 s outside
+     both slots.
+   - The resume4 log is empty and the resume5 launch records all job/candidate directories absent. Resume5 logs
+     2–20, resume6 starts with 10 completed and logs 22–28, and resume7 starts with 14 completed, the next
+     directory absent, and logs 30 + COMPLETE. The resume7 launch receipt discloses the failed post-Popen argv
+     assertion and the later exact argv check. A duplicate controller for the same pair would have been refused by
+     the exclusive log open and the directory guard.
+6. Gates (run by me)
+   - `PATH="<tmp>/node:$PATH" python3 -B scripts/local_agent_fast_gate.py --base 8361e09b...` -> FAST GATE: PASS.
+     It linted exactly the three changed Markdown paths: git diff --check, `--lint-untracked`,
+     markdownlint-cli2 "Linting: 3 files … 0 issues".
+   - `/lane/reviews/42612ca9787f-a4b-node /lane/reviews/thinking-disabled-qwen-20261114-lint_render.mjs` (read first)
+     -> PASS: three paths with 0 issues, one rendered table in the new scoreboard section and one in the evidence.
+     The section heading is unique.
+   - The retained initial gate log shows the MD012 failure at evidence line 37 and the final log shows PASS. This
+     is consistent with the disclosed correction.
+7. Preservation and privacy
+   - TASKS.md `|`-table lines: 507 at base and at HEAD, byte-identical. The diff removes nothing and adds 9
+     preface lines. No tick.
+   - The base scoreboard is an exact byte prefix of the HEAD scoreboard (165503 -> 167879 bytes).
+   - `docs/reviews/` is unchanged from base. The retained 31B review `.txt` is byte-identical to
+     `/lane/reviews/7be347d40945-thinking-disabled-31b-measurement.md`.
+   - I grepped the added lines for private host paths, the username, home directories, the actual weight-file
+     name, `/lane`, other agent/product names and credential patterns: no hit. The private host paths and weight
+     filename appear only in the private capsule (`batch-report.json` bwrap argv), not in committed files. The
+     Qwen-label column and text use the local profile label and say plainly that it is opaque and carries no
+     identity or provenance claim.
+8. Receipts read: audit.json, reproduction.json (30 tasks, helper `852cd7f5...`, no candidate execution or hidden
+   tests), cleanup.py/.json (15 pairs revoked/reaped, keys/sockets absent, 30 token files retired, current PID
+   namespace only, no global-idle claim), preservation.py/.json, postcommit.py, lightweight-reporting-resume.json
+   (only the builder's own pre-entry build-slot wait was cancelled; its child was `sleep 1`), retention and
+   archive-verification receipts, remaining-profile bindings. All are consistent with the committed text.
+9. Not run
+   - `python3 -B /lane/state/id3/reproduce_repeat.py --models qwen35-27b`: the live root `/lane/state/id3` is not
+     present in this review environment (`ls: cannot access`). As the request allows, I did not run archived
+     helpers and instead recomputed the archive data (items 4 and 3).
+   - No Rust build or test suite: no source changed, and the request requires no full-suite rerun or green claim.
+     The text keeps the last source gate as FAIL 1167/53/19 and makes no green claim.
+   - UI: not applicable; this is a reporting-only increment.
+
+## Evaluation integrity, honesty and confinement checks
+
+- Held-out: the manifest has `held_out:false` and `candidate_execution:false`, the audit records
+  native/hidden/held-out execution as false, and no held-out file is in the archive. Prompts are byte-identical
+  to the preceding repeat, so no tuning was introduced.
+- Failures are counted (1 timeout), "does not fit: 0" is reported separately, and the missing capture is treated
+  as unavailable.
+- MEASURE FIRST: a scoreboard line is present. It states the context/output budget and range, separates
+  does-not-fit from refusals, and traces every number to raw logs as checked above.
+- No promotion of a row, model role, quality, qualification or readiness claim. T-303/T-306 stay open.
+- No other product, private project, paper or patent is named in the added content.
+- Confinement and approval surfaces are unchanged (no source change). The system prompt still frames task and
+  repository text as untrusted data. No tool loop runs in this path.
+
+## Findings
+
+No critical, high or medium finding.
+
+- L1 (low, backlog T-309 label hygiene): the private `collector_policy.changed_variable` in every batch report
+  says "server template arguments remain default". For this profile the template arguments are
+  `{enable_thinking:false}`. The erratum at `docs/evidence/t303-thinking-disabled-qwen-2026-11-14.md:63-68`
+  names only `chat_transport_binary_source` and `comparison` as stale. The committed text at lines 39-43 states
+  the true template state, so no number or claim is wrong. Fix: list this label in the erratum at the next
+  reporting batch, or correct the label prospectively.
+- L2 (low, wording): `docs/evidence/t303-thinking-disabled-qwen-2026-11-14.md:32` says "These requests timed
+  out" for a single request (dev-004). Fix: use the singular.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing development partial-path measurement, Qwen-label profile): reporting increment
+  ACCEPTED. The numbers trace to the raw logs, the labels are honest, and the scope is exactly the three
+  reporting files. The rows remain OPEN, and this verdict closes nothing.
+
+Verdict: PASS

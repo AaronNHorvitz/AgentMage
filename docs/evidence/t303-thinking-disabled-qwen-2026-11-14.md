@@ -29,7 +29,7 @@ per-task times, tokens and causes are retained. Token totals include only
 attempts with final counters; missing counters are unavailable, never zero. Backend terminations:
 `{"stopped-below-token-limits": 29, "unobserved-or-ambiguous": 1}`.
 Upstream response captures exist for **29/30** attempts.
-Missing captures: `["dev-004"]`. These requests timed out before
+Missing captures: `["dev-004"]`. This request timed out before
 response-body capture began; no answer or final backend counter was retained.
 The recorded timeout, request and available logs are preserved; missing values
 are not reconstructed.
@@ -64,8 +64,11 @@ Erratum: inherited private policy labels `chat_transport_binary_source` and
 `comparison` still describe the preceding source and text-to-JSON-object change.
 For every pair here, actual API source is `a896f055256e96baec09966c71c5d0a7f1714d96` and the changed variable
 is the trusted thinking option, established by the source fields, API hash and
-captured requests. These labels affect no number. Frozen policy and prior sealed
-capsules remain unchanged; label hygiene remains T-309 backlog.
+captured requests. The inherited `collector_policy.changed_variable` also says
+server template arguments remain default; for this profile the prepared template
+already uses `enable_thinking: false`. These labels affect no number. Frozen
+policy and prior sealed capsules remain unchanged; label hygiene remains T-309
+backlog.
 
 ## Verification and review
 

@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The retained [independent Qwen-label measurement review](docs/reviews/bd1249c0b5a7-thinking-disabled-qwen-measurement.txt)
+returns **Verdict: PASS** for exact `bd1249c0b5a782c2fbdc0cacb4cd7cb2798174ae`,
+with no high or medium finding. Its two low documentation findings are corrected:
+the erratum also identifies `collector_policy.changed_variable`, and the single
+timeout uses singular wording. Counts and sealed artifacts remain unchanged.
+T-303/T-306 remain open; this reporting review closes no row. GPT-OSS and Muse
+still need fresh post-change measurements before tuning.
+
 The [thinking-disabled Qwen-label repeat](docs/evidence/t303-thinking-disabled-qwen-2026-11-14.md)
 finishes all 30 frozen development tasks at source
 `a896f055256e96baec09966c71c5d0a7f1714d96`: 29/30 strict ungraded proposals. Task passes and retries remain
