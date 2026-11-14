@@ -2335,3 +2335,14 @@ exit. No candidate, hidden or held-out test ran; task passes remain unavailable.
 One profile still needs a fresh repeat before tuning. See the
 [evidence and metadata erratum](t303-thinking-disabled-gpt-2026-11-14.md).
 T-303/T-306 remain open; independent core review is required.
+
+## Independent GPT-OSS measurement review retained — 2026-11-14
+
+The [independent core review](../reviews/4c7ecf16c6d0-thinking-disabled-gpt-measurement.txt)
+returns **Verdict: PASS** for exact reporting commit
+`4c7ecf16c6d0301c29dc06c86929f5bc2c44b34d`, with no high or medium finding.
+Two low documentation findings are corrected: the evidence now states that
+30/30 captures contain reasoning and eight output-cap refusals have no answer
+text; an unretained launch-preparation claim is dropped. Numbers and sealed
+inputs remain unchanged. T-303/T-306 stay open; no row closes. Muse remains
+the final fresh post-change repeat required before tuning and is queued.

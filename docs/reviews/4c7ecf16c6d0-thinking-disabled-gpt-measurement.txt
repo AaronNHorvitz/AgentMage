@@ -1,0 +1,136 @@
+Commit: 4c7ecf16c6d0301c29dc06c86929f5bc2c44b34d
+Scope: thinking-disabled-gpt-measurement
+
+# Independent review — thinking-disabled GPT-OSS development measurement (reporting increment)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Pinned checkout
+/lane/review-checkout at the exact commit. Row T-303 (related T-306), non-closing measurement.
+No GPU or model was launched; no archived code, candidate or hidden test was extracted or executed.
+
+## Methods and exact commands (run from /lane/review-checkout)
+
+1. `git rev-parse HEAD` → `4c7ecf16c6d0301c29dc06c86929f5bc2c44b34d`. Parent is base `1559be84…`.
+2. `git diff --check 1559be84b349f028396a7b60bcf9167cf9dcdf69 --` → exit 0.
+3. `git diff --name-only 1559be84… HEAD` → `TASKS.md`, `docs/evidence/coding-scoreboard.md`,
+   `docs/evidence/t303-thinking-disabled-gpt-2026-11-14.md` (158 insertions, 0 deletions).
+   `git diff --stat a896f055… HEAD -- scripts capabilities platforms model-profiles prompts evals tests`
+   is empty: no source, prompt, checker, task, profile or test change since the measured source.
+4. `sha256sum …-bindings.json …-post-commit.json` →
+   `128df2e2552466d4d8d38751abbfac749f5d581ac7077e6ee10c6c60eb824e60` and
+   `ae3306d06f54c7b386c347d039364fff50ae7a47b40e9a1b352eb3a4c5876a80`; both match the request.
+5. Own script: re-hashed all 36 bound artifacts (size and SHA-256) → 36/36 match, including the
+   928,174,080-byte `-inputs.tar` and the manifest. Post-commit receipt: the three committed blobs
+   (`git show 4c7ecf16:<path>`) and the working files equal `committed_sha256`; bindings hash and
+   postcommit method hash match.
+6. Read `verify.py`, `lint_render.mjs`, `postcommit.py`, `preservation.py`, `retain.py`, `export.py`,
+   `cleanup.py`, `controller8/9/10.py`, `launch9/10.py`, `reproduce_repeat.py` and `write_reports.py`
+   before executing anything. `verify.py` only streams and hashes tar members (in memory), runs
+   `git diff`/`git show`; nothing archived is imported or executed.
+7. `python3 -B /lane/reviews/thinking-disabled-gpt-20261114-verify.py` → `status PASS`, 2810 files,
+   2283 repository / 20 private inputs, 30 tasks, 11 proposals, causes 8/8/3/11, 188409/431625 tokens,
+   coverage 30, missing captures `[]`, 2287.190565017023 s, 2482.68469811097 s.
+8. `/lane/reviews/42612ca9787f-a4b-node /lane/reviews/thinking-disabled-gpt-20261114-lint_render.mjs`
+   → PASS, 0 lint issues in all three files, exactly one rendered table in each new section.
+9. `PATH="$report_tools:$PATH" bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base 1559be84…`
+   (with `CARGO_TARGET_DIR=/lane/state/review-target`) → `FAST GATE: PASS` (diff check, untracked lint,
+   markdownlint-cli2 0 issues).
+
+### Independent recomputation (reviewer's own code, not the builder's verifier)
+
+My script streamed every tar member into memory, re-checked each SHA-256 against the manifest (2810/2810),
+and recomputed from **upstream response captures** and the frozen task definitions rather than from the
+builder's backend-log regex:
+
+- Task order taken from `scripts/coding_eval_suite.development_tasks()` at this commit (frozen digest
+  checked by that function); every batch position matched (15 jobs × 2, including `dev-rust-001` at
+  position 29, the identifier that broke the initial formatter).
+- Each request: system/user messages equal `context.json`; parsed user JSON `task` equals the frozen
+  development statement exactly, its single file is the task's source with the task's `base_sha256`;
+  no other task's statement appears. Upstream request carries `chat_template_kwargs: {"enable_thinking": false}`
+  and `max_tokens = 32768 − input − 32`.
+- Base files from `git show <base>:<source>` matched each task's `base_sha256`.
+- Strict check re-implemented independently from `capabilities/repository-map/src/coding_proposal.rs`
+  (duplicate-key/unknown-key refusal, 64 KiB answer cap, exact `{edits:[{path,old,new}]}` shape, unique
+  byte match, excerpt containment, non-overlap, non-identity, size caps) and applied to each `stop`
+  response's `message.content`. Result per task equals the recorded cause for all 30; for the 11 proposals
+  my applied-edit SHA-256 equals `candidate_sha256` and the retained candidate source; for the other 19
+  the candidate equals the base (fallback).
+- Totals: causes `{incomplete 8, edit 8, format 3, ungraded-proposal 11}`; finish reasons
+  `{stop 22, length 8}` and every `length` response has `completion_tokens == max_tokens` (true output cap);
+  `usage` sums **188409 input / 431625 output**; `prompt_tokens` equals the preflight count in 30/30;
+  input range **2988–8517**; output allowance **24219–29748**; does-not-fit **0**;
+  request/check **2287.190565017023 s**; reserved work **2482.68469811097 s = 41.378078301849506 min**;
+  every job's reserved work < 900 s.
+- Fixed settings observed in the retained model reports: n_ctx 32768, temperature 0, seed 42, threads 4,
+  q8_0 K/V caches, batch 256, microbatch 128, 300 s idle/total; one distinct server argument set across
+  all 15 jobs; template kwargs `reasoning_effort: medium`; model SHA-256 `27cd6c43…` / 12109566624 bytes;
+  frozen-inputs SHA-256 `85dc3c08…`; API `ba623b92…`; helper `852cd7f5…`; GPU sampled peaks 13304–14166 MiB.
+  All committed hashes and numbers match.
+
+### Process, interruption and formatter trail
+
+- `controller10.py` differs from `controller9.py` only by the reservation-log suffix (diff with the
+  substitution applied is empty); controller8→9 likewise. Both wrappers, 900 s caps, 30 s released pauses,
+  refusal of partial replay (`assert not directory.exists()`).
+- Resource checkpoints 8 and 9: queue 1017.1955 s and 559.455 s, `job_started false`, `task_attempts 0`,
+  candidate directory absent; reservation logs show only "Waiting for a shared heavy-build/test reservation".
+  Their controller logs end in the expected assertion after the owned TERM. Launch10 receipt shows no
+  completed jobs before launch and binds the checkpoint9 hash; resume10 log is exactly 15 progress lines +
+  COMPLETE.
+- Formatter: `report-job-initial.log` shows audit, reproduction, cleanup PASS then `report-write.json`
+  failing; `report-write.json` is a `ValueError` at line 15 (`int('rust-001')`), before the first write at
+  line 144. The diff initial→corrected touches only that computation (now batch positions with
+  unique, complete coverage) plus the disclosed paragraph. `audit.json`, `reproduction.json`,
+  `cleanup.json` in the capsule are byte-identical to the exported copies and to the hashes in
+  `report-resume-launch.json`.
+- Cleanup: 15 settings revoked/API reaped, keys/sockets absent, 30 token files retired, zero matching
+  processes; scope stated as current PID namespace only.
+
+### Preservation, privacy, integrity
+
+- `TASKS.md` table lines: identical to base (`diff` empty), 507 lines; no row or completion tick added.
+- Base scoreboard is an exact byte prefix of the new scoreboard.
+- Prior Qwen capsule: bindings hash `4c011fa8…` and all 34 bound artifacts re-hashed unchanged.
+- Added lines contain no host path, username, hostname, e-mail, credential, private sibling project or
+  future product name (only `task-quality` matched an `sk-` pattern). Model names identify the measured
+  weights, not branding. No product comparison.
+- Evaluation integrity: no held-out content in requests (each request's task text is the frozen development
+  statement); `held_out_executed false` in all batches; no candidate or hidden test executed; nothing in the
+  diff is tuning material. Partial path is labelled as partial; passes are "Unavailable", never zero.
+- MEASURE FIRST: line present for this batch with date, commit, model, context/output budget, passes
+  (unavailable, reason given), time, GPU reserved minutes, failures by cause, changed variable, does-not-fit
+  counted apart. Context/output budgets stated.
+- No UI and no confinement code changed; no security boundary is touched by this increment.
+
+Not done: I did not rerun the original-helper reproduction (it executes the archived helper binary, which
+the request forbids) or the GPU work; I relied on the retained receipts plus my own independent
+re-derivation above. The full source gate was not rerun; its retained FAIL 1167/53/19 is disclosed and not
+claimed green, consistent with this documentation-only increment.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **Low (backlog, T-309) — observed reasoning output not stated.**
+  `docs/evidence/t303-thinking-disabled-gpt-2026-11-14.md:39-44`. All 30 of 30 retained upstream responses
+  carry non-empty `message.reasoning_content` despite `enable_thinking: false`, and the 8 output-cap
+  failures are entirely reasoning with empty `content`. The text correctly makes no support claim and says
+  counters include non-answer output, so nothing is mislabelled, but the retained data shows the option was
+  not honoured in practice. Fix: add one sentence, e.g. "Captures show reasoning output in 30/30 responses;
+  the 8 output-cap refusals produced no answer text."
+- **Low (backlog) — narrative claim without a retained trace.**
+  `docs/evidence/t303-thinking-disabled-gpt-2026-11-14.md:81-82` ("The next launch's preparation first failed
+  on a missing controller filename before starting a process"). I found no log or receipt of that failure in
+  the capsule. It affects no number and no process started. Fix: retain the failing output or drop the
+  sentence in the next reporting increment.
+- Already disclosed and accepted as backlog: inherited private labels `chat_transport_binary_source`,
+  `comparison` and `collector_policy.changed_variable` are stale (erratum at lines 60-67); verified they
+  affect no number.
+
+## Per-row result
+
+- T-303: this reporting/measurement increment is accepted (PASS). The row stays OPEN; nothing closes.
+- T-306: related, non-closing; stays OPEN.
+- The remaining profile's fresh full-30 repeat is still required before tuning, as the commit states.
+
+Verdict: PASS

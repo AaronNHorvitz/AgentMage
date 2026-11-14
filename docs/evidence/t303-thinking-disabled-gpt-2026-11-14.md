@@ -40,7 +40,9 @@ Changed variable: trusted API `thinking_mode: disabled`, encoded in every
 captured upstream request as `chat_template_kwargs: {"enable_thinking": false}`.
 The prepared server template retains `reasoning_effort: medium`. This records
 what was requested; it does not establish that this model supports or obeys the
-thinking extension. Complete framing, JSON-object output, prompts, strict
+thinking extension. Captures show reasoning output in all 30 responses; the
+eight output-cap refusals produced no answer text. Complete framing, JSON-object
+output, prompts, strict
 checks, profiles, 300-second idle/total deadlines, temperature 0, seed 42,
 four threads, Q8 caches, batch 256 and microbatch 128 stay fixed.
 Context is 32,768 tokens; output is
@@ -78,8 +80,6 @@ A second controller waited 559.455 seconds for the build slot and likewise
 checkpointed before GPU entry with zero attempts. Both launches, cancellation
 receipts and original logs remain retained. Only the builder's own pre-entry
 controllers and wrappers were stopped; no other worker was signalled.
-The next launch's preparation first failed on a missing controller filename
-before starting a process; that filename was corrected before launch.
 Before the completing controller launched, all job and candidate directories
 were absent, all frozen bindings and copied profiles passed, and the previous
 controller was absent. A bounded observation confirmed the resumed controller's
