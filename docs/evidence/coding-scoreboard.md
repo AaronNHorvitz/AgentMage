@@ -2262,3 +2262,34 @@ passes remain unavailable and the driver/profile is unqualified. Three other
 profiles still need fresh post-change measurements before tuning. See the
 [evidence and metadata erratum](t303-thinking-disabled-31b-2026-11-13.md).
 T-303/T-306 remain open; independent core review is required.
+
+## Thinking-disabled Qwen-label development repeat — 2026-11-14 UTC
+
+Source: `a896f055256e96baec09966c71c5d0a7f1714d96`. All 30 frozen development tasks ran through statement/editable-base
+source selection → credential-owning chat → unchanged strict checker. This is the
+available partial path; native admission and the original grading-control receipt
+still block full retrieval, native effects, tests, feedback and retries.
+
+| Date | Source commit | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU reserved work min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-14 | a896f055256e96baec09966c71c5d0a7f1714d96 | qwen35-27b (30/30) | 32768 / 24137–29804 | Unavailable | Unavailable | 29/30 | Not run | 1427.169 | 30.774 | 186402 / 34920 |
+
+Changed variable: trusted API `thinking_mode: disabled`, encoded in every upstream
+request as `chat_template_kwargs: {"enable_thinking": false}`; the prepared
+server template retains its existing `enable_thinking: false`. Complete framing, JSON-object output, prompts,
+checker, profiles, 300-second idle/total deadlines and the output-budget formula
+remain fixed. Does not fit: 0. Outcomes: `{"generation-refused:error:chat.transport.timeout": 1, "ungraded-proposal": 29}`.
+Backend counters cover 29/30; upstream response captures cover 29/30.
+Missing response captures: `["dev-004"]`. Recorded timeouts and
+available logs remain; unavailable final counters are never counted as zero.
+
+Reserved work totals 1846.469 seconds, starting after frozen-input validation;
+it includes load, verification, calls and cleanup. Queues, wrapper/pre-entry
+overhead and session gaps are excluded. Active GPU kernel time and continuous
+end-to-end elapsed time are unmeasured. Each two-task job uses both wrappers
+with a 900-second execution cap after GPU admission and releases both, followed by a 30-second pause outside
+reservations. All owners exit. No candidate, hidden or held-out test ran; task
+passes remain unavailable and the driver/profile is unqualified. Two other
+profiles still need fresh post-change measurements before tuning. See the
+[evidence and metadata erratum](t303-thinking-disabled-qwen-2026-11-14.md).
+T-303/T-306 remain open; independent core review is required.

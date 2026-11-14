@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The [thinking-disabled Qwen-label repeat](docs/evidence/t303-thinking-disabled-qwen-2026-11-14.md)
+finishes all 30 frozen development tasks at source
+`a896f055256e96baec09966c71c5d0a7f1714d96`: 29/30 strict ungraded proposals. Task passes and retries remain
+unavailable; no candidate, hidden or held-out test ran. Audit, original-helper
+reproduction, cleanup and archive verification pass. Two profiles still need
+fresh post-change measurements before tuning. This reporting increment
+requires independent core review. The local profile label remains opaque.
+T-303/T-306 remain open; no row or completion tick is added.
+
 The retained [independent 31B measurement review](docs/reviews/7be347d40945-thinking-disabled-31b-measurement.txt)
 returns **Verdict: PASS** for exact `7be347d40945357b601f4cc29c4ae43aa01936f5`,
 with no high or medium finding. Low metadata notes join T-309 backlog: the old
