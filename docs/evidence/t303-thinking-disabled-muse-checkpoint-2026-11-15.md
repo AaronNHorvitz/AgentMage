@@ -40,7 +40,9 @@ prepared profile and transport. Changed variable remains trusted API
 `thinking_mode: disabled`, encoded upstream as
 `chat_template_kwargs: {"enable_thinking": false}`. The prepared Muse template
 retains `reasoning_strength: medium`. This records the request without claiming
-model support. Complete framing, JSON-object output, prompts, checker, profile,
+model support. All 17 retained response captures contain non-empty reasoning output;
+the three timeouts have no capture. Complete framing, JSON-object output,
+prompts, checker, profile,
 300-second idle/total deadlines and budget formula remain fixed.
 
 Frozen-input SHA-256:

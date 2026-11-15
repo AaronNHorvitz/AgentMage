@@ -2379,3 +2379,14 @@ No candidate, hidden or held-out test ran. Finish the ten pending tasks before
 tuning; later full totals include this checkpoint, never add it. T-303/T-306
 remain open; independent core review required. See the
 [checkpoint evidence](t303-thinking-disabled-muse-checkpoint-2026-11-15.md).
+
+## Independent twenty-task Muse checkpoint review retained — 2026-11-15
+
+The [independent core review](../reviews/cc521088e3e8-thinking-disabled-muse-checkpoint20.txt)
+returns **Verdict: PASS** for exact reporting commit
+`cc521088e3e82ebd7597d2186cbcf01857e62226`, with no high or medium finding.
+Its low disclosure finding is addressed: all 17 captured Muse responses contain
+non-empty reasoning output despite the requested thinking option; the three
+timeouts have no capture. Counts and sealed artifacts remain unchanged. This
+accepts the cumulative 20/30 checkpoint only; ten tasks remain before tuning.
+T-303/T-306 stay open and no row closes.

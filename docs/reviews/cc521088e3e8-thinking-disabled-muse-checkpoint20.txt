@@ -1,0 +1,129 @@
+Commit: cc521088e3e82ebd7597d2186cbcf01857e62226
+Scope: thinking-disabled-muse-checkpoint20
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Pinned checkout
+/lane/review-checkout at the exact commit. Row T-303 (related T-306), non-closing measurement checkpoint,
+core tier. No GPU, model, candidate, hidden test or held-out task was run. No archived code was extracted,
+imported or executed, and the builder's job was not touched. Base 45b13def95fa4604ba189532dd408f21668ba20c;
+measured source a896f055256e96baec09966c71c5d0a7f1714d96.
+
+## Methods and exact commands (run from /lane/review-checkout)
+
+1. `git rev-parse HEAD` → `cc521088e3e82ebd7597d2186cbcf01857e62226`. `git rev-parse HEAD^` → base 45b13def….
+   `git diff --check 45b13def95fa4604ba189532dd408f21668ba20c` → exit 0. `git status --porcelain` → empty.
+   `git diff --numstat` shows four paths, all additions only: TASKS.md +17, coding-scoreboard.md +33, new
+   evidence file +104, retained review +91.
+2. `sha256sum /lane/reviews/thinking-disabled-muse-checkpoint20-20261115-v2-bindings.json` →
+   `0ede3601c69d1f3d14a348cdbc7235ac25ca257de2edb682329319e1ff785767` (matches the request). I hashed all
+   20 listed artifacts in my own Python loop (streaming SHA-256 plus size). All 20 match in bytes and SHA-256,
+   including the 925050880-byte inputs.tar `8239b473…`.
+3. I read `…-v2-verify.py` in full before running it. It only streams tar members (`tarfile 'r|'`), hashes
+   them, applies `json.loads` to retained JSON and runs regexes over logs. It never extracts, imports or
+   executes anything. `python3 -B /lane/reviews/thinking-disabled-muse-checkpoint20-20261115-v2-verify.py` →
+   `status PASS`: 2616 files, 2283 repository and 20 private inputs, 20/30 attempted with 10 remaining,
+   13 proposals, causes {ungraded-proposal 13, strict-edit-refused:code.proposal.edit 2,
+   strict-edit-refused:code.proposal.format 2, generation-refused:error:chat.transport.timeout 3},
+   request/check 3304.704401937961 s, reserved 3733.6732576609866 s, tokens 111197/99327, counter coverage
+   17, response captures 17, missing [dev-004, dev-011, dev-012], build wait 1332.798 s. The output is
+   identical to the retained `…-v2-verification-v2.json`. Among its checks, the script confirms that
+   audit20.py equals the original audit_repeat.py with exactly four textual substitutions (prefix range,
+   expected set, two count fields) and nothing else. It also checks that every upstream request body equals
+   `{model, messages, stream:false, max_tokens:budget, n:1, response_format json_object,
+   chat_template_kwargs {enable_thinking:false}}`, with budget `min(32768, 32768-preflight-32)`, and that
+   exactly 20 candidate source files exist, each hash-equal to the checked change content.
+4. `/lane/reviews/42612ca9787f-a4b-node /lane/reviews/thinking-disabled-muse-checkpoint20-20261115-v2-lint_render.mjs`
+   (read first: markdownlint plus a `marked` table count, no writes) → PASS. Lint gives 0/0/0, and the
+   scoreboard section and the evidence file each render exactly one table. This matches the retained
+   `…-v2-lint-render.json`.
+5. `mkdir -p /tmp/agentmage-cc521088-review-bin`, then I symlinked the retained node there as `node`.
+   `CARGO_TARGET_DIR=/lane/state/review-target PATH=/tmp/agentmage-cc521088-review-bin:$PATH python3 -B
+   scripts/local_agent_fast_gate.py --base 45b13def95fa4604ba189532dd408f21668ba20c` → `FAST GATE: PASS`.
+   Its four planned commands match the retained gate log step for step: diff check, untracked lint,
+   review-text lint of the retained review, and markdownlint-cli2 with 0 issues. There is no cargo build
+   or test step, because only `.md` and `docs/reviews/*.txt` paths changed. The tree is clean afterwards.
+   As the request states, the inherited source gate (1167/53/19) is not green and was not rerun. The
+   commit says so in both TASKS.md and the evidence file.
+6. `cmp docs/reviews/45b13def95fa-gpt-measurement-review-retention.txt /lane/reviews/45b13def95fa-gpt-measurement-review-retention.md`
+   → exit 0, byte-identical. It begins with the exact commit and scope and ends `Verdict: PASS`, and its only
+   finding is the one low.
+7. I read the preservation and post-commit methods and records, then re-derived their claims myself in this
+   checkout rather than trusting the records:
+   - Parent is exactly the base, the tree is clean, and the changed-path set equals the four recorded paths.
+   - For all four files, the `git show cc521088:<path>` SHA-256 and the working-file SHA-256 equal the
+     recorded `committed_sha256` (987fe30c…, 67969c41…, 4918d65f…, 3f537de8…).
+   - TASKS.md has 507 `|`-prefixed table lines at both base and commit, and they are identical line for
+     line. There is no tick or row change.
+   - The base `coding-scoreboard.md` is an exact byte prefix of the commit version (2417 bytes appended).
+   - The postcommit record's method hash `77ad024d…` equals the bound postcommit.py.
+   - The older 36-artifact GPT bindings (`128df2e2…`) still hash clean: 36/36.
+   I could not run the builder's preservation.py hash of the live frozen inputs under `/lane/state/id3`,
+   because that path is not visible to the reviewer and the request asks me not to use live state. The
+   frozen inputs were instead checked against their sealed copies through the verifier in step 3.
+
+### Independent checks beyond the request (reviewer's own read-only code)
+
+- Timeline. I streamed the model-state directory names: muse-00 and muse-02 are dated 20261114, and
+  muse-04 through muse-18 are dated 20261115. This matches "two jobs before the November 14 stop; eight
+  after the restart". The resume29 launch record lists completed muse jobs [0..16] (18 tasks) and resumes
+  at first18. session-progress20-resume29 (18:42:50Z) shows 20 completed. The queue capture (19:05:07Z)
+  shows a 1332.798 s wait with the next job directory absent. This supports "this session advanced from
+  18 to 20" and "queued beyond twenty minutes, no attempt".
+- Launcher correction. The retained `launch29-preflight-correction.json` states 0 attempts started and
+  unchanged inputs. Its failed and corrected method hashes (522e82ff…, 765054dd…) equal the retained
+  `launch29-before-preflight-correction.py` and `launch29.py`.
+- Retention narrowing. The `checkpoint/` copies inside the tar hash-equal the separately bound files:
+  verify, audit20, audit, audit-method, queue, retain, capture_queue and retention-scope-correction. The
+  tar has exactly 20 `candidates/` members.
+- Numbers in the committed text, from the retained audit:
+  - Preflight range 2910–8341, so allowance 32768−8341−32 = 24395 and 32768−2910−32 = 29826.
+  - 3733.673/60 = 62.228 min.
+  - All 17 counter-covered tasks are `stopped-below-token-limits`; the 3 timeouts are
+    `unobserved-or-ambiguous` with null counters and are not zero-filled. "Does not fit: 0" holds, since
+    every budget is > 0.
+  - Each figure in the scoreboard row, the evidence table and the TASKS paragraph traces to the audit.
+- Reasoning output. I streamed all 17 `upstream-response-*.bin` members as JSON. All 17 have
+  `finish_reason: stop`, non-empty `content` and non-empty `message.reasoning_content`, the shortest being
+  2926 characters (muse-18 response 00). Reasoning makes up most of each response's bytes, and `usage`
+  matches the backend counters. See the low finding below.
+- Privacy and naming. I scanned the 245 added lines for home or host paths, username, e-mail, tokens, keys
+  and private project names: no hit. `/lane/...` sandbox paths and the reviewer-model attribution line
+  occur only in the verbatim retained review, as in 199 retained reviews already at base. "Muse" is an
+  existing measured-profile label. There is no product comparison, patent, certification, compliance,
+  qualification or release claim. The commit author identity is the repository's existing one.
+- Evaluation integrity. No task, prompt, checker, profile, hidden test, threshold, permission or SBOM file
+  is in the diff. The held-out set was not run, the audit records `held_out_executed: false` and
+  `hidden_tests_executed: false`, and no number is re-derived in a way that could serve as tuning
+  material. Proposals are labelled ungraded and never counted as passes; first-attempt and within-budget
+  passes are `Unavailable` (null in the audit). Failures are all counted: 20/20 tasks have a cause.
+- MEASURE FIRST. The scoreboard gains a dated line for this partial batch. It states the context and output
+  allowance, keeps "does not fit" separate from model failures, keeps the build-queue wait separate from
+  model failures, and says later full totals include this checkpoint rather than adding to it. No line is
+  missing or late for this increment.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **Low (backlog, T-309): observed reasoning output not stated, recurring.** At
+  `docs/evidence/t303-thinking-disabled-muse-checkpoint-2026-11-15.md:38-44` and
+  `docs/evidence/coding-scoreboard.md:2363-2368`, all 17 of 17 retained Muse responses carry non-empty
+  `message.reasoning_content` (≥ 2926 characters) despite `chat_template_kwargs.enable_thinking: false`.
+  The text correctly claims no support ("records the request without claiming model support", "Support is
+  unclaimed") and says the counters include non-answer output, so nothing is mislabelled. It does not say
+  that the option visibly had no effect in practice, although the same gap was a low finding at 4c7ecf16
+  and was fixed in the GPT-OSS evidence (`t303-thinking-disabled-gpt-2026-11-14.md:43`). Fix: in the next
+  reporting increment (at the latest, the full-30 Muse report), add one sentence such as "Captures show
+  reasoning output in 17/17 retained responses; three timeouts have no capture."
+- Already disclosed and accepted as backlog (T-309): the inherited private labels, including
+  `collector_policy.changed_variable`, still describe earlier changes. They affect no count, and the actual
+  request bodies are verified.
+
+## Per-row result
+
+- T-303: this cumulative 20/30 reporting checkpoint and the verbatim retention of the 45b13def verdict are
+  accepted. The row stays OPEN and nothing closes.
+- T-306: related, non-closing; stays OPEN.
+- Original-helper reproduction was not rerun, which is disclosed and claimed nowhere. The ten remaining
+  Muse tasks must finish before any tuning. No model is qualified.
+
+Verdict: PASS
