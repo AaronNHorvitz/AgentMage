@@ -1,0 +1,91 @@
+Commit: 45b13def95fa4604ba189532dd408f21668ba20c
+Scope: gpt-measurement-review-retention
+
+# Independent review — retention of the thinking-disabled GPT-OSS measurement verdict
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Pinned checkout
+/lane/review-checkout at the exact commit. Row T-303 (related T-306), non-closing documentation
+increment, core tier. No GPU, model, candidate, hidden test or held-out task was run; no archived code
+was extracted, imported or executed. The queued Muse controller was not touched.
+
+## Methods and exact commands (run from /lane/review-checkout)
+
+1. `git rev-parse HEAD` → `45b13def95fa4604ba189532dd408f21668ba20c`; parent is base `4c7ecf16…`.
+2. `git diff --check 4c7ecf16c6d0301c29dc06c86929f5bc2c44b34d --` → exit 0.
+3. `git diff --stat 4c7ecf16… HEAD` → exactly four paths: `TASKS.md` (+8),
+   `docs/evidence/coding-scoreboard.md` (+11), `docs/evidence/t303-thinking-disabled-gpt-2026-11-14.md`
+   (+4/−3), `docs/reviews/4c7ecf16c6d0-thinking-disabled-gpt-measurement.txt` (+136). The same diff limited to
+   `scripts capabilities evals prompts model-profiles tests docs/decisions IP-POLICY.md` is empty.
+4. `cmp docs/reviews/4c7ecf16c6d0-thinking-disabled-gpt-measurement.txt /lane/reviews/4c7ecf16c6d0-thinking-disabled-gpt-measurement.md`
+   → exit 0 (verbatim). It begins with the correct Commit/Scope lines and ends `Verdict: PASS`.
+5. I read `/lane/reviews/45b13def95fa-review-retention-verify.py` (40 lines) before running it. It only runs
+   `git`, hashes files and streams tar members into memory. `python3 -B /lane/reviews/45b13def95fa-review-retention-verify.py`
+   as given → **FileNotFoundError** for `/lane/state/id3/frozen-inputs-v2.json`. That path is not visible in
+   the reviewer sandbox (`/lane/state` contains only `review-target` and `tmp`). Everything before line 28
+   had already passed: commit/base, receipt hashes, gate-log hash, path set, committed blobs, verbatim review,
+   ledger rows, scoreboard prefix, privacy regex and the 36 bound GPT artifacts.
+   Adapted run (`/tmp/rv45/verify.py`, two lines changed, diff recorded): it loads the frozen-inputs manifest
+   from the sealed archive member `measurement/frozen-inputs-v2.json`, asserts SHA-256
+   `85dc3c08ba406fc4fae5cc3c49bcad9684bd1fe27c1743c5aa05b0acfea85abd` (the value the prior review checked),
+   checks the 2283 repository inputs against the checkout as before, and requires each of the 20 private-input
+   hashes to appear among the sealed archive's file contents. Result: `status PASS`, 507 ledger lines, 2283/20
+   frozen inputs, 36 sealed artifacts unchanged, 30 reasoning responses, 8 output-cap empty answers.
+6. `/lane/reviews/42612ca9787f-a4b-node /lane/reviews/thinking-disabled-gpt-20261114-lint_render.mjs` → PASS,
+   0 lint issues in all three Markdown files; exactly one rendered table in each measured section.
+7. Fast gate. `/lane/state/id3/node-bin` is also not visible here. Without it the gate failed only at
+   markdownlint (`Missing executable: node`). With `node` linked to the retained review node binary in
+   `/tmp/rv45/bin`:
+   `CARGO_TARGET_DIR=/lane/state/review-target PATH=/tmp/rv45/bin:$PATH bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base 4c7ecf16…`
+   → `FAST GATE: PASS` after queueing for the slot. I also ran the same command directly, since it does only
+   Git and Markdown checks: `FAST GATE: PASS`. Steps (diff check, untracked lint, review-text lint,
+   markdownlint-cli2 with 0 issues) match the builder's gate log step for step. `git status --short` is empty
+   afterwards.
+
+### Independent recomputation (reviewer's own code)
+
+I streamed every `measurement/gpt-oss-*/upstream-response-*.bin` member into memory. There are 30 responses
+across 15 jobs, with finish reasons `{stop 22, length 8}`. All 30 have non-empty `message.reasoning_content`
+(shortest is 3280 characters). All 8 `length` responses have `content == ''`; no `stop` response has empty
+content. This confirms the new sentence at `docs/evidence/t303-thinking-disabled-gpt-2026-11-14.md:43-44`
+exactly, and it matches the 8 `incomplete` causes in the unchanged results.
+
+### Low-finding corrections, preservation, privacy, integrity
+
+- Prior low 1 (unstated reasoning output) is corrected at evidence lines 43-44, and the corrected text
+  matches the data. The text still makes no support or obedience claim.
+- Prior low 2 (unretained preparation-failure sentence) is corrected: the sentence is removed from the
+  evidence. It now appears only in the verbatim review copy, as expected. No number depended on it.
+- TASKS.md adds only a paragraph above the queue. Table lines are byte-identical to base (507) with no tick.
+  It states that T-303/T-306 stay open and that the Muse repeat is still required before tuning. "Muse" was
+  already in use at base as a measured-profile label.
+- The base scoreboard is an exact byte prefix of the new one. The appended section changes no number and
+  claims no new result. This increment is not a batch changing model input, edit application or retries,
+  so it needs no new MEASURE FIRST line.
+- I scanned the 158 added lines for host or home paths, username, e-mail, tokens, private lane or project
+  names: no hit. The retained review contains only generic `/lane/...` sandbox paths, as many earlier
+  retained reviews at base already do. No product comparison, no patent, no legal or compliance claim.
+- Evaluation integrity: no task, prompt, checker, profile, test or held-out content changed. Nothing new
+  in the diff could serve as tuning material, and no score was re-derived differently.
+
+Not done: I could not hash the live private inputs under `/lane/state/id3` and `/lane/state/jo1-20261113`
+because this sandbox cannot see them. I checked them only against the sealed copies, which are bound
+by the 36-artifact bindings hash `128df2e2…`. This commit changes no code, so that limitation does not affect
+any claim made here.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **Low (backlog) — request commands not reproducible from the reviewer sandbox.** The verifier
+  (`/lane/reviews/45b13def95fa-review-retention-verify.py:28-30`) and the fast-gate command depend on
+  `/lane/state/id3/frozen-inputs-v2.json` and `/lane/state/id3/node-bin`, which are not mounted for the
+  reviewer. Fix: put the review copies under `/lane/reviews` (e.g. read the manifest from the sealed archive
+  or from a hashed copy, and name the retained `42612ca9787f-a4b-node` as `node`) in future requests.
+
+## Per-row result
+
+- T-303: this documentation/retention increment is accepted (PASS). The row stays OPEN; nothing closes.
+- T-306: related, non-closing; stays OPEN.
+- The Muse fresh full-30 development repeat is still required before tuning, as the commit states.
+
+Verdict: PASS

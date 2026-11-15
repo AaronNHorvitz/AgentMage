@@ -2346,3 +2346,36 @@ Two low documentation findings are corrected: the evidence now states that
 text; an unretained launch-preparation claim is dropped. Numbers and sealed
 inputs remain unchanged. T-303/T-306 stay open; no row closes. Muse remains
 the final fresh post-change repeat required before tuning and is queued.
+
+## Thinking-disabled Muse checkpoint — 2026-11-15 UTC, 20/30
+
+Source: `a896f055256e96baec09966c71c5d0a7f1714d96`. Incomplete cumulative development repeat:
+**twenty attempted, ten pending**. Available path: statement/editable-base source
+selection → credential-owning chat → unchanged strict checker. Native admission
+and the original grading-control receipt still block full retrieval, effects,
+tests, feedback and retries. Proposals are not task passes.
+
+| Date | Source commit | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU reserved work min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-14–15 | a896f055256e96baec09966c71c5d0a7f1714d96 | muse (20/30; ten pending) | 32768 / 24395–29826 | Unavailable | Unavailable | 13/20 | Not run | 3304.704 | 62.228 | 111197 / 99327 (17/20 counters) |
+
+Changed variable: trusted API `thinking_mode: disabled`, encoded as
+`chat_template_kwargs: {"enable_thinking": false}`; the prepared server template
+retains `reasoning_strength: medium`. Support is unclaimed. Other prompts,
+checker, profiles, complete/JSON-object framing, deadlines and budget formula
+are fixed. Does not fit: 0. Four strict edit refusals (two edit, two format),
+three transport timeouts, thirteen strict ungraded proposals. Missing counters
+and response captures for dev-004/011/012 are unavailable, never zero or rebuilt.
+
+Reserved work totals 3733.673 seconds after frozen-input validation, including
+verification, loading, calls and cleanup; queues, pre-entry overhead and pauses
+are excluded. Active GPU kernel time and continuous elapsed time are unmeasured.
+Two-task jobs use both wrappers with a 900-second cap after GPU admission and
+30-second released pauses. All ten completed pairs revoke settings and reap
+their owners. The next pair remained queued after 1332.798 seconds of build
+wait, with no new task attempt. This wait is not a model failure. Read-only
+prefix audit and archive verification pass; helper reproduction is not rerun.
+No candidate, hidden or held-out test ran. Finish the ten pending tasks before
+tuning; later full totals include this checkpoint, never add it. T-303/T-306
+remain open; independent core review required. See the
+[checkpoint evidence](t303-thinking-disabled-muse-checkpoint-2026-11-15.md).

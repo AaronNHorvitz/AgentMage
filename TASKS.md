@@ -2,6 +2,23 @@
 
 ## Active queue: local agent mission
 
+The [Muse checkpoint](docs/evidence/t303-thinking-disabled-muse-checkpoint-2026-11-15.md)
+records **20/30 attempted; ten pending**, with 13 strict ungraded proposals.
+This session advanced from eighteen attempts; the next pair remained queued
+for a shared build slot beyond twenty minutes. First-attempt and within-budget
+task passes remain unavailable; no candidate, hidden or held-out test ran.
+Read-only prefix audit and archive verification pass; original-helper
+reproduction is not rerun. Finish the full repeat before tuning. T-303/T-306
+remain open, and this non-closing checkpoint requires independent core review.
+
+The retained [independent reporting review](docs/reviews/45b13def95fa-gpt-measurement-review-retention.txt)
+returns **Verdict: PASS** for exact `45b13def95fa4604ba189532dd408f21668ba20c`,
+with no high or medium finding. Its low request-path finding informs this
+checkpoint's retained-artifact review commands; no live builder state is needed.
+No row closes. Git reads and approval-gated pushes remain released at the first
+MEASURE FIRST-permitted capability boundary; this measurement starts no Git
+tool. Other service actions, sign-in and code-host issues/PRs remain planning only.
+
 The retained [independent GPT-OSS measurement review](docs/reviews/4c7ecf16c6d0-thinking-disabled-gpt-measurement.txt)
 returns **Verdict: PASS** for exact `4c7ecf16c6d0301c29dc06c86929f5bc2c44b34d`,
 with no high or medium finding. Its two low documentation findings are corrected:
