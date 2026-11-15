@@ -1,0 +1,203 @@
+Commit: cbe1d31dfac869d09b32fca2e38a5498cffcc833
+Scope: thinking-disabled-muse-measurement
+
+# Independent core review — complete thinking-disabled Muse development measurement (30/30)
+
+Reviewer: independent Claude Opus 5.5 session (extra-high effort), read-only, pinned checkout
+/lane/review-checkout. Row T-303 (related T-306). This is a non-closing measurement batch at core tier.
+Base d1b408016c284e3aaf36e7546f0631ef89a19b0c; measured source a896f055256e96baec09966c71c5d0a7f1714d96.
+
+## Methods
+
+I used only the pinned checkout and the retained /lane/reviews artifacts. I did not use live builder
+state. I did not launch a model, use the GPU, run a candidate, hidden or held-out test, extract or
+import archived code, or reconstruct grading controls. I read archive members into memory only, as
+the verifier does, to inspect small receipts and report-writer versions. I did not modify the
+repository. For context I read the RESUMED owner section of /lane/control/brief.md, and I read the
+verifier, report writer, reproduction, audit, cleanup, launch, recovery, preservation and
+post-commit methods before relying on their receipts.
+
+## Exact commands and results
+
+1. `git rev-parse HEAD` gives cbe1d31dfac869d09b32fca2e38a5498cffcc833, and `git rev-parse HEAD^`
+   gives d1b408016c284e3aaf36e7546f0631ef89a19b0c. `git diff --check d1b4…` gives rc 0, and
+   `git status --porcelain` is empty. The diff has four paths (M TASKS.md, M coding-scoreboard.md,
+   A t303-thinking-disabled-muse-2026-11-15.md, A docs/reviews/d1b408016c28-…-checkpoint22.txt) and
+   345 insertions with no deletions. `git diff --name-only a896f05 HEAD` shows only docs/ and TASKS.md,
+   and a896f05 is an ancestor of HEAD. So there is no source, prompt, checker, task, threshold,
+   permission or SBOM change since the measured source.
+2. `sha256sum thinking-disabled-muse-20261115-bindings.json` gives 9787fff1…b6d393 (21303 bytes),
+   as required. I streamed, hashed and size-checked all 111 bound artifacts myself, including the
+   928727040-byte inputs.tar (045ed1f0…dfc596). None was missing or mismatched. The only files with
+   this prefix that are not bound are the bindings file itself and post-commit.json.
+   - Correction trail, read in memory from the archive:
+     - `first-report-job-failure.log`: audit, reproduction, cleanup and summary-check all PASS, then
+       `report-write.json` exits 1.
+     - `first-report-write-failure.json`: `json.loads` hits "Unterminated string … char 4977" on the
+       truncated capture.
+     - `partial-capture-reporting-correction.json`: binds the failed method b2c315a3… and the failed
+       receipt 43b6e897…, and records `measurement_inputs_changed: false` and
+       `source_or_threshold_changed: false`.
+   - Report-writer diff, failed version (b2c315) to final bound version (e2a40885, identical to the
+     archived copy): the change only replaces the bare `json.loads` with a try/except. On
+     JSONDecodeError the new code asserts one terminal `error`/`chat.transport.timeout`, cause
+     `generation-refused`, no success, base fallback, `api_usage is None` and no answer.txt. It then
+     pins the exact partial `[{dev-027, 16384, fda17450…}]` and complete+partial+missing==30. The rest
+     is prose. No capture is repaired and no count changes. Audit, reproduction, cleanup and summary
+     were not rerun.
+3. `python3 -B /lane/reviews/thinking-disabled-muse-20261115-verify.py` gives rc 0 and PASS. It
+   reports:
+   - 3087 files, 2283 repository and 20 private inputs, 30 tasks and 19 proposals.
+   - Causes: edit 3, format 4, transport timeout 4, ungraded 19.
+   - 166355 input / 150086 output tokens, with counter coverage 26.
+   - Missing captures dev-004, dev-011 and dev-012. One partial capture: dev-027, 16384 bytes,
+     fda17450….
+   - 26 complete captures, all 26 with reasoning.
+   - 4798.4650 s request/check time and 5430.4918 s reserved work.
+
+   This output is identical to the retained archive-verification.json. Reading the verifier shows it
+   checks the following:
+   - Every archive member: no absolute paths, `..`, tokens, keys or .gguf files; size and hash
+     against the manifest.
+   - The six source files changed since 9a6c9d20 against `git show a896f05`.
+   - Frozen repository and private bindings, the profile hash, the API, helper and model hashes, the
+     template kwargs `{reasoning_strength: medium}`, and n_ctx 32768.
+   - That each upstream body equals `{model, messages, stream:false, max_tokens:min(32768,
+     32768-n-32), n:1, response_format json_object, chat_template_kwargs {enable_thinking:false}}`.
+   - Backend counters against preflight and usage, and the answer bytes against the events and the
+     response content.
+   - The whole controller, absence, priority-correction and interrupted-preparation chain.
+
+   I cross-checked the six-profile summary and its inputs:
+   - Its six inputs hash to the retained prior capsule audits: a4b-20261113-audit-repeat (b77868a0…),
+     e4b-20261113 (87bc7bc6…), 31b-20261113 (3355b743…), qwen-20261114 (cb3ee053…) and
+     gpt-20261114 (58a7f15f…). The Muse input equals this capsule's audit.json (1b98416e…).
+   - The per-profile proposals (16/16/26/29/11/19) match the committed scoreboard lines 2185–2434.
+   - The totals are 180 tasks and 117 proposals, with refusal causes format 27, edit 20, incomplete 8,
+     timeout 5 and length 3.
+   - The external summary copy equals the archived copy byte for byte.
+
+   From audit.json I checked the claimed ranges: input 2910–8341, output 24395–29826, and every
+   budget plus input plus 32 equals 32768, so does-not-fit is 0. Backend terminations are 26 stopped
+   below limits and 4 unobserved, and the four timeouts sit at 300.0 s. The first 20 and 22 rows
+   reproduce the earlier checkpoint figures exactly: 13/3304.704/111197/99327/17 and
+   14/3688.973/125470/115890/19. So the checkpoints are cumulative, not added.
+
+   Against the PASS-verified checkpoint-22 capsule (bindings a6d982f7…, all 30 artifacts unchanged):
+   all 296 shared muse-00..muse-20 measurement files are byte-identical in this capsule, and all 22
+   candidate sources match by hash. No earlier attempt was replayed or altered. The development
+   suite digest 0c2a0624… equals scripts/coding_eval_suite.py:33. The manifest has
+   `held_out: false`. The 20 private inputs are run scripts, the API, the helper, policies and
+   profiles, with no held-out or hidden-test content. The reproduction method loads only
+   `suite.development_tasks()` and compares the helper's context and strict-check output with the
+   retained records.
+4. `/lane/reviews/42612ca9787f-a4b-node /lane/reviews/thinking-disabled-muse-20261115-lint_render.mjs`
+   gives PASS. Lint is 0/0/0, and there is one rendered table in the scoreboard section and one in
+   the evidence file. This is identical to the retained lint-render.json.
+5. I made the node symlink in /tmp/agentmage-cbe1d31d-review-bin, then ran
+   `CARGO_TARGET_DIR=/lane/state/review-target PATH=…:$PATH python3 -B scripts/local_agent_fast_gate.py --base d1b4…`.
+   It gives `FAST GATE: PASS` with rc 0: diff check, untracked lint, review lint, and markdownlint
+   with 0 issues in 3 files. This matches the retained reporting-gate.log. The inherited source gate
+   (1167/53/19) was not rerun. It is disclosed as failing, not green.
+6. `cmp docs/reviews/d1b408016c28-thinking-disabled-muse-checkpoint22.txt /lane/reviews/d1b408016c28-thinking-disabled-muse-checkpoint22.md`
+   shows them identical. The copy begins with the exact d1b4 commit, its findings section reads
+   "None at critical, high, medium or low severity", and it ends `Verdict: PASS`. Its "eight pending"
+   wording describes the reviewed 22/30 checkpoint, and the new prose labels it that way.
+7. Preservation, checked independently:
+   - `git show cbe1d31d:<path> | sha256sum` for the four paths gives b70ef209…, f2d1f45d…, 40a56e29…
+     and 13b30273…. These equal the working-tree bytes, preservation.json and post-commit.json.
+   - The post-commit commit, base, bindings 9787fff1… and `clean: true` match.
+   - TASKS.md has 507 `|` table lines at base and at HEAD, byte-identical, and no deleted lines. The
+     diff is one 22-line insertion at the top of the active queue.
+   - The base scoreboard is an exact byte prefix of the HEAD scoreboard.
+   - The GPT capsule bindings (128df2e2…, 36 artifacts) and the checkpoint-22 bindings (30 artifacts)
+     still match.
+   - `retained_review_in_diff: false` refers to the e24 retention already in base, as stated.
+   - Privacy scan of all 345 added lines: no home paths, usernames, hostnames, e-mail addresses,
+     credentials, keys or private-project names. `/lane/...` sandbox paths appear only inside the
+     verbatim retained review, matching established practice (301 committed docs at base already
+     contain them).
+   - No other agent product, patent, certification or qualification claim appears. The model names
+     identify measured profiles, not branding.
+   - The new TASKS paragraph on Git reads and approval-gated pushes matches the owner's 2026-11-15
+     RESUMED note. That note releases that one row at the first capability boundary MEASURE FIRST
+     permits, with every push shown and needing the user's yes, and keeps other service actions and
+     code-host PR/issue tools planning only. The paragraph claims nothing built and does not reorder
+     work.
+8. Chain 32:
+   - launch32.py asserts HEAD d1b4, a clean tree, STOP absent, the frozen inputs (85dc3c08…), four
+     profiles and 22 sealed record hashes. It also asserts no exact-owner match in this PID namespace,
+     prior PID absent, the prior log `completed 22`, memory.max ≤ 16 GiB, CPU ≤ 4, and
+     `os.nice(0)==19`. All of these run before any write, which supports "initial non-nice invocation
+     refused before writes or launch".
+   - Its failure is a shadowed `f`: the `with … open('x') as f` for the absence receipt replaces the
+     frozen-input object, and `len(f['repository'])` fails afterwards.
+   - The recovery method is read-only toward the process. It re-verifies the frozen inputs and the 22
+     hashes, and checks the exact /proc/280 cmdline, start tick 9359444 and nice 19 (stat fields
+     22 and 19 indexed correctly), `BUILD_SLOT_PRIORITY=low`, and that controller32 equals
+     controller31 apart from the log suffix. It then writes the receipt without restarting anything.
+   - The controller-32 log reads completed 24/26/28/30, then `COMPLETE; no candidate execution or
+     grading.`
+   - cleanup.json: 15/15 jobs revoked and reaped, model keys and sockets absent, no matching
+     processes, and 30 token files retired (control and client for 15 jobs, so 30 API tokens). GPU
+     peaks were 17457–18572 MiB. The method states the scan covers this PID namespace only, with no
+     global-idle claim.
+   - Two jobs ran before the November 14 stop (resume12 log 2, 4, then the operator stop). Thirteen
+     ran afterwards (resume15, 16, 17×2, 18, 23, 25, 29, 31 and 32×4), for 15 in total. No resource
+     ceiling or priority was raised.
+
+## Claims vs evidence
+
+Every number in the new scoreboard row, the TASKS paragraph and the evidence file traces to the
+retained raw records:
+- 30/30 attempts and 19 strict ungraded proposals, with the 4/3/4/19 cause split.
+- 4798.465 s request/check and 5430.492 s / 90.508 min reserved work.
+- 166355/150086 tokens at 26/30 counter coverage.
+- Input 2910–8341, allowance 24395–29826 and does-not-fit 0.
+- 27/30 captures: 26 complete and 1 literal 16384-byte prefix, plus 3 missing.
+- 26/26 complete captures with non-empty reasoning.
+- 180/117 across six profiles, with the largest refusal cause format 27.
+
+The MEASURE FIRST requirements hold for this batch. A scoreboard line exists. Context and output
+budgets are stated. Does-not-fit is counted apart from model failures. The four timeouts are counted,
+not dropped. Missing counters and missing or partial reasoning are reported as unavailable, never as
+zero.
+
+The proposals are labelled as untested edits, and task passes are labelled as unavailable. The
+documents claim no support for the thinking extension. The inherited policy-label erratum is
+disclosed, affects no count, and stays T-309 backlog.
+
+Evaluation integrity holds. There was no held-out or hidden execution, no tuning input, frozen task
+digests, and no change to prompts, tasks or source.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **Low (backlog) — two report-writer versions are referenced by hash but not retained.**
+  - Location: archive members `muse-report/report-continuation-summary-preparation.json` (records
+    `after_sha256` 14a1dfa4…) and `muse-report/partial-capture-reporting-correction.json` (records
+    `changed_methods.write_reports.py` 8c2d438b…).
+  - What is missing: the retained versions are b183eb6c… (before the continuation summary),
+    b2c315a3… (the failed version) and e2a40885… (the final bound version). Neither 14a1dfa4 nor
+    8c2d438b is in the archive or the bindings. The step from 14a1dfa to b2c315, which added the
+    reasoning-capture count, has no receipt. The correction receipt names a writer hash that differs
+    from the final one; the request discloses this.
+  - Impact: none on any number. All committed figures are independently recomputed by the bound
+    verifier, and the final writer is retained.
+  - Fix: in future capsules, retain every method version a receipt names, or record the final hash
+    in a closing receipt.
+- **Observation, not a finding:** the evidence says the verifier "independently recomputes … strict
+  outcomes". The verifier actually tallies the recorded causes and checks them against
+  checked.json and the events. Strict-check re-execution comes from the bound original-helper
+  reproduction (reproduce_repeat.py, verified_tasks muse 30). Together they support the claim.
+
+## Per-row result
+
+- T-303 (related T-306): the complete 30/30 thinking-disabled Muse development measurement and the
+  six-profile 180-attempt summary are accepted as a non-closing reporting batch. The row stays open,
+  task passes and retries remain unavailable, and the largest measured refusal cause
+  (`strict-edit-refused:code.proposal.format`, 27/180) selects the next work.
+- Retention of the independent d1b408016c28 checkpoint-22 PASS is verified verbatim.
+
+Verdict: PASS

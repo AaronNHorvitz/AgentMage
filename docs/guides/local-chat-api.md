@@ -151,8 +151,8 @@ Invalid, duplicate or null mode values refuse without replacing settings or
 connecting. Chat/proposal bodies cannot set the mode. Native development
 launchers keep their separate default configuration.
 
-Optional `response_format` requests output syntax: `text` (the default) or
-`json_object`. Text omits the upstream format field; JSON-object mode sends
+Optional `response_format` requests output syntax: `text` (the default),
+`json_object`, or an inline named schema. Text omits the upstream format field; JSON-object mode sends
 `response_format: {"type":"json_object"}` to the chosen endpoint. It works
 with either response mode, including conversations without a workspace.
 Choose it explicitly for a server that supports it. Unsupported requests fail
@@ -167,6 +167,38 @@ GET reports the effective format or null when unconfigured. Invalid, duplicate
 or null values refuse without replacing settings or opening a connection.
 Chat/proposal bodies cannot select it. Omitting it on a new settings choice
 restores text. Native development launchers keep their separate defaults.
+
+For a supporting endpoint, trusted settings may instead choose, for example:
+
+```json
+{
+  "response_format": {
+    "json_schema": {
+      "name": "answer_v1",
+      "schema": {
+        "type": "object",
+        "properties": {"answer": {"type": "string"}},
+        "required": ["answer"],
+        "additionalProperties": false
+      }
+    }
+  }
+}
+```
+
+This is the format field of the normal endpoint settings choice, which still
+requires the control token, endpoint and conversation approval. It sends
+`response_format: {"type":"json_schema","json_schema":{"name":...,"strict":true,"schema":...}}`
+in the bound upstream body. The name is 1–64 ASCII letters, digits, underscores
+or hyphens; the inline schema must declare an object root. Reference and
+resolution keywords (`$ref`, `$dynamicRef`, `$recursiveRef`, `$schema`, `$id`)
+are refused throughout the supplied schema. The engine resolves no schema
+resource. Other schema semantics and supported keywords are the endpoint's
+responsibility; this is a generation request, not local schema validation or a
+guarantee of endpoint support. Schema data counts toward the unchanged encoded
+request byte ceiling. GET returns the chosen schema under the control token.
+This option also works for ordinary chat without a folder. It changes no
+consumer checks, tools, permissions, prompts, deadlines or retry behavior.
 
 Settings and the model key are **not persisted**. Restart requires a fresh
 authenticated endpoint choice. API tokens persist in their private directory.

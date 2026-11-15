@@ -21,6 +21,86 @@ use sha2::{Digest, Sha256};
 const CLIENT: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const CONTROL: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
+fn edit_schema_choice() -> Value {
+    json!({"json_schema":{"name":"coding_edits_v1","schema":{
+        "type":"object","properties":{"edits":{"type":"array","minItems":1,"maxItems":32,
+            "items":{"type":"object","properties":{
+                "path":{"type":"string"},"old":{"type":"string"},"new":{"type":"string"}},
+                "required":["path","old","new"],"additionalProperties":false}}},
+        "required":["edits"],"additionalProperties":false}}})
+}
+
+fn upstream_format(choice: &Value) -> Value {
+    if choice == "json_object" {
+        json!({"type":"json_object"})
+    } else {
+        let mut schema = choice["json_schema"].clone();
+        schema["strict"] = json!(true);
+        json!({"type":"json_schema","json_schema":schema})
+    }
+}
+
+#[test]
+fn inline_schema_requires_trusted_choice_and_preserves_settings_on_refusal() {
+    let api = Api::new();
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let endpoint = format!("http://{}/v1", listener.local_addr().unwrap());
+    let choice = json!({"endpoint":endpoint,"approve_conversations":true,
+        "response_format":edit_schema_choice()});
+    assert_eq!(
+        api.call("PUT", "/v1/settings", CLIENT, Some(choice.clone()))
+            .0,
+        403
+    );
+    assert_eq!(
+        api.call("PUT", "/v1/settings", CONTROL, Some(choice.clone()))
+            .0,
+        200
+    );
+    let settings = || {
+        let (status, body) = api.call("GET", "/v1/settings", CONTROL, None);
+        assert_eq!(status, 200);
+        serde_json::from_slice::<Value>(&body).unwrap()
+    };
+    let accepted = settings();
+    assert_eq!(accepted["response_format"], edit_schema_choice());
+    for invalid in [
+        json!({"json_schema":{"name":"","schema":{"type":"object"}}}),
+        json!({"json_schema":{"name":"x","schema":{"type":"array"}}}),
+        json!({"json_schema":{"name":"x","schema":{"type":"object","$ref":"file:///outside"}}}),
+        json!({"json_schema":{"name":"x","schema":{"type":"object"},"strict":false}}),
+        json!({"json_schema":{"name":"x"}}),
+    ] {
+        let mut bad = choice.clone();
+        bad["response_format"] = invalid;
+        assert_eq!(api.call("PUT", "/v1/settings", CONTROL, Some(bad)).0, 400);
+        assert_eq!(settings(), accepted);
+    }
+    let duplicate = format!(
+        "{{\"endpoint\":{endpoint:?},\"approve_conversations\":true,\"response_format\":{{\"json_schema\":{{\"name\":\"x\",\"name\":\"y\",\"schema\":{{\"type\":\"object\"}}}}}}}}"
+    );
+    assert_eq!(
+        split(api.raw(&api.bytes("PUT", "/v1/settings", CONTROL, duplicate.as_bytes(), ""))).0,
+        400
+    );
+    assert_eq!(settings(), accepted);
+    for route in ["/v1/chat", "/v1/code/proposals"] {
+        let mut input = if route == "/v1/chat" {
+            chat()
+        } else {
+            coding_request()
+        };
+        input["response_format"] = edit_schema_choice();
+        assert_eq!(api.call("POST", route, CLIENT, Some(input)).0, 400);
+    }
+    assert!(listener.accept().is_err());
+    api.configure(&endpoint);
+    assert_eq!(settings()["response_format"], "text");
+    assert_eq!(api.call("DELETE", "/v1/settings", CONTROL, None).0, 200);
+    assert_eq!(settings()["response_format"], Value::Null);
+}
+
 #[test]
 fn thinking_control_is_trusted_explicit_and_cannot_be_injected_by_chat_or_proposals() {
     let api = Api::new();
@@ -256,96 +336,110 @@ fn json_object_format_requires_trusted_settings_and_resets_to_text() {
 }
 
 #[test]
-fn json_object_request_never_substitutes_for_strict_proposal_validation() {
-    for mode in ["stream", "complete"] {
-        for (answer, refusal) in [
-            (coding_answer(), None),
-            (
-                format!("```json\n{}\n```", coding_answer()),
-                Some("code.proposal.format"),
-            ),
-            ("{\"edits\":[]}".into(), Some("code.proposal.format")),
-            (
-                "{\"edits\":[{\"path\":\"../outside\",\"old\":\"x\",\"new\":\"y\"}]}".into(),
-                Some("code.proposal.edit"),
-            ),
-        ] {
-            let api = Api::new();
-            let (endpoint, task) = upstream(move |mut socket| {
-                let raw = incoming(&mut socket);
-                let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
-                let input: Value = serde_json::from_slice(&raw[start..]).unwrap();
-                assert_eq!(input["response_format"], json!({"type":"json_object"}));
-                assert_eq!(input["stream"], mode == "stream");
-                assert!(input.get("tools").is_none());
-                if mode == "complete" {
-                    reply(&mut socket, "application/json", &json!({"model":"fixture","choices":[{
+fn structured_output_request_never_substitutes_for_strict_proposal_validation() {
+    for format in [json!("json_object"), edit_schema_choice()] {
+        for mode in ["stream", "complete"] {
+            for (answer, refusal) in [
+                (coding_answer(), None),
+                (
+                    format!("```json\n{}\n```", coding_answer()),
+                    Some("code.proposal.format"),
+                ),
+                ("{\"edits\":[]}".into(), Some("code.proposal.format")),
+                (
+                    "{\"edits\":[],\"edits\":[]}".into(),
+                    Some("code.proposal.format"),
+                ),
+                (
+                    "{\"edits\":[{\"path\":\"sample.py\",\"old\":\"x\"}]}".into(),
+                    Some("code.proposal.format"),
+                ),
+                (
+                    "{\"edits\":[{\"path\":\"../outside\",\"old\":\"x\",\"new\":\"y\"}]}".into(),
+                    Some("code.proposal.edit"),
+                ),
+            ] {
+                let api = Api::new();
+                let expected_format = upstream_format(&format);
+                let (endpoint, task) = upstream(move |mut socket| {
+                    let raw = incoming(&mut socket);
+                    let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
+                    let input: Value = serde_json::from_slice(&raw[start..]).unwrap();
+                    assert_eq!(input["response_format"], expected_format);
+                    assert_eq!(input["stream"], mode == "stream");
+                    assert!(input.get("tools").is_none());
+                    if mode == "complete" {
+                        reply(&mut socket, "application/json", &json!({"model":"fixture","choices":[{
                         "index":0,"message":{"role":"assistant","content":answer},"finish_reason":"stop"}]}).to_string());
-                } else {
-                    let body = format!(
-                        "data: {}\n\ndata: {}\n\ndata: [DONE]\n\n",
-                        json!({"model":"fixture","choices":[{"index":0,"delta":{"content":answer},"finish_reason":null}]}),
-                        json!({"model":"fixture","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]})
-                    );
-                    reply(&mut socket, "text/event-stream", &body);
-                }
-            });
-            assert_eq!(api.call("PUT", "/v1/settings", CONTROL, Some(json!({
-                "endpoint":endpoint,"approve_conversations":true,"response_mode":mode,"response_format":"json_object"
+                    } else {
+                        let body = format!(
+                            "data: {}\n\ndata: {}\n\ndata: [DONE]\n\n",
+                            json!({"model":"fixture","choices":[{"index":0,"delta":{"content":answer},"finish_reason":null}]}),
+                            json!({"model":"fixture","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]})
+                        );
+                        reply(&mut socket, "text/event-stream", &body);
+                    }
+                });
+                assert_eq!(api.call("PUT", "/v1/settings", CONTROL, Some(json!({
+                "endpoint":endpoint,"approve_conversations":true,"response_mode":mode,"response_format":format
             }))).0, 200);
-            let (status, body) =
-                api.call("POST", "/v1/code/proposals", CLIENT, Some(coding_request()));
-            assert_eq!(status, 200);
-            let rows = events(&body);
-            let last = rows.last().unwrap();
-            if let Some(code) = refusal {
-                assert_eq!(last["type"], "error");
-                assert_eq!(last["code"], code);
-                assert!(!rows.iter().any(|v| v["type"] == "proposal"));
-            } else {
-                assert_eq!(last["type"], "proposal");
-                assert_eq!(last["applied"], false);
-                assert_eq!(last["tested"], false);
+                let (status, body) =
+                    api.call("POST", "/v1/code/proposals", CLIENT, Some(coding_request()));
+                assert_eq!(status, 200);
+                let rows = events(&body);
+                let last = rows.last().unwrap();
+                if let Some(code) = refusal {
+                    assert_eq!(last["type"], "error");
+                    assert_eq!(last["code"], code);
+                    assert!(!rows.iter().any(|v| v["type"] == "proposal"));
+                } else {
+                    assert_eq!(last["type"], "proposal");
+                    assert_eq!(last["applied"], false);
+                    assert_eq!(last["tested"], false);
+                }
+                task.join().unwrap();
             }
-            task.join().unwrap();
         }
     }
 }
 
 #[test]
-fn unsupported_json_object_request_reports_status_without_retry_or_fallback() {
-    let api = Api::new();
-    let (endpoint, task) = upstream(move |mut socket| {
-        let raw = incoming(&mut socket);
-        let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
-        let input: Value = serde_json::from_slice(&raw[start..]).unwrap();
-        assert_eq!(input["response_format"], json!({"type":"json_object"}));
-        socket
-            .write_all(
-                b"HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+fn unsupported_structured_output_request_reports_status_without_retry_or_fallback() {
+    for format in [json!("json_object"), edit_schema_choice()] {
+        let api = Api::new();
+        let expected_format = upstream_format(&format);
+        let (endpoint, task) = upstream(move |mut socket| {
+            let raw = incoming(&mut socket);
+            let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
+            let input: Value = serde_json::from_slice(&raw[start..]).unwrap();
+            assert_eq!(input["response_format"], expected_format);
+            socket
+                .write_all(
+                    b"HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+                )
+                .unwrap();
+        });
+        assert_eq!(
+            api.call(
+                "PUT",
+                "/v1/settings",
+                CONTROL,
+                Some(json!({
+                    "endpoint":endpoint,"approve_conversations":true,"response_format":format
+                }))
             )
-            .unwrap();
-    });
-    assert_eq!(
-        api.call(
-            "PUT",
-            "/v1/settings",
-            CONTROL,
-            Some(json!({
-                "endpoint":endpoint,"approve_conversations":true,"response_format":"json_object"
-            }))
-        )
-        .0,
-        200
-    );
-    let (status, body) = api.call("POST", "/v1/code/proposals", CLIENT, Some(coding_request()));
-    assert_eq!(status, 200);
-    let rows = events(&body);
-    let last = rows.last().unwrap();
-    assert_eq!(last["type"], "error");
-    assert_eq!(last["code"], "chat.transport.status");
-    assert!(!rows.iter().any(|v| v["type"] == "proposal"));
-    task.join().unwrap();
+            .0,
+            200
+        );
+        let (status, body) = api.call("POST", "/v1/code/proposals", CLIENT, Some(coding_request()));
+        assert_eq!(status, 200);
+        let rows = events(&body);
+        let last = rows.last().unwrap();
+        assert_eq!(last["type"], "error");
+        assert_eq!(last["code"], "chat.transport.status");
+        assert!(!rows.iter().any(|v| v["type"] == "proposal"));
+        task.join().unwrap();
+    }
 }
 
 #[test]

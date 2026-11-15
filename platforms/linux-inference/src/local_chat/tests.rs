@@ -185,20 +185,32 @@ fn requests_bound_messages_tokens_and_encoded_size() {
         );
     }
     for (include_usage, format, mode, thinking) in [false, true].into_iter().flat_map(|usage| {
-        [ChatResponseFormat::Text, ChatResponseFormat::JsonObject]
-            .into_iter()
-            .flat_map(move |format| {
-                [ChatResponseMode::Stream, ChatResponseMode::Complete]
+        [
+            ChatResponseFormat::Text,
+            ChatResponseFormat::JsonObject,
+            ChatResponseFormat::JsonSchema(
+                ChatOutputSchema::new(
+                    "answer".into(),
+                    json!({"type":"object","properties":{"answer":{"type":"string"}},
+                        "required":["answer"],"additionalProperties":false}),
+                )
+                .unwrap(),
+            ),
+        ]
+        .into_iter()
+        .flat_map(move |format| {
+            [ChatResponseMode::Stream, ChatResponseMode::Complete]
+                .into_iter()
+                .flat_map(move |mode| {
+                    let format = format.clone();
+                    [
+                        ChatThinkingMode::ProviderDefault,
+                        ChatThinkingMode::Disabled,
+                    ]
                     .into_iter()
-                    .flat_map(move |mode| {
-                        [
-                            ChatThinkingMode::ProviderDefault,
-                            ChatThinkingMode::Disabled,
-                        ]
-                        .into_iter()
-                        .map(move |thinking| (usage, format, mode, thinking))
-                    })
-            })
+                    .map(move |thinking| (usage, format.clone(), mode, thinking))
+                })
+        })
     }) {
         let encode = |content: &str| {
             encode_chat_request(
@@ -210,7 +222,7 @@ fn requests_bound_messages_tokens_and_encoded_size() {
                 1,
                 include_usage,
                 mode,
-                format,
+                &format,
                 thinking,
             )
         };
@@ -225,6 +237,68 @@ fn requests_bound_messages_tokens_and_encoded_size() {
         content.push('x');
         assert_eq!(encode(&content), Err(ChatError::Request));
     }
+}
+
+#[test]
+fn output_schema_is_inline_typed_and_cannot_request_reference_resolution() {
+    let schema = json!({"type":"object","properties":{"answer":{"type":"string"}},
+        "required":["answer"],"additionalProperties":false});
+    let format = json!({"json_schema":{"name":"answer_v1","schema":schema}});
+    let decoded: ChatResponseFormat = serde_json::from_value(format.clone()).unwrap();
+    assert_eq!(serde_json::to_value(&decoded).unwrap(), format);
+    for name in [
+        "",
+        "bad name",
+        "../file",
+        "https://example.invalid",
+        &"a".repeat(65),
+    ] {
+        assert_eq!(
+            ChatOutputSchema::new(name.into(), schema.clone()),
+            Err(ChatError::Request)
+        );
+    }
+    for invalid in [Value::Null, json!([]), json!({}), json!({"type":"array"})] {
+        assert_eq!(
+            ChatOutputSchema::new("answer".into(), invalid),
+            Err(ChatError::Request)
+        );
+    }
+    for keyword in ["$ref", "$dynamicRef", "$recursiveRef", "$schema", "$id"] {
+        let mut nested = schema.clone();
+        nested["properties"]["answer"][keyword] = json!("https://example.invalid/schema");
+        assert_eq!(
+            ChatOutputSchema::new("answer".into(), nested),
+            Err(ChatError::Request)
+        );
+    }
+    for invalid in [
+        r#"{"json_schema":{"name":"answer","name":"other","schema":{"type":"object"}}}"#,
+        r#"{"json_schema":{"name":"answer","schema":{"type":"object"},"strict":false}}"#,
+        r#"{"json_schema":{"name":"answer","schema":{"type":"object"}},"text":null}"#,
+    ] {
+        assert!(serde_json::from_str::<ChatResponseFormat>(invalid).is_err());
+    }
+    let huge = ChatOutputSchema::new(
+        "answer".into(),
+        json!({"type":"object","description":"x".repeat(MAX_REQUEST_BYTES)}),
+    )
+    .unwrap();
+    assert_eq!(
+        encode_chat_request(
+            "test-model",
+            &[ChatMessage {
+                role: ChatRole::User,
+                content: "x"
+            }],
+            1,
+            false,
+            ChatResponseMode::Complete,
+            &ChatResponseFormat::JsonSchema(huge),
+            ChatThinkingMode::ProviderDefault,
+        ),
+        Err(ChatError::Request)
+    );
 }
 
 #[test]

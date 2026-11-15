@@ -454,7 +454,7 @@ impl LocalChatTransport {
         self.response_mode
     }
 
-    /// Request JSON-object output while constructing trusted immutable settings.
+    /// Request structured output while constructing trusted immutable settings.
     /// No prompt is added, bytes repaired, limits raised or retries introduced.
     /// The endpoint may ignore the request; consumers retain their strict checks.
     #[must_use]
@@ -465,8 +465,8 @@ impl LocalChatTransport {
 
     /// Requested output format; this is not proof of a valid model response.
     #[must_use]
-    pub const fn response_format(&self) -> ChatResponseFormat {
-        self.response_format
+    pub fn response_format(&self) -> ChatResponseFormat {
+        self.response_format.clone()
     }
 
     /// Select an optional endpoint thinking control in trusted configuration.
@@ -509,7 +509,7 @@ impl LocalChatTransport {
             max_tokens,
             include_usage,
             self.response_mode,
-            self.response_format,
+            &self.response_format,
             self.thinking_mode,
         )?);
         // Use the same serde message-array encoding as the frozen body. This

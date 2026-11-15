@@ -2,6 +2,31 @@
 
 ## Active queue: local agent mission
 
+The [trusted inline output-schema decision](docs/decisions/0209-trusted-inline-output-schema.md)
+addresses the largest measured refusal cause in the fresh six-profile repeat.
+Read-only diagnosis splits 27 format refusals into 11 duplicate-field answers,
+11 wrong structures, four malformed JSON answers and one oversized answer.
+The optional schema requests generation structure through trusted settings;
+strict edit validation remains authoritative. [Source evidence](docs/evidence/t303-inline-output-schema-2026-11-15.md)
+records passing formatting, Clippy and new/expanded tests; the complete source
+gate remains FAIL with 1,169 passes, the same 53 failures and 19 ignored tests.
+A fresh resumable development repeat is required; no improvement is claimed yet.
+T-303/T-306 remain open and no row or sub-row is added.
+
+The released Git work is placed within existing T-306 at the first capability
+boundary after this measured-cause work and its development repeat, once task
+completion reliability can be measured, before T-312 model-role selection.
+Every push must show branch, commits and remote and receive a fresh yes.
+Other service actions, sign-in and code-host issues/pull requests remain
+planning only. This increment starts no Git tool.
+
+The retained [independent full Muse measurement review](docs/reviews/cbe1d31dfac8-thinking-disabled-muse-measurement.txt)
+returns **Verdict: PASS** for exact `cbe1d31dfac869d09b32fca2e38a5498cffcc833`,
+with no high or medium finding. It accepts reporting only and closes no row.
+Its low artifact-retention finding joins T-309 backlog: future capsules must
+retain every method version named by a receipt or bind the final method hash
+in a closing receipt. The accepted measurements and sealed artifacts stay unchanged.
+
 The [thinking-disabled Muse repeat](docs/evidence/t303-thinking-disabled-muse-2026-11-15.md)
 finishes all 30 frozen development tasks at source
 `a896f055256e96baec09966c71c5d0a7f1714d96`: 19/30 strict ungraded proposals. Task passes and retries remain

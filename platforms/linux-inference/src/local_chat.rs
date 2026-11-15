@@ -176,14 +176,78 @@ pub enum ChatResponseMode {
 
 /// Trusted upstream output request, separate from framing and edit validation.
 /// Servers may reject or ignore it; no output gains authority from this setting.
-#[derive(Clone, Copy, Default, Debug, Deserialize, Serialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
+#[derive(Clone, Default, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case", deny_unknown_fields)]
 pub enum ChatResponseFormat {
     /// Ordinary conversation; omit the upstream format constraint.
     #[default]
     Text,
     /// Request a JSON object from a supporting endpoint. Consumers still validate.
     JsonObject,
+    /// Request a named strict schema from a supporting endpoint. This remains
+    /// an untrusted generation result, never a validation or permission receipt.
+    JsonSchema(ChatOutputSchema),
+}
+
+/// An explicitly chosen, repository-independent output schema. The engine never
+/// resolves schema references or reads a file/URL named in schema data.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(try_from = "OutputSchemaInput")]
+pub struct ChatOutputSchema {
+    name: String,
+    schema: serde_json::Value,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct OutputSchemaInput {
+    name: String,
+    schema: serde_json::Value,
+}
+
+impl TryFrom<OutputSchemaInput> for ChatOutputSchema {
+    type Error = ChatError;
+
+    fn try_from(input: OutputSchemaInput) -> Result<Self, Self::Error> {
+        Self::new(input.name, input.schema)
+    }
+}
+
+impl ChatOutputSchema {
+    /// Accept an inline object schema and an ASCII name. External/reference
+    /// keywords are refused before any request; the provider checks schema
+    /// semantics. The existing request byte ceiling also includes this schema.
+    pub fn new(name: String, schema: serde_json::Value) -> Result<Self, ChatError> {
+        if name.is_empty()
+            || name.len() > 64
+            || !name
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || b"_-".contains(&byte))
+            || !schema.is_object()
+            || schema.get("type").and_then(serde_json::Value::as_str) != Some("object")
+        {
+            return Err(ChatError::Request);
+        }
+        let mut pending = vec![&schema];
+        while let Some(value) = pending.pop() {
+            match value {
+                serde_json::Value::Object(fields) => {
+                    if fields.keys().any(|key| {
+                        matches!(
+                            key.as_str(),
+                            "$ref" | "$dynamicRef" | "$recursiveRef" | "$schema" | "$id"
+                        )
+                    }) {
+                        return Err(ChatError::Request);
+                    }
+                    pending.extend(fields.values());
+                }
+                serde_json::Value::Array(items) => pending.extend(items),
+                _ => {}
+            }
+        }
+        Ok(Self { name, schema })
+    }
 }
 
 /// Trusted request for a supporting endpoint's optional thinking control.
@@ -211,7 +275,7 @@ pub fn encode_chat(
         max_tokens,
         false,
         ChatResponseMode::Stream,
-        ChatResponseFormat::Text,
+        &ChatResponseFormat::Text,
         ChatThinkingMode::ProviderDefault,
     )
 }
@@ -229,7 +293,7 @@ pub fn encode_chat_with_usage(
         max_tokens,
         true,
         ChatResponseMode::Stream,
-        ChatResponseFormat::Text,
+        &ChatResponseFormat::Text,
         ChatThinkingMode::ProviderDefault,
     )
 }
@@ -240,7 +304,7 @@ pub(super) fn encode_chat_request(
     max_tokens: u32,
     include_usage: bool,
     mode: ChatResponseMode,
-    format: ChatResponseFormat,
+    format: &ChatResponseFormat,
     thinking: ChatThinkingMode,
 ) -> Result<Vec<u8>, ChatError> {
     if !valid_model(model)
@@ -270,7 +334,7 @@ pub(super) fn encode_chat_request(
         #[serde(skip_serializing_if = "Option::is_none")]
         stream_options: Option<StreamOptions>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        response_format: Option<ResponseFormat>,
+        response_format: Option<ResponseFormat<'a>>,
         #[serde(skip_serializing_if = "Option::is_none")]
         chat_template_kwargs: Option<TemplateOptions>,
     }
@@ -279,8 +343,16 @@ pub(super) fn encode_chat_request(
         include_usage: bool,
     }
     #[derive(Serialize)]
-    struct ResponseFormat {
+    struct ResponseFormat<'a> {
         r#type: &'static str,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        json_schema: Option<SchemaRequest<'a>>,
+    }
+    #[derive(Serialize)]
+    struct SchemaRequest<'a> {
+        name: &'a str,
+        strict: bool,
+        schema: &'a serde_json::Value,
     }
     #[derive(Serialize)]
     struct TemplateOptions {
@@ -303,9 +375,21 @@ pub(super) fn encode_chat_request(
                     enable_thinking: false,
                 },
             ),
-            response_format: (format == ChatResponseFormat::JsonObject).then_some(ResponseFormat {
-                r#type: "json_object",
-            }),
+            response_format: match format {
+                ChatResponseFormat::Text => None,
+                ChatResponseFormat::JsonObject => Some(ResponseFormat {
+                    r#type: "json_object",
+                    json_schema: None,
+                }),
+                ChatResponseFormat::JsonSchema(schema) => Some(ResponseFormat {
+                    r#type: "json_schema",
+                    json_schema: Some(SchemaRequest {
+                        name: &schema.name,
+                        strict: true,
+                        schema: &schema.schema,
+                    }),
+                }),
+            },
             stream_options: (include_usage && mode == ChatResponseMode::Stream).then_some(
                 StreamOptions {
                     include_usage: true,

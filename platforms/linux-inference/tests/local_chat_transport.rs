@@ -8,8 +8,8 @@ use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
 use agentmage_platform_linux_inference::local_chat::{
-    ChatError, ChatFinish, ChatMessage, ChatResponseFormat, ChatResponseMode, ChatRole,
-    ChatThinkingMode, LocalChatEndpoint,
+    ChatError, ChatFinish, ChatMessage, ChatOutputSchema, ChatResponseFormat, ChatResponseMode,
+    ChatRole, ChatThinkingMode, LocalChatEndpoint,
 };
 use agentmage_platform_linux_inference::local_chat_transport::{
     BearerKey, ChatCancellation, LocalChatApproval, LocalChatTransport, LocalProbeApproval,
@@ -27,8 +27,17 @@ fn complete_body() -> serde_json::Value {
 #[test]
 fn complete_mode_freezes_actual_body_and_reports_only_validated_text_and_optional_usage() {
     use sha2::{Digest, Sha256};
-    for (usage, format, thinking) in [false, true].into_iter().flat_map(|usage| {
-        [ChatResponseFormat::Text, ChatResponseFormat::JsonObject]
+    for (usage, format, thinking) in
+        [false, true].into_iter().flat_map(|usage| {
+            [
+            ChatResponseFormat::Text,
+            ChatResponseFormat::JsonObject,
+            ChatResponseFormat::JsonSchema(ChatOutputSchema::new(
+                "answer".into(),
+                serde_json::json!({"type":"object","properties":{"answer":{"type":"string"}},
+                    "required":["answer"],"additionalProperties":false}),
+            ).unwrap()),
+        ]
             .into_iter()
             .flat_map(move |format| {
                 [
@@ -36,9 +45,10 @@ fn complete_mode_freezes_actual_body_and_reports_only_validated_text_and_optiona
                     ChatThinkingMode::Disabled,
                 ]
                 .into_iter()
-                .map(move |thinking| (usage, format, thinking))
+                .map(move |thinking| (usage, format.clone(), thinking))
             })
-    }) {
+        })
+    {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let endpoint =
             LocalChatEndpoint::parse(&format!("http://{}/v1", listener.local_addr().unwrap()))
@@ -49,7 +59,7 @@ fn complete_mode_freezes_actual_body_and_reports_only_validated_text_and_optiona
         assert_eq!(client.thinking_mode(), ChatThinkingMode::ProviderDefault);
         let client = client
             .with_response_mode(ChatResponseMode::Complete)
-            .with_response_format(format)
+            .with_response_format(format.clone())
             .with_thinking_mode(thinking);
         assert_eq!(client.response_format(), format);
         assert_eq!(client.thinking_mode(), thinking);
@@ -70,6 +80,13 @@ fn complete_mode_freezes_actual_body_and_reports_only_validated_text_and_optiona
                 ChatResponseFormat::JsonObject => assert_eq!(
                     body["response_format"],
                     serde_json::json!({"type":"json_object"})
+                ),
+                ChatResponseFormat::JsonSchema(_) => assert_eq!(
+                    body["response_format"],
+                    serde_json::json!({"type":"json_schema","json_schema":{
+                        "name":"answer","strict":true,"schema":{
+                            "type":"object","properties":{"answer":{"type":"string"}},
+                            "required":["answer"],"additionalProperties":false}}})
                 ),
             }
             assert!(body.get("stream_options").is_none());
