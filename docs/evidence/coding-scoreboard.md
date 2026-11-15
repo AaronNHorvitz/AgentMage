@@ -2412,3 +2412,53 @@ pass; original-helper reproduction is not rerun. The exact independent e24 revie
 is PASS with no findings; this checkpoint needs independent core review and closes
 no row. Finish the remaining eight tasks before tuning. See the
 [checkpoint evidence](t303-thinking-disabled-muse-checkpoint22-2026-11-15.md).
+
+## Independent checkpoint-22 review retained — 2026-11-15
+
+The [independent core review](../reviews/d1b408016c28-thinking-disabled-muse-checkpoint22.txt)
+returns **Verdict: PASS** for exact reporting commit
+`d1b408016c284e3aaf36e7546f0631ef89a19b0c`, with no findings at any severity.
+This accepts the cumulative 22/30 Muse checkpoint only. Eight tasks remain
+before tuning; task correctness and retries are still unavailable. Counts and
+sealed artifacts remain unchanged. T-303/T-306 stay open; no row closes.
+
+## Thinking-disabled Muse development repeat — 2026-11-14–15 UTC
+
+Source: `a896f055256e96baec09966c71c5d0a7f1714d96`. All 30 frozen development tasks ran through statement/editable-base
+source selection → credential-owning chat → unchanged strict checker. This is the
+available partial path; native admission and the original grading-control receipt
+still block full retrieval, native effects, tests, feedback and retries.
+
+| Date | Source commit | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU reserved work min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-14–15 | a896f055256e96baec09966c71c5d0a7f1714d96 | muse (30/30) | 32768 / 24395–29826 | Unavailable | Unavailable | 19/30 | Not run | 4798.465 | 90.508 | 166355 / 150086 |
+
+Changed variable: trusted API `thinking_mode: disabled`, encoded in every upstream
+request as `chat_template_kwargs: {"enable_thinking": false}`; the prepared
+server template retains `reasoning_strength: medium`. This records the requested
+option without claiming model support. Complete framing, JSON-object output,
+prompts, checker, profiles, 300-second idle/total deadlines and budget formula
+remain fixed. Does not fit: 0. Outcomes: `{"generation-refused:error:chat.transport.timeout": 4, "strict-edit-refused:code.proposal.edit": 3, "strict-edit-refused:code.proposal.format": 4, "ungraded-proposal": 19}`.
+Backend counters cover 26/30 including non-answer output; response captures
+cover 27/30. Missing response captures: `["dev-004", "dev-011", "dev-012"]`.
+Unavailable final counters are never zero or reconstructed.
+Captures comprise 26 complete JSON responses and 1
+truncated prefix (`dev-027`, 16384 bytes), not a completed response. Its final
+counters are unavailable. Non-empty reasoning output appears in
+26/26 complete retained responses despite the
+requested option; missing captures and partial-response reasoning are unavailable.
+
+Reserved work totals 5430.492 seconds after frozen-input validation, including
+verification, loading, calls and cleanup. Queues, wrapper/pre-entry overhead and
+pauses are excluded. Active GPU kernel time and continuous end-to-end elapsed
+time are unmeasured. Each two-task job uses both wrappers with a 900-second cap
+after GPU admission and releases both before its 30-second pause. All owners
+exit. No candidate, hidden or held-out test ran; task passes remain unavailable.
+Two jobs completed before the November 14 stop; thirteen completed after the
+November 15 owner restart, skipping the four recorded attempts without replay.
+All controller segments, the queued-session absence and stop receipts remain retained.
+All six prepared profiles now have fresh post-change measurements. See the
+[evidence and metadata erratum](t303-thinking-disabled-muse-2026-11-15.md).
+T-303/T-306 remain open; independent core review is required.
+
+All six profiles now cover 180 development attempts: 117/180 strict ungraded proposals. The largest refusal cause is `strict-edit-refused:code.proposal.format` (27/180). That measured cause sets the next work after high/medium review findings. Task correctness and retries remain unavailable; no held-out task ran.

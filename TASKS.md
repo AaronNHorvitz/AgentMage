@@ -2,6 +2,28 @@
 
 ## Active queue: local agent mission
 
+The [thinking-disabled Muse repeat](docs/evidence/t303-thinking-disabled-muse-2026-11-15.md)
+finishes all 30 frozen development tasks at source
+`a896f055256e96baec09966c71c5d0a7f1714d96`: 19/30 strict ungraded proposals. Task passes and retries remain
+unavailable; no candidate, hidden or held-out test ran. Audit, original-helper
+reproduction, cleanup and archive verification pass. All six profiles now have fresh
+post-change measurements. This reporting increment requires independent core
+review. T-303/T-306 remain open; no row or completion tick is added.
+
+The owner resumed the lane on November 15 and released repository reads and
+approval-gated pushes over Git. The first capability-row boundary permitted by
+MEASURE FIRST will schedule that work, after task-completion reliability can be
+measured; this reporting increment starts no Git tool. Other service actions,
+organisation sign-in, and code-host issue/pull-request tools remain planning only.
+Every eventual push must show its exact branch, commits and remote and receive
+the user's yes. The measured largest failure cause still chooses the next work.
+
+The retained [independent checkpoint-22 review](docs/reviews/d1b408016c28-thinking-disabled-muse-checkpoint22.txt)
+returns **Verdict: PASS** for exact `d1b408016c284e3aaf36e7546f0631ef89a19b0c`,
+with no findings. It accepts the cumulative 22/30 Muse reporting checkpoint;
+no row closes. T-303/T-306 stay open, and the eight remaining development tasks
+must finish before tuning. Earlier sealed artifacts and counts are unchanged.
+
 The [Muse checkpoint](docs/evidence/t303-thinking-disabled-muse-checkpoint22-2026-11-15.md)
 advances to **22/30 attempted; eight pending**, with fourteen strict ungraded
 proposals. Task passes and retries remain unavailable. Read-only audit and
