@@ -2462,3 +2462,46 @@ All six prepared profiles now have fresh post-change measurements. See the
 T-303/T-306 remain open; independent core review is required.
 
 All six profiles now cover 180 development attempts: 117/180 strict ungraded proposals. The largest refusal cause is `strict-edit-refused:code.proposal.format` (27/180). That measured cause sets the next work after high/medium review findings. Task correctness and retries remain unavailable; no held-out task ran.
+
+## Inline-schema API checkpoint — 2026-11-15 UTC, 2/30
+
+Source: `72c002a42957340de0b6fa0eb4d48385db2c7e62`. Two frozen development tasks
+ran through source selection → credential-owning chat API → unchanged Rust strict
+checker. Both produced **strict ungraded proposals**, not task passes. These
+same two tasks also produced proposals in the preceding repeat; no improvement
+is established. Twenty-eight tasks on this profile and all five other profiles
+remain before further tuning.
+
+| Date | Source commit | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU reserved work min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-15 | 72c002a42957340de0b6fa0eb4d48385db2c7e62 | gemma4-26b-a4b (2/30; 28 pending) | 32768 / 23170–23232 | Unavailable | Unavailable | 2/2 | Not run | 64.846 | 1.708 | 19070 / 3665 (2/2 counters) |
+
+Changed variable: trusted `response_format` selects a named inline edit schema,
+encoded upstream as `json_schema` with `strict: true`. Captured bodies establish
+the actual requests; support beyond these observations is unclaimed. Messages
+and selected context are byte-identical to the preceding repeat. Prompts, helper,
+checker, model/profile, complete framing, requested thinking option, 300-second
+idle/total deadlines and output formula remain fixed. Inputs 9504–9566; does not
+fit: 0. Both complete captures finish with `stop`; reasoning metadata is absent
+and remains unavailable, never reconstructed as zero.
+
+One earlier **preparation failure attempted zero tasks**: a 111-byte private
+Unix socket path prevented the health client from connecting, although the
+server log records loading in 28.209 seconds. Its startup deadline expired.
+The failed preparation used 189.866 seconds /
+3.164 reserved minutes; no task counters exist.
+A short private namespace produces 87-byte socket paths. Only addressing
+changed; no deadline, resource ceiling, priority or generation input changed.
+The failed artifacts remain intact and no task was replayed. Combined reserved
+work, including that failure, is **292.327 seconds / 4.872 minutes**.
+
+Reserved-work timers start after frozen-input validation and exclude queues,
+wrapper/pre-entry overhead and pauses. Active GPU kernel time and continuous
+elapsed time are unmeasured. The completed job revokes settings and reaps API/model
+owners; keys/sockets are absent and two API tokens are retired. Process scanning
+covers this PID namespace only. Reservation-wrapper exit statuses are unavailable;
+completed worker reporting and owner absence are observed, not substituted for
+those statuses. Native admission and original grading controls still block full
+retrieval, effects, tests, feedback and retries. No candidate, hidden or held-out
+test ran. T-303/T-306 remain open; independent core review and the full fresh
+six-profile repeat are required. See the [source and checkpoint evidence](t303-inline-output-schema-2026-11-15.md).

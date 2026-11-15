@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The [inline-schema API checkpoint](docs/evidence/t303-inline-output-schema-2026-11-15.md)
+records 2/30 A4B attempts at source `72c002a42957340de0b6fa0eb4d48385db2c7e62`:
+two strict ungraded proposals, not task passes. The same tasks already produced
+proposals before this change; no improvement is established. The remaining
+28 tasks and all five other profile repeats must finish before further tuning.
+A zero-task startup failure from an overlong private socket path is retained;
+only the private addressing was corrected. T-303/T-306 remain open, and this
+source/checkpoint batch requires independent core review. No row is added or closed.
+
 The [trusted inline output-schema decision](docs/decisions/0209-trusted-inline-output-schema.md)
 addresses the largest measured refusal cause in the fresh six-profile repeat.
 Read-only diagnosis splits 27 format refusals into 11 duplicate-field answers,
