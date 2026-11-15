@@ -1,0 +1,97 @@
+Commit: e24b697ab09aa8fd6c7a5af75c2efad55c4ac58e
+Scope: muse-checkpoint20-review-retention
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Pinned checkout
+/lane/review-checkout at the exact commit. Row T-303 (related T-306), non-closing reporting increment, core
+tier. Base cc521088e3e82ebd7597d2186cbcf01857e62226. I ran no GPU, model, candidate, hidden test or
+held-out task. I extracted, imported and executed no archived code. I did not run the builder's write or
+preservation methods, did not read live builder state, and did not touch the builder's queued job.
+
+## Methods and exact commands (run from /lane/review-checkout)
+
+1. `git rev-parse HEAD` → `e24b697ab09aa8fd6c7a5af75c2efad55c4ac58e`. `git rev-parse HEAD^` → base
+   `cc521088e3e82ebd7597d2186cbcf01857e62226`. `git diff --check cc521088…` → exit 0.
+   `git status --porcelain` → empty, both before and after the gate. The diff has exactly four paths:
+   TASKS.md +9; coding-scoreboard.md +11; the checkpoint evidence file +3/−1, a reflow of one sentence
+   with one sentence added; and the new docs/reviews/cc521088e3e8-thinking-disabled-muse-checkpoint20.txt
+   +129. No script, task, prompt, checker, profile, threshold, permission or SBOM path changed.
+2. `cmp docs/reviews/cc521088e3e8-thinking-disabled-muse-checkpoint20.txt /lane/reviews/cc521088e3e8-thinking-disabled-muse-checkpoint20.md`
+   → exit 0, byte-identical. The retained review begins with the exact commit and scope, ends with
+   `Verdict: PASS`, and has one low finding and no high or medium finding.
+3. `sha256sum /lane/reviews/muse-checkpoint20-review-retention-20261115-bindings.json` →
+   `55a30ab3622348c765b67a1e3aed7d28b7eb5bd8bd535efc915a6dcd3821b9a9` (matches). I size- and hash-checked
+   all 6 listed artifacts in my own loop: 6/6 match. I read both method versions and the preservation
+   method and records. My independent re-derivation:
+   - The `git show HEAD:<path>` SHA-256 of all four paths equals the postcommit and preservation records:
+     653bca6f…, 8c6b77d8…, 6df28580…, 7f01a8be….
+   - TASKS.md has 507 `|`-prefixed table lines at both base and commit, identical line for line, so no row
+     or tick changed.
+   - The base coding-scoreboard.md is an exact byte prefix of the commit version, so the change is
+     append-only.
+   - The prior-review disclosure is honest: `ast.parse` of the before-fix method raises SyntaxError at
+     line 12 ("bytes can only contain ASCII literal characters", the em dash in a `b'''` literal). A Python
+     file that fails to compile runs no line, which supports "before executing any line". The corrected
+     method parses, and a diff shows it differs only by `'''…'''.encode()` in place of `b'''…'''`.
+   - The added non-review prose has no home or host path, username, e-mail, credential, private project
+     name, product comparison, patent, certification or qualification claim. `/lane/...` sandbox paths
+     occur only inside the verbatim retained review, as in earlier retained reviews.
+4. `sha256sum /lane/reviews/thinking-disabled-muse-checkpoint20-20261115-v2-bindings.json` →
+   `0ede3601c69d1f3d14a348cdbc7235ac25ca257de2edb682329319e1ff785767` (matches). I re-hashed the 20 bound
+   artifacts myself: 20/20 match.
+   I read `…-v2-verify.py` in full first. It only streams tar members into memory, hashes them, parses JSON
+   and applies regexes, and it writes nothing. `python3 -B /lane/reviews/thinking-disabled-muse-checkpoint20-20261115-v2-verify.py`
+   → `status PASS`, with:
+   - 2616 files; 2283 repository and 20 private inputs; 20/30 attempted, 10 remaining; 13 ungraded proposals.
+   - Causes {ungraded-proposal 13, strict-edit-refused:code.proposal.edit 2, …format 2,
+     generation-refused:error:chat.transport.timeout 3}.
+   - Counter coverage 17; response captures 17; missing [dev-004, dev-011, dev-012].
+   - Tokens 111197/99327; request/check 3304.704 s; reserved 3733.674 s; build wait 1332.798 s.
+   - candidate_execution, hidden_tests and held_out all false.
+
+   This is identical to the figures the prior independent review reported.
+
+   Reasoning-output claim: I streamed the tar read-only and parsed the retained `upstream-response-*.bin`
+   members. There are 17 of them, all with `finish_reason: stop`, non-empty `content` and non-empty
+   `message.reasoning_content` (2926–47468 characters; the shortest is muse-18 response 00). Absent:
+   muse-02 response 01 (dev-004) and muse-10 responses 00/01 (dev-011, dev-012), which are the three
+   timeouts. The added sentences ("all 17 retained/captured responses contain non-empty reasoning output
+   … the three timeouts have no capture") are exactly supported. I reconstructed no capture or counter.
+5. `mkdir -p /tmp/agentmage-e24b697a-review-bin`; I symlinked `/lane/reviews/42612ca9787f-a4b-node` as
+   `node` there. `CARGO_TARGET_DIR=/lane/state/review-target PATH=/tmp/agentmage-e24b697a-review-bin:$PATH python3 -B scripts/local_agent_fast_gate.py --base cc521088e3e82ebd7597d2186cbcf01857e62226`
+   → `FAST GATE: PASS`. The plan has four commands: diff check, untracked lint, review-text lint of the
+   retained review, and markdownlint-cli2 with "0 issues in 0 files". This is identical to the retained
+   gate log. No cargo step runs because only `.md`/`docs/reviews/*.txt` changed. The inherited source gate
+   (1167/53/19) is not green and was not rerun, as the request states. This commit makes no claim about it.
+
+## Evaluation integrity, claims and MEASURE FIRST
+
+- No held-out, hidden or candidate run; no task, prompt, checker or threshold change; nothing usable as
+  tuning material is added. The text says to finish the ten remaining tasks before tuning.
+- Counts are unchanged. First/within-budget passes stay unavailable, and proposals stay ungraded and are
+  not counted as passes.
+- The scoreboard gains a dated line for this reporting increment. It changes no number, so no new budget
+  statement is needed: the checkpoint line at base already states the context/output allowances and keeps
+  "does not fit" separate.
+- No row closes, and T-303/T-306 stay open in both TASKS.md and the scoreboard. No model qualification is
+  claimed.
+
+## Findings
+
+No critical, high, medium or new low finding. The prior low finding (observed reasoning output not
+stated) is resolved at
+`docs/evidence/t303-thinking-disabled-muse-checkpoint-2026-11-15.md:43-44`, `docs/evidence/coding-scoreboard.md:2388-2390`
+and `TASKS.md:7-9`. The earlier backlog item on the inherited private `collector_policy.changed_variable`
+labels (T-309) remains backlog and is unaffected.
+
+Limits: I could not check the builder's preservation hashes of live frozen inputs under `/lane/state/id3`,
+because that is live state, which the request excludes. Those inputs were checked against their sealed
+copies through the verifier in step 4.
+
+## Per-row result
+
+- T-303: the verbatim retention of the cc521088 PASS and the reasoning-output disclosure are accepted as
+  a non-closing reporting increment. The row stays OPEN.
+- T-306: related, non-closing; stays OPEN.
+- Twenty of 30 attempted; ten Muse tasks must finish before any tuning. No model is qualified.
+
+Verdict: PASS

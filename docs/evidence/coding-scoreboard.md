@@ -2390,3 +2390,25 @@ non-empty reasoning output despite the requested thinking option; the three
 timeouts have no capture. Counts and sealed artifacts remain unchanged. This
 accepts the cumulative 20/30 checkpoint only; ten tasks remain before tuning.
 T-303/T-306 stay open and no row closes.
+
+## Muse checkpoint: 22 of 30 attempts — 2026-11-15
+
+| Date | Source commit | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU reserved work min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-14–15 | a896f055256e96baec09966c71c5d0a7f1714d96 | muse (22/30; eight pending) | 32768 / 24395–29826 | Unavailable | Unavailable | 14/22 | Not run | 3688.973 | 69.846 | 125470 / 115890 (19/22 counters) |
+
+Cumulative checkpoint: includes the earlier twenty attempts, never added to them.
+Changed variable remains trusted API `thinking_mode: disabled`; the prepared
+Muse template retains `reasoning_strength: medium`. All nineteen retained
+responses contain reasoning; model support for the requested option is unclaimed.
+Complete framing, JSON-object output, prompts, checker, profile, deadlines and
+budget formula are unchanged. Input 2910–8341; does not fit: 0. Causes: 14 ungraded
+proposals, 3 format refusals, 2 edit refusals, 3 timeouts. Three missing captures and
+counters remain unavailable. Timers exclude queues, wrapper/pre-entry overhead
+and pauses; active GPU kernel time is unmeasured. Native admission and original
+grading controls still block full retrieval, effects, tests, feedback and retries.
+No candidate, hidden or held-out test ran. Read-only audit and archive verification
+pass; original-helper reproduction is not rerun. The exact independent e24 review
+is PASS with no findings; this checkpoint needs independent core review and closes
+no row. Finish the remaining eight tasks before tuning. See the
+[checkpoint evidence](t303-thinking-disabled-muse-checkpoint22-2026-11-15.md).

@@ -2,6 +2,16 @@
 
 ## Active queue: local agent mission
 
+The [Muse checkpoint](docs/evidence/t303-thinking-disabled-muse-checkpoint22-2026-11-15.md)
+advances to **22/30 attempted; eight pending**, with fourteen strict ungraded
+proposals. Task passes and retries remain unavailable. Read-only audit and
+archive verification pass; original-helper reproduction is not rerun. The
+retained [independent checkpoint-retention review](docs/reviews/e24b697ab09a-muse-checkpoint20-review-retention.txt)
+returns **Verdict: PASS** for exact `e24b697ab09aa8fd6c7a5af75c2efad55c4ac58e`,
+with no findings; it closes no row. This new checkpoint needs independent core
+review. No candidate, hidden or held-out test ran. Finish the eight remaining
+Muse tasks before tuning. T-303/T-306 remain open.
+
 The retained [independent Muse checkpoint review](docs/reviews/cc521088e3e8-thinking-disabled-muse-checkpoint20.txt)
 returns **Verdict: PASS** for exact `cc521088e3e82ebd7597d2186cbcf01857e62226`,
 with no high or medium finding. Its low disclosure finding is corrected: every
