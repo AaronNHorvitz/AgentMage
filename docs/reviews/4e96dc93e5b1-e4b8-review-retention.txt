@@ -1,0 +1,175 @@
+Commit: 4e96dc93e5b1872378552f78e5a3abdd51470e68
+Scope: e4b8-review-retention
+
+Reviewer: independent session (Claude Opus 5.5, extra-high effort), read-only, pinned checkout
+`/lane/review-checkout`. I launched no model and used no GPU. I executed no candidate, hidden or
+held-out test, imported no archived module and ran no captured binary or helper. The only capsule
+script I executed was the standalone `verify_retention.py`, after reading it in full. My only
+scratch write was the symlink `/tmp/agentmage-e4b8-retention-review-bin/node`. `git status
+--porcelain` was empty before and after my runs.
+
+## Methods and results
+
+1. Commit and diff
+   - `git rev-parse HEAD` gives `4e96dc93e5b1872378552f78e5a3abdd51470e68`. `HEAD^` gives
+     `3b92cf280c9ba1c3cf21cd4e0ce860dcba35c74f`. `git status --porcelain` is empty.
+   - `git diff --check 3b92cf28…` exits 0. `--stat` shows exactly two paths with additions only:
+     `TASKS.md` (+19) and the new `docs/reviews/3b92cf280c9b-inline-schema-e4b-continuation.md`
+     (+16).
+   - I read both hunks in full. TASKS.md gains two prose paragraphs under "Active queue". Its
+     `|` table lines are 507 before and 507 after, and no line is removed, so no row is ticked,
+     added or split. Both paragraphs state that T-303/T-306 stay open.
+   - The diff does not touch `docs/evidence`, the scoreboard, source, prompts, suites, checkers
+     or profiles.
+   - I decoded the review JSON fence independently with `json.loads` and encoded `report` as
+     UTF-8. Its SHA-256 is `ca783dbd…2c`, equal to the envelope's `sha256` field. The bytes are
+     identical to `/lane/reviews/3b92cf280c9b-inline-schema-e4b-continuation.md` and to
+     `methods/original-review.txt`. Envelope `commit` and `scope` match. Lines 56 and 84 of the
+     original are whitespace-only (`grep -n ' $'`). That is the cause of the first gate failure,
+     and the fault is in the original report, not the builder's.
+2. Capsule
+   - `sha256sum` results match the request: `bindings.json` `21fe3aab…e3bc`, `manifest.json`
+     `2499536d…7497`, post-commit JSON `2ebdede7…4c56`, and prior r2 bindings `ba57a608…6069`.
+   - I read the whole of `verify_retention.py` first. It uses only the stdlib and runs
+     subprocess only for `git show`. It has no capsule import, exec or eval. The top-level copy
+     and the `methods/` copy are byte-identical.
+   - Running it printed PASS in 1.4 s: 60 files, 4986 prior files rehashed unchanged, 8 carried
+     tasks, 0 new attempts, 0 GPU entries, queued 1816.3940157530014 s, lossless review, 507
+     ledger rows, scoreboard unchanged, and no candidate, hidden or held-out execution.
+   - Both public copies `cmp` identical to the committed files. Committed SHA-256s
+     (`03a81237…` TASKS.md, `5b1b0a6a…` review) equal `committed_content_sha256` in the
+     post-commit JSON. Its `method_sha256` equals `retention_postcommit.py` (`2516f22d…`). That
+     method asserts HEAD^ = base, a clean tree and exactly the two changed paths.
+3. Fast gate
+   - Command: `PATH=/tmp/agentmage-e4b8-retention-review-bin:$PATH python3 -B
+     scripts/local_agent_fast_gate.py --base 3b92cf28… --timeout 3600`, with
+     `CARGO_TARGET_DIR=/lane/state/review-target`.
+   - Steps: `git diff --check` exit 0, `--lint-untracked` exit 0, and `markdownlint-cli2` on both
+     files exit 0 (0 issues). The gate printed `FAST GATE: PASS` with rc 0.
+   - No `--lint-reviews` step runs, because the gate applies it only to `docs/reviews/*.txt`
+     (`scripts/local_agent_fast_gate.py:180`). The request states this ("ordinary Markdown lint").
+   - The source gate was not rerun. The text says so and carries the inherited FAIL
+     1169/53/19.
+4. Resume and stop methods (read only)
+   - `launch.py` differs from its reviewed parent only in the following: the r2 capsule and its
+     hash, the 4-pair prefix (00/02/04/06), the r2 prior files and stop count 8, the addition of
+     the r1 controller to the owner set, and carried 8 / planned 22. Before launch it
+     authenticates the following:
+     - every r2 manifest file;
+     - the 2283 repository and 26 private frozen inputs;
+     - the completed, revoked and reaped pairs, with no key, socket or token;
+     - the candidates;
+     - no owner present in `/proc`;
+     - no STOP file and a clean tree;
+     - low priority and the cgroup limits.
+   - `launch.json` records `memory.max` 17179869184, `cpu.max` 400000 100000, observed nice 19,
+     head 3b92cf28 and pid 261.
+   - `controller.py` differs from the r2 controller only in the reservation-log parent
+     (`…-r3-…`). The verifier asserts equality with the frozen original, with only the needle
+     replaced. The controller still calls `build-slot → gpu-slot queue-run agentmage 900`, which
+     sets the 900 s cap, and keeps the 30 s released pause.
+   - `controller.log` holds only the `AssertionError: job failed: gemma4-e4b 8` traceback and no
+     progress JSON. The queue log holds only the build-slot wait line, and the
+     `gemma4-e4b-08` directory never existed. `/tools/build-slot` stops yielding to
+     high-priority callers after `BUILD_SLOT_LOW_MAX_WAIT=1200`, which is the "twenty-minute
+     low threshold". Even after that it still needs a free slot. The wrapper was in that wait
+     loop, so it never reached `gpu-slot`.
+   - `stop_checkpoint.py` differs from its parent only in the following:
+     - the group scan also matches the session;
+     - the receipt text now reads "group and session".
+   - `checkpoint-stop.json`:
+     - Members were the controller (261), the build-slot wrapper (262, argv ending
+       `gemma4-e4b 8`) and `sleep 1` (5021), all with pgid=sid=261.
+     - SIGTERM went to pgid 261 only. The fresh rescan was empty, and the foreign-process flag
+       is false.
+     - Timing is consistent. Launch was 06:53:08.667, the stop at 07:23:25.036 is about 1816.37
+       s later, and the wrapper started 3 ticks after the controller.
+   - `controller-exit.json` records exit 1 with pid and start ticks matching launch, and its
+     `launch_sha256` equals the hash of `launch.json`. No pair directory and no token means no
+     new model/API owner or token. I checked that the retired-token absence is asserted for
+     each prefix `auth/`.
+   - `check_retention.py` rehashes the prior capsule and the frozen inputs. It checks the
+     following:
+     - an exact pgid/sid/owner `/proc` scan, which was empty;
+     - the 507 rows and an unchanged scoreboard;
+     - that exactly the two paths changed;
+     - the lossless envelope;
+     - a private-name hygiene list over the TASKS additions.
+   - Receipt hashes match `launch.py`, `controller.py`, `stop_checkpoint.py`, `check_retention.py`
+     (`485e0326…`), `write_queue_note.py` (`bfb5c42b…`) and `encode_review.py` (`051d8892…`).
+5. Reporting and encoding methods
+   - `retain_review.py` is byte-identical to `before-encoding-retain_review.py` (`a41bcfc1…`). It
+     copied the raw report to `.txt` and inserted the review note.
+   - The first gate receipt (`retention-gate.json`, rc 1, method `f2c2beb1…` =
+     `before-encoding-run_retention_gate.py`) shows the following failures on lines 56/84 of the
+     `.txt`:
+     - `--lint-untracked` failed with trailing whitespace;
+     - `--lint-reviews` failed.
+   - `encode_review.py` does the following:
+     - asserts that the `.txt` equals the raw review and contains no CR;
+     - preserves the before-encoding copies;
+     - writes the `ensure_ascii` JSON envelope and asserts a byte-exact round trip;
+     - deletes the `.txt` and rewrites only the link path in TASKS.md;
+     - updates the retention JSON;
+     - textually patches `check_retention.py` and `run_retention_gate.py`, adding the envelope
+       check and renaming the output files.
+
+     Diffs against the before-encoding copies show only those changes. No repository
+     validator or threshold changed.
+   - The final gate receipt has rc 0, method `8570b422…`, and its log hash matches.
+   - `methods.json` (method `46751c9c…` = `retain_methods.py`) holds current hashes and complete
+     diffs against the r2 parents. The verifier rechecks every hash.
+   - `seal_retention.py` copies with hash checks. Its manifest
+     `prepared_but_not_executed` labels the measurement and report methods that were carried
+     but not run.
+   - None of the retention methods pushes, opens a socket or URL, or touches a remote (grep
+     over all of them).
+   - The public note text equals `queue-note.json` and `review-retention.json` exactly once each.
+6. Claims, hygiene and integrity
+   - The TASKS text claims only a cancelled zero-entry wait, no new score and an unchanged 8/30.
+     It says 22 E4B tasks plus the four other profiles must finish before tuning or capability
+     work, and that the rows stay open. Every number traces to the stop receipt. No task-quality,
+     qualification or release claim is made.
+   - The added lines contain no username, home path, private sibling name or other agent
+     product. The only `/lane/…` and `/tmp/…` paths and the "Claude Opus 5.5" reviewer label
+     are inside the verbatim retained report, as accepted in earlier retentions.
+   - Evaluation integrity: no task ran and no source or prompt changed, so no tuning or held-out
+     exposure is possible.
+   - MEASURE FIRST: no batch changed what the model sees, and the latest scoreboard line is from
+     today, so no new line is due.
+   - The work order is unchanged. No capability work was done.
+
+## Findings
+
+No critical, high or medium findings.
+
+- L1 (low, carried, already T-309 backlog): the controller-owner set still differs between
+  `methods/launch.py:39` (which adds the finish, resume, next, r1 and r2 controllers) and the
+  frozen `methods/cleanup.py`. The text claims no stronger cleanup guarantee. Fix (backlog):
+  derive one owner set and use it in both scans.
+- L2 (low, recorded by this commit in the T-309 backlog): on a queued cancellation, the frozen
+  `methods/controller.py:31` asserts the wrapper's return code before checking `stopped`. Fix
+  (backlog) as the note states.
+- L3 (low, backlog): the JSON envelope in
+  `docs/reviews/3b92cf280c9b-inline-schema-e4b-continuation.md` is outside the
+  `--lint-reviews` format check, which covers only `.txt` (`scripts/local_agent_fast_gate.py:180`).
+  Nothing in the repository verifies its `sha256` field or its Commit/Scope/Verdict structure.
+  For this commit, the capsule verifier and my own decode confirm both. Fix (backlog): if this
+  envelope form is reused, add a gate check that decodes the envelope, verifies the hash and
+  applies `review_text_lint` to the decoded report. Reviewers should avoid whitespace-only lines
+  so that `.txt` retention works unchanged.
+
+## Per-row result
+
+- T-303 (related T-306), non-closing review retention, scope `e4b8-review-retention`: PASS.
+  - The independent 3b92cf28 PASS report is retained byte-for-byte, and I verified this
+    independently.
+  - The zero-entry queued cancellation is honestly reported and traces to authenticated
+    receipts. Only the own session/group was signalled, and the rescan is empty within the
+    current PID namespace.
+  - The prior 4986-file capsule is unchanged, and so are the scoreboard and the 507 ledger
+    lines.
+  - The scope is exactly two paths.
+  - No row closes. T-303 and T-306 stay open.
+
+Verdict: PASS
