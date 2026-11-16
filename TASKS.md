@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The [inline-schema E4B repeat](docs/evidence/t303-inline-schema-e4b-checkpoint24-2026-11-16.md)
+records 24/30 frozen development attempts: 16/24 strict ungraded proposals.
+Task passes and retries remain unavailable; no candidate, hidden or held-out
+test ran. Source/outcome audit, comparison, original-helper reproduction and
+cleanup pass. The remaining 6 E4B tasks and four other full profiles (120 attempts) remain before tuning or
+new capabilities. T-303/T-306 stay open; no row is added or closed.
+This reporting increment requires independent core review.
+
+The retained [independent E4B queued-resume review](docs/reviews/f2b8d49c752c-inline-schema-e4b-eighteen-task-resume.txt)
+returns **Verdict: PASS** for exact
+`f2b8d49c752cc7346a99203d963267955c97e81f`, with no high or medium finding.
+It accepts reporting only and closes no row. The carried low findings stay in
+T-309: filter the unused inherited controller argument to recorded owners, and
+report queued cancellation before a wrapper-failure assertion in a future method. The report is retained byte
+for byte as plain text; earlier sealed measurements remain unchanged.
+The review also recommends allowing queued pairs to proceed instead of repeatedly
+stopping them without a new attempt; this resume waits for shared capacity.
+T-303/T-306 stay open.
+
 The [E4B queued-resume record](docs/evidence/t303-inline-schema-e4b-resume18-2026-11-16.md) authenticates the accepted
 18/30 checkpoint and records a further 1814.791-second (30.247-minute)
 wait for shared build capacity, cancelled before GPU entry or any new attempt.
