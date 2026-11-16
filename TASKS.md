@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The retained [independent 31B queued-resume review](docs/reviews/98c3a8bb7857-inline-schema-31b-queued-resume.txt)
+returns **Verdict: PASS** for exact
+`98c3a8bb78573d8434f8ada1ba4d498a5e128090`, with no high or medium finding.
+It accepts reporting only and closes no row. Low L1 joins T-309: the queue
+capsule omits two wire-audit inputs and its final gate's node hash; the sealed
+first-pair inputs and identical audit output preserve the reviewed result.
+The carried queued-stop diagnostic remains backlog. The report is retained
+byte for byte. T-303/T-306 stay open; measurement order is unchanged.
+
 The [31B measurement resume](docs/evidence/t303-inline-schema-31b-queued-resume-2026-11-16.md)
 waited 3604.458 seconds (60.074 minutes) for shared build capacity,
 then stopped its authenticated own queued session before GPU entry or a new

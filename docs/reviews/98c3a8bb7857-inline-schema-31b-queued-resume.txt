@@ -1,0 +1,200 @@
+Commit: 98c3a8bb78573d8434f8ada1ba4d498a5e128090
+Scope: inline-schema-31b-queued-resume
+
+# Independent review — T-303 (related T-306), non-closing report of the 31B queued resume and verdict retention
+
+Reviewer: Claude Opus 5.5, separate session. I had read-only access and worked in the pinned
+checkout `/lane/review-checkout`. I used no GPU and launched no model. I repeated no inference,
+executed no candidate, loaded no hidden or held-out test, imported no archived module,
+reconstructed no control and did not modify the repository. My only scratch was `/tmp/rv-98c3`:
+a node symlink, plus two diff files I regenerated for comparison.
+
+Limitation: the builder's live state (`/lane/state/is1`, `/lane/state/is1-31b-r2-20261116`) is
+not mounted in my sandbox. So I checked queued-process, socket, key and token absence only through
+the sealed receipts. No claim in the commit depends on live state that the capsule does not seal,
+apart from the low gap L1 below.
+
+## Methods, commands and results
+
+1. Commit and diff
+   - `git rev-parse HEAD` gives `98c3a8bb78573d8434f8ada1ba4d498a5e128090`, and its parent is
+     `c2938c258f6e7411c7c0cc90254bdc4430b01b81`. `git status --porcelain` is empty before and
+     after the gate.
+   - `git diff --check c2938c25…` exits 0. `git diff --name-status` lists three paths, all added
+     lines:
+     - `M TASKS.md` (+15)
+     - `A docs/evidence/t303-inline-schema-31b-queued-resume-2026-11-16.md` (+31)
+     - `A docs/reviews/c2938c258f6e-inline-schema-31b-development.txt` (+198)
+   - I read every added line. There is no source, prompt, suite, checker, profile, permission,
+     threshold, supply-chain or binding change. No row is added or closed, and T-303/T-306 stay
+     open.
+   - The scoreboard is not in the diff. `git show c2938c25:docs/evidence/coding-scoreboard.md`,
+     the HEAD file and the capsule's `scoreboard_sha256` are all `1dfd0c6d…f8beea`.
+   - Ledger: `TASKS.md` keeps 507 `|` lines, identical to base. The capsule verifier and
+     `verify_retention.py` check this too.
+   - Retained review: `cmp` of the committed `.txt` and
+     `/lane/reviews/c2938c258f6e-inline-schema-31b-development.md` shows them identical, sha256
+     `4d95e5b3…754199`. It begins `Commit: c2938c25…` and ends `Verdict: PASS`.
+     - The TASKS note summarises it correctly as PASS, with no high or medium finding and no row
+       closed.
+     - Its "owner-set and queued-stop diagnostics, singular/plural wording, live prior-report
+       drift" are exactly the retained L1, L2, L3 and Note, all in T-309.
+   - Hygiene: I grepped the added lines for home paths, the username, email, hostnames, `sk-` keys
+     and passwords, with no hits. The only absolute paths are `/lane/...` sandbox paths and
+     `/tmp/rv-c293`, inside the retained review, which follows the convention of the committed
+     reviews. `gemma4-31b` is a measurement label, not branding. No other agent product, private
+     project, paper or patent is named.
+
+2. Queue capsule verifier (`verify_queue.py`, read in full first)
+   - It only reads, hashes, runs `json.loads` and runs `git show`. It imports and executes nothing
+     from the capsule.
+   - `python3 -B /lane/reviews/inline-schema-31b-r2-queued-20261116/verify_queue.py`: status
+     PASS, 49 files, `new_attempts` 0, `gpu_entries` 0, `queued_seconds` 3604.4575766100024,
+     `scoreboard_byte_identical` true, `rows_closed` 0.
+   - Digests:
+     - `bindings.json` = `505283e4…0f387`
+     - `manifest.json` = `82b5ba83…bb0b`
+     - post-commit = `f801a4f2…9dff5`
+     All three match the request.
+   - The post-commit file names this commit and base, with `clean: true`. Each of its three
+     content hashes equals `git show HEAD:<path>`, `capsule/public/<path>` and the working-tree
+     file (`8689c6c5…`, `1cc84a5a…`, `4d95e5b3…`).
+
+3. Original prefix verifier (`verify_measurement.py`, read in full first; read-only)
+   - `python3 -B /lane/reviews/inline-schema-31b-r1-20261116/verify_measurement.py`: PASS, 2415
+     files, 2 tasks, 0 strict proposals, causes `{strict-edit-refused:code.proposal.edit: 2}`,
+     19070/3121 tokens, 2/2 counters, 133.1467 s, 177.8599 s.
+   - `bindings.json` is still `452556d5…d00e`, and the file set is exact, so the original capsule
+     is unchanged.
+   - New launch authentication (`launch.py`, read in full):
+     - It checks every r1 capsule file against its manifest, all 2283 repository and 26 private
+       frozen inputs against freeze `a92430c6…`, and every live file under `gemma4-31b-00`
+       (exact set equality, 28 files).
+     - It also checks both candidate sources, the eight r1 working files including the r1 stop
+       receipt, and runs an exact-owner `/proc` scan, a STOP-file check and a clean-tree check.
+     - `verify_queue.py` re-checks every `saved_31b_files` hash against the r1 manifest.
+   - `audit.py`, `reproduce.py`, `cleanup.py`, `wire_audit.py`, `invoke_checks.py` and
+     `stop_checkpoint.py` are byte-identical (`cmp`) to the r1 capsule copies.
+   - `audit.json`, `wire-audit.json` and `reproduction.json` are byte-identical to the sealed r1
+     outputs. All four stderr files are empty.
+
+4. Launch, controller and stop
+   - I regenerated `diff -u` from the sealed E4B r10 launcher (`5489020e…`, which matches the r10
+     manifest entry) to `launch.py` (`9f371b32…`). It is byte-identical to `launch-derivation.diff`
+     after the header lines. It changes only the prefix capsule and hash, the model, the counts
+     2/28 and the r1 working paths.
+   - Controller: I took the frozen private controller from the r1 capsule (`4d3f3e42…`, equal to
+     `frozen-inputs-v2.json`) and made the single reservation-log replacement with parent
+     `/lane/state/is1-31b-r2-20261116`. It reproduces `controller.py` exactly (`6f706eaf…`). Both
+     wrappers, `gpu-slot queue-run agentmage 900` and the 30 × 1 s released pauses are unchanged.
+   - `launch.json`:
+     - head `c2938c25`, observed argv equals the command, pid 262, start ticks 15937943
+     - nice 19 from `stat` (argv `nice -n 9` on top of an inherited nice 10), priority low
+     - `memory.max` 17179869184 (16 GiB), `cpu.max` 400000/100000 (4 CPUs)
+     - carried 2, planned 28, no candidate and no hidden or held-out set
+   - `queued-owner-check.json` (2134 s into the wait): `low_max_wait_override: null`, 0 GPU
+     entries, 0 new tasks. No limit was raised or bypassed.
+   - The queue log is exactly the one build-slot wait line, with no GPU-wait line.
+   - `stop_checkpoint.py` (`34ca9736…`, unchanged from r1):
+     - authenticates the pid, argv, start ticks and pgid = sid = pid
+     - requires that no `gemma4-31b-02` directory exists and that the queue log is that exact
+       line
+     - requires that every group member is in the own session, and that the single wrapper ends
+       `gemma4-31b 2`
+     - re-checks the identity, then sends `killpg` SIGTERM to its own group only
+     - rescans until the group and session are empty, and re-checks that there is no pair
+       directory and the log is unchanged
+   - `checkpoint-stop.json`:
+     - signalled controller 262, wrapper 263 and `sleep 1` 10789, all with sid 262
+     - `matching_processes_after: []`, no foreign process signalled
+     - 0 new attempts and 0 GPU entries
+   - The timing checks out:
+     - `(16298354 − 15937947)/100` = 3604.07 s from wrapper start to the `sleep` child
+     - launch UTC 14:32:17.403 to stop 15:32:21.849 is 3604.446 s
+     - both agree with 3604.458 s (60.074 min)
+   - `controller-exit.json`: exit 1, same pid and start ticks, `launch_sha256` matches.
+     `controller.log` holds only the inherited `AssertionError: job failed: gemma4-31b 2` (carried
+     L2 below) and no progress JSON. The public text counts this as no model failure, which is
+     correct.
+
+5. Checks, cleanup and retention
+   - `invoke_checks.py` runs only audit, wire audit, reproduction (`--partial`) and cleanup. Every
+     return code is 0, and every method, output and stderr hash matches.
+   - `reproduce.py` calls only the frozen measurement helper on saved contexts and answers, and
+     reads candidate files. It runs no candidate, no test and no inference.
+   - `cleanup.json`: 1 pair revoked and reaped, keys and sockets absent, `matching_processes: []`,
+     `retired_token_files: []`. This matches "No additional token file needed retirement".
+   - `retain_review.py` copies bytes with an exclusive create and asserts equality.
+   - `python3 -B …/methods/verify_retention.py` (read first, run from the checkout): PASS.
+     - `TASKS.md` equals base plus exactly the queue note and then the retention note
+     - 507 ledger lines unchanged
+     - scoreboard byte-identical
+     - hygiene PASS
+   - `write_queue_report.py` derives the seconds and minutes from `checkpoint-stop.json`. The
+     claims "2/30, 0 strict", "28 tasks + three full profiles = 118" and "no candidate, hidden or
+     held-out" all trace to receipts or the unchanged scoreboard line.
+
+6. Fast gate
+   - `PATH=/tmp/rv-98c3/bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target python3 -B
+     scripts/local_agent_fast_gate.py --base c2938c25… --timeout 3600` gives `FAST GATE: PASS`,
+     exit 0.
+   - The checks were diff-check, lint-untracked, lint-reviews on the retained review, and
+     markdownlint-cli2 on 2 files with 0 issues. The command list is identical to the builder's
+     `final-fast-gate.log`, whose sha256 matches `final-check.json`.
+   - The source gate was not rerun, and the commit does not claim it. The inherited failing source
+     gate stays unqualified.
+
+7. MEASURE FIRST and evaluation integrity
+   - The scoreboard's latest line is dated today (2026-11-16, 31B 2/30). It states context 32768
+     and output allowance 23170–23232, passes and retries are "Unavailable", and the held-out set
+     was "Not run".
+   - This batch changes nothing the model sees, how edits apply, or how tests and retries run. So
+     no new line is required, and not adding one is correct.
+   - No held-out content, hidden test or tuning was touched. The work order (118 attempts before
+     tuning or capability work) is unchanged.
+   - Confinement: no product source or boundary changed. I re-ran no escape attempts because there
+     is no boundary code in the diff. The stop and cleanup acted only on exact own-session or
+     exact owner arguments.
+
+## Findings
+
+No high or medium findings.
+
+- L1 (low, T-309 backlog). Two `wire_audit.py` inputs are not sealed in this capsule.
+  - Detail: in this run, `wire_audit.py` (`methods`, lines 5–6) reads `W/'prior-manifest.json'`
+    and `W/'prior-pair-report.json'` from `/lane/state/is1-31b-r2-20261116`. `seal_queue.py` does
+    not copy them, so the queue capsule cannot re-check them.
+  - `check_final.py` also uses an unsealed `retention-bin`, and `final-check.json` omits the node
+    hash that `review-retention-check.json` records.
+  - Impact is nil for this commit: `wire-audit.json` is byte-identical to the r1 output, which
+    was computed from the sealed r1 copies of both files.
+  - Fix: add both prior files and a node hash to the sealed list, or have the verifier compare
+    them with the r1 capsule.
+- L2 (low, carried, T-309; exercised again). The queued-stop assertion misreads as a job failure.
+  - Detail: `controller.py:31` asserts the wrapper return code before it checks `stopped`. So
+    `controller.log` again reads `AssertionError: job failed: gemma4-31b 2`, although no job ran.
+  - The receipts and public text handle this correctly.
+  - Fix: as in the retained review.
+- Note (backlog). Stopping at 60 minutes gave up the queue position.
+  - Detail: the stop was voluntary, and it gave up the shared-capacity queue position. Cutting
+    the stop only for reporting delays the remaining 118 attempts.
+  - Suggestion: consider leaving a queued own controller running across a pinned review, since
+    pinned reviews no longer need the builder to pause. This is not a finding.
+
+## Per-row result
+
+- T-303 (related T-306), non-closing reporting, scope `inline-schema-31b-queued-resume`: PASS.
+  - The c2938c25 independent PASS is retained byte for byte.
+  - The queued-resume report is accurate:
+    - 3604.458 s queued
+    - own group only, authenticated and rescanned empty
+    - no GPU entry, no new attempt and no model launched
+    - limits and wrappers unchanged, with the controller differing only in the reservation-log
+      parent
+  - The prefix capsule is immutable, and the audit, wire and reproduction outputs are
+    byte-identical.
+  - The scoreboard is byte-identical, and the 507 ledger lines are unchanged.
+  - The fast gate passes. The source gate was not rerun, as disclosed.
+  - No row closes. T-303 and T-306 remain open.
+
+Verdict: PASS
