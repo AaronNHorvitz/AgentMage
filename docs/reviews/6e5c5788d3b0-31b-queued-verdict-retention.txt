@@ -1,0 +1,98 @@
+Commit: 6e5c5788d3b0ba5914bde93efbd1c1c7c7da81c3
+Scope: 31b-queued-verdict-retention
+
+# Independent review — T-303 (related T-306), non-closing retention of the 31B queued-resume verdict
+
+Reviewer: Claude Opus 5.5, separate session, read-only, working in the pinned checkout
+`/lane/review-checkout`. No GPU, no model launched, no task repeated, no candidate executed, no
+hidden or held-out test loaded, no archived module imported, no control reconstructed, and the
+repository was not modified. Scratch: `/tmp/rv-6e5c/bin/node` symlink only.
+
+## Methods, commands and results
+
+1. Commit and diff
+   - `git rev-parse HEAD` = `6e5c5788d3b0ba5914bde93efbd1c1c7c7da81c3`; base
+     `98c3a8bb78573d8434f8ada1ba4d498a5e128090` resolves. `git status --porcelain` is empty
+     before and after the gate.
+   - `git diff --check 98c3a8bb…` exits 0.
+   - `git diff --name-status 98c3a8bb…`: exactly two paths, additions only:
+     - `M TASKS.md` (+9)
+     - `A docs/reviews/98c3a8bb7857-inline-schema-31b-queued-resume.txt` (+200)
+   - No source, prompt, suite, checker, permission, profile, threshold, binding, supply-chain or
+     scoreboard change. No row is added or closed.
+
+2. Retained review
+   - `cmp docs/reviews/98c3a8bb7857-inline-schema-31b-queued-resume.txt
+     /lane/reviews/98c3a8bb7857-inline-schema-31b-queued-resume.md` exits 0 (identical).
+   - `sha256sum` on both gives
+     `53e1030b1f7040b3a669227b78799cb2be7b33dfa3452b1999e4e5435424a988`, matching the request.
+   - It begins `Commit: 98c3a8bb78573d8434f8ada1ba4d498a5e128090` and
+     `Scope: inline-schema-31b-queued-resume`. It says "No high or medium findings" and ends
+     `Verdict: PASS`.
+
+3. TASKS.md
+   - `diff <(git show BASE:TASKS.md) TASKS.md` shows only one 9-line insertion (8 text lines plus
+     a blank line) directly after `## Active queue: local agent mission`, above the existing
+     queued-resume note.
+   - Table lines starting with `|`: 507 in base and 507 at HEAD, and the `diff` of the two sets is
+     empty.
+   - The note is accurate to the retained report:
+     - PASS for the exact full base sha, with no high or medium finding
+     - reporting only, no row closed
+     - L1 (two unsealed `wire_audit.py` prior inputs plus the missing node hash in the final gate)
+       goes to T-309, together with the report's own reason that the impact is nil (sealed r1
+       inputs, byte-identical audit output)
+     - the carried queued-stop diagnostic (L2) stays in backlog
+     - retained byte for byte; T-303/T-306 open; measurement order unchanged
+   - T-309 exists as an open ledger row (`TASKS.md:3571`). The report's non-finding "Note" about
+     the queue position is not carried, which is correct because the report says it is not a
+     finding.
+
+4. Scoreboard: `git diff --quiet 98c3a8bb… -- docs/evidence/coding-scoreboard.md` exits 0, so the
+   file is byte-identical to base.
+
+5. Hygiene and IP
+   - I grepped the added lines for home paths, the owner's name and email, `@domain` addresses,
+     `sk-` keys, passwords, tokens, API keys, private keys and hostnames. The only hits are the
+     retained report's own sentence describing its hygiene check.
+   - The absolute paths are `/lane/...` sandbox paths and `/tmp/rv-*`, the same convention as the
+     293 committed reviews that already contain `/lane/`.
+   - No other agent product, private project, paper, patent or branding trademark is named.
+     `gemma4-31b` is a measurement label.
+
+6. Fast gate
+   - `mkdir -p /tmp/rv-6e5c/bin; ln -sf /lane/reviews/42612ca9787f-a4b-node
+     /tmp/rv-6e5c/bin/node` (node sha256 `d1de76d8…d932c`, matching the request).
+   - `PATH=/tmp/rv-6e5c/bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target python3 -B
+     scripts/local_agent_fast_gate.py --base 98c3a8bb78573d8434f8ada1ba4d498a5e128090 --timeout
+     3600` gives `FAST GATE: PASS` with exit 0:
+     - `git diff --check`: exit 0
+     - `--lint-untracked`: exit 0
+     - `--lint-reviews` on the retained report: exit 0
+     - markdownlint-cli2 on `./TASKS.md`: 0 issues
+   - The source gate was not rerun, and the commit does not claim it. The inherited failing source
+     gate stays unqualified.
+
+7. MEASURE FIRST and evaluation integrity
+   - This commit changes nothing the model sees, how edits are applied, or how tests and retries
+     run, and it adds no attempt. No new scoreboard line is due, and the latest line (2026-11-16,
+     31B 2/30, 0 strict ungraded) is unchanged.
+   - No held-out content, hidden test or tuning is touched. The remaining 118 attempts still come
+     before tuning or capability work.
+   - Confinement: no boundary code is in the diff, so I re-ran no escape attempts.
+
+## Findings
+
+No high or medium findings. No new low findings. The retained L1 and carried L2 are correctly
+recorded as T-309 backlog.
+
+## Per-row result
+
+- T-303 (related T-306), non-closing retention, scope `31b-queued-verdict-retention`: PASS.
+  - The 98c3a8bb independent PASS is retained byte for byte (sha256 matches).
+  - The TASKS note accurately records its scope and its lows.
+  - The 507 ledger lines are unchanged and the scoreboard is byte-identical.
+  - The fast gate passes.
+  - No row closes. T-303 and T-306 remain open.
+
+Verdict: PASS
