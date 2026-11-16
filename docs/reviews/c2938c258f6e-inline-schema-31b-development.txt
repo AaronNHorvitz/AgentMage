@@ -1,0 +1,198 @@
+Commit: c2938c258f6e7411c7c0cc90254bdc4430b01b81
+Scope: inline-schema-31b-development
+
+# Independent review — T-303 (related T-306), non-closing 31B 2/30 inline-schema development measurement
+
+Reviewer: Claude Opus 5.5, separate session. I had read-only access and worked in the pinned
+checkout `/lane/review-checkout`. I used no GPU and launched no model. I repeated no task, executed
+no candidate, imported no archived module, loaded no hidden or held-out test, reconstructed no
+control and did not modify the repository. My only scratch was `/tmp/rv-c293`: a node symlink and
+my own read-only derivation script.
+
+Limitation: the builder's live state directory (`/lane/state/is1`) is not mounted in my sandbox.
+So I checked live token-file, socket and key absence only through the sealed receipts. A `ps`
+in my namespace shows no model, API or controller process. Nothing the commit claims depends on
+live state that the capsule does not seal.
+
+## Methods, commands and results
+
+1. Commit and diff
+   - `git rev-parse HEAD` gives `c2938c258f6e7411c7c0cc90254bdc4430b01b81`. `git status --porcelain`
+     is empty, before and after the gate.
+   - `git diff --check b0ff4fe9…` exits 0. `b0ff4fe9..HEAD` is one commit that only adds lines: 340
+     added, 0 removed. It touches four paths: `TASKS.md` (+16), `docs/evidence/coding-scoreboard.md`
+     (+28), the new `docs/evidence/t303-inline-schema-31b-2026-11-16.md` (+77), and the retained
+     `docs/reviews/b0ff4fe90f44-inline-schema-e4b-complete-development.txt` (+219).
+   - I read every added line. There is no source, prompt, suite, checker, profile, permission,
+     threshold or supply-chain change. No row is added or closed, and T-303/T-306 stay open.
+   - Ledger: `TASKS.md` has 507 `|` table lines at both base and HEAD, and they are identical. The
+     base scoreboard is an exact byte prefix of the HEAD scoreboard.
+   - Retained review: the sha256 of the committed `.txt` and of
+     `/lane/reviews/b0ff4fe90f44-inline-schema-e4b-complete-development.md` are both `8dbef94a…cae4`.
+     It begins `Commit: b0ff4fe9…` and ends `Verdict: PASS`. The TASKS note correctly summarises it
+     as PASS with carried lows L1–L3 in T-309.
+   - Hygiene: the added lines contain no home directory, username, hostname, email, credential or
+     private project name. The `/lane/...` paths in the retained review follow the convention of the
+     291 committed reviews already there. Model identifiers (`gemma4-31b`) are measurement labels,
+     not branding. No other agent product is named or compared.
+
+2. Verifier (read in full first)
+   - `verify_measurement.py` only reads, hashes, runs `json.loads` and runs `git show`. It imports
+     nothing from the capsule.
+   - `python3 -B …/verify_measurement.py`: status PASS, 2415 files, 2 tasks, 0 strict proposals,
+     causes `{strict-edit-refused:code.proposal.edit: 2}`, 19070/3121 tokens with 2/2 coverage,
+     133.1467 s request/check, 177.8599 s reserved.
+   - Digests:
+     - `bindings.json` = `452556d5…de00e`
+     - `manifest.json` = `0187d07c…95dc5`
+     - post-commit = `cbfad849…7deeb`
+     All three match the request.
+   - The post-commit file names this commit and base, `clean: true`, and four content hashes. I
+     checked each hash against `git show HEAD:<path>` and against `capsule/public/<path>`: all
+     identical.
+   - Independent derivation (`/tmp/rv-c293/derive.py`, my own code), worked from
+     `record.json`, `events.ndjson`, `checked.json`, `backend-slice.log`, `upstream-request-0N.json`
+     and `upstream-response-0N.bin`:
+     - dev-001: preflight 9504, budget `min(32768, 32768−9504−32)` = 23232 = `max_tokens`. Backend
+       prompt eval 9504 and eval 1152, `truncated = 0`. Response usage 9504/1152, `finish_reason`
+       stop. Checker `{"error":"code.proposal.edit"}`. Time 68.502 s.
+     - dev-002: preflight 9566, budget 23170. Backend 9566/1969, `truncated = 0`, finish stop.
+       Same checker error. Time 64.644 s.
+     - Totals: 133.147 s, 19070/3121 tokens and 177.860 s reserved (2.964 min). Budgets
+       23170–23232, inputs 9504–9566, does-not-fit 0, both `stopped-below-token-limits`.
+     - Captures: 2 complete-choice JSON. The `message` has only `content`/`role` keys, so reasoning
+       metadata is "unavailable", which is correctly not counted as zero.
+     - `answer.txt` equals the response `content` byte for byte. The peak sampled GPU use is
+       20827 MiB.
+   - Every published number in the evidence and scoreboard matches. Both proposals were refused,
+     and nothing is presented as a correct-task claim.
+
+3. Lint and gate
+   - I read `measurement/lint.mjs`. It lints three files with markdownlint and renders the last
+     scoreboard section and the evidence page, expecting one table each.
+   - `/lane/reviews/42612ca9787f-a4b-node …/measurement/lint.mjs`: PASS, 0/0/0 issues, tables 1/1.
+   - `PATH=/tmp/rv-c293/bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target python3 -B
+     scripts/local_agent_fast_gate.py --base b0ff4fe9… --timeout 3600`: `FAST GATE: PASS`, exit 0.
+     The checks were diff-check, lint-untracked, lint-reviews on the retained review, and
+     markdownlint-cli2 with 0 issues.
+   - The source gate was not rerun. Its inherited FAIL (1169/53/19) is disclosed with a link.
+
+4. Launch and controller
+   - `launch-v1.py` (`ec5ef097…`) differs from `launch.py` (`85215419…`) only in A4B
+     authentication. v1 matched A4B files against the E4B manifest. The corrected launcher loads
+     `prior-a4b-bindings.json` from the hash-checked E4B capsule, checks the A4B manifest and every
+     A4B file against it, and then matches each live file against the manifest of its own model.
+   - v1 can only fail in that loop, which runs before any `open('x')`, controller write or Popen.
+     The corrected launcher's `assert not list(N.glob('gemma4-31b-[0-9][0-9]'))` and its exclusive
+     creation of `controller.py` confirm that v1 left no state.
+   - Both completed capsules still verify end to end:
+     - E4B r10: bindings `6fbc3afd…`, 23621 files, 0 mismatches, 0 extra.
+     - A4B: bindings `8444940c…`, manifest `64890d54…`, 2883 files, 0 mismatches. These hashes match
+       the retained A4B review.
+   - `launch.json`:
+     - head `b0ff4fe9` on a clean tree, 2283 repository and 26 private inputs, freeze `a92430c6…`
+     - observed argv equals the command, pid 2609, start ticks 15739319, nice 19 (verified from
+       `stat`), priority low
+     - `memory.max` 17179869184 (16 GiB), `cpu.max` 400000/100000 (4 CPUs)
+     - 0 carried attempts
+   - `controller.diff` changes only the reservation-log parent. The 900 s cap, both wrappers and the
+     30 × 1 s released pauses are unchanged. The verifier rebuilds this diff from the frozen private
+     controller (`4d3f3e42…`).
+   - Pair 00's reservation log shows both waits, model ready, two task lines and
+     `"status": "completed"`.
+   - Pair 02's log has only the build-slot wait line.
+   - `checkpoint-stop.json` (method `34ca9736…`, matching its retained diff):
+     - authenticates the exact controller pid, start ticks and session
+     - signals only its own group: controller, wrapper and sleep
+     - finds the group empty on rescan
+     - records `new_attempts_in_stopped_pair = gpu_entries = 0`, queue 667.278 s and controller
+       exit 1
+     The stopped pair has its own receipt.
+
+5. Prior comparison
+   - `prior-bindings.json` = `14ad9873…`, identical to `/lane/reviews/thinking-disabled-31b-20261113-bindings.json`
+     and cited in committed review 7be347d40945.
+   - The prior archive tar hashes to `f29b5a91…`, which is its bound digest.
+   - The `prepare_methods.py` diff replaces the live prior report with a read-only extraction of
+     one member from that tar. I ran `tar -xO` myself: `15d07d82…`, equal to `prior-pair-report.json`
+     and to the prior manifest entry. Both contexts also equal their archived bytes.
+   - Upstream request bodies compared with the archived prior bodies differ only in
+     `response_format`: `json_object` became the named `coding_edits_v1` `json_schema` with
+     `strict: true`.
+   - The profile without `state_root`, the runtime manifest, the model settings and n_ctx 32768 are
+     equal.
+   - `batch.py` differs from the prior batch only in roots, format and thinking assertions, and the
+     upstream-response capture. It is the same frozen input that the E4B/A4B reviews accepted. The
+     measurement helper is unchanged, so "helper fixed" is accurate. The API binary change is the
+     measured variable from the source review.
+
+6. Audit, reproduction and cleanup
+   - `methods.json`: `audit.py` and `reproduce.py` are unchanged from E4B r10 (empty diffs).
+     `cleanup.py`, `wire_audit.py` and `stop_checkpoint.py` change model names only (I read each
+     diff).
+   - `check-invocation.json`: return codes are 0, and the method, output and stderr hashes match.
+   - `reproduction.json` = `{gemma4-31b: 2}`.
+   - `cleanup.json`:
+     - 1 pair revoked and reaped, with keys and sockets absent
+     - `matching_processes: []`
+     - retired token files exactly `gemma4-31b-00/auth/{control,client}.token` (2)
+     - the method states exact argv matching in this PID namespace only
+   - The package derivation selects candidate sources from the frozen development definitions.
+     `development_tasks()` loads only the 30-task development collection, checked by digest. The
+     held-out loaders need an explicit path and were not called. Its first failure was disclosed,
+     and only its own unsealed partial output was removed.
+
+7. Reporting and preservation
+   - `write_reports.py` derives every number from `audit`, `wire`, `cleanup` and stop receipts.
+   - `preservation.json` and `hygiene.json` hashes match the public bytes.
+   - `reporting-checks.json` lint and gate logs match their hashes and record exit 0.
+   - Every claim I checked is backed by a receipt, including the stop note, "28 pending" and
+     "118 attempts" (28 + 3 × 30). There is no stronger binary-provenance claim.
+   - MEASURE FIRST:
+     - A dated scoreboard line exists for this batch.
+     - The changed variable, context 32768 and the output-allowance formula and range are stated.
+     - Does-not-fit (0) is counted apart from model failures.
+     - Passes and retries are "Unavailable", with the reason given.
+     - The held-out set was not run.
+
+## Findings
+
+No high or medium findings.
+
+- L1 (low, carried, T-309). `launch.json` `owner_arguments` still carries inherited, unused owner
+  paths. They are harmless.
+- L2 (low, carried, T-309; exercised for the first time here). `measurement/controller.py:31`
+  asserts the wrapper return code before it checks `stopped`. So the authenticated queued stop
+  wrote `AssertionError: job failed: gemma4-31b 2` to `controller.log`, even though no job ran.
+  - `checkpoint-stop.json` is authoritative, and the public text correctly counts no failure.
+  - The log line still reads like a model failure to anyone who reads it alone.
+  - Fix: check `stopped` before the return-code assertion, and exit 1 with a "stopped while
+    queued" line.
+- L3 (low, T-309). `docs/evidence/t303-inline-schema-31b-2026-11-16.md:56` reads "All 1 completed
+  jobs", because `measurement/write_reports.py:70` hard-codes the plural. The prose is wrong only
+  in form; the number is correct.
+  - Fix: choose "job"/"jobs" from the count.
+  - The earlier token-count wording finding is resolved for this report: the count now comes from
+    `cleanup.json`, and the "2" is correct.
+- Note (backlog). `prepare_methods-v1` found that the live prior-run report in
+  `/lane/state/jo1-20261113` no longer matches its sealed receipt. The correction correctly uses the
+  authenticated archive, which I confirmed is intact. The cause of the live drift is not recorded.
+  No sealed evidence or criterion is affected.
+
+Confinement: no product boundary changed. The stop and cleanup scans matched exact own-session or
+exact owner arguments, and signalled no foreign process.
+
+## Per-row result
+
+- T-303 (related T-306), non-closing measurement, scope `inline-schema-31b-development`: PASS.
+  - Result: 31B 2/30, 0 strict ungraded proposals (2 strict-edit refusals). Task passes and retries
+    are unavailable and reported as such.
+  - All published counts, timers, tokens, ranges, captures, causes and the stop note match my
+    independent derivation from raw captures and receipts.
+  - The commit only adds lines. The 507 ledger lines are unchanged, the scoreboard prefix is exact
+    and the b0ff4fe9 PASS is retained byte for byte.
+  - The fast gate and direct lint pass. The source gate was not rerun and remains FAIL, as
+    disclosed.
+  - No row closes. T-303 and T-306 remain open.
+
+Verdict: PASS

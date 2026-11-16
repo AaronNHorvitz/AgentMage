@@ -2,6 +2,21 @@
 
 ## Active queue: local agent mission
 
+The [31B measurement resume](docs/evidence/t303-inline-schema-31b-queued-resume-2026-11-16.md)
+waited 3604.458 seconds (60.074 minutes) for shared build capacity,
+then stopped its authenticated own queued session before GPU entry or a new
+attempt. The scoreboard stays byte-identical at 2/30 attempted, 0 strict ungraded
+proposals; task passes and retries remain unavailable. The remaining 118 attempts
+still precede tuning or capability work. T-303/T-306 stay open.
+
+The retained [independent 31B first-pair review](docs/reviews/c2938c258f6e-inline-schema-31b-development.txt)
+returns **Verdict: PASS** for exact
+`c2938c258f6e7411c7c0cc90254bdc4430b01b81`, with no high or medium finding.
+It accepts reporting only and closes no row. The carried low owner-set and
+queued-stop diagnostics, singular/plural report wording and the unexplained
+live prior-report drift remain T-309 backlog; the sealed prior report is intact.
+The review is retained byte for byte. T-303/T-306 stay open.
+
 The [inline-schema 31B measurement](docs/evidence/t303-inline-schema-31b-2026-11-16.md)
 records 2/30 frozen development attempts: 0/2 strict ungraded proposals.
 Task passes and retries remain unavailable; no candidate, hidden or held-out
