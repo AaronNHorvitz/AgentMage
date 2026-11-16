@@ -1,0 +1,232 @@
+Commit: 31e1f8aa4e6e3a0433663ff9558b562c41c090dd
+Scope: inline-schema-31b-resumed-development
+
+# Independent review: T-303 (related T-306), non-closing 31B inline-schema resumed development measurement
+
+Reviewer: Claude Opus 5.5, separate session, read-only, working in the pinned checkout
+`/lane/review-checkout`. I used no GPU, launched no model, replayed no task, executed no candidate or test,
+loaded no hidden or held-out test, imported no archived module and reconstructed no control. The repository
+was not modified. Scratch: `/tmp/rv-31e1/` (a node symlink, a derivation script, the gate log and the added
+lines), all in my own sandbox tmpfs.
+
+## Methods, commands and results
+
+1. Commit, diff and preservation
+   - `git rev-parse HEAD` returns `31e1f8aa4e6e3a0433663ff9558b562c41c090dd`. `git status --porcelain` is empty
+     before and after the gate.
+   - `git diff --check f2af7abc165f…` exits 0.
+   - `git diff --stat f2af7abc…` shows four files and 297 insertions, with no deletions (`git diff -U0 | grep '^-'`
+     is empty):
+     - `TASKS.md` +16
+     - `docs/evidence/coding-scoreboard.md` +28
+     - new `docs/evidence/t303-inline-schema-31b-resumed-2026-11-16.md` +82
+     - new `docs/reviews/f2af7abc165f-inline-schema-31b-continued-development.txt` +171
+   - No source, script, prompt, suite, checker, profile, budget, permission, threshold or supply-chain file
+     changed. I read every added line.
+   - TASKS.md table lines (`^|`): 507 at the base and 507 at HEAD, and `diff` finds them identical.
+   - The base scoreboard is an exact byte prefix of the HEAD scoreboard (`cmp -n`), so the update is
+     append-only.
+   - The retained review is byte-identical to `/lane/reviews/f2af7abc165f-inline-schema-31b-continued-development.md`
+     (`cmp`; both sha256 `a491e07e…edee82b4`).
+   - Public hygiene: I grepped the 297 added lines for home paths, the account name, email-like strings, keys,
+     tokens, host-wrapper lane and project names, and agent product and vendor names.
+     - The hits are the model identifier `gemma4-31b`, used descriptively as in earlier commits, and the
+       retained review's reviewer self-identification and sandbox `/lane/...` paths. Earlier committed reviews
+       follow the same convention.
+     - No private host path, username, hostname, credential, private sibling-project name or trademark used
+       as branding appears. No other agent product is named or compared.
+     - The host-supplied wrappers carry private names and a home-relative path in their comments. They live
+       only in the private capsule, not in the commit.
+
+2. Capsule verifier (read in full before running)
+   - The script reads and hashes files and calls `git show` for the base TASKS and scoreboard only. It
+     imports nothing from the capsule and executes nothing.
+   - `python3 -B /lane/reviews/inline-schema-31b-r7-20261116/verify_measurement.py` returns PASS with exit 0:
+     - 2488 files and 6 tasks
+     - 2 strict ungraded proposals
+     - causes `{strict-edit-refused:code.proposal.edit: 4, ungraded-proposal: 2}`
+     - 44823/5522 tokens, coverage 6
+     - request/check 305.21499440199113 s, reserved work 457.1916286399937 s
+   - `sha256sum` results match the request:
+     - bindings `926e437c…37875041655`
+     - manifest `b2c12b6f…f43a38`
+     - postcommit `47331b2a…2062a`
+     - predecessor bindings `c45088c1…039d0ed8`
+     - predecessor postcommit `688b8122…4150165`
+   - The postcommit names this commit and base f2af7abc, and `clean: true`. Its `method_sha256` equals
+     sha256(`measurement/postcommit.py`) `e82067af…a782`.
+   - All four `committed_content_sha256` values equal both `git show HEAD:<path> | sha256sum` and the capsule
+     `public/` copies (checked directly, not via the verifier).
+   - Independent derivation (`/tmp/rv-31e1/derive.py`, my own script) reads `upstream-request-*.json`,
+     `upstream-response-*.bin`, the per-task `backend-slice.log`, `record.json`, `checked.json` and
+     `answer.txt`:
+
+     | Task | Input / output tokens | `max_tokens` | Outcome | Request/check s |
+     | --- | --- | --- | --- | --- |
+     | dev-001 | 9504 / 1152 | 23232 | strict refused `code.proposal.edit` | 68.502 |
+     | dev-002 | 9566 / 1969 | 23170 | strict refused `code.proposal.edit` | 64.644 |
+     | dev-003 | 4754 / 736 | 27982 | strict refused `code.proposal.edit` | 43.447 |
+     | dev-004 | 3225 / 753 | 29511 | `changes` (ungraded proposal) | 24.413 |
+     | dev-005 | 8462 / 426 | 24274 | `changes` (ungraded proposal) | 77.920 |
+     | dev-006 | 9312 / 486 | 23424 | strict refused `code.proposal.edit` | 26.288 |
+
+     - On all six tasks the usage counters, the backend prompt-eval/eval counts and the preflight values agree.
+     - `max_tokens` = 32768 − input − 32 in every case. Every finish reason is `stop`, every answer parses as
+       JSON and equals the message content.
+     - Every upstream request carries `json_schema` `coding_edits_v1` with `strict: true` and
+       `enable_thinking: false`.
+     - `reasoning_content` is absent in all six responses and is reported as "unavailable", not zero.
+     - Retries are 0 and graded is false. `native_coding_harness` is false.
+     - Sums: 44823/5522 tokens and 305.215 s.
+     - Reserved work is 177.860 + 106.150 + 173.182 = 457.192 s (7.620 min).
+     - Ranges: output 23170–29511, input 3225–9566.
+     - Sampled GPU peaks are 20827, 21162 and 20582 MiB, giving 20582–21162.
+     - Does not fit: 0.
+   - Every published number in TASKS, the scoreboard and the evidence file matches:
+     - 6/30 tasks, 2/6 proposals, causes 4 and 2
+     - 24 pending, and 114 = 24 + 3 × 30 remaining attempts
+     - 6 retired token files
+     - a 280.559 s queue
+   - Both ungraded proposals are labelled as unapplied and untested, and neither is ever presented as a task
+     pass. First-attempt and within-budget passes are "Unavailable", not zero.
+   - I read the dev-005/dev-006 answers and the dev-005 candidate only. I executed nothing.
+
+3. Lint and reporting gate
+   - I read `lint.mjs`: markdownlint on the three changed Markdown files plus a count of rendered tables in the
+     new sections.
+   - The node `/lane/reviews/42612ca9787f-a4b-node` is sha256 `d1de76d8…d932c`, matching `reporting-checks.json`.
+   - `/lane/reviews/42612ca9787f-a4b-node …/measurement/lint.mjs` returns PASS: 0/0/0 issues, with 1 rendered
+     table each for the scoreboard and the evidence file.
+   - `PATH=/tmp/rv-31e1/bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target python3 -B
+     scripts/local_agent_fast_gate.py --base f2af7abc165f0a3fe34888b195dab0a2acf676be --timeout 3600` returns
+     `FAST GATE: PASS`, exit 0. It ran:
+     - `git diff --check`
+     - `--lint-untracked`
+     - `--lint-reviews` on the retained review
+     - markdownlint-cli2 v0.23.2: 0 issues in 3 files
+   - The source gate was not rerun (reporting only, as requested). The inherited FAIL
+     (1,169 passed / 53 failed / 19 ignored) is disclosed in the evidence file. It matches
+     `docs/reviews/ac1c30201171-trusted-inline-output-schema.txt:112`.
+
+4. Launch, carry-over and queue chain
+   - I read `launch.py` in full and diffed it against the r6 launcher (`previous-queue-r6/launch.py`). The only
+     additions are the r6 pin authentication block and the recorded wrapper hashes.
+   - Before starting any process, the launcher authenticates:
+     - every r5 capsule file;
+     - the r5 postcommit `688b8122…`, the commit hashes and HEAD;
+     - all 2283 repository and 26 private frozen inputs (freeze `a92430c6…`);
+     - the carried `-00`/`-02` jobs (settings revoked, API reaped, no key, socket or token);
+     - the carried candidates;
+     - the r5 stop and cleanup;
+     - the nine r6 pins, with PASS stop, cleanup and preservation, zero GPU entries and zero new attempts;
+     - an exact-owner `/proc` scan that includes the r5 and r6 owner arguments;
+     - no reservation log, no STOP marker, a clean tree and `BUILD_SLOT_PRIORITY=low`;
+     - cgroup limits.
+   - I independently re-hashed all 2470 r5 capsule files against its manifest: all match and there are no
+     extras. The nine retained `prefix-*`/`prior-*` copies and `prefix-postcommit.json` are byte-identical to the
+     r5 originals.
+   - No carried attempt was replayed:
+     - All 56 files under `measurement/gemma4-31b-00/` and `-02/` equal the r5 manifest entries, with none
+       missing.
+     - The `-00`/`-02` reservation logs equal the r5 copies (`c5b14a02…`, `d62da40c…`).
+     - The four carried candidate files equal r5.
+     - The model-state directory timestamps (08:10 and 10:48 local) predate the r7 launch (17:26:42 UTC). The
+       new `-04` state directory (11:29 local, 17:29 UTC) falls inside it.
+   - The controller equals the frozen original (`private/input-003`) with only the reservation-log parent
+     replaced (`diff`, one line). It runs build-slot → gpu-slot `queue-run agentmage 900` and waits 30 × 1 s
+     released pauses. It keeps the "never replay silently" guard on existing directories.
+   - `launch.json` records:
+     - nice 19 (observed via stat), PID 263, start ticks 16984460
+     - `memory.max` 17179869184 and `cpu.max` 400000/100000 (16 GiB, 4 CPUs)
+     - priority low, carried 4, planned 26
+     - wrapper hashes
+   - The pinned `build-slot.at-launch` (`87624e08…`) and `gpu-slot.at-launch` (`9804180e…`) equal the current
+     `/tools/` wrappers.
+     - The build wrapper tries `heavy3.lock` only after both regular slots are busy, and only while
+       `MemAvailable` ≥ `BUILD_SLOT3_MIN_AVAIL_KB` (default 30 GiB).
+     - Low-priority yielding (default 1200 s) is unchanged.
+     - The GPU wrapper enforces the exclusive lock, the automatic owner, the compute-count baseline, 16 GiB RAM,
+       a GPU baseline below 4 GiB, and a TERM/KILL deadline.
+   - Reservation logs:
+     - `-04` shows both wait lines (the third-slot wording), model ready, dev-005 and dev-006, and completed.
+     - `-06` contains only the build-slot wait line, and its hash `f83c8bc5…` equals the stop receipt.
+   - `controller.log` shows a single `completed: 6` line, then exit 1 at pair 6. `controller-exit.json` matches
+     the PID, start ticks and launch hash.
+   - The r7 `checkpoint-stop.json` records PASS:
+     - queued 280.559 s
+     - only its own session (PID/PGID/SID 263, plus the wrapper and `sleep`) signalled
+     - a fresh scan empty, zero GPU entries and zero new attempts
+     - not counted as a model failure
+   - The r6 queued stop records PASS: queued 1280.475 s (launch 17:02:36 → stop 17:23:57 UTC), own session
+     only, zero entries and zero attempts, and preservation with `no_new_tokens`. Its queue-log hash `d6086c56…`
+     equals the r5 `-04` log retained in r5, so its bytes are known.
+   - The r3 (1278.079 s) and r4 (1519.535 s) PASS stop receipts are present in the sealed r5 capsule, as the
+     evidence states.
+
+5. Prior comparison
+   - `prior-manifest.json` hashes to the retained digest `e73ffad3…`, and `prior-pair-report.json` matches its
+     prior-manifest entry.
+   - The verifier asserts, per pair:
+     - every context sha equals the preceding 31B repeat;
+     - model, runtime manifest and profile (excluding `state_root`) equal the original report;
+     - n_ctx 32768;
+     - the frozen batch, API, collector and helper hashes;
+     - 300 s total/idle deadlines.
+   - `wire-audit.json` (method unchanged) records PASS for 6 tasks, and every context is identical to the prior
+     repeat.
+
+6. Audit, reproduction and cleanup
+   - `methods.json` shows audit, wire_audit, reproduce, cleanup, invoke_checks and invoke_reporting with
+     `change: none`, each equal to the r5 originals.
+   - I read the changed methods' r5→r7 diffs:
+     - `write_reports`, `retain_review`, `run_reporting_checks`, `package`, `postcommit`, `request_review`,
+       `stop_checkpoint` and `finish_blocked` change only paths, counts, the cumulative token list, the
+       retention source and hash, the new reservation-log wording and the r6 pin copy.
+     - No measurement, checker or threshold logic changes.
+   - `check-invocation.json`: 4 checks, each with return code 0. Their stderr files are empty (0 bytes).
+   - `reproduction.json`: the frozen helper `852cd7f5…` verified 6 tasks, with no candidate execution and no
+     hidden tests loaded.
+   - `cleanup.json`:
+     - 3 pairs, each with settings revoked, API reaped and keys/sockets absent;
+     - no matching processes in the current PID namespace.
+   - Token retirement lists:
+     - `-00`: control and client tokens (r1 prefix cleanup)
+     - `-02`: control and client tokens (r5)
+     - `-04`: control and client tokens (r7)
+
+     The lists are pairwise disjoint, 6 in total, as published.
+
+7. Claims and MEASURE FIRST
+   - A new scoreboard line follows this batch. It states context and output allowances, counts "does not fit"
+     separately (0) and labels missing metadata as unavailable.
+   - Every number traces to the raw logs above. The previous review's low queue-history finding is addressed:
+     r3, r4 and r6 are disclosed with their exact queue times.
+   - No held-out run, tuning content, comparison with other products or stronger binary-provenance claim
+     appears. No row is closed or added, and no owner-ready or release claim is made.
+
+## Findings
+
+No high or medium findings.
+
+- **Low (backlog T-309):** the r6 queued-stop receipt records `method_sha256` `f03d9e8c720bbe64…`.
+  - The bytes of that stop method appear in neither the r7 capsule (`measurement/previous-queue-r6/` holds
+    nine pins without `stop_checkpoint.py`) nor the r5 capsule. Neither manifest has an entry with that hash.
+  - The r6 `controller.log` is also not retained. The same pattern applies to the r3/r4 pins in r5.
+  - The method that signalled processes for r6 therefore cannot be re-read. Only its receipt can be
+    authenticated.
+  - No number is affected: there were zero GPU entries and zero attempts, and the r7 launcher's own
+    exact-owner scan covered the r6 owners before launch.
+  - Fix: in the next capsule that carries a queued-stop receipt, add that session's `stop_checkpoint.py` and
+    `controller.log` to the pins and copy them.
+- **Low (backlog T-309):** `launch.py` asserts `BUILD_SLOT_PRIORITY=low` but records neither
+  `BUILD_SLOT_LOW_MAX_WAIT` nor `BUILD_SLOT3_MIN_AVAIL_KB`.
+  - As a result, the evidence's "LOW/default wait" and "Lane settings are unchanged" are inferred from the
+    wrapper defaults rather than recorded.
+  - Fix: record the presence and value of both variables in `launch.json`.
+
+## Per-row result
+
+- T-303 (related T-306), non-closing development measurement: PASS for reporting. T-303 and T-306 stay open,
+  and nothing closes.
+
+Verdict: PASS
