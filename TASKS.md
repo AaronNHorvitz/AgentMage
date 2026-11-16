@@ -2,6 +2,22 @@
 
 ## Active queue: local agent mission
 
+The [independent completed 27B measurement review](docs/reviews/2b62d6501ad6-inline-schema-qwen-development.txt)
+returns **Verdict: PASS** for exact
+`2b62d6501ad644e7cf069d4b52b5f925cb873a4d`, with no high or medium finding.
+It accepts non-closing reporting only; T-303/T-306 remain open. The report is
+retained byte for byte. Its two notes remain T-309 backlog: preserve the private
+owner-attention record, and document the verifier's pinned-checkout requirement.
+No review verdict is inferred for the new measurement commit.
+
+The [inline-schema gpt-oss measurement](docs/evidence/t303-inline-schema-gpt-2026-11-16.md)
+records 4/30 frozen development attempts: 0/4 strict ungraded proposals.
+Task passes/retries remain unavailable; no candidate, hidden or held-out test
+ran. All 30 contexts reproduce before inference against this model's own prior
+repeat. Original frozen bindings, audit, comparison, reproduction and cleanup
+pass. 56 attempts remain before tuning or new capabilities. T-303/T-306
+remain open; no row closes. Independent core review is required.
+
 The [inline-schema 27B measurement](docs/evidence/t303-inline-schema-qwen-2026-11-16.md)
 records 30/30 frozen development attempts: 28/30 strict ungraded proposals.
 Task passes/retries remain unavailable; no candidate, hidden or held-out test

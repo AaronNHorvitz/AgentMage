@@ -1,0 +1,134 @@
+Commit: 2b62d6501ad644e7cf069d4b52b5f925cb873a4d
+Scope: inline-schema-qwen-development
+
+Reviewer: independent Claude Opus 5.5 session, extra-high effort, read-only, pinned checkout
+`/lane/review-checkout`. Base `7a3c07c90de9c808ef24ead1b3c57bb6acf775ce`. Rows T-303/T-306: a
+non-closing MEASURE FIRST measurement report (qwen35-27b, inline `json_schema` with `strict: true`).
+No GPU, model, candidate, hidden or held-out execution by me.
+
+## Methods, commands and results
+
+1. Commit and tree
+   - `git rev-parse HEAD 2b62d650...` gives `2b62d6501ad644e7cf069d4b52b5f925cb873a4d` for both.
+     `git status --porcelain` is empty, before and after the gates.
+   - `git diff --check 7a3c07c9...` exits 0.
+   - The diff touches 5 files: README.md (one table cell), TASKS.md (+21), coding-scoreboard.md (+32, append
+     only), the new evidence file, and the retained review
+     `docs/reviews/7a3c07c90de9-engine-readme-privacy-repair.txt`. No source, prompt, task, threshold,
+     permission or measurement input changes.
+
+2. Capsule verifier
+   - `sha256sum manifest.json bindings.json` gives `c980bff0…d766` and `bfbaa650…cc41a`, as requested.
+   - I read `verify_measurement.py` (224 lines) in full. It imports only the standard library and runs
+     read-only Git commands (`ls-tree`, `cat-file --batch`, `rev-parse`, `show`). It imports no archived
+     module and executes no candidate.
+   - `python3 -B .../verify_measurement.py` gives `status PASS`, 30 tasks, 28 strict ungraded proposals,
+     causes `{ungraded-proposal: 28, strict-edit-refused:code.proposal.edit: 2}`, 189334/37798 tokens and
+     31887 files. It ran in 7.8 s.
+   - What the verifier covers:
+     - the full 9,630-file archive, against Git blob SHA-1s and the source tree;
+     - 2,283 repository and 26 private frozen hashes;
+     - the 195-file working-tree drift, recomputed from Git;
+     - the original and fresh 30-context preflights, against the prior repeat's manifest;
+     - 19,241 candidate projection files, against their frozen Git bases;
+     - upstream request bytes for every task;
+     - backend counters re-parsed from the raw logs;
+     - cleanup, the preparation2/3 failure archives, preservation and the retained review.
+   - Post-commit receipt `inline-schema-qwen-r4-20261116-post-commit.json`:
+     - `git show HEAD:<f> | sha256sum` matches `committed_content_sha256` for all 5 files.
+     - Each file is byte-identical to its copy under `capsule/public/`.
+
+3. Independent re-derivation (my own script over the raw `measurement/` files, not the builder's
+   verifier)
+   - 15 batch reports.
+   - Reserved work: 1666.284 s = 27.771 min.
+   - Sampled GPU peaks: 17987–18504 MiB.
+   - Sum of `generation_seconds`: 1260.537.
+   - Input preflight range: 2932–8599. Output budgets: 24137–29804.
+   - Causes: 28 ungraded proposals and 2 strict-edit refusals, over 30 tasks.
+   - Launch-to-exit UTC interval: 3800.162 s.
+   - Every number in the evidence, scoreboard, TASKS and README matches.
+   - Upstream request `qwen35-27b-00/upstream-request-00.json`:
+     - It carries `response_format {type: json_schema, json_schema: {name: coding_edits_v1, strict: true, schema}}`
+       and `enable_thinking: false`.
+     - The changed variable is as claimed. `wire-audit.json` records contexts and profiles identical to the
+       prior repeat, and the verifier checks this against hashes.
+   - Failed preparations:
+     - preparation2 failed on an absent `demo/model.json`, with 18.443459 s reserved.
+     - preparation3 failed on `git ls-tree` exit 128, with 44.628164 s reserved.
+     - This supplies the trace that review B2 found missing for 18.443 s.
+   - `demo/model.json` is tracked in `72c002a4`, and its SHA-256 `f007bf5a…` equals the prior pair's
+     `runtime_manifest_sha256`. `72c002a4` is an ancestor of HEAD.
+   - `controller.diff` changes only the reservation-log parent; the verifier checks this as an exact
+     string replacement.
+   - `launch.diff`:
+     - It adds archive and preflight authentication.
+     - It adds a read-only `.git` bind to the mount.
+     - The probe now asserts `.git` exists and reruns the fresh preflight.
+     - It adds no device, privilege or grading control.
+
+4. Gates, with node pinned on a private scratch PATH (`/tmp/rv-node.*/node` symlinked to
+   `/lane/reviews/42612ca9787f-a4b-node`; `sha256sum` gives
+   `d1de76d8edf2fededf6f8b30d244e2c0529ac607923a018283b77e9c74bd932c`; v24.15.0) and
+   `CARGO_TARGET_DIR=/lane/state/review-target`
+   - `bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base 7a3c07c9… --timeout 3600`
+     gives `FAST GATE: PASS` (exit 0; Markdown lint 0 issues in 4 files).
+   - `python3 -B scripts/private_host_paths.py --base 7a3c07c9…` gives `PRIVATE PATH CHECK: PASS`.
+   - `python3 -B scripts/license_policy.py` gives `LICENCE POLICY: PASS`.
+
+5. Preservation and claims
+   - The base scoreboard is an exact byte prefix of the new one.
+   - TASKS.md table lines are identical to base (509), and the TASKS diff removes no line.
+   - The retained review is byte-identical to `/lane/reviews/7a3c07c90de9-engine-readme-privacy-repair.md`
+     (SHA-256 `605f1511…`) and ends `Verdict: PASS`.
+   - TASKS' summary of M1 (resolved) and of L4/L5/L6 joining T-309 matches that review.
+   - The README change is limited to the "Measured coding" cell. The "AgentMage is an independent,
+     privately developed product" paragraph is untouched.
+   - "Two profiles remain" and "60 attempts remain" are correct: 4 of the 6 policy profiles are complete.
+   - All links in the new text resolve.
+
+6. Public hygiene and integrity
+   - I grepped the diff for the home path, username, e-mail, credentials and other agent products.
+   - The only hits are in the retained review: `/lane/...` lane paths and the reviewer attribution "Claude
+     Opus 5.5". The repository already uses both (293 and 218 files under `docs/reviews` at base).
+   - The model name appears only as the identity of the measured model, not as branding.
+   - Tasks run: `dev-001`…`dev-029` and `dev-rust-001` only.
+   - Every record has `graded=false` and `retries=0`. `held_out_executed`, `candidate_execution` and
+     `hidden_tests_executed` are false.
+   - Task bases come from the frozen preflight, and the contexts are byte-identical to the prior repeat.
+   - Failures are counted: 2 refusals, kept out of the 28 proposals. Does-not-fit is reported separately
+     (0).
+
+7. Confinement
+   - This commit changes no tool, permission, sandbox or network code, so no new boundary needed escape
+     reproduction.
+   - The measurement bwrap (`--bind / /` plus read-only source and `.git`) is a source-pinning mount, not a
+     confinement boundary. No generated candidate runs inside it, as the verifier checks and the records
+     show.
+
+## Findings
+
+No critical, high or medium findings.
+
+Backlog (low / note):
+- **N1 (note).** TASKS.md compresses the retained review's B1 (owner attention: a pre-existing
+  `docs/architecture/` file links to another repository of the owner) into "historical-file diagnostics stay
+  deferred". That is not wrong, but the owner-attention item could be named explicitly when T-309 is next
+  touched.
+- **N2 (note).**
+  - `verify_measurement.py` checks the `unchanged_files_sha256` preservation against the current working
+    directory (`Path(name).read_bytes()`) and uses Git in the caller's cwd, so it must be run from the pinned
+    checkout.
+  - That is how I ran it. Documenting the requirement in the capsule would help later reviewers.
+
+## Per-row result
+
+- T-303/T-306 MEASURE FIRST reporting increment (non-closing):
+  - Every number traces to raw logs and matches my re-derivation.
+  - Budgets and changed variable are stated. Does-not-fit is reported separately from model failures.
+  - Setup failures are separated from scores.
+  - No held-out, hidden or candidate execution.
+  - Prior bytes are preserved, and the gates pass.
+  - The increment is accepted. T-303 and T-306 remain open; nothing closes.
+
+Verdict: PASS

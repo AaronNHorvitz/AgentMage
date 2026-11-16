@@ -3004,3 +3004,37 @@ used another 18.443 plus 44.628 seconds and zero task attempts, recorded
 separately. GPU kernel time and complete end-to-end latency are unmeasured.
 Audit, comparison, original-helper reproduction and cleanup pass.
 T-303/T-306 remain open. See [evidence](t303-inline-schema-qwen-2026-11-16.md).
+
+## Inline-schema gpt-oss development measurement — 2026-11-16 UTC
+
+| Date | Source commit | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU reserved work min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-16 | 72c002a42957340de0b6fa0eb4d48385db2c7e62 | gpt-oss (4/30) | 32768 / 24497–29748 | Unavailable | Unavailable | 0/4 | Not run | 500.353 | 8.863 | 23752 / 88912 (4/4 counters) |
+
+Changed variable: trusted named inline `json_schema` request with `strict: true`.
+Contexts/messages, model/profile, runtime, helper, prompts, strict checker,
+framing, thinking request, deadlines and output formula match the preceding
+gpt-oss repeat. Profile `reasoning_effort: medium` and the transport's thinking
+disabled request are unchanged; internal reasoning is not inferred.
+Input 2988–8239; does not fit: 0.
+Causes: `{"generation-refused:error:chat.response.incomplete": 3, "strict-edit-refused:code.proposal.edit": 1}`. Captures:
+`{"complete-choice-json": 4}`; reasoning metadata:
+`{"non-empty": 4}`. Missing metadata is not zero.
+
+Native admission/original grading controls still block effects, project tests,
+feedback and retries. Task passes remain unavailable. No candidate, hidden or
+held-out test ran. 56 attempts remain before tuning or new capabilities.
+Earlier attempts are never added or replayed. All original frozen input bindings
+pass against the complete read-only Git-backed source snapshot; the licence
+batch's working-tree changes are outside this measurement. All 30 contexts
+were reproduced before inference against this model's own preceding repeat.
+
+Completed-job reserved work 531.759 seconds excludes queues, pre-entry
+validation, wrapper overhead and released pauses. The recorded controller
+launch-to-exit UTC interval is 623.220 seconds including queues and
+released pauses; outer authentication, preflight and reporting are outside it.
+GPU kernel time and complete end-to-end latency are unmeasured.
+Audit, comparison, original-helper reproduction and cleanup pass.
+T-303/T-306 remain open. See [evidence](t303-inline-schema-gpt-2026-11-16.md).
+
+The builder requested a checkpoint through the exact controller's stop flag. The active second pair finished normally; the next pair never started. No model attempt was cancelled. The stop method, process identity, request and exit are retained for a resume without replay.
