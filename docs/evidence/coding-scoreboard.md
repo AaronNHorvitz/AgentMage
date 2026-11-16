@@ -2972,3 +2972,35 @@ continuous elapsed time are unmeasured. Both wrappers release between two-task
 jobs; resource limits and host low priority stay fixed. Audit, comparison,
 original-helper reproduction and cleanup pass. T-303/T-306 remain open;
 independent core review is required. See [evidence](t303-inline-schema-31b-finish-2026-11-16.md).
+
+## Inline-schema 27B development measurement — 2026-11-16 UTC
+
+| Date | Source commit | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU reserved work min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-16 | 72c002a42957340de0b6fa0eb4d48385db2c7e62 | qwen35-27b (30/30) | 32768 / 24137–29804 | Unavailable | Unavailable | 28/30 | Not run | 1260.537 | 27.771 | 189334 / 37798 (30/30 counters) |
+
+Changed variable: trusted named inline `json_schema` request with `strict: true`.
+Contexts/messages, model/profile, runtime, helper, prompts, strict checker,
+framing, thinking request, deadlines and output formula match the preceding
+27B repeat. Input 2932–8599; does not fit: 0.
+Causes: `{"strict-edit-refused:code.proposal.edit": 2, "ungraded-proposal": 28}`. Captures:
+`{"complete-choice-json": 30}`; reasoning metadata:
+`{"unavailable": 30}`. Missing metadata is not zero.
+
+Native admission/original grading controls still block effects, project tests,
+feedback and retries. Task passes remain unavailable. No candidate, hidden or
+held-out test ran. 60 attempts remain before tuning or new capabilities.
+Earlier checkpoints are never added or replayed. All original frozen input
+bindings pass against the complete read-only Git-backed source snapshot;
+the licence batch's changed working-tree bytes are outside this measurement.
+All 30 development contexts were reproduced before inference.
+
+Completed-job reserved work 1666.284 seconds excludes queues, pre-entry
+validation, wrapper overhead and released pauses. The recorded controller
+launch-to-exit UTC interval is 3800.162 seconds including queues and
+released pauses; outer authentication, preflight and reporting are outside it.
+Earlier failed preparations
+used another 18.443 plus 44.628 seconds and zero task attempts, recorded
+separately. GPU kernel time and complete end-to-end latency are unmeasured.
+Audit, comparison, original-helper reproduction and cleanup pass.
+T-303/T-306 remain open. See [evidence](t303-inline-schema-qwen-2026-11-16.md).

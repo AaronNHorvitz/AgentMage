@@ -2,6 +2,27 @@
 
 ## Active queue: local agent mission
 
+The [inline-schema 27B measurement](docs/evidence/t303-inline-schema-qwen-2026-11-16.md)
+records 30/30 frozen development attempts: 28/30 strict ungraded proposals.
+Task passes/retries remain unavailable; no candidate, hidden or held-out test
+ran. A full read-only Git archive passed all 30 context preflights and every
+original frozen binding. Audit, comparison, reproduction and cleanup pass.
+Three earlier setup failures are preserved separately from task outcomes.
+60 attempts remain before tuning or new capabilities. T-303/T-306 remain
+open; no row closes. Independent core review is required.
+
+The [independent privacy repair re-review](docs/reviews/7a3c07c90de9-engine-readme-privacy-repair.txt)
+returns **Verdict: PASS** for exact
+`7a3c07c90de9c808ef24ead1b3c57bb6acf775ce`. Medium M1 is resolved; no high or
+medium finding remains. It accepts non-closing README/licence maintenance,
+not a completed mission row. The report is retained byte for byte.
+Low L4 (misaligned wide text), L5 (HEAD hidden by index/working bytes) and L6
+(additional encoding/path heuristics) join T-309; prior L1-L3 remain backlog.
+The review's historical-file diagnostics stay deferred. B2's missing trace of
+the earlier 18.443-second setup is supplied by the next measurement capsule's
+complete second-preparation archive; that time remains separate from scores.
+MEASURE FIRST and T-303/T-306 remain unchanged.
+
 The [independent README/licence review](docs/reviews/da13234ff9c3-engine-readme-dual-licence.txt)
 returns **Verdict: FINDINGS** for exact
 `da13234ff9c3c75d6672db108a8713130c5cccd7`. Medium M1 concerns username
