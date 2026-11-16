@@ -1,0 +1,80 @@
+# Inline-schema E4B complete development measurement — 2026-11-16 UTC
+
+**30/30 frozen development tasks attempted; 17 strict ungraded proposals.**
+This session adds **6 new attempts** to the twenty-four carried attempts.
+First-attempt and within-budget task passes remain **unavailable**.
+Four other full profiles (120 attempts) still need this repeat before tuning or capability work.
+T-303/T-306 remain open; independent core review is required.
+
+Measured source: `72c002a42957340de0b6fa0eb4d48385db2c7e62`. The available path is
+existing Rust context selection → credential-owning chat API → original Rust
+strict edit checker. Native executable admission and the original grading-control
+receipt remain unavailable; full repository retrieval, native effects, tests,
+feedback and retries cannot run. No control is reconstructed. No candidate,
+hidden or held-out test ran. Proposals are unapplied and untested.
+
+| Outcome / cause | Attempts |
+| --- | --- |
+| `strict-edit-refused:code.proposal.edit` | 13 |
+| `ungraded-proposal` | 17 |
+| Does not fit | 0 |
+
+Request/check time totals **960.589 seconds**. Completed-job reserved work
+is **1108.945 seconds / 18.482 minutes**, after frozen-input validation,
+including model verification, loading, requests and cleanup. Queues, wrapper
+and pre-entry overhead and released pauses are excluded. Active GPU kernel
+time and continuous end-to-end elapsed time are unmeasured. Backend counters
+cover **30/30**: **215833 input / 73110 output tokens**. Backend terminations:
+`{"stopped-below-token-limits": 30}`. Captures:
+`{"complete-choice-json": 30}`. Reasoning metadata:
+`{"unavailable": 30}`; missing metadata is never zero.
+
+Changed variable from the preceding repeat: trusted named inline `json_schema`
+requests with `strict: true`. Captured upstream bodies verify the actual encoding.
+Every attempted context and message matches its previous repeat byte for byte.
+Model/profile, runtime, helper, prompts, strict checker, complete framing,
+requested thinking option and 300-second total/idle deadlines remain fixed.
+Context is 32,768 tokens. Output follows
+`min(32768, 32768 - rendered input tokens - 32)`, ranging **23006–29515**;
+preflight input ranges **3221–9730**. No model answer is repaired or fallback
+added. No task-quality improvement or model-role qualification is established.
+
+The resumed launcher authenticates all 2,283 repository and 26 private frozen
+bindings and every saved twenty-four-task raw file against the previous sealed E4B
+checkpoint. It verifies cleanup and exact prior-owner absence before launch.
+The twenty-four carried attempts are included in these cumulative totals, never added
+again or retried. Earlier queue cancellations retain their own logs and exact-owner stop
+receipts; none entered a task or the GPU.
+Only the controller's reservation-log parent changes to a fresh namespace.
+The frozen controller, batch launcher, sources and measurement settings stay fixed.
+This launcher obtains the prior owner set from the authenticated launch receipt
+and adds the exact previous and current controller paths; cleanup reuses that
+set plus completed auth/state owners. The older owner-derivation and queued-stop
+diagnostics remain recorded in T-309; earlier artifacts are unchanged.
+Each two-task job uses both shared wrappers with a 900-second execution cap,
+host low priority, nice 19, 16 GiB/four CPUs and 30-second released pauses.
+The controller checks every wrapper's zero exit status and itself exits zero.
+
+All 15 completed jobs revoke settings and reap API/model owners; model keys
+and sockets are absent. Cleanup retires 6 new API tokens; twenty-four previously retired tokens are recorded
+separately across the earlier accepted segments. Together they account for 30.
+Exact-argument process scanning covers this PID namespace only; no global-idle
+claim follows. Sampled total GPU peaks range
+**5284–6102 MiB**.
+
+Read-only source/outcome audit, capture/context/profile comparison and original
+helper reproduction for all 30 attempted tasks pass. Reproduction checks the
+native context and each available strict edit result without executing generated
+programs or loading hidden tests. The private sealed review capsule retains raw
+requests/responses, events, context/checker outputs, candidates, frozen source
+and private bindings, comparison metadata and every reporting method version.
+Its verifier hashes and reads only; it imports no archived module and executes
+no captured binary or candidate. Existing source-to-binary provenance is not
+strengthened. Earlier sealed measurements remain unchanged.
+
+Reporting fast gate, direct Markdown lint, table rendering, public-text hygiene,
+ledger-row preservation and prior scoreboard-prefix checks pass. The full source
+gate is not rerun for this reporting change and remains **FAIL**: 1,169 passed,
+53 inherited failures and 19 ignored, as recorded in the
+[source review](../reviews/ac1c30201171-trusted-inline-output-schema.txt).
+No row closes; no release or owner-ready claim is made.
