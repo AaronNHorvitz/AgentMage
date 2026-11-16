@@ -2,6 +2,22 @@
 
 ## Active queue: local agent mission
 
+The [inline-schema E4B repeat](docs/evidence/t303-inline-schema-e4b-2026-11-16.md)
+records 2/30 frozen development attempts: 1/2 strict ungraded proposals.
+Task passes and retries remain unavailable; no candidate, hidden or held-out
+test ran. Source/outcome audit, comparison, original-helper reproduction and
+cleanup pass. The remaining 28 E4B tasks and four other full profiles (120 attempts) remain before tuning or
+new capabilities. T-303/T-306 stay open; no row is added or closed.
+This reporting increment requires independent core review.
+
+The retained [independent review-retention verdict](docs/reviews/d38e57125787-a4b-measurement-review-retention.txt)
+returns **Verdict: PASS** for exact
+`d38e571257873b45cc8129aeaa2224ab7c90423d`, with no high or medium finding.
+It accepts reporting only and closes no row. Low L1 joins the T-309 provenance
+backlog: retain the complete method or patch producing final public prose, or
+assert the exact added note. This batch retains its complete writing methods;
+prior sealed artifacts remain unchanged. T-303/T-306 stay open.
+
 The retained [independent A4B full-profile review](docs/reviews/193e59d2c4b0-inline-schema-a4b-development-measurement.txt)
 returns **Verdict: PASS** for exact
 `193e59d2c4b00d009269ba43b5c8d95fd2165ee7`, with no high or medium finding.

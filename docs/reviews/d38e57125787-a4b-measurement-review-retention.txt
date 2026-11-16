@@ -1,0 +1,184 @@
+Commit: d38e571257873b45cc8129aeaa2224ab7c90423d
+Scope: a4b-measurement-review-retention
+
+Reviewer: independent Claude Opus 5.5 session (extra-high effort), read-only, working in the pinned
+checkout `/lane/review-checkout`. Row: T-303 (related T-306), non-closing review retention, reporting
+only. Tier: core. Base `193e59d2c4b00d009269ba43b5c8d95fd2165ee7`. I judged only this commit. I
+launched no model, repeated no attempt, executed no candidate, hidden or held-out test, ran no captured
+API/helper binary or controller, and reconstructed no grading control. I did not modify the
+repository. `/lane/state` (other than `review-target` and `tmp`) is not visible in this sandbox, so
+builder-side state (the 26 private inputs, the live E4B namespace) is judged only through the retained
+receipts.
+
+## Methods, commands and results
+
+1. Commit identity, scope and preservation
+   - `git rev-parse HEAD` gives `d38e571257873b45cc8129aeaa2224ab7c90423d`. `git rev-parse HEAD^`
+     gives `193e59d2c4b00d009269ba43b5c8d95fd2165ee7`. `git diff --check <base>` returns rc 0, and
+     `git status --porcelain` prints nothing, both before and after my runs.
+   - `git diff --name-status <base>` lists exactly three paths: M `TASKS.md`, M
+     `docs/evidence/t303-inline-schema-a4b-2026-11-16.md`, A
+     `docs/reviews/193e59d2c4b0-inline-schema-a4b-development-measurement.txt`. I read every hunk.
+     - TASKS.md: a 9-line prose note goes in under `## Active queue: local agent mission`. It records
+       that the retained review is PASS with no high or medium finding, that it accepts the
+       measurement only and closes no row, that L1 is corrected (2 + 20), and that T-303/T-306 remain
+       open. It also records that the next E4B launch waited for a build slot and was stopped before
+       any task or GPU entry, that there is no new score, and that five profile repeats still come
+       before tuning.
+     - The evidence file changes one line. "The previous segment already retired 22 API tokens" becomes
+       "The earlier segments retired 22 API tokens (2 + 20)". This is word for word the fix that L1 of
+       the 193e59 review proposed.
+   - `cmp docs/reviews/193e59d2c4b0-inline-schema-a4b-development-measurement.txt /lane/reviews/193e59d2c4b0-inline-schema-a4b-development-measurement.md`
+     returns rc 0, so the retention is verbatim. The review ends `Verdict: PASS` and says "No critical,
+     high or medium findings." Its only finding is L1 (low), which is now addressed.
+   - `diff <(git show <base>:TASKS.md | grep '^|') <(grep '^|' TASKS.md)` shows no difference over all
+     507 table lines. No row is added, changed or closed.
+   - `cmp <(git show <base>:docs/evidence/coding-scoreboard.md) docs/evidence/coding-scoreboard.md`
+     returns rc 0, so the scoreboard is byte-for-byte unchanged. No new score is published.
+   - No source, prompt, profile, checker, suite, threshold, permission or SBOM file changed, because
+     the diff touches only the three documentation paths above.
+
+2. Capsule and retained verifier
+   - `sha256sum` gives `bindings.json` `451acf98…4c0dcc4919`, `manifest.json` `0c370805…5d642cc` and
+     the post-commit receipt `e378e377…a014f4a7ed`, all as requested. The bindings record 25 files,
+     zero new attempts and no row closed. On disk there are 27 files: the 25 listed, plus the manifest
+     and bindings.
+   - I read all of `verify.py` before running it. It only reads and hashes files. It has no subprocess
+     and imports no captured module. It refuses absolute names, `..`, symlinks, token, key and socket
+     names and `.gguf` files. It requires the set of files on disk to equal the manifest set.
+   - `python3 -B /lane/reviews/a4b-measurement-review-retention-20261116/verify.py` returns rc 0 and
+     prints `PASS`, 25 files, retained review PASS, 507 ledger lines unchanged, scoreboard unchanged, 0
+     new attempts, 0 GPU job entries, new score null, no source change and no row closed.
+   - My own checks, beyond the verifier:
+     - The three `public/` copies are byte-identical (`cmp`) to the committed files.
+     - `prior-full-bindings.json` and `prior-full-manifest.json` are byte-identical to
+       `/lane/reviews/inline-schema-a4b-20261116/{bindings,manifest}.json`. That bindings file still
+       hashes to `8444940c…bfab3`.
+     - `launch.json` records 418 saved A4B files. That set equals the prior manifest's set of
+       `measurement/gemma4-26b-a4b-NN/` entries, in both directions, with equal hashes. Re-hashing
+       those 418 files in the existing sealed A4B capsule gives zero mismatches, so the sealed
+       measurement is intact.
+     - `queue/frozen-inputs-v2.json` hashes to `a92430c6…` and records source `72c002a4…`, 2283
+       repository and 26 private inputs. Re-hashing all 2283 repository inputs in the pinned checkout
+       gives 0 mismatches. None of the three changed paths is a frozen input. I cannot see the 26
+       private inputs. The frozen controller entry equals the retained `original-controller.py`
+       (`4d3f3e42…`).
+
+3. Launch, queue and stop receipts
+   - `queue/launch.py`, before it launches anything:
+     - It authenticates the frozen inputs and the full A4B capsule (every pair completed, settings
+       revoked, API reaped, no key, socket or token, and every saved file equal to the sealed
+       manifest).
+     - It requires the finish controller to have exited 0, no live A4B owner argv in `/proc`, no
+       existing `gemma4-e4b-NN` directory, reservation log or candidates directory, no STOP file, a
+       clean tree, `BUILD_SLOT_PRIORITY=low`, memory.max ≤ 16 GiB, cpu.max ≤ 4 CPUs and the unchanged
+       controller hash.
+     - It runs the unmodified controller under `nice` in a new session and confirms argv and nice 19
+       from `/proc`.
+   - `launch.json` records head `193e59d2…`, source `72c002a4…`, `controller_change` false, nice 19,
+     priority low, memory.max 17179869184, cpu.max `400000 100000`, pid 270 with start ticks
+     `12155570`, `candidate_execution` false and `hidden_or_held_out` false.
+   - `original-controller.py`: on SIGTERM it only sets a flag. Its child `build-slot` wrapper dies
+     from the same group signal, so `assert result.returncode==0` raises. `controller.log` contains
+     exactly that traceback (`AssertionError: job failed: gemma4-e4b 0`) and no progress JSON line.
+     `controller-exit.json` gives exit 1 for the same pid, ticks and launch hash. This matches the
+     claim that the controller exits 1 after its queued wrapper is signalled.
+   - `queue/reservation.log` is only `Waiting for a shared heavy-build/test reservation (2 slot(s),
+     priority low)...`. The build slot was never granted, so the nested `gpu-slot`/`batch.py` never
+     ran. This supports "before any task or GPU entry".
+   - Wait time: from launch at `04:01:53Z` to stop at `04:35:08Z` is 33.2 minutes. The start-tick gap
+     between pid 270 and the `sleep 1` child is (12354940 − 12155570)/100 = 1993.7 s. Both match "33
+     minutes".
+   - `queue/cancel_queued.py`:
+     - It re-verifies the controller's pid, start ticks, argv and pgid. It requires no job directory
+       or candidates and the reservation log still at "Waiting…".
+     - It collects only members of the controller's own process group, which `launch.py` created
+       with `start_new_session`. Their argv[0] is limited to python3/bash/sleep/flock.
+     - Separately, it collects at most one process whose argv is exactly `bash /tools/build-slot
+       python3 -B <W>/prior.py`.
+     - It re-checks identity just before `killpg`/`kill`. Afterwards it confirms that none of those
+       processes survives, that the controller exit is 1 and that the reservation log is unchanged.
+       Otherwise it refuses and does no broad signalling.
+   - `queued-stop.json` lists group {270 controller, 271 build-slot wrapper, 10386 sleep} with pgid 270
+     and one metadata wrapper (pid 633). Every count is zero (task_attempts, gpu_job_entries, job
+     directories, matching processes afterwards), candidates are false, new score is null, and
+     `foreign_process_signalled` is false. Its scope says "Current PID namespace and exact own process
+     identities only". There is no global-idle claim.
+   - `check.py`:
+     - It asserts the three-path scope, the verbatim review, the 507 table lines, the unchanged
+       scoreboard, and that the evidence diff is exactly the L1 replacement.
+     - It scans the public prose for home paths and private names, re-hashes all 2283/26 inputs and
+       confirms the zero-attempt stop.
+     - It scans `/proc` for the signalled pgids or the controller/batch/launch/prior method paths.
+       `checks.json` records PASS and no matches.
+   - `checks.json` `content_sha256` values equal `sha256sum` of the committed files: TASKS
+     `15d62e0e…`, evidence `e79fc144…`, review `353e812c…`. The post-commit receipt gives commit
+     `d38e5712…`, base `193e59d2…`, bindings `451acf98…`, clean true and those same three content
+     digests. Its method hash `dd017acf…` equals the manifest entry for `postcommit.py`, which asserts
+     the HEAD^ base, a clean tree and the exact path set before it writes. These are content
+     SHA-256s, not Git blob ids, as the request says.
+   - `package.py` copies with hash checks, refuses symlinks or existing destinations, and writes the
+     manifest and bindings last. That is consistent with what is on disk.
+
+4. Lint and reporting gate
+   - `/lane/reviews/42612ca9787f-a4b-node` is v24.15.0, SHA-256 `d1de76d8…bd932c`.
+   - `<node> /lane/reviews/a4b-measurement-review-retention-20261116/lint.mjs`, run from the checkout,
+     returns rc 0 and prints `PASS`: TASKS.md 0 issues and the evidence file 0 issues. The rule
+     overrides are the same as in the earlier capsules.
+   - `PATH=/tmp/agentmage-review-retention-bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target python3 -B scripts/local_agent_fast_gate.py --base 193e59d2c4b00d009269ba43b5c8d95fd2165ee7 --timeout 3600`
+     returns rc 0 with `FAST GATE: PASS`. The diff check, untracked lint and review lint each return rc
+     0, and markdownlint-cli2 reports 2 files with 0 issues. This is identical to the retained
+     `reporting-gate.log`.
+   - No Rust was built, so nothing needed the build slot. I did not rerun the full source gate, and
+     this commit makes no overall-green claim.
+
+5. Integrity, privacy and IP
+   - No held-out or hidden test ran, no candidate was executed, and no E4B task, model process or API
+     process started (step 3). Queue cancellation is not counted as a model failure, retry or score.
+     MEASURE FIRST holds: there is no batch that changes what the model sees, how edits are applied or
+     how tests run, and the latest scoreboard line (2026-11-15–16) is current. The next work is still
+     the five profile repeats, not tuning.
+   - I scanned all 233 added lines for home paths, the host user, email, credential and key
+     patterns, private sibling names and product or patent terms. I found:
+     - sandbox paths (`/lane/…`, `/tools/…`, `/tmp/…`), only inside the retained review, which is the
+       repository's established convention;
+     - the reviewer self-identification line;
+     - sentences inside the review that state those items are absent.
+   - There is no private host path, username, hostname, credential, personal data, private project
+     name, trademark branding or patent in committed text. The private capsule's hygiene scripts list
+     private names as strings to refuse, but they are not committed.
+   - Confinement: no source or permission surface changed, so I repeated no escape tests. The
+     tool-boundary results of earlier reviews are unaffected.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog, provenance)** — `queue/retain_review.py` in the private capsule inserts only
+  the first six lines of the TASKS.md note (`TASKS.md:5-10`). The last three lines (`TASKS.md:11-13`,
+  about the E4B queue stop) come from an edit that is not retained as a method. The final bytes are
+  still bound by `checks.json`, `package.py` and the post-commit receipt, and every claim in those
+  lines traces to `queued-stop.json`, `controller-exit.json` and `reservation.log`. Nothing published
+  is unsupported. Fix in a later capsule: keep the method or patch that produces the final committed
+  prose, or have `check.py` assert the exact added note.
+- **Note (no finding)** — The metadata wrapper's exit 143 is a tool return the builder observed. It
+  is not in a retained receipt, though `queued-stop.json` and `check.py` do show that the wrapper no
+  longer exists. The controller's "job failed" traceback is how the unmodified controller always
+  reacts to a signalled wrapper. The public prose correctly labels it as queue cancellation, not a
+  model failure.
+
+## Per-row result
+
+- T-303 (related T-306), retention of the independent 193e59 A4B measurement review, the L1 wording
+  correction and the record of a zero-task E4B queue cancellation: **accepted as non-closing
+  reporting.**
+  - The review is retained verbatim with PASS and no high or medium finding, and L1 is fixed exactly
+    as proposed.
+  - All 507 ledger table lines are unchanged and the scoreboard is byte-identical. The sealed A4B
+    capsule and frozen inputs are intact.
+  - The E4B attempt never got past the build-slot wait. Only the launcher's own process group and its
+    own metadata wrapper were signalled, and there is no new score.
+  - No row is added or closed. T-303/T-306 remain open. Next: resume the remaining frozen profile
+    measurements with a fresh reservation-log namespace, without replaying the cancelled queue.
+
+Verdict: PASS
