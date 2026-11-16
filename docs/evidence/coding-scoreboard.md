@@ -2862,3 +2862,31 @@ original-helper reproduction and cleanup pass. T-303/T-306 remain open;
 independent core review is required. See [evidence](t303-inline-schema-31b-continued-2026-11-16.md).
 
 The next pair was stopped after 291.498 seconds waiting for shared build capacity, before GPU entry or a new attempt. Its exact own session was authenticated, signalled and rescanned empty. Queue time adds no model failure or retry. The 26 unattempted 31B tasks remain pending.
+
+## Inline-schema 31B resumed development measurement — 2026-11-16 UTC
+
+| Date | Source commit | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU reserved work min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-16 | 72c002a42957340de0b6fa0eb4d48385db2c7e62 | gemma4-31b (6/30; 24 pending) | 32768 / 23170–29511 | Unavailable | Unavailable | 2/6 | Not run | 305.215 | 7.620 | 44823 / 5522 (6/6 counters) |
+
+Changed variable: trusted named inline `json_schema` request with `strict: true`.
+Contexts/messages, model/profile, runtime, helper, prompts, strict checker,
+complete framing, requested thinking option, deadlines and output formula match
+the preceding 31B repeat. Input 3225–9566; does not fit: 0.
+Causes: `{"strict-edit-refused:code.proposal.edit": 4, "ungraded-proposal": 2}`. Captures:
+`{"complete-choice-json": 6}`; reasoning metadata:
+`{"unavailable": 6}`. Missing metadata is not zero.
+
+Task passes and retries remain unavailable: native admission and original grading
+controls still block effects, tests, feedback and retries. No candidate, hidden
+or held-out test ran. The remaining 24 31B tasks and three full profiles (114 attempts) remain before tuning
+or capability work. These cumulative totals include the four prior attempts; checkpoints are never added or replayed.
+
+Reserved work totals 457.192 seconds after frozen-input validation, excluding
+queues, wrapper/pre-entry overhead and released pauses. GPU kernel time and
+continuous elapsed time are unmeasured. Both wrappers release between two-task
+jobs; resource limits and host low priority stay fixed. Audit, comparison,
+original-helper reproduction and cleanup pass. T-303/T-306 remain open;
+independent core review is required. See [evidence](t303-inline-schema-31b-resumed-2026-11-16.md).
+
+The next pair was stopped after 280.559 seconds waiting for shared build capacity, before GPU entry or a new attempt. Its exact own session was authenticated, signalled and rescanned empty. Queue time adds no model failure or retry. The 24 unattempted 31B tasks remain pending.

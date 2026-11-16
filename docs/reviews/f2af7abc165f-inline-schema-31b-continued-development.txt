@@ -1,0 +1,171 @@
+Commit: f2af7abc165f0a3fe34888b195dab0a2acf676be
+Scope: inline-schema-31b-continued-development
+
+# Independent review: T-303 (related T-306), non-closing 31B inline-schema continued development measurement
+
+Reviewer: Claude Opus 5.5, separate session, read-only, working in the pinned checkout
+`/lane/review-checkout`. I used no GPU, launched no model, repeated no task, executed no candidate, loaded
+no hidden or held-out test, imported no archived module and reconstructed no control. The repository was
+not modified. Scratch: a `/tmp/rv-f2af/bin/node` symlink and a gate log, both in my own sandbox tmpfs.
+
+## Methods, commands and results
+
+1. Commit, diff and preservation
+   - `git rev-parse HEAD` returns `f2af7abc165f0a3fe34888b195dab0a2acf676be`, and `git status --porcelain` is empty
+     before and after the gate.
+   - `git diff --check 6e5c5788d3b0…` exits 0.
+   - `git diff --numstat 6e5c5788…` shows additions only:
+     - `TASKS.md` +15
+     - `docs/evidence/coding-scoreboard.md` +28
+     - new `docs/evidence/t303-inline-schema-31b-continued-2026-11-16.md` +74
+     - new `docs/reviews/6e5c5788d3b0-31b-queued-verdict-retention.txt` +98
+   - No source, prompt, suite, checker, profile, permission, threshold or supply-chain file changed.
+   - I read every added line.
+   - TASKS.md table lines (`^|`) are identical at the base and at HEAD, with 507 lines.
+   - The base scoreboard (206750 bytes) is an exact byte prefix of the HEAD scoreboard (`cmp` OK). The update
+     is append-only.
+   - The retained review is byte-identical to the independent source
+     `/lane/reviews/6e5c5788d3b0-31b-queued-verdict-retention.md`: both sha256 `e0b6a305…cf93d3a`.
+   - Public hygiene: I grepped the added lines for home paths, the owner's name, email-like strings, keys,
+     tokens and product or vendor names.
+     - The only hits are inside the retained review text: `/lane/...` sandbox paths and `/tmp/rv-*`, plus the
+       reviewer self-identification line. Many earlier committed reviews follow the same convention.
+     - No private host path, username, hostname, credential, private project name or trademark used as
+       branding appears.
+     - No other agent product is named or compared.
+
+2. Capsule verifier (read in full before running)
+   - The script reads and hashes files and calls `git show` for the base scoreboard and TASKS only. It has no
+     imports from the capsule and executes nothing.
+   - `python3 -B …/verify_measurement.py` returns PASS: 2470 files, tasks 4, strict ungraded proposals 1, causes
+     `{strict-edit-refused:code.proposal.edit: 3, ungraded-proposal: 1}`, 27049/4610 tokens, coverage 4,
+     request/check 201.00644758800627 s, reserved 284.01001927402103 s.
+   - `sha256sum`: bindings `c45088c1…039d0ed8`, manifest `5a911ecf…7191860`, postcommit `688b8122…4150165`. All three
+     match the request.
+   - The postcommit names this commit and base. Its `method_sha256` equals sha256 of `measurement/postcommit.py`
+     (`33112ed4…3b7b`).
+   - All four `committed_content_sha256` values equal `git show HEAD:<path> | sha256sum`, which also equals the
+     capsule `public/` copies (checked directly).
+   - Independent derivation: I wrote my own script, using neither the builder's audit nor the verifier, over
+     `upstream-response-*.bin`, `upstream-request-*.json`, `backend-slice.log`, `record.json`, `checked.json` and
+     `answer.txt`. Per task (input/output tokens, then outcome):
+
+     | Task | Input / output tokens | Outcome |
+     | --- | --- | --- |
+     | dev-001 | 9504 / 1152 | strict refused `code.proposal.edit` |
+     | dev-002 | 9566 / 1969 | strict refused `code.proposal.edit` |
+     | dev-003 | 4754 / 736 | strict refused `code.proposal.edit` |
+     | dev-004 | 3225 / 753 | `changes` (ungraded proposal) |
+
+     - On all four tasks the usage counters, the backend prompt-eval/eval counts and the preflight values agree.
+       Every finish reason is `stop`, every answer is JSON, retries 0, graded false.
+     - Sums: 27049/4610 tokens and 201.006 s.
+     - `max_tokens` = 32768 − input − 32 gives 23232, 23170, 27982 and 29511, so the range is 23170–29511. Input
+       ranges 3225–9566.
+     - Reserved work is 177.860 + 106.150 = 284.010 s, or 4.734 min.
+     - Sampled GPU peaks are 20827 and 21162 MiB.
+     - Every upstream request carries `json_schema` `coding_edits_v1` with `strict: true` and
+       `enable_thinking: false`.
+     - Reasoning metadata is absent in all four responses (reported as "unavailable", not zero).
+     - Does not fit: 0.
+     - All published numbers match. The ungraded proposal is labelled as unapplied and untested, and it is never
+       presented as a task pass.
+
+3. Lint and reporting gate
+   - I read `lint.mjs`: markdownlint on the three files plus a count of rendered tables in the new sections.
+   - The recorded node is sha256 `d1de76d8…d932c`, matching `reporting-checks.json`.
+   - `/lane/reviews/42612ca9787f-a4b-node …/lint.mjs` returns PASS: 0/0/0 issues, with 1 rendered table each for
+     the scoreboard and the evidence file.
+   - `PATH=/tmp/rv-f2af/bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target python3 -B
+     scripts/local_agent_fast_gate.py --base 6e5c5788… --timeout 3600` returns `FAST GATE: PASS`, exit 0:
+     - `git diff --check`
+     - `--lint-untracked`
+     - `--lint-reviews` on the retained review
+     - markdownlint-cli2 v0.23.2: 0 issues
+   - The source gate was not rerun (reporting-only, as requested). The inherited FAIL
+     (1,169 passed / 53 failed / 19 ignored) is disclosed in the evidence file.
+
+4. Launch and queue chain
+   - Read `launch.py`, `launch-derivation.diff` and `preparation.json`. The launcher authenticates:
+     - the r1 prefix bindings `452556d5…` and every manifest entry;
+     - all 2283 repository and 26 private frozen inputs (freeze `a92430c6…`);
+     - only `gemma4-31b-00` present before launch, with the API reaped, settings revoked and no key, socket or
+       token;
+     - the prefix candidates;
+     - the r1 stop;
+     - the r2 queued capsule `505283e4…`;
+     - the r3 and r4 queued pins, each with a PASS stop, cleanup and preservation, zero GPU entries and zero new
+       attempts;
+     - an exact-owner `/proc` scan after each step;
+     - no reservation log, no STOP marker, a clean git tree and `BUILD_SLOT_PRIORITY=low`.
+   - `launch.json` records:
+     - nice 19 (observed via stat), PID 256, start ticks 16648976
+     - cgroup limits `memory.max` 17179869184 and `cpu.max` 400000/100000 (16 GiB, 4 CPUs)
+     - priority low, carried 2, planned 28, 28 saved prefix files and 83 owner arguments
+   - The verifier confirms that the controller equals the frozen original with only the reservation-log parent
+     replaced. I read the controller: build-slot → gpu-slot `queue-run agentmage 900`, 30 × 1 s released
+     pauses, and a "never replay silently" guard on existing directories.
+   - `controller.log` shows a single `completed: 4` line, then exit 1 at pair 4. `controller-exit.json` matches the
+     PID, start ticks and launch hash.
+   - Reservation logs:
+     - `-00` is the carried prefix, hash-bound to the prefix manifest and not replayed (state directory 08:10 local,
+       r1 era).
+     - `-02` is new: both wait lines, model ready, dev-003 and dev-004, then completed. Its state directory
+       timestamp falls inside the r5 window (16:30:47 to 16:55:18 UTC).
+     - `-04` contains only the build-slot wait line.
+   - The r5 `checkpoint-stop.json` records PASS: queued 291.498 s, only its own session (PID/PGID/SID 256)
+     signalled, a fresh scan empty, zero GPU entries and zero new attempts. It is not counted as a model failure.
+
+5. Prior comparison
+   - `prior-manifest.json` hashes to the retained digest `e73ffad3…` in `prior-bindings.json`.
+   - `prior-pair-report.json` matches its prior-manifest entry, and all three files match the prefix manifest.
+   - `wire_audit.py` (unchanged from r1, `change: none`) requires each context sha to equal the prior repeat. It
+     also requires model, runtime manifest and profile (excluding `state_root`) to equal the original report.
+     Its result is PASS for 4 tasks.
+
+6. Audit, reproduction and cleanup
+   - `methods.json` shows audit, reproduce, cleanup, wire_audit, invoke_checks and stop_checkpoint all identical
+     to the r1 originals.
+   - `check-invocation.json` records four checks, each with return code 0. Their stderr files are empty.
+   - `reproduce.py` calls only the frozen helper (sha `852cd7f5…`, equal to the frozen private input) for
+     context and strict checks on saved answers. It compares candidates by reading bytes, never executes code
+     and loads development tasks only.
+   - `cleanup.json`:
+     - 2 pairs, each with settings revoked, API reaped and keys/sockets absent;
+     - no matching processes in the current PID namespace;
+     - retired `gemma4-31b-02/auth/{control,client}.token`, disjoint from the prefix's
+       `gemma4-31b-00/auth/{…}` entries: 4 in total, as published.
+
+7. Reporting, packaging and postcommit
+   - `write_reports.py.diff` changes only singular/plural wording.
+   - `package.py.diff` adds only the copy of the r4 pins.
+   - `postcommit.py.diff` changes only the capsule path.
+   - The claims in TASKS, scoreboard and evidence match the receipts above:
+     - 116 = 26 + 3 × 30 remaining attempts
+     - 4 token files
+     - peaks 20827–21162 MiB
+     - 291.498 s queue
+   - No stronger binary-provenance claim is made, and no row is closed.
+   - MEASURE FIRST: a new scoreboard line follows this batch. Context and output budgets are stated,
+     does-not-fit is counted separately (0), and every number traces to raw logs.
+   - No held-out run and no tuning content.
+
+## Findings
+
+No high or medium findings.
+
+- **Low (backlog T-309):** `docs/evidence/t303-inline-schema-31b-continued-2026-11-16.md:45-46` says the launcher
+  authenticates "prior queued resume cleanup" in the singular. Since the last public line (r2, 3604.458 s), two
+  further queued sessions were started and stopped before GPU entry with no public mention:
+  - r3, queued 1278.079 s (`measurement/previous-queue/checkpoint-stop.json`)
+  - r4, queued 1519.535 s (`measurement/previous-queue-r4/checkpoint-stop.json`, "No public reporting increment")
+
+  Both have authenticated PASS receipts with zero attempts, so no number is affected. Fix: in the next
+  reporting increment, add one sentence listing the r3 and r4 queued stops and their queue times.
+
+## Per-row result
+
+- T-303 (related T-306), non-closing development measurement: PASS for reporting. The row stays open and nothing
+  closes.
+
+Verdict: PASS
