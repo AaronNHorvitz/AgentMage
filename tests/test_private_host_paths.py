@@ -25,6 +25,7 @@ class PrivatePathTests(unittest.TestCase):
         self.base = self.git("rev-parse", "HEAD").decode().strip()
         policy = {"schema_version": 1, "baseline_commit": self.base,
                   "username_sha256": hashlib.sha256(self.username).hexdigest(),
+                  "username_bytes": len(self.username),
                   "preserved_files": {"old.log": hashlib.sha256(self.old).hexdigest()}}
         raw = (json.dumps(policy) + "\n").encode()
         self.write(checker.POLICY, raw)
@@ -75,6 +76,61 @@ class PrivatePathTests(unittest.TestCase):
         self.assertTrue(checker.check(self.root, self.base))
         self.write("renamed.log", self.old)
         self.assertGreaterEqual(len(checker.check(self.root, self.base)), 2)
+
+    def test_username_substrings_case_and_encoded_text_fail_without_echo(self):
+        text = self.username.decode()
+        values = [self.username + b"-host", self.username + b"_dir", b"1000" + self.username,
+                  self.username.upper(), text.title().encode(),
+                  ("/tmp/" + text + "_cache/file").encode(),
+                  (r"\/var\/home\/" + text + r"\/file").encode(),
+                  ("%2Fvar%2Fhome%2F" + text + "%2Ffile").encode(),
+                  (r"\u0066" + text[1:]).encode(),
+                  ("/home/" + text + "/file").encode("utf-16"),
+                  ("/home/" + text + "/file").encode("utf-16-be"),
+                  ("/home/" + text + "/file").encode("utf-32")]
+        for value in values:
+            with self.subTest(value=value):
+                self.write("new.bin", value)
+                errors = checker.check(self.root, self.base)
+                self.assertTrue(errors)
+                self.assertNotIn(text.lower(), "\n".join(errors).lower())
+
+    def test_encoded_paths_for_other_users_also_fail(self):
+        home = b"/" + b"home/" + b"another-person/file"
+        for value in (home.replace(b"/", br"\/"),
+                      b"%2f" + b"home%2fanother-person%2ffile"):
+            with self.subTest(value=value):
+                self.write("new.bin", value)
+                self.assertTrue(checker.check(self.root, self.base))
+
+    def test_ellipsis_is_a_placeholder_but_cannot_hide_a_username(self):
+        digest = hashlib.sha256(self.username).hexdigest()
+        placeholder = b"/" + b"home/" + "…".encode()
+        self.assertFalse(checker.contains_private(placeholder, digest))
+        self.assertTrue(checker.contains_private(placeholder + self.username, digest))
+
+    def test_substring_filename_and_staged_encoded_content_are_checked(self):
+        name = self.username.decode().upper() + "_host.md"
+        self.write(name, b"safe")
+        errors = checker.check(self.root, self.base)
+        self.assertTrue(errors)
+        self.assertNotIn(self.username.decode(), "\n".join(errors).lower())
+        (self.root / name).unlink()
+        self.write("safe.bin", self.username.upper())
+        self.git("add", "safe.bin")
+        self.write("safe.bin", b"safe")
+        self.assertTrue(checker.check(self.root, self.base))
+
+    def test_only_exact_public_repository_url_is_exempt(self):
+        public = checker.PUBLIC_REPOSITORY_URL
+        username = public.split(b"/")[3]
+        digest = hashlib.sha256(username.lower()).hexdigest()
+        self.assertFalse(checker.contains_private(b"[source](" + public + b")", digest))
+        for value in (public + b"-private", public + b"/secret", public.upper(),
+                      b"https://example.invalid/" + username + b"/AgentMage",
+                      public + b" ssh " + username + b"-host"):
+            with self.subTest(value=value):
+                self.assertTrue(checker.contains_private(value, digest))
 
     def test_exception_policy_tampering_fails(self):
         self.write(checker.POLICY, b"{}\n")

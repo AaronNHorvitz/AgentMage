@@ -90,3 +90,19 @@ uses no GPU and runs no model or candidate. Resume the remaining three frozen
 measurement profiles before tuning or new capability work; Git reads and fresh
 exact-approved pushes stay at T-306's first permitted capability boundary.
 Service actions, sign-in and code-host issue/pull-request tools remain planning.
+
+## Independent review correction — 2026-11-16
+
+The [independent review](../reviews/da13234ff9c3-engine-readme-dual-licence.txt)
+returned FINDINGS, including medium M1 in the path checker. Its low L2 also
+corrects the supply-chain account above: the base check failed because provenance,
+SBOM and the hash manifest had been stale since `1d59bed3`. Regeneration caught
+up non-licence drift as well: it added the previously unrecorded first-party
+`cargo:agentmage-local-api@0.0.0` component and its edges, and refreshed the
+Cargo.lock and package-file hashes. Cargo.lock itself was unchanged. External
+records stayed unchanged and full-tree binding scope was preserved. The original
+batch's passing regenerated check does not mean the base was current.
+
+Low L3 records that package spec templates install LICENSE without NOTICE or
+THIRD-PARTY-NOTICES.md; package notice completeness remains open at T-309 and
+package acceptance. The original commit and independent review remain unchanged.

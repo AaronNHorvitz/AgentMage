@@ -45,8 +45,11 @@ host crate's full source checks. Historical fixture directories are not rewritte
 
 The checks are:
 
-- Private home paths and the local username in the entire selected range,
-  including committed, staged, unstaged and untracked files. The explicit
+- Private home paths and case-insensitive local username substrings at the
+  selected range's end state, including committed, staged, unstaged and
+  untracked files. Raw bytes, JSON escapes, URL encoding and UTF-16/32 text
+  are inspected. Only the exact public repository URL is exempt. Intermediate
+  commits are not scanned (T-309 backlog). The explicit
   `architecture/private-path-exceptions.json` list pins 49 historical files to
   exact SHA-256 bytes at its Git baseline; any edit or deletion fails. Its own
   bytes are pinned by the checker. Existing synthetic fixture identities are

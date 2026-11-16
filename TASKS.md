@@ -2,6 +2,26 @@
 
 ## Active queue: local agent mission
 
+The [independent README/licence review](docs/reviews/da13234ff9c3-engine-readme-dual-licence.txt)
+returns **Verdict: FINDINGS** for exact
+`da13234ff9c3c75d6672db108a8713130c5cccd7`. Medium M1 concerns username
+substrings, letter case and encoded paths; the builder repair broadens detection
+and adds negative controls, pending independent re-review. No row closes.
+The original 49 historical blobs and their explicit exception set remain intact.
+Low L1 (intermediate commits), L2 (supply-chain catch-up disclosure) and L3
+(package notices) are tracked for T-309; the guide now states end-state coverage
+and the licence evidence adds the review's supply-chain correction.
+
+MEASURE FIRST remains active. The file-only measurement snapshot failed three
+preparations: existing device access, a missing runtime manifest, and missing
+Git history. No inference request or task result was produced. All failures and
+cleanup are preserved privately; the reserved preparation work is 18.443 plus
+44.628 seconds, separate from task scores. This approach is stopped. A complete
+Git-backed source snapshot passed all 30 original development-context comparisons
+without inference; its off-GPU preflight must precede resuming measurement.
+No model process is running. T-309 also retains this preparation-coverage gap.
+Three profiles/90 attempts remain; the scoreboard is unchanged.
+
 The [independent completed 31B measurement review](docs/reviews/3a84d30f8600-inline-schema-31b-development-completion.txt)
 returns **Verdict: PASS** for exact
 `3a84d30f86006488e7a36a74c4fa4cdd412e7e40`, with no high or medium finding.
