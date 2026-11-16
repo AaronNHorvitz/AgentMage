@@ -2505,3 +2505,32 @@ those statuses. Native admission and original grading controls still block full
 retrieval, effects, tests, feedback and retries. No candidate, hidden or held-out
 test ran. T-303/T-306 remain open; independent core review and the full fresh
 six-profile repeat are required. See the [source and checkpoint evidence](t303-inline-output-schema-2026-11-15.md).
+
+## Inline-schema A4B checkpoint — 2026-11-15–16 UTC, 22/30
+
+| Date | Source commit | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU reserved work min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-15–16 | 72c002a42957340de0b6fa0eb4d48385db2c7e62 | gemma4-26b-a4b (22/30; 8 pending) | 32768 / 23002–29511 | Unavailable | Unavailable | 13/22 | Not run | 755.953 | 19.594 | 159313 / 52532 (22/22 counters) |
+
+Changed generation variable: trusted named inline `json_schema` request with
+`strict: true`. Contexts/messages, helper, prompts, strict checker, model/profile,
+framing, thinking request, deadlines and output formula match the preceding
+repeat. Input 3225–9734; does not fit: 0. Causes: thirteen strict ungraded proposals,
+nine `code.proposal.edit` refusals and zero format refusals. These are not task
+passes. Admission and original grading controls still block native execution,
+tests, feedback and retries. No candidate, hidden or held-out test ran.
+
+All 22 captures are complete JSON; reasoning metadata is absent/unavailable,
+never zero. Reserved-work timers total 1175.639 seconds after frozen-input
+validation, excluding queues, wrapper/pre-entry overhead and pauses. Active GPU
+kernel time and continuous elapsed time remain unmeasured. The earlier zero-task
+startup failure adds 189.866 seconds / 3.164 reserved minutes;
+combined work is 1365.504 seconds / 22.758 minutes. No task/retry is added.
+The earlier 2/30 checkpoint is included, never added to this cumulative prefix.
+
+The last pair ended queued before any task attempt; exact owner/queue stop
+receipts and cleanup are retained. Actual host low priority, nice 19, all limits
+and both wrappers stayed fixed. Read-only audit and retained-artifact verification
+pass; independent checker reproduction is not rerun. Eight A4B tasks and five
+full profile repeats remain before tuning or new capabilities. T-303/T-306 remain
+open; independent core review is required. See [checkpoint evidence](t303-inline-schema-a4b-checkpoint22-2026-11-16.md).

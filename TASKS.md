@@ -2,6 +2,21 @@
 
 ## Active queue: local agent mission
 
+The [inline-schema A4B checkpoint](docs/evidence/t303-inline-schema-a4b-checkpoint22-2026-11-16.md)
+records 22/30 attempted, with thirteen strict ungraded proposals. Task passes and
+retries remain unavailable; no candidate, hidden or held-out test ran. Read-only
+audit and cleanup pass; independent checker reproduction is not rerun. The last
+pair ended queued before an attempt. Finish the remaining eight tasks and five
+other profile repeats before tuning or new capabilities. T-303/T-306 remain open;
+no row is added or closed. This checkpoint requires independent core review.
+
+The retained [independent source/checkpoint review](docs/reviews/ac1c30201171-trusted-inline-output-schema.txt)
+returns **Verdict: PASS** for exact `ac1c302011716226f4e50b2467fb1fb6c6ddae96`,
+with no high or medium findings; it closes no row. Its low oversized-schema
+diagnostics and source-to-binary build-receipt findings join T-309 backlog.
+Existing binaries and sealed artifacts stay unchanged; build provenance is not
+strengthened by this reporting increment. The full six-profile repeat remains required.
+
 The [inline-schema API checkpoint](docs/evidence/t303-inline-output-schema-2026-11-15.md)
 records 2/30 A4B attempts at source `72c002a42957340de0b6fa0eb4d48385db2c7e62`:
 two strict ungraded proposals, not task passes. The same tasks already produced

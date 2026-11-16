@@ -1,0 +1,193 @@
+Commit: ac1c302011716226f4e50b2467fb1fb6c6ddae96
+Scope: trusted-inline-output-schema
+
+# Independent review — trusted inline output schema (T-303, related T-306; non-closing)
+
+Reviewer: independent Claude Opus 5.5 session (extra-high effort), read-only, pinned checkout
+`/lane/review-checkout`. Tier: core. I judged only commit `ac1c3020…` (source `72c002a4…`, base
+`cbe1d31d…`). I did not launch a model, repeat a measurement, run any candidate, hidden or held-out
+test, execute captured binaries or reconstruct grading controls. I did not modify the repository.
+Private host paths are written below as `<home>`/`<repo>` placeholders. `/lane/...` names sandbox
+mount points, as in earlier accepted reviews.
+
+## Methods, exact commands and results
+
+1. Identity and tree
+   - `git rev-parse HEAD` gives `ac1c302011716226f4e50b2467fb1fb6c6ddae96`. `HEAD^` gives
+     `72c002a42957340de0b6fa0eb4d48385db2c7e62`. `HEAD^^` gives `cbe1d31dfac869d09b32fca2e38a5498cffcc833`.
+   - `git diff --check cbe1d31d…` gives rc 0. `git status --porcelain` is empty.
+   - `git diff --stat` shows exactly 11 paths: 5 Rust files (2 source, 3 test), TASKS.md, decision 0209,
+     the scoreboard, the new evidence file, the API guide and the retained review. There are no Cargo,
+     lock, package or supply-chain paths.
+   - I read all 11 diffs in full.
+
+2. Source review (`platforms/linux-inference/src/local_chat.rs:177-251`, `:301-397`;
+   `local_chat_transport.rs:454-512`)
+   - `ChatResponseFormat::JsonSchema(ChatOutputSchema)` is new. `ChatOutputSchema` has private
+     fields, and serde deserialization goes through `try_from` to `ChatOutputSchema::new`, so the
+     check cannot be skipped.
+   - The name must be 1–64 bytes of `[A-Za-z0-9_-]`. The root must be an object with
+     `"type":"object"`. An iterative walk over every object key and every array refuses `$ref`,
+     `$dynamicRef`, `$recursiveRef`, `$schema` and `$id` at any depth. The walk keeps its own list, so
+     deep input cannot overflow the stack, and serde_json's recursion limit already bounds parsing.
+     JSON escapes such as `\u0024ref` are decoded to `$ref` before the key comparison.
+   - `deny_unknown_fields` on the input struct refuses an injected `strict:false`. Serde derive
+     refuses duplicate `name`.
+   - The wire encoding is `{"type":"json_schema","json_schema":{"name","strict":true,"schema"}}`.
+     Text still omits the field and `json_object` is unchanged.
+   - The schema bytes pass through the same `PrivateRequestWriter` cap (256 KiB, one zeroized
+     allocation), so the claim "schema counts toward the existing ceiling" is true.
+   - The engine resolves nothing, and no file, URL or network access is added.
+   - Trust boundary: the only deserialization site is `Settings.response_format`
+     (`platforms/local-api/src/lib.rs:680`). Its routes are control-token only (`lib.rs:1436`), and
+     the settings body is capped at 256 KiB (`lib.rs:92,547`). Chat and proposal bodies have no such
+     field.
+   - The model's answer gains no authority: the strict proposal checker is unchanged and still sits
+     after generation. No UI consumes `response_format`, so no UI row is affected.
+
+3. Test review. The new and expanded tests cover:
+   - name, root, reference and duplicate/`strict` refusals, and encoded overflow;
+   - the request-size boundary over every format × mode × thinking × usage combination;
+   - the exact socket body containing the schema with no workspace;
+   - client token 403 and control token 200;
+   - invalid choices returning 400 while preserving the previous settings, including a raw
+     duplicate-name body;
+   - `/v1/chat` and `/v1/code/proposals` rejecting an injected `response_format` (400) before any
+     upstream connection (`listener.accept()` errors);
+   - reset to text, and DELETE giving null;
+   - fenced, duplicate-key, missing-field, empty-edits and `../outside` answers still refused under
+     the schema in both framings;
+   - upstream 400 with no retry or fallback.
+
+   This is adequate coverage of the trust boundary the batch introduces.
+
+4. `sha256sum /lane/reviews/inline-schema-20261115/capsule-bindings.json` gives
+   `b19883b2dc7657763b01d08769e982df1f9fe30a7cc2ad95b58d663a02f8a625` (match).
+   I read all four verifiers and the lint script first; all are read/hash-only.
+   - `python3 -B …/verify_capsule.py` gives PASS: 507 files, manifest `61a5a6fe…b9a35`.
+   - `python3 -B …/verify_source.py` gives PASS: 2283 repository and 26 private bindings, 5 changed
+     Rust files, 10 source-commit paths. The source gate in it is 1169/53/19/0/0.
+   - `python3 -B …/verify_diagnosis.py` gives PASS: 180 attempts, 117 proposals, format categories
+     duplicate-fields 11 / wrong-shape 11 / malformed-json 4 / oversize 1. All 180 records
+     authenticate against six origin manifests.
+   - `python3 -B …/verify_measurement.py` gives PASS: 2 attempted, 2 strict ungraded proposals,
+     19070/3665 tokens, request/check 64.84618068697455 s, reserved 102.46154281000781 s, failed
+     preparation 189.86591242800932 s, total 292.32745523801714 s, `checker_reexecution: false`.
+     - It also binds: profile and runtime manifest equal to the authenticated prior A4B report;
+       context hashes equal to the prior records; upstream bodies equal to
+       {messages, `max_tokens = 32768 − input − 32`, wire schema with strict true, thinking disabled};
+       both captures HTTP 200 with `stop`; backend log token counts; cleanup with 2 retired tokens
+       and no key or socket.
+     - The verifier tallies the Rust checker's bound outputs rather than re-running the checker;
+       the evidence says so.
+
+5. My own spot checks inside the capsule
+   - The retained `output-format.json` is exactly the edit schema the decision describes: `edits`,
+     1–32 items, each requiring exactly `path`/`old`/`new` as strings, with `additionalProperties:false`.
+   - Both upstream bodies carry it with `strict:true`. Their `max_tokens` are 23232 and 23170.
+   - Prior A4B records for dev-001 and dev-002 are both `ungraded-proposal`, so the "no improvement
+     claimed" wording is correct.
+   - Arithmetic checks: 41.636 + 23.210 = 64.846 s; 9504 + 9566 = 19070; 102.462 / 60 = 1.708 min;
+     189.866 / 60 = 3.164 min; total 4.872 min.
+   - The failed-preparation report has `scope_resources.memory.peak` and no sampled GPU peak, so the
+     post-seal wording ("no sampled GPU-memory peak … lane cgroup RAM peak") is accurate.
+   - The server log shows `model loaded` at 28.208 s.
+   - I reproduced the socket limit myself with Python on a nonexistent path: a 111-byte AF_UNIX
+     connect fails with `OSError: AF_UNIX path too long`, and an 87-byte path reaches
+     `FileNotFoundError`.
+   - The policy records the API binary source as `72c002a4…`. Its captured upstream bodies contain
+     `json_schema`, which base `cbe1d31d` would have refused at settings time (400), so the measured
+     behaviour comes from the new code (see L2).
+
+6. Lint and gates
+   - `/lane/reviews/42612ca9787f-a4b-node` is SHA256 `d1de76d8…bd932c`, v24.15.0. Running it on
+     `…/lint_checkpoint.mjs` gives PASS: 0 issues in all 5 files, 1 new scoreboard table, 2 evidence
+     tables.
+   - `PATH=/tmp/agentmage-inline-schema-review-bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target
+     python3 -B scripts/local_agent_fast_gate.py --base cbe1d31d… --timeout 3600` gives
+     `FAST GATE: FAIL` (exit 1):
+     - diff-check, untracked lint, review lint and markdownlint pass;
+     - `cargo fmt --check` passes (rc 0, mostly waiting for a slot);
+     - `cargo clippy --all-targets -D warnings` passes;
+     - `cargo test --no-fail-fast` finishes 30 targets: 1169 passed, 53 failed, 19 ignored,
+       0 measured, 0 filtered.
+   - My 53 failure names equal both `gate-comparison.json.failure_names` and
+     `prior-source-gate-comparison.json.failures`.
+   - All 53 are in `shells/host` (42 `linux_coding_runtime`, 10 `linux_read`, 1
+     `linux_repository_map`), which this batch does not touch. They fail closed on
+     `LinuxSandboxError { kind: InvalidManifest }` in this environment.
+   - All six new or expanded test functions report `ok`. There is no skip, allowlist or green claim.
+   - The same gate with `--base 72c002a4…` selects the 3 reporting docs and gives `FAST GATE: PASS`.
+
+7. Post-commit receipt
+   - `sha256sum /lane/reviews/inline-schema-20261115-post-commit.json` gives `fa206088…e2bc3`
+     (match).
+   - I checked by script: the commit and parent match; the set of changed paths equals its 11
+     `public_blobs`; each Git blob id and SHA256 matches both `HEAD:` and the checkout; all 5 sidecar
+     sizes and hashes match.
+   - The final-wording sidecar equals the receipt's clarification. Replacing the after-literal with
+     the before-literal in the committed evidence reproduces `cdd4260b…d56`. That equals both the
+     retained before-wording file and the capsule `preservation.json` reporting-path hash.
+   - The old scoreboard (180198 bytes) is an exact byte prefix of the new one. TASKS.md and the
+     scoreboard only add lines (34 and 43). The final reporting-gate log ends `FAST GATE: PASS`.
+
+8. Retained review
+   - `cmp docs/reviews/cbe1d31dfac8-thinking-disabled-muse-measurement.txt
+     /lane/reviews/cbe1d31dfac8-thinking-disabled-muse-measurement.md` gives rc 0 (identical).
+   - It shows `Verdict: PASS` with no high or medium finding. Its low retention finding is placed in
+     T-309 backlog in TASKS.md and closes no row.
+
+9. Publication and policy scans
+   - The added lines outside `docs/reviews` have no home path, username, hostname, e-mail address,
+     credential, key, private-project name, agent-product name, code-host or inference-server
+     brand, or patent.
+   - Model names appear only as measured profile labels, as before.
+   - There are no supply-chain or licence changes. The schema is generic (no repository, folder,
+     task or tool needed), as the owner's interface rule requires.
+   - Git placement inside existing T-306 follows brief item 2: it states where and why, adds no row,
+     starts no Git tool, and requires a fresh yes showing branch, commits and remote for each push.
+     It does not reorder MEASURE FIRST.
+
+10. Evaluation integrity and MEASURE FIRST
+    - Only `dev-*` IDs appear, and the diff contains no task content.
+    - Nothing hidden or held-out was loaded or run. Prompts, checker, thresholds, tasks and profiles
+      are unchanged.
+    - The diagnosis uses development answers only and repairs or executes nothing.
+    - The scoreboard has a new line for this batch, which changes what the model is asked to
+      produce. Context 32768 and output budgets 23170–23232 are stated, does-not-fit 0 is counted
+      separately, and the zero-task startup failure is reported apart from model failures.
+    - Every number traces to the raw logs above. The remaining 178 attempts are stated as required
+      before further tuning.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog): a near-ceiling schema is accepted but makes every later chat fail
+  generically.** `ChatOutputSchema::new` (`platforms/linux-inference/src/local_chat.rs:220`)
+  enforces no size limit of its own. A trusted settings choice can carry a schema of up to about
+  256 KiB (`platforms/local-api/src/lib.rs:92`), which takes the whole 256 KiB encoded-request
+  ceiling (`local_chat.rs:13`). PUT returns 200, and each later chat or proposal then fails with the
+  generic request error, without saying the schema used up the budget. This is reachable only by
+  the control-token owner and is fail-closed, so it is not a security issue. Fix: refuse schemas
+  above a stated share of the request ceiling at PUT, or report the schema's encoded size in GET.
+- **L2 (low, backlog): no build receipt ties the measured binary to its source.**
+  The retained `finalize_measurement.py` copies `<repo>/target/debug/agentmage-local-api` after
+  checking the five Rust source hashes and a clean HEAD. It does not record the build command or
+  prove the binary was rebuilt from those bytes (`chat_transport_binary_build` is null in the
+  retained policy). The captured `json_schema`/`strict:true` bodies show the new code ran, so this
+  checkpoint is not in doubt. Fix: build in the same step and record the command and output hash.
+
+## Per-row result
+
+- T-303 (related T-306), trusted-inline-output-schema source and checkpoint batch: **accepted as
+  a non-closing increment**.
+  - The source does what decision 0209 and the guide say, and confinement and authority are
+    unchanged.
+  - The 2/30 A4B checkpoint and the zero-task startup failure are honestly labelled and trace to
+    the raw artifacts.
+  - The full source gate stays FAIL on 53 inherited failures with identical identities.
+  - No row closes, and T-303/T-306 stay OPEN. The full six-profile development repeat is still
+    required before further tuning.
+
+Verdict: PASS
