@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Existing runtime event publication for explicitly admitted endpoint turns.
 
 use agentmage_kernel_contracts::{

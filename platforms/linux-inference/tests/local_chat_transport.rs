@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Actual loopback sockets, synthetic servers only; no model qualification.
 
 use std::io::{Read, Write};

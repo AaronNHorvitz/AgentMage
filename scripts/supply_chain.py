@@ -285,7 +285,7 @@ def swift_component(root: Path) -> dict[str, Any]:
         "version": "0.0.0",
         "classification": "production",
         "scope": "required",
-        "license": "Apache-2.0",
+        "license": "MIT OR Apache-2.0",
         "source": {"type": "repository-path", "path": "platforms/macos"},
         "integrity": None,
         "hashes": [{"algorithm": "SHA-256", "content": tree_hash(path)}],
@@ -368,7 +368,7 @@ def build_documents(root: Path = ROOT) -> tuple[dict[str, Any], dict[str, Any], 
                 "bom-ref": "application:agentmage@0.0.0",
                 "name": "AgentMage",
                 "version": "0.0.0",
-                "licenses": [{"license": {"id": "Apache-2.0"}}],
+                "licenses": [{"expression": "MIT OR Apache-2.0"}],
             },
             "properties": [
                 {"name": "agentmage:macos-status", "value": "blocked-macos"}

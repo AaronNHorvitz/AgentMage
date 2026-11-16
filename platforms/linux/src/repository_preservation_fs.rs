@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Descriptor-relative local preservation reads; never follow repository links.
 
 use super::*;

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Actual file edits/seals with explicitly synthetic Git and process observations.
 
 use super::*;

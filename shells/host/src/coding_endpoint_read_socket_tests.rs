@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Synthetic socket + snapshot boundary, with the production read verifier/owner.
 
 use super::*;

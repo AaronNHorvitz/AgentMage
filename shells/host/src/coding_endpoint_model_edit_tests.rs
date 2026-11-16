@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Strict untrusted proposals, synthetic creation and original native previews.
 use super::*;
 use crate::coding_endpoint_prepared_startup::CodingEndpointEditProposalError as Refusal;

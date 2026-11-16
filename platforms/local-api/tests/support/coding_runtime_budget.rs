@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Actual terminal against a stalled synthetic native-runtime HTTP peer.
 //! No model, native tool, cancellation effect or coding score is fabricated.
 

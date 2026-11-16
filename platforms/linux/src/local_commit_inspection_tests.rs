@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Component evidence; no native artifact, sandbox or private-key admission.
 
 use super::*;

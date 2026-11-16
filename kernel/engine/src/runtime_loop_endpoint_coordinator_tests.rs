@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Synthetic full coordinator execution. No model score or coding-workflow acceptance.
 
 use super::*;

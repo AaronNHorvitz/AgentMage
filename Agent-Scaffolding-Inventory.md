@@ -1,3 +1,8 @@
+<!-- markdownlint-disable MD041 -->
+> **Historical planning document (August to October 2026).** This list no longer
+> defines this repository's scope. Its original text is kept unchanged below, under
+> [Decision 0210](docs/decisions/0210-historical-inventory-and-public-readme.md).
+
 # AgentMage — Portable Local Agent Scaffolding Inventory
 
 ## What This Inventory Is and Why It Exists

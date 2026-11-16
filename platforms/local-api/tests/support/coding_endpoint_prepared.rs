@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Synthetic creation/endpoint, real native edits and original HTTP ownership.
 use super::*;
 use agentmage_host::coding_endpoint_prepared_startup::{

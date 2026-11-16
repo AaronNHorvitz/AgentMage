@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Disposable component cryptography; no native sandbox or approval admission.
 
 use super::*;

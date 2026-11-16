@@ -1,6 +1,6 @@
 #![deny(missing_docs)]
 #![forbid(unsafe_code)]
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Local API with explicit source scopes and separately approved exact writes.
 //! Ordinary clients cannot turn discovery or model output into write authority.
 

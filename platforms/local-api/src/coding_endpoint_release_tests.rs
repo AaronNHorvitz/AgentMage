@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Actual HTTP/coordinator release, synthetic extraction refusal; no native run.
 use super::*;
 use agentmage_host::runtime_tools::read_only_runtime_registry;

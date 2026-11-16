@@ -45,6 +45,17 @@ host crate's full source checks. Historical fixture directories are not rewritte
 
 The checks are:
 
+- Private home paths and the local username in the entire selected range,
+  including committed, staged, unstaged and untracked files. The explicit
+  `architecture/private-path-exceptions.json` list pins 49 historical files to
+  exact SHA-256 bytes at its Git baseline; any edit or deletion fails. Its own
+  bytes are pinned by the checker. Existing synthetic fixture identities are
+  declared separately in the checker and cannot exempt the private username.
+- Complete licence texts, all resolved crate and editor package licences,
+  headers, package lock entries, historical inventory bytes and notices under
+  Decision 0211. `python3 scripts/license_policy.py` runs this check separately.
+  These checks do not regenerate evidence or approve a distribution package.
+
 - Whitespace errors across the selected Git diff and all untracked additions,
   using Git's whitespace rules without staging files; the existing Markdown
   linter for changed Markdown files.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! One strict edit generation through the original controlled endpoint phase.
 //!
 //! Trusted composition, with either standalone phase execution or dispatch by

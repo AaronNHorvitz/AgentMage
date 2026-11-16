@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! One controlled endpoint phase, not a second agent loop or native admission.
 
 use agentmage_kernel_contracts::{

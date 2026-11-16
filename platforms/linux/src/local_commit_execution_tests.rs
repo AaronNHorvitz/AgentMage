@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Executor ordering with synthetic outcomes, never native or approval proof.
 
 use super::*;

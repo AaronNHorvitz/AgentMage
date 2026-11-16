@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Explicit endpoint model turns for coordinator composition. No orchestration
 //! loop, tools, proposal interpretation, recovery or effect authority lives here.
 

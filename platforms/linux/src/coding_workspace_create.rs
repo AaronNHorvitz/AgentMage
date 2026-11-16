@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Private, exact absent-file plans for the live worktree owner's original apply.
 
 use super::*;

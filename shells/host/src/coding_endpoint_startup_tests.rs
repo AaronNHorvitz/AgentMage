@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Held-root preparation and provenance tests, without native worker/model claims.
 
 use super::*;

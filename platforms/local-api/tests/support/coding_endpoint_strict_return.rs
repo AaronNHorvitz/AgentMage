@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Synthetic creation/model; real HTTP, native edits and original-owner return.
 use super::*;
 

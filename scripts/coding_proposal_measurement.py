@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT OR Apache-2.0
 """Measure the snapshot proposal API on development tasks, without executing edits.
 
 No held-out loader, tests, references, Git history, commands or retry feedback

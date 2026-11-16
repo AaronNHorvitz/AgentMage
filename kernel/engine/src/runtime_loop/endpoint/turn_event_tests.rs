@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Event and replay integration with synthetic ports, never coding scores.
 
 use crate::runtime_event::{RuntimeEventBatchLimits, RuntimeEventError, RuntimeEventSequence};

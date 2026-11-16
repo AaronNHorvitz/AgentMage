@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Synthetic explicit-turn integration, not model scoring or tool execution.
 
 use std::collections::VecDeque;

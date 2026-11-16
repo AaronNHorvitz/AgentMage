@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Shared event framing for native runs and selected-endpoint model turns.
 
 use agentmage_kernel_contracts::{

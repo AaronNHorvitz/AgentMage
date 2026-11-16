@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Component authority checks with real Linux descriptors; no agent/model workflow.
 
 use std::{

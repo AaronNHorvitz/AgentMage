@@ -1,7 +1,17 @@
 AgentMage
-Copyright (c) 2026 Aaron N. Horvitz
+Copyright 2026 Aaron N. Horvitz
 
-Licensed under the Business Source License 1.1 (see LICENSE): Change Date 2030-09-07, Change License Apache License 2.0, no Additional Use Grant.
-Versions published before 2026-09-07 were released under the Apache License 2.0 and remain available under it.
+From the relicensing commit implementing Decision 0211, this project's own work
+is licensed MIT OR Apache-2.0, at the recipient's choice. Complete texts are in
+LICENSE-MIT and LICENSE-APACHE, and reproduced in LICENSE for package copies.
+The Business Source License no longer applies to new versions.
 
-Interim state (Decision 0051): the LICENSE file is authoritative. Package manifests, the SBOM, and package evidence still carry the SPDX identifier Apache-2.0 and are updated in the next evidence batch; they do not grant rights beyond the LICENSE file.
+Versions published before 2026-09-07 were under the Apache License 2.0.
+Versions published from 2026-09-07 until the relicensing commit were under the
+Business Source License 1.1. Those published versions keep the licence they
+were published with. Their Git history and Decision 0051 remain unchanged.
+
+Third-party dependencies retain their own licences, notices and obligations.
+See THIRD-PARTY-NOTICES.md and supply-chain/dependency-provenance.json, including
+unresolved findings. This notice does not relicense third-party work.
+The licences grant no right to the project's name.

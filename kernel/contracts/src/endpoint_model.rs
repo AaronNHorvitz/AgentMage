@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Selected-endpoint exchanges, without native model attestation or authority.
 
 use std::time::Duration;

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Synthetic creation and command observations; real durable grant transactions.
 use super::super::tests::{Fixture, spec};
 use super::*;

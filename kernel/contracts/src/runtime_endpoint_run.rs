@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Endpoint run framing without a native model profile or tokenizer assertion.
 
 use crate::{

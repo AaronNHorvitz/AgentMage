@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Descriptor-bound file reads for the original ephemeral endpoint coordinator.
 //!
 //! Trusted startup must obtain workspace selection/read consent and native

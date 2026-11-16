@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Bounded observation of an explicitly shared run. Never schedules an effect.
 
 use super::*;

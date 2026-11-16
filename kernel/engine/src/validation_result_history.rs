@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Exact process-retained validation history, without current-source acceptance.
 
 use std::collections::BTreeSet;

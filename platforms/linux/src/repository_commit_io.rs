@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Closed object storage and branch I/O for the dormant local-commit adapter.
 
 use super::*;

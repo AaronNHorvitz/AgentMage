@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Source visibility and exact-edit contracts, without model or tool execution.
 
 use agentmage_capability_repository_map::coding_proposal::{

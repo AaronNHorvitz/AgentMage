@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Linux temporary-index construction and externally pinned OpenPGP local commits.
 
 use std::collections::BTreeMap;

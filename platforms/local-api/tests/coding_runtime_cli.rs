@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Actual terminal consumer against a synthetic HTTP peer; not a native run.
 use agentmage_kernel_contracts::*;
 use agentmage_kernel_engine::runtime_coordinator::seal_runtime_approval_challenge;

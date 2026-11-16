@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Real filesystem controls with synthetic Git layout; no executable trust bypass.
 
 use super::*;

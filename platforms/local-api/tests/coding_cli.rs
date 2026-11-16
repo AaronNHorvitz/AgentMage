@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Actual terminal executable -> local API -> kernel/native write contracts.
 
 use std::fs;

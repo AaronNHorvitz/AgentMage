@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Synthetic API-to-upstream socket contracts, never real-model evidence.
 
 use std::fs;

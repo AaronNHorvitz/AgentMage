@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT OR Apache-2.0
 """Reclassify retained baseline log slices without inference or task execution.
 
 Reads only manifest-bound campaign records. Output includes development task

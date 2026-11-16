@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Synthetic creation provenance; real native grants, descriptors and atomic writes.
 use super::*;
 use agentmage_kernel_contracts::*;

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Explicit in-process handoff of live creation authority, never path adoption.
 
 use super::coding_runtime_api::{RuntimePort, RuntimeSession, Selection};

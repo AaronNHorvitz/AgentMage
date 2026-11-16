@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Synthetic command results under real held handles and canonical authority.
 use super::*;
 use agentmage_kernel_engine::command_runner::{

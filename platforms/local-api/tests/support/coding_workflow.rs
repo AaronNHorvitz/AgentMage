@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Executable guided client against synthetic API/model/command observations.
 use super::*;
 use agentmage_kernel_engine::{

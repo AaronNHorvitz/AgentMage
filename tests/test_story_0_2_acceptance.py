@@ -10,7 +10,7 @@ from unittest.mock import patch
 from scripts.story_0_2_evidence import DEFAULT_OUTPUT
 from scripts.validate_docs import (
     CANONICAL_DOCS,
-    DECISION_BOUNDARIES,
+    README_BOUNDARIES,
     ROOT,
     check_accepted_decision_contract,
     check_sensitive,
@@ -66,7 +66,7 @@ class Story02AcceptanceTests(unittest.TestCase):
             "RUNTIME-BOUNDARIES.md",
         ):
             self.assertIn(public_path, readme)
-        self.assertIn("Business Source License 1.1", license_text)
+        self.assertIn("MIT OR Apache-2.0", license_text)
         self.assertIn("## Supported Versions", security)
         self.assertIn("## Reporting a Vulnerability", security)
         self.assertIn("signed release manifest", security)
@@ -89,7 +89,7 @@ class Story02AcceptanceTests(unittest.TestCase):
             for relative in CANONICAL_DOCS
         }
         changed = dict(canonical)
-        changed["README.md"] = DECISION_BOUNDARIES["runtime"][2].sub(
+        changed["README.md"] = README_BOUNDARIES["runtime"][0].sub(
             "REMOVED-RUNTIME-CONTRACT",
             changed["README.md"],
         )

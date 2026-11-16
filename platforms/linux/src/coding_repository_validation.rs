@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Approved project test results and bounded, separately approved exact reruns.
 //! No new command executor, model loop, persistence format or grading oracle.
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Synthetic endpoint replies; actual retained coordinator accounting/control.
 use super::*;
 use crate::coding_endpoint_edit_generation::CodingEndpointEditGeneration;

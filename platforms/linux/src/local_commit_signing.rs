@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Dormant socket-free private-key primitive. Not an OpenPGP commit signature.
 //!
 //! The product must not activate this primitive until packet construction,

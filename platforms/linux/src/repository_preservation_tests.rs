@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Real bounded filesystem scans with synthetic Git output, not native admission.
 
 use super::*;

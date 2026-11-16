@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Exact endpoint approval handoff to the existing native worktree edit owner.
 
 use super::*;

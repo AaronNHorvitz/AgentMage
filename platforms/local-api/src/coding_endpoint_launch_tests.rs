@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Private configuration refusal and production preparation components.
 use super::*;
 use crate::endpoint_launch_fixture as fixture;

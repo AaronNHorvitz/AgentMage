@@ -1,0 +1,175 @@
+Commit: 3a84d30f86006488e7a36a74c4fa4cdd412e7e40
+Scope: inline-schema-31b-development-completion
+
+Reviewer: independent Claude Opus 5.5 session, read-only, pinned checkout `/lane/review-checkout`.
+Row: T-303 (related T-306), non-closing measurement. Base `acad6a3766c2f526bd0a0226419450ec408d99a2`.
+I used no GPU, started no model, replayed no attempt, executed no candidate or test, loaded no hidden or
+held-out check, imported no archived module and modified neither the repository nor any capsule.
+
+## Methods, commands and results
+
+1. Commit and public diff
+   - `git rev-parse HEAD` gives `3a84d30f86006488e7a36a74c4fa4cdd412e7e40`. `git status --porcelain` is empty.
+     `git diff --check acad6a37…` exits 0.
+   - The diff adds 323 lines and removes none, across 4 files: TASKS.md (+15), coding-scoreboard.md (+26),
+     the new evidence file `t303-inline-schema-31b-finish-2026-11-16.md` (+80) and the retained review
+     `docs/reviews/acad6a3766c2-inline-schema-31b-development-checkpoint26.txt` (+202).
+   - I read every added line.
+     - The TASKS.md hunk is a single insertion below the queue heading. The TASKS `|` table lines are identical
+       to the base (`diff` of `grep '^|'`), 507 lines.
+     - The base scoreboard is an exact byte prefix of the new one (`cmp -n`).
+   - A grep of the additions for host paths, usernames, hostnames, mail addresses, credentials and other agent
+     products found only the following:
+     - `/lane/...` sandbox paths inside the retained review. This matches earlier accepted practice: 298
+       committed review files contain them.
+     - The model identifier `gemma4-31b`, used as a measured model name as in earlier lines, not as branding.
+   - No private home path, local user name, sibling project or product comparison appears.
+   - The retained review is byte-identical (`cmp`) to `/lane/reviews/acad6a3766c2-inline-schema-31b-development-checkpoint26.md`.
+     It begins with the exact `Commit:` line and ends `Verdict: PASS`.
+   - The TASKS note summarises it accurately: PASS, no high or medium finding, and the existing low queued-stop
+     diagnostic stays T-309 backlog.
+
+2. Capsule verifier
+   - I read `verify_measurement.py` in full. It imports only standard-library modules, reads and hashes files and
+     calls `git show`. It imports no archived module and executes no generated code.
+   - `python3 -B /lane/reviews/inline-schema-31b-r10-20261116/verify_measurement.py` exits 0 with PASS. It
+     reports:
+     - 2856 files and 30 tasks
+     - 17 proposals; causes `strict-edit-refused:code.proposal.edit` 13 and `ungraded-proposal` 17
+     - 215953 input and 34733 output tokens, counter coverage 30
+     - 1620.652 request/check seconds and 2251.151 reserved seconds
+   - The sha256 values match the request:
+     - bindings `b4066b1b…8ea6`
+     - manifest `a74b838f…df81`
+     - postcommit `dc0e491e…0d3e`
+     - predecessor bindings `fbb03502…ec8f`
+     - predecessor postcommit `ed068373…610c44`
+   - Postcommit binding: the postcommit names commit `3a84d30f…` and base `acad6a37…`, with `clean: true`. Its
+     `method_sha256` equals `sha256(measurement/postcommit.py)`. Each of the 4 committed files is identical in
+     three places: `git show HEAD:<file> | sha256sum`, the capsule `public/` copy and the postcommit
+     `committed_content_sha256`.
+   - Independent recount from the raw batch reports and records (my own script, not the builder's audit):
+     - 30 distinct tasks (dev-001…dev-029 and dev-rust-001), each with `retries==0` and `graded==false`.
+     - Causes: 17 ungraded proposals and 13 strict-edit refusals.
+     - Reserved work 2251.151 s = 37.519 min; request/check 1620.652 s.
+     - Preflight input 3225–9734; output budget 23002–29511; sampled GPU peaks 19976–21741 MiB.
+     - The new reservation logs give 9376+23360+32 = 32768 and 3697+29039+32 = 32768, matching the output formula.
+   - Carry-over: all 26 r9 audit development rows equal the r10 rows exactly. The 4 new rows are dev-027, dev-028,
+     dev-029 and dev-rust-001. The r9 totals (16 proposals, 184337/31288 tokens) plus the new rows (1 proposal,
+     31616/3445 tokens) give 17 and 215953/34733 exactly.
+   - `first_passes` and `within_budget_passes` are `null` in the audit. The scoreboard and evidence show
+     "Unavailable", never zero or success. Held-out is "Not run" and does-not-fit is 0.
+
+3. Lint and reporting gate
+   - The pinned node `/lane/reviews/42612ca9787f-a4b-node` has sha256 `d1de76d8…bd932c`, matching `reporting-checks.json`.
+   - I read `lint.mjs` (13 lines). `PATH=/tmp/rv10/bin:$PATH node …/measurement/lint.mjs` gives PASS: 0 lint
+     issues in all 3 files, and 1 rendered table each in the scoreboard section and in the evidence.
+   - `PATH=/tmp/rv10/bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base acad6a3766c2f526bd0a0226419450ec408d99a2 --timeout 3600`
+     exits 0 with `FAST GATE: PASS`. It runs:
+     - `git diff --check`
+     - `--lint-untracked`
+     - `--lint-reviews` on the retained review
+     - markdownlint-cli2: 0 issues in 3 files
+   - The working tree stays clean afterwards.
+   - The source gate was not rerun. The evidence discloses its inherited FAIL (1169 passed, 53 failed, 19 ignored).
+
+4. Launch, controller and predecessor
+   - `launch.json` records:
+     - 26 carried attempts and 4 new ones planned
+     - 2283 repository and 26 private frozen inputs
+     - head `acad6a37…` and freeze `a92430c6…`
+     - prior bindings, manifest and postcommit equal to the r9 capsule
+     - nice 19 and priority low
+     - cgroup `memory.max` 17179869184 (16 GiB) and `cpu.max` 400000/100000 (4 CPUs)
+     - `wrapper_environment` with both `BUILD_SLOT_LOW_MAX_WAIT` and `BUILD_SLOT3_MIN_AVAIL_KB` set to `null`
+   - The argv and nice increment match the predecessor launch.
+   - The wrapper bytes at launch equal the current `/tools/build-slot` (`87624e08…`) and `/tools/gpu-slot` (`9804180e…`).
+   - `controller.py` differs from the frozen original only in the reservation-log parent path (the verifier checks
+     this by exact string replacement). I read the controller:
+     - It invokes both wrappers with `queue-run agentmage 900`.
+     - It refuses to replay a partial directory and skips completed reports.
+     - It pauses for 30 seconds with both reservations released between jobs.
+   - Controller log: progress lines 28 and 30, then `COMPLETE; no candidate execution or grading.`. The controller
+     exit is 0, and its pid and start ticks match the launch.
+   - I read all 15 reservation logs. Each has 7 lines and ends `"status": "completed"` with `error: null`. The new
+     pairs 26 and 28 have the expected build and GPU wait lines.
+   - `launch.py.diff` shows the following changes:
+     - the predecessor path and hashes move from r8 to r9
+     - `n==26`
+     - the r9 controller is added to the owner set
+   - The authentication logic is unchanged.
+   - Predecessor:
+     - `python3 -B /lane/reviews/inline-schema-31b-r9-20261116/verify_measurement.py` still exits 0 (2800 files,
+       26 tasks), so the r9 capsule is unchanged.
+     - `prefix-stop.json` is a PASS with 26 completed tasks and `queued_seconds_at_stop` 1484.6177. It shows no new
+       attempts or GPU entries in the stopped pair, `matching_processes_after == []` and no foreign process
+       signalled.
+     - The signalled session contains only the r9 controller, its build-slot child and `sleep`.
+     - The stop's `queue_log_sha256` matches the retained r9 `gemma4-31b-26-reservation.log`, which holds the single
+       build-wait line.
+     - The prefix controller log ends in the disclosed `AssertionError` (existing low, T-309), with exit 1.
+
+5. Contexts, profiles, budgets and generated answers
+   - The verifier checks the following:
+     - every attempted `context.json` hash against the preceding thinking-disabled repeat's manifest
+     - request messages against the context messages
+     - the exact upstream body: `json_schema` with `strict: true`, `enable_thinking: false`, `n: 1`, non-stream
+       and the formula `max_tokens`
+     - profile, runtime manifest, launcher, API, collector and helper hashes against the frozen inputs
+     - 300-second total and idle deadlines
+   - `wire-audit.json` is a PASS with identical contexts and profiles, captures `complete-choice-json` 30 and
+     reasoning `unavailable` 30.
+   - `reproduction.json` verifies 30 tasks with `candidate_execution: false` and `hidden_tests_loaded: false`.
+     `reproduce.py` calls only the original helper on saved answers.
+   - Method changes:
+     - `methods.json`: the audit, wire, reproduce, cleanup and invoke scripts are unchanged, with empty diffs.
+     - The retained derivation diffs (write_reports, package, postcommit, hygiene, verify, retain_review and
+       request_review) change only paths, counts and text, plus three logic changes:
+       - hygiene tolerates the absence of a retained review
+       - the retired-token reconstruction now has two inputs instead of three
+       - one prefix copy is dropped
+   - I read the four new answers as text only. They are JSON edit proposals: three were refused as
+     `code.proposal.edit`, and dev-rust-001 was accepted with one change whose hash equals the candidate hash.
+
+6. Cleanup and tokens
+   - `cleanup.json` is a PASS with 15 completed pairs, 15 settings revocations, 15 API reaps and keys and sockets
+     absent in all 15. `matching_processes` is `[]` (exact owner arguments, current PID namespace only). Its
+     launch hash matches the r10 launch.
+   - The capsule contains no `.token`, `.sock`, `api-key` or `.gguf` file (checked by the verifier).
+   - Independent reconstruction of retired tokens:
+     - r9 `prefix-retired.json` (18) plus r9 `cleanup.json` (8) equals the r10 `prefix-retired.json` list (26).
+     - It is disjoint from the 4 new entries (pairs 26 and 28, control and client).
+     - The total is 30 unique entries, matching the evidence.
+   - The private state directory is not visible from my namespace, so I relied on the hash-bound receipts. I saw
+     no model or API process from this measurement in my namespace.
+
+7. Packaging and receipts
+   - The verifier checks the following:
+     - every manifest entry: size, sha256, not a symlink, no `..`, and an exact file set
+     - `check-invocation.json` and `reporting-invocation.json` return codes and method, output and stderr hashes
+     - `reporting-checks.json` log hashes
+     - `preservation.json`: 507 ledger lines and the exact scoreboard prefix, both re-derived with `git show`
+       from the base
+     - the `retained-review.json` hash and task note
+
+## Findings
+
+No critical, high, medium or new low finding.
+
+- Evaluation integrity: this commit changes only documentation. No held-out task ran or was used. No hidden test
+  was loaded. Contexts, prompts, profile, budget formula and checker are byte-identical to the preceding repeat.
+  All failures are counted (13 refusals) and none dropped.
+- Honest claims: every public number (30/30, 17/30, 13 refusals, 215953/34733, 1620.652 s, 2251.151 s =
+  37.519 min, 3225–9734, 23002–29511, 19976–21741 MiB, 1484.618 s and 26 + 4 token files) traces to raw receipts.
+  I recomputed them independently. Passes and retries are shown as unavailable, never as zero.
+- MEASURE FIRST: a scoreboard line is present for this completed batch. It states the changed variable, the
+  context and output allowance, and does-not-fit 0 counted apart from model outcomes.
+- Existing low findings (the queued-stop diagnostic, older unrecorded overrides and missing stop archives)
+  remain T-309 backlog, as disclosed.
+
+## Per-row result
+
+- T-303 (related T-306): reporting increment accepted. The measurement is a completed development profile only
+  and closes no row. T-303 and T-306 stay open, and no owner-ready or release claim is made or supported.
+
+Verdict: PASS

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Bounded local HTTP transport. Only trusted configuration may mint approval;
 //! endpoint parsing, model output and endpoint discovery confer no authority.
 //! This text-only path neither activates qualified gateway routes nor runs tools.

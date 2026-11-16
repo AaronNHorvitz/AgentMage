@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The [independent completed 31B measurement review](docs/reviews/3a84d30f8600-inline-schema-31b-development-completion.txt)
+returns **Verdict: PASS** for exact
+`3a84d30f86006488e7a36a74c4fa4cdd412e7e40`, with no high or medium finding.
+It accepts reporting only and closes no row; prior low findings stay T-309
+backlog. The report is retained byte for byte. T-303/T-306 remain open.
+
+The owner's 2026-11-16 public-account and licence orders are implemented under
+[Decision 0210](docs/decisions/0210-historical-inventory-and-public-readme.md) and
+[Decision 0211](docs/decisions/0211-mit-or-apache-2-licensing.md).
+README follows the engine inventory and scoreboard; the historical inventory's
+original bytes and 49 historical private-path files are preserved. The current
+licence is MIT OR Apache-2.0; historical published versions retain their terms.
+T-317/T-318 record later runtime work only. MEASURE FIRST resumes with the three
+remaining profiles before tuning or new capability work. No row closes here;
+independent core review is required for this combined batch. The
+[verification record](docs/evidence/readme-and-dual-licence-2026-11-16.md)
+keeps inherited build-contract and contract-package allowlist drift visible;
+no runtime or full-gate success is inferred.
+
 The [inline-schema 31B measurement](docs/evidence/t303-inline-schema-31b-finish-2026-11-16.md)
 records 30/30 frozen development attempts: 17/30 strict ungraded proposals.
 Task passes and retries remain unavailable; no candidate, hidden or held-out
@@ -3653,6 +3672,8 @@ hidden tests or weaken thresholds. Desktop UI work is deferred to a separate she
 | [ ] | T-310 | T-309 | Full gate including the unchanged long documentation gate once, end-to-end demonstration and independent PASS. Then prepare OWNER-TEST-READY with exact build/install/start commands, guide and unexercised owner checks; no public release. |
 | [ ] | T-315 | Starts no earlier than the first CAP-29 work; preserves current queue order | Study how agent memories are linked under [Decision 0204](docs/decisions/0204-open-study-memory-linking.md). Compare named, versioned, replaceable linking methods over the same facts, with per-link provenance and set-wide disabling without rewrites. Keep source-backed memory writing and context selection replaceable and record all method names/versions in run evidence. Fixed-task comparisons report needed facts reached, wrong facts brought into context, cost and task outcomes; adopt by measurement without changing thresholds or choosing methods on held-out results. Planning only now; implementation evidence and independent PASS required for closure. |
 | [ ] | T-316 | Later CAP-03 work, after MEASURE FIRST coding measurement; preserves current coding priorities and queue order | Under [Decision 0205](docs/decisions/0205-one-runtime-for-model-driven-work.md), freeze a synthetic everyday-tool task set, its development/held-out split and qualification scores before any run. Score the right tool and exact arguments, no invented result, asking first respected, and instructions hidden in tool results or documents not followed. Measure per model profile and again after changes to prompts, tool descriptions, runtime or profile. Never tune on held-out results or weaken existing thresholds. Planning only now; actual evidence and independent PASS required for closure. |
+| [ ] | T-317 | Later CAP-49 work after MEASURE FIRST; preserves coding priority | Typed graphs of model, tool, memory and approval steps on this runtime under Decision 0205. Bind each step's exact inputs, outputs, order, retries and limits to its record. Replay without new inference or effects; re-running from a step is a new run with current permissions. Planning only; no implementation now. |
+| [ ] | T-318 | T-317 and T-312; T-313 evaluation and held-out retention condition | Direct several agents through typed flows on this same runtime. T-313 remains the bounded coding-team measurement and must improve held-out results to be kept; this later general composition introduces no second runtime or duplicate team implementation. Preserve isolation, separate review, approval and budget boundaries. Planning only; no implementation now. |
 
 ## Current Delivery Amendment (2026-09-24)
 
@@ -3898,7 +3919,7 @@ Stabilization scope freeze: inactive (Decision 0047) — the complete preserved 
 
 First-release surface: standalone hardened desktop application (Decision 0048).
 
-Repository license: Business Source License 1.1 (Decision 0051); versions published before 2026-09-07 remain under Apache License 2.0.
+Repository license: MIT OR Apache-2.0 (Decision 0211). Earlier published versions retain their original licences; see NOTICE.
 
 First-release gate: Story 25.3 under the Decision 0052 restart-readiness correction.
 

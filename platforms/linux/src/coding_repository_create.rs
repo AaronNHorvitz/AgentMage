@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Creation lineage retained only across a verified native transaction and publication.
 
 use super::*;

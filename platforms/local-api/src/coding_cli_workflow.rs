@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Guided terminal scheduling of the existing separately approved API operations.
 //! No tools, permission grants, model transport or execution recovery live here.
 

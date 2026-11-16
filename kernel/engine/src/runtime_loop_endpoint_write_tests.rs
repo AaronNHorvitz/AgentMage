@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Synthetic scoped effects through the real coordinator. No native executor,
 //! repository ownership, local model or coding score is claimed here.
 

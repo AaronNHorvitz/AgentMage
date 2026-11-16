@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Exact pending edits mediated by the existing kernel and native write driver.
 
 use std::collections::BTreeSet;

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Bounded source selection and effect-free exact-edit proposals.
 //!
 //! Callers supply already-authorized snapshots. This module has no filesystem,

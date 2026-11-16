@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! HTTP transport for the existing verified interactive driver. No agent loop.
 
 use super::*;

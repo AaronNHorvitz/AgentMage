@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Actual retained HTTP owner -> record -> fresh offline terminal processes.
 //! Cancellation is real; tools, permissions and model endpoint are synthetic.
 

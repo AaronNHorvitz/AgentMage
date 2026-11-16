@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Dormant candidate construction through the closed offline Git supervisor.
 
 use super::*;

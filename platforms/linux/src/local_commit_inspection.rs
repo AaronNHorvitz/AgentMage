@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Offline public-identity inspection; no private key or agent is projected.
 
 use super::*;

@@ -22,7 +22,7 @@ def valid_manifest() -> dict[str, object]:
             "version": "0.0.0",
             "edition": "2024",
             "rust-version": "1.95.0",
-            "license": "Apache-2.0",
+            "license": "MIT OR Apache-2.0",
             "repository": "https://github.com/AaronNHorvitz/AgentMage",
             "publish": False,
             "build": False,

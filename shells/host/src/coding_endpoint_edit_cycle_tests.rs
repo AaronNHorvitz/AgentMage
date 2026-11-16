@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Original coordinator/strict transport/edits; synthetic model/creation/feedback.
 use super::*;
 use crate::coding_endpoint_edit_generation::CodingEndpointStrictEdits;

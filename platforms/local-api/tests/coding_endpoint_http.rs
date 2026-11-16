@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Real HTTP/endpoint sockets with synthetic tools and a rejecting verifier.
 //! No native filesystem, grant, model quality or coding success is claimed.
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Local API process with explicit source scopes and separately approved writes.
 
 use std::net::{SocketAddr, TcpListener};

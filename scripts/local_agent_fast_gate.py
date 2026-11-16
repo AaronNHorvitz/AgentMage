@@ -44,6 +44,20 @@ HOST_CATALOG_INPUTS = RUNTIME_PRODUCER_FIXTURE_INPUTS | {
     "schemas/runtime/validation-receipt.schema.json",
     "schemas/runtime/command-receipt.schema.json",
 }
+LICENCE_INPUTS = {
+    "experimental/model-lab/Cargo.toml",
+    "LICENSE", "LICENSE-MIT", "LICENSE-APACHE", "NOTICE", "CONTRIBUTING.md",
+    "package.json", "package-lock.json", "shells/vscode/package.json",
+    "architecture/private-path-exceptions.json",
+    "packaging/linux/agentmage.spec.in", "packaging/linux/agentmage-release.spec.in",
+    "supply-chain/sbom.cdx.json", "supply-chain/dependency-provenance.json",
+    "supply-chain/dependency-hashes.sha256",
+}
+LICENCE_METADATA_INPUTS = {
+    "package.json", "package-lock.json", "shells/vscode/package.json",
+    "experimental/model-lab/Cargo.toml", "packaging/linux/agentmage.spec.in",
+    "packaging/linux/agentmage-release.spec.in",
+}
 CRATE_INPUT_SUFFIXES = {".rs", ".toml", ".json", ".sql", ".txt"}
 CRATE_EXTENSIONLESS_INPUTS = {
     "kernel/contracts/LICENSE",
@@ -63,6 +77,35 @@ def changed_paths(root: Path, base: str) -> list[str]:
     tracked = git(root, "diff", "--name-only", "--no-renames", "-z", revision, "--")
     untracked = git(root, "ls-files", "--others", "--exclude-standard", "-z")
     return sorted(os.fsdecode(item) for item in set((tracked + untracked).split(b"\0")) if item)
+
+
+def licence_metadata_only(root: Path, base: str, paths: list[str]) -> None:
+    """New metadata coverage permits only this mechanical licence update.
+
+    Behavior, dependencies and package scripts still need explicit coverage;
+    recognizing a licence field must not admit arbitrary manifest changes.
+    """
+    for name in sorted(LICENCE_METADATA_INPUTS.intersection(paths)):
+        original = git(root, "show", base + ":" + name).decode()
+        current = (root / name).read_text(encoding="utf-8")
+        if name.endswith(".json"):
+            before, after = json.loads(original), json.loads(current)
+            if name == "package-lock.json":
+                for key in ("", "shells/vscode"):
+                    before["packages"][key].pop("license", None)
+                    after["packages"][key].pop("license", None)
+            else:
+                before.pop("license", None)
+                after.pop("license", None)
+            same = before == after
+        elif name.endswith("Cargo.toml"):
+            same = current == original.replace('license = "Apache-2.0"',
+                                               'license = "MIT OR Apache-2.0"')
+        else:
+            same = current == original.replace("License:        Apache-2.0",
+                                               "License:        (MIT OR Apache-2.0)")
+        if not same:
+            raise ValueError(f"{name}: non-licence metadata change needs explicit fast-gate coverage")
 
 
 def affected_packages(metadata: dict, paths: list[str], root: Path) -> list[str]:
@@ -163,7 +206,9 @@ def plan(root: Path, paths: list[str], metadata: dict) -> list[list[str]]:
         path = PurePosixPath(name)
         if name == 'scripts/coding_eval_worker_graph.py':
             modules.add('tests.test_coding_eval_worker_oracle')
-        if name == "scripts/runtime_producer_fixtures.py":
+        if name == "scripts/validate_docs.py":
+            module = "tests.test_documentation_controls"
+        elif name == "scripts/runtime_producer_fixtures.py":
             module = "tests.test_runtime_producer_contract"
         elif name in worker_roles:
             module = "tests.test_coding_eval_worker_oracle"
@@ -181,7 +226,7 @@ def plan(root: Path, paths: list[str], metadata: dict) -> list[list[str]]:
                     and p.endswith(".txt")]
     for name in paths:
         if (name in known_global or name in review_paths or name in VALIDATION_SCHEMA_INPUTS
-                or name in RUNTIME_PRODUCER_FIXTURE_INPUTS
+                or name in RUNTIME_PRODUCER_FIXTURE_INPUTS or name in LICENCE_INPUTS
                 or name.endswith((".md", ".py"))):
             continue
         if any(name.startswith(directory) for directory in package_roots) and (
@@ -191,6 +236,12 @@ def plan(root: Path, paths: list[str], metadata: dict) -> list[list[str]]:
         raise ValueError(f"{name}: no fast check registered; add coverage before proceeding")
     commands = [["git", "diff", "--check", "--"]]
     commands.append([sys.executable, "scripts/local_agent_fast_gate.py", "--lint-untracked"])
+    commands.append([sys.executable, "scripts/private_host_paths.py"])
+    commands.append([sys.executable, "scripts/license_policy.py"])
+    if LICENCE_INPUTS.intersection(paths):
+        modules.update({"tests.test_license_policy", "tests.test_private_host_paths"})
+    if any(name.startswith("supply-chain/") for name in paths):
+        commands.append([sys.executable, "scripts/supply_chain.py"])
     reviews = [p for p in review_paths if (root / p).is_file()]
     if reviews:
         commands.append([sys.executable, "scripts/local_agent_fast_gate.py", "--lint-reviews", *reviews])
@@ -371,6 +422,8 @@ def main() -> int:
         paths = changed_paths(ROOT, args.base)
         if not paths:
             raise ValueError("no changed paths; use --base with the commit before the change")
+        revision = git(ROOT, "rev-parse", "--verify", "--end-of-options", args.base + "^{commit}").decode().strip()
+        licence_metadata_only(ROOT, revision, paths)
         if shutil.which("cargo") is None:
             raise ValueError("cargo is required to determine workspace ownership")
         metadata = json.loads(subprocess.check_output(
@@ -380,6 +433,9 @@ def main() -> int:
         # Check the entire requested range, including committed and staged edits.
         revision = git(ROOT, "rev-parse", "--verify", "--end-of-options", args.base + "^{commit}").decode().strip()
         commands[0] = ["git", "diff", "--check", revision, "--"]
+        for command in commands:
+            if command[1:2] == ["scripts/private_host_paths.py"]:
+                command.extend(["--base", revision])
         print(json.dumps({"paths": paths, "commands": commands}, indent=2), flush=True)
         if args.plan:
             return 0

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! One terminal from retained coordinator through saved record and exact diff.
 //! Synthetic creation/model; real HTTP, permissions, native edits and transfer.
 use super::*;

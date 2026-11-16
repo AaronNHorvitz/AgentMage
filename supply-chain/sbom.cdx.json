@@ -98,9 +98,7 @@
       ],
       "licenses": [
         {
-          "license": {
-            "id": "Apache-2.0"
-          }
+          "expression": "MIT OR Apache-2.0"
         }
       ],
       "name": "agentmage-capability-knowledge",
@@ -129,9 +127,7 @@
       ],
       "licenses": [
         {
-          "license": {
-            "id": "Apache-2.0"
-          }
+          "expression": "MIT OR Apache-2.0"
         }
       ],
       "name": "agentmage-capability-read-only",
@@ -155,14 +151,12 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "fbb7eecbc1993405b8126fcc7dc11867cf8f0f054f0d9ed238c222fdc56326b3"
+          "content": "95551f4dad4d30eaa0ff5579eea973141ec90f8b579b334d8769cc0e99ae19ec"
         }
       ],
       "licenses": [
         {
-          "license": {
-            "id": "Apache-2.0"
-          }
+          "expression": "MIT OR Apache-2.0"
         }
       ],
       "name": "agentmage-capability-repository-map",
@@ -186,14 +180,12 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "97e9845d1c8327628099ce2ac1e4a78061a54e5a0f51e909f92ec12994867769"
+          "content": "d8690cb3326c611207cb327399f117d5ed7830de6565e5ae14b1e1958724b8c0"
         }
       ],
       "licenses": [
         {
-          "license": {
-            "id": "Apache-2.0"
-          }
+          "expression": "MIT OR Apache-2.0"
         }
       ],
       "name": "agentmage-host",
@@ -217,14 +209,12 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "3d2d890afa57d6d988498b6c8668d5593a9832b15d664f635f2c42a31053854f"
+          "content": "7d29586c660bdb53cb3ad909f3b5a09365e0e389fa0c9bbb7aeed36404485bb2"
         }
       ],
       "licenses": [
         {
-          "license": {
-            "id": "Apache-2.0"
-          }
+          "expression": "MIT OR Apache-2.0"
         }
       ],
       "name": "agentmage-kernel-contracts",
@@ -248,14 +238,12 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "9a66d9bbb02fab33bf66a6530277a9797af33e2c713a86c2aef90cf0970d7a55"
+          "content": "0c32c6a46b3758b08b9e48e9d419cdd3db036cf834cdacd4fbe9c3cf34337410"
         }
       ],
       "licenses": [
         {
-          "license": {
-            "id": "Apache-2.0"
-          }
+          "expression": "MIT OR Apache-2.0"
         }
       ],
       "name": "agentmage-kernel-engine",
@@ -275,18 +263,45 @@
       "version": "0.0.0"
     },
     {
-      "bom-ref": "cargo:agentmage-platform-linux-inference@0.0.0",
+      "bom-ref": "cargo:agentmage-local-api@0.0.0",
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "1cc867fd6c5c38f83c5ff5df3b7a2127eaa7b71fa01d8823b4e3d7b0d639d4c1"
+          "content": "4ac29db693f6d878a50a453622cc7e20e7e8427c63f8c647c977105c3ee8f685"
         }
       ],
       "licenses": [
         {
-          "license": {
-            "id": "Apache-2.0"
-          }
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "agentmage-local-api",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/agentmage-local-api@0.0.0",
+      "scope": "required",
+      "type": "library",
+      "version": "0.0.0"
+    },
+    {
+      "bom-ref": "cargo:agentmage-platform-linux-inference@0.0.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "152495e04cf378ee72d2376dd41683c294105caa2c39d31f0427c7f21986aa4b"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
         }
       ],
       "name": "agentmage-platform-linux-inference",
@@ -310,14 +325,12 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "e973243ba51639373ff47541bcafb1930beef53ae7e8a41a7e487a30344517ae"
+          "content": "9f4b7cdda5d76b0d8137ffa3b34535178bb0880512a8485010ff833df062b4e2"
         }
       ],
       "licenses": [
         {
-          "license": {
-            "id": "Apache-2.0"
-          }
+          "expression": "MIT OR Apache-2.0"
         }
       ],
       "name": "agentmage-platform-linux",
@@ -346,9 +359,7 @@
       ],
       "licenses": [
         {
-          "license": {
-            "id": "Apache-2.0"
-          }
+          "expression": "MIT OR Apache-2.0"
         }
       ],
       "name": "agentmage-platform-windows",
@@ -377,9 +388,7 @@
       ],
       "licenses": [
         {
-          "license": {
-            "id": "Apache-2.0"
-          }
+          "expression": "MIT OR Apache-2.0"
         }
       ],
       "name": "agentmage-xtask",
@@ -5332,14 +5341,12 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "d6c40736773ca30b5a5821aa55418def2f028b2d161d7dfb8c6e6688994c3083"
+          "content": "fd2038c56a0fc67add8fcf0fb7c31a68df08a68622f5dc8bac2b0bf33a4a92e4"
         }
       ],
       "licenses": [
         {
-          "license": {
-            "id": "Apache-2.0"
-          }
+          "expression": "MIT OR Apache-2.0"
         }
       ],
       "name": "@agentmage/vscode-shell",
@@ -5363,14 +5370,12 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "5c25127ac887fe48cbb8a87da6dac32d6c2e2c77efacf28ee02f0411c4f7a74c"
+          "content": "8f09aa318a92c0d21d258dc6de54913269b51b074450a85d135749cf05351d6d"
         }
       ],
       "licenses": [
         {
-          "license": {
-            "id": "Apache-2.0"
-          }
+          "expression": "MIT OR Apache-2.0"
         }
       ],
       "name": "agentmage-planning-docs",
@@ -16865,9 +16870,7 @@
       ],
       "licenses": [
         {
-          "license": {
-            "id": "Apache-2.0"
-          }
+          "expression": "MIT OR Apache-2.0"
         }
       ],
       "name": "AgentMageMacOSPlatform",
@@ -16987,6 +16990,23 @@
         "cargo:zeroize@1.9.0"
       ],
       "ref": "cargo:agentmage-kernel-engine@0.0.0"
+    },
+    {
+      "dependsOn": [
+        "cargo:agentmage-capability-repository-map@0.0.0",
+        "cargo:agentmage-host@0.0.0",
+        "cargo:agentmage-kernel-contracts@0.0.0",
+        "cargo:agentmage-kernel-engine@0.0.0",
+        "cargo:agentmage-platform-linux-inference@0.0.0",
+        "cargo:agentmage-platform-linux@0.0.0",
+        "cargo:rustix@1.1.4",
+        "cargo:serde@1.0.229",
+        "cargo:serde_json@1.0.151",
+        "cargo:sha2@0.11.0",
+        "cargo:signal-hook@0.3.18",
+        "cargo:zeroize@1.9.0"
+      ],
+      "ref": "cargo:agentmage-local-api@0.0.0"
     },
     {
       "dependsOn": [
@@ -20417,9 +20437,7 @@
       "bom-ref": "application:agentmage@0.0.0",
       "licenses": [
         {
-          "license": {
-            "id": "Apache-2.0"
-          }
+          "expression": "MIT OR Apache-2.0"
         }
       ],
       "name": "AgentMage",
@@ -20433,7 +20451,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:fef7d5cf-a860-56c4-821d-c3df53c18471",
+  "serialNumber": "urn:uuid:c33b8ff9-73ab-51b9-82f9-208ce94847c9",
   "specVersion": "1.6",
   "version": 1
 }

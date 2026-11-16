@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Exact commands in a worktree held after this owner's successful creation.
 
 use super::*;

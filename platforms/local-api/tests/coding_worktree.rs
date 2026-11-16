@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Actual API/CLI state, consent and native refusal; no model or sandbox bypass.
 
 use serde_json::{Value, json};

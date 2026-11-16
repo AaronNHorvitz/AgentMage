@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Exclusive in-process ownership of ephemeral configured-endpoint coding runs.
 //!
 //! Keep one owner in the hosting service. Requests identify retained instances;

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Private immutable request storage; common fields never replace the original sealed request.
 
 use super::{RuntimeLoopError, RuntimeRunScope, event_frame::RuntimeEventScope};

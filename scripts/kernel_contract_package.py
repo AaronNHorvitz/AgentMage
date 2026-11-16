@@ -200,7 +200,7 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
         "version": CRATE_VERSION,
         "edition": "2024",
         "rust-version": "1.95.0",
-        "license": "Apache-2.0",
+        "license": "MIT OR Apache-2.0",
         "repository": "https://github.com/AaronNHorvitz/AgentMage",
         "publish": False,
         "exclude": [
@@ -308,7 +308,7 @@ def build_report(path: Path, root: Path = ROOT) -> dict[str, Any]:
             "size_bytes": path.stat().st_size,
             "source_revision": revision,
             "source_path": "kernel/contracts",
-            "license": "Apache-2.0",
+            "license": "MIT OR Apache-2.0",
             "publish": False,
         },
         "members": [

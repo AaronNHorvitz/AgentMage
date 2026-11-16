@@ -69,6 +69,15 @@ class FastGateTests(unittest.TestCase):
         with self.assertRaises(subprocess.CalledProcessError):
             gate.changed_paths(self.root, "--help")
 
+    def test_new_licence_metadata_coverage_rejects_unrelated_manifest_changes(self):
+        original = '{"license":"Apache-2.0","scripts":{"test":"original"}}\n'
+        with patch.object(gate, "git", return_value=original.encode()):
+            self.write("package.json", original.replace("Apache-2.0", "MIT OR Apache-2.0"))
+            gate.licence_metadata_only(self.root, "fixture", ["package.json"])
+            self.write("package.json", original.replace("original", "different-command"))
+            with self.assertRaises(ValueError):
+                gate.licence_metadata_only(self.root, "fixture", ["package.json"])
+
     def test_reverse_dependencies_are_included_and_unrelated_crate_is_not(self):
         self.assertEqual(gate.affected_packages(self.metadata, ["kernel/base/src/lib.rs"], self.root),
                          ["client", "foundation", "runtime"])
@@ -105,8 +114,8 @@ class FastGateTests(unittest.TestCase):
     def test_document_only_change_has_no_build_or_evidence_generator(self):
         self.write("docs/mission.md")
         commands = gate.plan(self.root, ["docs/mission.md"], self.metadata)
-        self.assertEqual([c[0] for c in commands], ["git", sys.executable, "node"])
-        self.assertEqual(commands[2][-1], "./docs/mission.md")
+        self.assertEqual([c[0] for c in commands], ["git", sys.executable, sys.executable, sys.executable, "node"])
+        self.assertEqual(commands[4][-1], "./docs/mission.md")
 
     def test_unknown_change_and_missing_tests_fail_closed(self):
         for name in ("web/app.js", "architecture/config.json", "scripts/new_tool.py",

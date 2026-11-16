@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Executable native-admission refusal, not a successful worker/model workflow.
 #[path = "support/endpoint_launch.rs"]
 mod fixture;

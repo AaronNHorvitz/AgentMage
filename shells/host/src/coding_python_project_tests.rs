@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Synthetic project composition tests; no native execution or model qualification.
 use super::*;
 use agentmage_capability_repository_map::{

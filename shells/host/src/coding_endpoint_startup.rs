@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Trusted startup composition, without a native model profile or a second loop.
 
 use std::sync::Arc;

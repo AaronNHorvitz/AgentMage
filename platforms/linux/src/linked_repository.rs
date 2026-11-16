@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Explicit, descriptor-held linked Git metadata for read-only development use.
 
 use std::fs::File;

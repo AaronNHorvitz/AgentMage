@@ -4,14 +4,17 @@
 from __future__ import annotations
 
 import re
+import hashlib
 import sys
 from pathlib import Path
 from urllib.parse import unquote
 
 try:
+    from scripts.license_policy import check as check_license_policy
     from scripts.planning_scope import build_report as build_planning_scope_report
     from scripts.status_model import load_json, load_status_model, validate_status_model
 except ModuleNotFoundError:  # Direct execution adds scripts/, not the repository root.
+    from license_policy import check as check_license_policy
     from planning_scope import build_report as build_planning_scope_report
     from status_model import load_json, load_status_model, validate_status_model
 
@@ -23,6 +26,10 @@ LOCAL_INSTRUCTION_INPUTS = {
 }
 REQUIRED_FILES = (
     "README.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE",
+    "CONTRIBUTING.md",
+    "THIRD-PARTY-NOTICES.md",
     "PRD.md",
     "IMPLEMENTATION-PLAN.md",
     "Agent-Scaffolding-Inventory.md",
@@ -285,7 +292,7 @@ CODEBASE_AUDIT_DECISION_FILE = "docs/decisions/0011-whole-codebase-audit.md"
 STATUS_DECISION_FILE = "docs/decisions/0012-stabilization-truth-and-status-model.md"
 DECISION_BOUNDARIES = {
     "license": (
-        re.compile(r"Business Source License 1\.1", re.IGNORECASE),
+        re.compile(r"MIT OR Apache-2\.0", re.IGNORECASE),
     ),
     "model": (
         re.compile(r"Gemma 4 E4B"),
@@ -326,6 +333,19 @@ DECISION_BOUNDARIES = {
         re.compile(r"GitHub Enterprise", re.IGNORECASE),
         re.compile(r"capability class", re.IGNORECASE),
     ),
+}
+# Decision 0210 supersedes the old public-face requirements, including names
+# and desktop scope. Preserve those checks on the historical canonical docs.
+README_BOUNDARIES = {
+    "license": (re.compile(r"MIT OR Apache-2\.0"),),
+    "model": (re.compile(r"no supported release, platform or admitted\s+production model"),),
+    "runtime": (re.compile(r"versioned local HTTP API"), re.compile(r"MCP server")),
+    "platform": (re.compile(r"Fedora Kinoite"),),
+    "interface": (re.compile(r"no desktop screens"), re.compile(r"T-310a")),
+    "handoff": (re.compile(r"only independent exact-commit review closes a row"),),
+    "support": (re.compile(r"SECURITY\.md"), re.compile(r"not a supported-platform claim")),
+    "release": (re.compile(r"Local owner testing precedes\s+any public release"),),
+    "delivery": (re.compile(r"MEASURE FIRST"), re.compile(r"ungraded proposals")),
 }
 LINK = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
 IDENTIFIER = re.compile(r"\b(?:AM|AT|CR)-[A-Z0-9.-]+\b")
@@ -488,6 +508,15 @@ def check_cross_document_contract(failures: list[str]) -> None:
     )
     for relative in CANONICAL_DOCS:
         text = read(relative)
+        if relative == "README.md":
+            for marker in ("2026-10-25", "2026-11-02", "Decision 0153", "historical planning list",
+                           "a desktop host application", "this is yet another harness for the world to use and improve upon"):
+                if marker not in text:
+                    failures.append(f"README.md: missing owner-required marker: {marker}")
+            paragraphs = [line for line in text.splitlines() if line.startswith("AgentMage is an independent, privately developed product")]
+            if len(paragraphs) != 1 or hashlib.sha256(paragraphs[0].encode()).hexdigest() != '2011f8e97e2eaa3ee78b97f13eae8a0bd3cdc0ce8dc6013c64567eccb76239e7':
+                failures.append("README.md: independence paragraph changed")
+            continue
         for term in required_terms:
             if term not in text:
                 failures.append(f"{relative}: missing cross-document term: {term}")
@@ -500,14 +529,7 @@ def check_cross_document_contract(failures: list[str]) -> None:
     if sprint_count != 169:
         failures.append(f"TASKS.md: expected 169 sprint headings, found {sprint_count}")
 
-    license_text = read("LICENSE")
-    if (
-        "Business Source License 1.1" not in license_text
-        or "Change Date:" not in license_text
-        or "Change License:" not in license_text
-        or "Licensor:" not in license_text
-    ):
-        failures.append("LICENSE: expected complete Business Source License 1.1 text with parameters")
+    failures.extend(check_license_policy(ROOT))
 
 
 def check_accepted_decision_contract(
@@ -646,7 +668,10 @@ def check_accepted_decision_contract(
         if text is None:
             failures.append(f"{relative}: missing from decision-consistency input")
             continue
-        for boundary, patterns in DECISION_BOUNDARIES.items():
+        boundaries = README_BOUNDARIES if relative == "README.md" else DECISION_BOUNDARIES
+        for boundary, patterns in boundaries.items():
+            if relative == "Agent-Scaffolding-Inventory.md" and boundary == "license":
+                patterns = (re.compile(r"Business Source License 1\.1"),)
             for pattern in patterns:
                 if pattern.search(text) is None:
                     failures.append(

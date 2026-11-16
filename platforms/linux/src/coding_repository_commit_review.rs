@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Live-owner checks before constructing an authority-free candidate-tree plan.
 
 use super::*;

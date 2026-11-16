@@ -71,7 +71,7 @@
         }
       ],
       "integrity": null,
-      "license": "Apache-2.0",
+      "license": "MIT OR Apache-2.0",
       "name": "agentmage-capability-knowledge",
       "scope": "required",
       "source": {
@@ -91,7 +91,7 @@
         }
       ],
       "integrity": null,
-      "license": "Apache-2.0",
+      "license": "MIT OR Apache-2.0",
       "name": "agentmage-capability-read-only",
       "scope": "required",
       "source": {
@@ -107,11 +107,11 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "fbb7eecbc1993405b8126fcc7dc11867cf8f0f054f0d9ed238c222fdc56326b3"
+          "content": "95551f4dad4d30eaa0ff5579eea973141ec90f8b579b334d8769cc0e99ae19ec"
         }
       ],
       "integrity": null,
-      "license": "Apache-2.0",
+      "license": "MIT OR Apache-2.0",
       "name": "agentmage-capability-repository-map",
       "scope": "required",
       "source": {
@@ -127,11 +127,11 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "97e9845d1c8327628099ce2ac1e4a78061a54e5a0f51e909f92ec12994867769"
+          "content": "d8690cb3326c611207cb327399f117d5ed7830de6565e5ae14b1e1958724b8c0"
         }
       ],
       "integrity": null,
-      "license": "Apache-2.0",
+      "license": "MIT OR Apache-2.0",
       "name": "agentmage-host",
       "scope": "required",
       "source": {
@@ -147,11 +147,11 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "3d2d890afa57d6d988498b6c8668d5593a9832b15d664f635f2c42a31053854f"
+          "content": "7d29586c660bdb53cb3ad909f3b5a09365e0e389fa0c9bbb7aeed36404485bb2"
         }
       ],
       "integrity": null,
-      "license": "Apache-2.0",
+      "license": "MIT OR Apache-2.0",
       "name": "agentmage-kernel-contracts",
       "scope": "required",
       "source": {
@@ -167,15 +167,35 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "9a66d9bbb02fab33bf66a6530277a9797af33e2c713a86c2aef90cf0970d7a55"
+          "content": "0c32c6a46b3758b08b9e48e9d419cdd3db036cf834cdacd4fbe9c3cf34337410"
         }
       ],
       "integrity": null,
-      "license": "Apache-2.0",
+      "license": "MIT OR Apache-2.0",
       "name": "agentmage-kernel-engine",
       "scope": "required",
       "source": {
         "path": "kernel/engine",
+        "type": "repository-path"
+      },
+      "version": "0.0.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:agentmage-local-api@0.0.0",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "4ac29db693f6d878a50a453622cc7e20e7e8427c63f8c647c977105c3ee8f685"
+        }
+      ],
+      "integrity": null,
+      "license": "MIT OR Apache-2.0",
+      "name": "agentmage-local-api",
+      "scope": "required",
+      "source": {
+        "path": "platforms/local-api",
         "type": "repository-path"
       },
       "version": "0.0.0"
@@ -187,11 +207,11 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "1cc867fd6c5c38f83c5ff5df3b7a2127eaa7b71fa01d8823b4e3d7b0d639d4c1"
+          "content": "152495e04cf378ee72d2376dd41683c294105caa2c39d31f0427c7f21986aa4b"
         }
       ],
       "integrity": null,
-      "license": "Apache-2.0",
+      "license": "MIT OR Apache-2.0",
       "name": "agentmage-platform-linux-inference",
       "scope": "required",
       "source": {
@@ -207,11 +227,11 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "e973243ba51639373ff47541bcafb1930beef53ae7e8a41a7e487a30344517ae"
+          "content": "9f4b7cdda5d76b0d8137ffa3b34535178bb0880512a8485010ff833df062b4e2"
         }
       ],
       "integrity": null,
-      "license": "Apache-2.0",
+      "license": "MIT OR Apache-2.0",
       "name": "agentmage-platform-linux",
       "scope": "required",
       "source": {
@@ -231,7 +251,7 @@
         }
       ],
       "integrity": null,
-      "license": "Apache-2.0",
+      "license": "MIT OR Apache-2.0",
       "name": "agentmage-platform-windows",
       "scope": "required",
       "source": {
@@ -251,7 +271,7 @@
         }
       ],
       "integrity": null,
-      "license": "Apache-2.0",
+      "license": "MIT OR Apache-2.0",
       "name": "agentmage-xtask",
       "scope": "required",
       "source": {
@@ -3607,11 +3627,11 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "d6c40736773ca30b5a5821aa55418def2f028b2d161d7dfb8c6e6688994c3083"
+          "content": "fd2038c56a0fc67add8fcf0fb7c31a68df08a68622f5dc8bac2b0bf33a4a92e4"
         }
       ],
       "integrity": null,
-      "license": "Apache-2.0",
+      "license": "MIT OR Apache-2.0",
       "name": "@agentmage/vscode-shell",
       "scope": "required",
       "source": {
@@ -3627,11 +3647,11 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "5c25127ac887fe48cbb8a87da6dac32d6c2e2c77efacf28ee02f0411c4f7a74c"
+          "content": "8f09aa318a92c0d21d258dc6de54913269b51b074450a85d135749cf05351d6d"
         }
       ],
       "integrity": null,
-      "license": "Apache-2.0",
+      "license": "MIT OR Apache-2.0",
       "name": "agentmage-planning-docs",
       "scope": "excluded",
       "source": {
@@ -11051,7 +11071,7 @@
         }
       ],
       "integrity": null,
-      "license": "Apache-2.0",
+      "license": "MIT OR Apache-2.0",
       "name": "AgentMageMacOSPlatform",
       "platform_status": "blocked-macos",
       "scope": "required",
@@ -11160,6 +11180,23 @@
         "cargo:serde@1.0.229",
         "cargo:serde_json@1.0.151",
         "cargo:sha2@0.11.0",
+        "cargo:zeroize@1.9.0"
+      ]
+    },
+    {
+      "component_id": "cargo:agentmage-local-api@0.0.0",
+      "depends_on": [
+        "cargo:agentmage-capability-repository-map@0.0.0",
+        "cargo:agentmage-host@0.0.0",
+        "cargo:agentmage-kernel-contracts@0.0.0",
+        "cargo:agentmage-kernel-engine@0.0.0",
+        "cargo:agentmage-platform-linux-inference@0.0.0",
+        "cargo:agentmage-platform-linux@0.0.0",
+        "cargo:rustix@1.1.4",
+        "cargo:serde@1.0.229",
+        "cargo:serde_json@1.0.151",
+        "cargo:sha2@0.11.0",
+        "cargo:signal-hook@0.3.18",
         "cargo:zeroize@1.9.0"
       ]
     },
@@ -14589,14 +14626,14 @@
   ],
   "document_id": "agentmage-dependency-provenance",
   "generated_from": {
-    "Cargo.lock": "6504697ed0201ce9c5dfd8e028620ffad1a749da030d3ec06d31e9787df866bd",
-    "Cargo.toml": "8947da4e57d447c5a66641e21ec9e56091bf0068914a0aeb45d98123ab6c38cc",
-    "package-lock.json": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
-    "package.json": "5c25127ac887fe48cbb8a87da6dac32d6c2e2c77efacf28ee02f0411c4f7a74c",
+    "Cargo.lock": "f663ca2ce805eb08af90a4df93bc4701b6382e6612c64fd54f3415be056a7ac0",
+    "Cargo.toml": "564d2e4298fcccf4ddbf7ffec37f6ffdaef5b1df936c8ea3d0274f0d0802e785",
+    "package-lock.json": "6e4781cc6f5ec7137b58fc824d148cf4398a2aa6bad71d0c46afd0ad05837e7f",
+    "package.json": "8f09aa318a92c0d21d258dc6de54913269b51b074450a85d135749cf05351d6d",
     "platforms/macos/Package.resolved": "5b5e7b222df13b8f50caf4f16a31cddc336aaffca1859dae1513e29eeeb0b71d",
     "platforms/macos/Package.swift": "180ad855bcc16e5c395ed3490b8f1d7be5fa552e20ecaac551220cdfe1d72948",
     "rust-toolchain.toml": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310",
-    "shells/vscode/package.json": "62533387ddcdd384963564af25c7675dc2991fd47e1b7c0a068252e67251112e",
+    "shells/vscode/package.json": "17b41a6d01b7a2efa2c8eb8586dd12691c6922959234e076487a2b9ed4ee05ce",
     "supply-chain/cargo-external-catalog.json": "708f2ea6ff273d76d81fee07213fc91d4a173392d1776f64ebfa969c467b42ff"
   },
   "platform_status": {

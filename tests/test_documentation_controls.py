@@ -11,6 +11,7 @@ from unittest.mock import patch
 from scripts.validate_docs import (
     CANONICAL_DOCS,
     DECISION_BOUNDARIES,
+    README_BOUNDARIES,
     ROOT as VALIDATOR_ROOT,
     check_accepted_decision_contract,
     check_claims,
@@ -108,7 +109,7 @@ class DocumentationControlTests(unittest.TestCase):
             for relative in CANONICAL_DOCS
         }
 
-        for boundary, patterns in DECISION_BOUNDARIES.items():
+        for boundary, patterns in README_BOUNDARIES.items():
             with self.subTest(boundary=boundary):
                 changed = dict(canonical)
                 mutated = changed["README.md"]
@@ -126,6 +127,17 @@ class DocumentationControlTests(unittest.TestCase):
                     ),
                     failures,
                 )
+
+    def test_original_boundaries_still_detect_drift_outside_the_readme(self) -> None:
+        canonical = {relative: (ROOT / relative).read_text() for relative in CANONICAL_DOCS}
+        for boundary, patterns in DECISION_BOUNDARIES.items():
+            with self.subTest(boundary=boundary):
+                changed = dict(canonical)
+                for pattern in patterns:
+                    changed["PRD.md"] = pattern.sub("REMOVED-BOUNDARY", changed["PRD.md"])
+                failures = []
+                check_accepted_decision_contract(failures, documents=changed)
+                self.assertTrue(any(item.startswith(f"PRD.md: {boundary} boundary") for item in failures))
 
     def test_local_link_check_rejects_missing_and_escaping_targets(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Snapshot-only coding contracts; no model or filesystem-effect claim.
 
 use agentmage_capability_repository_map::coding_proposal::{

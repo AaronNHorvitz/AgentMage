@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT OR Apache-2.0
 """Collect a fixed, single-turn text-proposal baseline through the local chat API.
 
 This measurement client is not the native coding agent. It runs no model text,

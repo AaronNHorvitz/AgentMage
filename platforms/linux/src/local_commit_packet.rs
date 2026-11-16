@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Dormant RSA/v4 signature assembly; no approval authority.
 //!
 //! Original implementation of the wire fields in RFC 4880 sections 3.2,

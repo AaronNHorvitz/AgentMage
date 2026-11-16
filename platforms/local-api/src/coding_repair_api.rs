@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! One explicitly disclosed failure-to-proposal request, never a second agent loop.
 
 use super::*;

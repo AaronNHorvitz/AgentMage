@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Endpoint terminal consent tests against a recording synthetic HTTP peer.
 use super::*;
 use agentmage_kernel_engine::runtime_coordinator::{

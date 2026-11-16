@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Synthetic normalized records/endpoint claims; no native execution or grade.
 use super::*;
 use crate::coding_verifier::{CodingCompletionCandidate, coding_completion_schema};

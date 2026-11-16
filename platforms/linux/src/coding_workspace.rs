@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Explicit source selection for the local coding API. Read consent alone
 //! confers no writes; separately approved changes use the native kernel driver.
 

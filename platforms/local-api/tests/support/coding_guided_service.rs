@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Executable consumers of the actual API. Upstream generation is synthetic;
 //! native ownership refusal is real. No successful native run is claimed.
 use super::*;

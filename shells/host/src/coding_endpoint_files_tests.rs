@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Real-descriptor and durable-authority components; no model score or native admission claim.
 
 use super::*;

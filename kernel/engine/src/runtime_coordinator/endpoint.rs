@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Static endpoint run admission. No native profile, dispatch, grant or loop.
 
 use super::*;

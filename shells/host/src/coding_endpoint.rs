@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Approved endpoint turns in the reusable coordinator, without another agent loop.
 //!
 //! The caller owns the original disclosure consent and trusted context source.

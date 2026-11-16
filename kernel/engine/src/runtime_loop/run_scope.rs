@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Borrowed, verified run scope for model-independent tool and verifier boundaries.
 
 use agentmage_kernel_contracts::{

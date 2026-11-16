@@ -450,7 +450,15 @@ def _validate_documents(
         if text is None:
             failures.append(f"missing status document input: {path}")
             continue
-        for marker in markers:
+        # Decision 0210 supersedes the old desktop/public-face wording only.
+        # Historical canonical documents still require the original markers.
+        selected_markers = ([
+            "Current product lifecycle: `scaffolded`.",
+            "Current enabled models: none.", "Current supported platforms: none.",
+            "T-303 and T-306 remain open.", "architecture/status-model.json",
+            "No candidate, hidden or held-out test ran", "T-310a",
+        ] if path == "README.md" else markers)
+        for marker in selected_markers:
             if marker not in text:
                 failures.append(f"{path} is missing current-status marker: {marker}")
 

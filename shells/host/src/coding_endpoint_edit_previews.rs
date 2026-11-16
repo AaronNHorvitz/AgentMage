@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Strict responses and exact approvals over ONE original live native owner.
 
 use std::sync::{Arc, Mutex};

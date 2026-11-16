@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Synthetic static run admission, not native tools or a coding score.
 
 use std::{cell::Cell, num::NonZeroU64, time::Duration};

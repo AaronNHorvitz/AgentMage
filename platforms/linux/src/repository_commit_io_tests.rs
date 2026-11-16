@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Real held roots and synthetic supervisor results, not native signer evidence.
 
 use super::*;

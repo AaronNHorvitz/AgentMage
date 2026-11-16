@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Run-bound endpoint context over already consented source snapshots.
 
 use std::collections::BTreeMap;

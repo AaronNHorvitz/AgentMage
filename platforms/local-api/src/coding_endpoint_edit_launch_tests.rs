@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Synthetic launch metadata and actual native refusal; no model/task score.
 use super::*;
 use crate::endpoint_launch_fixture as fixture;

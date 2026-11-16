@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Context boundaries and socket composition, using synthetic source/model/authority fixtures.
 
 use super::*;

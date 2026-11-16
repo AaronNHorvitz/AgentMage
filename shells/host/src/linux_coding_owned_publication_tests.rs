@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Component dispatch refusal, without fabricating a native worktree owner.
 
 use super::{RuntimePortFailure, with_owned_terminal_publication};

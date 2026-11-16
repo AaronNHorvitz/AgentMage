@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Exact read observations, never semantic approval of arbitrary coding tasks.
 
 use std::collections::BTreeSet;

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Synthetic accepted-turn/outcome framing; never a coding score or task proof.
 
 use agentmage_kernel_contracts::{

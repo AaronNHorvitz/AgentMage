@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Synthetic creation and endpoint provenance; actual original native writes.
 use super::*;
 use agentmage_kernel_engine::runtime_loop::{

@@ -293,8 +293,8 @@ def validate_contract(contract: Any, root: Path = ROOT) -> list[str]:
         failures.append("Cargo workspace edition must equal 2024")
     if workspace_package.get("rust-version") != "1.95.0":
         failures.append("Cargo rust-version must equal 1.95.0")
-    if workspace_package.get("license") != "Apache-2.0":
-        failures.append("Cargo workspace license must be Apache-2.0")
+    if workspace_package.get("license") != "MIT OR Apache-2.0":
+        failures.append("Cargo workspace license must be MIT OR Apache-2.0")
     if workspace_package.get("publish") is not False:
         failures.append("bootstrap Cargo packages must not be publishable")
 

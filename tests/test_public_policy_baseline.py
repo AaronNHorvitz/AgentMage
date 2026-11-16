@@ -10,41 +10,13 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class PublicPolicyBaselineTests(unittest.TestCase):
-    def test_apache_2_license_is_complete_pinned_and_consistent(self) -> None:
-        license_bytes = (ROOT / "LICENSE").read_bytes()
-        license_text = license_bytes.decode("utf-8")
-        package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
-
-        self.assertEqual(
-            hashlib.sha256(license_bytes).hexdigest(),
-            "3c0fe2e36ea4933e3fbf92bc2bac81ae05bc47800e85be7e1bb40ede19c5e5f7",
-        )
-        self.assertIn("Business Source License 1.1", license_text)
-        self.assertIn("Licensor:             Aaron N. Horvitz", license_text)
-        self.assertIn("Change Date:          2030-09-07", license_text)
-        self.assertIn("Change License:       Apache License, Version 2.0", license_text)
-        self.assertIn("Covenants of Licensor", license_text)
-        # Manifests carry the SPDX identifier until the next evidence batch (Decision 0051).
-        self.assertIn(package["license"], ("Apache-2.0", "BUSL-1.1"))
-
-        expected_references = {
-            "README.md": "[Business Source License 1.1](./LICENSE)",
-            "PRD.md": "| **License** | Business Source License 1.1 (Decision 0051)",
-            "NOTICE": "Business Source License 1.1",
-            "docs/decisions/0051-business-source-license.md": "Change Date 2030-09-07",
-            "IMPLEMENTATION-PLAN.md": "Apache-2.0 licensing",
-            "Agent-Scaffolding-Inventory.md": "Apache-2.0 license",
-            "TASKS.md": "Publish the Apache License 2.0",
-            "docs/decisions/0001-product-security-and-runtime-baseline.md": (
-                "distributed under the Apache License 2.0"
-            ),
-        }
-        for relative, expected in expected_references.items():
-            with self.subTest(document=relative):
-                self.assertIn(
-                    expected,
-                    (ROOT / relative).read_text(encoding="utf-8"),
-                )
+    def test_dual_licence_is_complete_pinned_and_consistent(self) -> None:
+        from scripts.license_policy import check
+        self.assertEqual(check(ROOT), [])
+        licence = (ROOT / "LICENSE").read_text()
+        self.assertIn("MIT OR Apache-2.0", licence)
+        self.assertIn("END OF TERMS AND CONDITIONS", licence)
+        self.assertIn("Permission is hereby granted", licence)
 
     def test_security_policy_covers_the_complete_public_response_lifecycle(self) -> None:
         policy = (ROOT / "SECURITY.md").read_text(encoding="utf-8")

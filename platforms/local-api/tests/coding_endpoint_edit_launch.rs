@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Actual executable refusals; native Git trust is preserved, never substituted.
 #[path = "support/endpoint_launch.rs"]
 mod fixture;

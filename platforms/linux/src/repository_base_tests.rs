@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT OR Apache-2.0
 //! Private parser tests and a real Git protocol fixture, not native admission.
 
 use super::*;
