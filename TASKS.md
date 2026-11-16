@@ -2,6 +2,21 @@
 
 ## Active queue: local agent mission
 
+The [inline-schema A4B repeat](docs/evidence/t303-inline-schema-a4b-2026-11-16.md)
+finishes all 30 frozen development tasks: 19/30 strict ungraded proposals.
+Task passes and retries remain unavailable; no candidate, hidden or held-out
+test ran. Audit, wire/context comparison, original-helper reproduction and
+cleanup pass. The earlier checkpoints are included, never added. Five other
+profile repeats must finish before tuning or new capabilities. T-303/T-306
+remain open; no row is added or closed. Independent core review is required.
+
+The retained [independent checkpoint review](docs/reviews/5b72d1d43cf7-inline-schema-a4b-checkpoint22.txt)
+returns **Verdict: PASS** for exact
+`5b72d1d43cf789b5477a8fe27d72bba3b73a9818`, with no high or medium finding.
+Its low priority-wording finding is corrected in the earlier evidence; the new
+verifier authenticates all 28 carried first-pair files against their prior sealed
+manifest, addressing its low coverage finding. No row closes.
+
 The [inline-schema A4B checkpoint](docs/evidence/t303-inline-schema-a4b-checkpoint22-2026-11-16.md)
 records 22/30 attempted, with thirteen strict ungraded proposals. Task passes and
 retries remain unavailable; no candidate, hidden or held-out test ran. Read-only

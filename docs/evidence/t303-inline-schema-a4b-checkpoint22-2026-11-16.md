@@ -68,13 +68,14 @@ Eleven completed two-task jobs used both shared wrappers, a 900-second execution
 cap after GPU admission, host-provided low build priority and nice 19 within
 16 GiB/four CPUs. Both slots are released between jobs, with 30-second pauses.
 The first resumed controller skipped the old pair and completed three pairs.
+It was stopped for a planned relaunch at the wrapper's default (high) priority.
 Its existing stop handler let the queued pair finish and exited 1 at the released
 pause. No child/model was signalled. The second verified the eight saved attempts
 and their cleanup, skipped them and completed seven more pairs without replay.
 
-A proposed normal-priority resume was refused by preflight before any process
-or task: the host explicitly sets low priority. The initial worker-only
-interpretation was wrong. Both method versions and the correction receipt are
+That proposed resume at the wrapper's default (high) priority was refused by
+preflight before any process or task: the host explicitly sets low priority.
+The initial worker-only interpretation was wrong. Both method versions and the correction receipt are
 retained. Actual queue priority, limits, source and generation inputs never changed.
 
 The final pair remained queued for a shared build slot for over fifty minutes,

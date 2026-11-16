@@ -2534,3 +2534,32 @@ and both wrappers stayed fixed. Read-only audit and retained-artifact verificati
 pass; independent checker reproduction is not rerun. Eight A4B tasks and five
 full profile repeats remain before tuning or new capabilities. T-303/T-306 remain
 open; independent core review is required. See [checkpoint evidence](t303-inline-schema-a4b-checkpoint22-2026-11-16.md).
+
+## Inline-schema A4B full development repeat — 2026-11-15–16 UTC
+
+| Date | Source commit | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU reserved work min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-15–16 | 72c002a42957340de0b6fa0eb4d48385db2c7e62 | gemma4-26b-a4b (30/30) | 32768 / 23002–29511 | Unavailable | Unavailable | 19/30 | Not run | 1201.878 | 30.189 | 215953 / 94310 (30/30 counters) |
+
+Changed variable: trusted named inline `json_schema` request with `strict: true`.
+Contexts/messages, helper, prompts, strict checker, model/profile, framing,
+thinking request, deadlines and output formula match the preceding repeat.
+Input 3225–9734; does not fit: 0. Causes:
+`{"generation-refused:complete:length": 1, "strict-edit-refused:code.proposal.edit": 10, "ungraded-proposal": 19}`. Capture counts:
+`{"complete-choice-json": 30}`; reasoning metadata:
+`{"unavailable": 30}`. Missing metadata is not zero.
+
+These are generation/checker outcomes, not task passes. Native admission and
+original grading controls still block effects, tests, feedback and retries;
+no candidate, hidden or held-out test ran. Prior 2/30 and 22/30 counts are included,
+never added. Five other full profiles remain before tuning or capability work.
+
+Reserved-work timers total 1811.358 seconds after frozen-input validation,
+excluding queues, wrapper/pre-entry overhead and released pauses. GPU kernel
+time and continuous elapsed time remain unmeasured. The earlier zero-task startup
+failure adds 189.866 seconds / 3.164 minutes; combined reserved work
+is 2001.224 seconds / 33.354 minutes. No task or retry is
+added for that failure. Both wrappers release between pairs; resource limits and
+host low priority remain fixed. Audit, wire/context comparison, original-helper
+reproduction and cleanup pass. T-303/T-306 remain open; independent core review
+is required. See [full evidence](t303-inline-schema-a4b-2026-11-16.md).

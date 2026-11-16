@@ -1,0 +1,170 @@
+Commit: 5b72d1d43cf789b5477a8fe27d72bba3b73a9818
+Scope: inline-schema-a4b-checkpoint22
+
+# Independent review: inline-schema A4B checkpoint, 22/30 (T-303, related T-306; non-closing)
+
+Reviewer: independent Claude Opus 5.5 session (extra-high effort), read-only, using the pinned checkout
+`/lane/review-checkout`. Tier: core. I judged only commit `5b72d1d4…` against base `ac1c3020…`, with
+measured source `72c002a4…`. I launched no model, repeated no attempt, ran no candidate, hidden or
+held-out test, ran no captured API or helper binary, and reconstructed no grading control. I did not
+modify the repository. Private host paths are written as `<home>`/`<repo>`. `/lane/...`, `/tools/...`
+and `/tmp/...` are names inside the sandbox.
+
+## Methods, exact commands and results
+
+1. Commit identity and scope (in `/lane/review-checkout`)
+   - `git rev-parse HEAD` gives `5b72d1d43cf789b5477a8fe27d72bba3b73a9818`. `git rev-parse HEAD^` gives
+     `ac1c302011716226f4e50b2467fb1fb6c6ddae96`. `git diff --check ac1c3020…` gives rc 0.
+     `git status --porcelain` prints nothing, so the tree is clean.
+   - `git diff --stat ac1c3020…` lists exactly 4 paths and 357 insertions, with no deletions:
+     `TASKS.md` (+15), `docs/evidence/coding-scoreboard.md` (+29), the new
+     `docs/evidence/t303-inline-schema-a4b-checkpoint22-2026-11-16.md` (+120) and
+     `docs/reviews/ac1c30201171-trusted-inline-output-schema.txt` (+193).
+   - `git diff --name-only 72c002a4… HEAD | grep -vE '^(TASKS.md|docs/)'` prints nothing. So no source,
+     prompt, task, threshold, permission, profile or supply-chain file has changed since the measured
+     source.
+   - I checked preservation myself in Python, reading Git blobs. The 507 `|` table lines in `TASKS.md` are
+     byte-identical between base and HEAD. The HEAD scoreboard starts with the exact base scoreboard bytes.
+     The SHA-256 values of the four committed blobs (`4e8a1c10…`, `23eeef5d…`, `fe94cc72…`, `4c3a953f…`)
+     equal those in capsule `measurement/preservation.json` and in the post-commit receipt.
+   - `cmp docs/reviews/ac1c30201171-trusted-inline-output-schema.txt /lane/reviews/ac1c30201171-trusted-inline-output-schema.md`
+     gives rc 0, so the retained review is verbatim. That review records PASS with no high or medium
+     finding and closes no row. Its two low findings (oversized-schema diagnostics and the missing
+     source-to-binary build receipt) are carried to T-309 backlog, and the new prose says so.
+
+2. Capsule identity and the retained verifier
+   - `sha256sum` gives `8d15ac67…a5fdd` for `bindings.json` and `a77aaa0f…e8d2b` for `manifest.json`;
+     both are as requested. `bindings.json` records 2719 files, source `72c002a4…`, and
+     `candidate_execution` and `held_out` both false.
+   - Before running `verify_measurement.py` I read all of it. It only reads and hashes files: it imports
+     no captured module, runs no captured binary and extracts nothing. Its only subprocesses are
+     `git diff`/`git show` on the pinned checkout. It requires the file set on disk to equal the
+     manifest exactly, and it refuses absolute or `..` names, symlinks, token, key or socket names and
+     `.gguf` files.
+   - `python3 -B /lane/reviews/inline-schema-a4b-checkpoint22-20261116/verify_measurement.py` prints
+     `PASS`, rc 0. It reports 2719 files verified, 2283 repository and 26 private inputs, 22 tasks,
+     8 pending, 30 frozen tasks and `checker_reexecution: false`. The causes are
+     `ungraded-proposal` 13 and `strict-edit-refused:code.proposal.edit` 9. Tokens are 159313 in and
+     52532 out, with counters on 22/22. Request/check time is `755.9530396499904` s and reserved time is
+     `1175.638575051009` s. Candidate and hidden-test execution are both false.
+
+3. My own recomputation from the retained raw files, beyond the verifier
+   - I read `measurement/audit.json` development rows. Preflight input ranges 3225–9734, and the output
+     budget ranges 23002–29511. Both match `32768 − n − 32`: 32768−3225−32 = 29511 and
+     32768−9734−32 = 23002. Cause counts are 13 and 9, with no format refusal and no task that does not
+     fit. The input and output token sums are 159313 and 52532.
+   - The total GPU peaks sampled across the 11 batch reports range from 19323 to 20091 MiB, as
+     published.
+   - The prior zero-task startup failure, `prior-checkpoint/failed-preparation-report.json`, has status
+     `failed` and reserved time 189.86591242800932 s. Its 0 task attempts are confirmed by
+     `short-path-correction.json`, which the verifier binds. Adding the 22-attempt total gives
+     1365.5044874790183 s, or 22.7584 min. The 22-attempt total alone is 19.5940 min. All of these
+     match the prose.
+   - **"Included, never added":** `prior-checkpoint/capsule-bindings.json` (`b19883b2…`) and
+     `capsule-manifest.json` are byte-identical to the earlier sealed capsule
+     `/lane/reviews/inline-schema-20261115/`. Every one of the 28 files in capsule
+     `measurement/gemma4-26b-a4b-00/` matches a hash in that earlier sealed manifest; none is missing
+     and none differs. This includes `batch-report.json`, which is the old
+     `measurement/batch-report.json` with reserved time 102.46154281000781 s. Pair 00 was therefore
+     carried over and not replayed. `prior-pair-report.json` differs from it because it is the older
+     `json_object` repeat report (source `a896f055…`), used only to compare the model and runtime. It
+     is not the 2/30 pair.
+   - Server flags in the profile and batch settings match the prose: ctx 32768, temp 0, seed 42,
+     4 threads, q8_0 K/V caches, batch 256, ubatch 128, `--chat-template-kwargs {}`, 300000 ms
+     idle/total timeouts, `thinking_mode: disabled`, `response_mode: complete`. The helper hash in the
+     manifest is `852cd7f5…`, the API hash in the batch reports is `f13a12ca…`, and the freeze hash in
+     `launch*.json` is `a92430c6…`. All are as published.
+   - `grep -rlaiE 'authorization:|bearer [A-Za-z0-9]'` over `measurement/` finds nothing. No `*.token`,
+     `api-key` or `*.sock` file is retained. `cleanup.json` lists 20 retired token files, two for each of
+     pairs 02–20. It records 11 settings revocations, 11 API reaps and 11 jobs with model keys and
+     sockets absent. Its matching-process list is empty, and it covers this PID namespace only.
+
+4. Operations: queue stop, priority correction and controller exits
+   - `queue-wait-observation.json` gives queue-log mtime `2026-11-16T02:11:50.321361+00:00` and stop time
+     `03:03:09.614514+00:00`, which is 3079.293153 s or 51.32 min. Its stop-receipt, queue-log and method
+     hashes are bound by the verifier. The queue log is one line, `Waiting … (2 slot(s), priority low)`.
+   - `queued-pair22-stop.json` records `queued_only`, 0 new attempts, no pair-22 directory beforehand and
+     no other worker signalled. It lists the verified group members: controller 11681, the
+     `build-slot → gpu-slot queue-run agentmage 900 … batch.py gemma4-26b-a4b 22` wrapper 31869 and
+     `sleep 1`. I read `/tools/build-slot`; the retained copy has the same SHA-256, `8103a2d0…`. Its slot
+     locks are `flock` descriptors, and a low-priority caller creates no waiter marker. Terminating a
+     queued low-priority waiter therefore leaves no stale lock that could block other lanes.
+   - `controller.log` shows completed 4, 6 and 8; `controller2.log` shows completed 10 through 22 and then
+     `AssertionError: job failed: gemma4-26b-a4b 22`. Both `controller-exit*.json` files give exit 1. The
+     prose correctly calls this a queued cancellation, not success, a task failure or a retry.
+   - `graceful-scheduling-handoff.json` records a SIGTERM to the first controller (pid 262) through its
+     existing stop handler, with no child or model signalled, intended for resumption at
+     `"next_build_priority": "high (wrapper default)"`. `host-priority-correction.json` then records
+     `preflight-refused-before-launch` with no controller launched, 0 attempts and no change to the
+     actual queue priority. `diff launch2-before-host-priority.py launch2.py` shows the only change is
+     the assertion: `BUILD_SLOT_PRIORITY` absent became `=='low'`. Both `launch.json` and `launch2.json`
+     record priority `low`, nice 19 and identical scope limits (`cpu.max 400000 100000`, memory.max
+     16 GiB). The pair-22 queue log confirms the priority was low. No resource raise took effect. The
+     wording is noted as L1 below.
+
+5. Lint and reporting gate
+   - `/lane/reviews/42612ca9787f-a4b-node --version` gives v24.15.0, and its SHA-256 is
+     `d1de76d8…bd932c` as stated. Running it on `…/measurement/lint.mjs` from the checkout prints
+     `PASS`, with 0 lint issues in each of the 3 files and rendered tables `{scoreboard: 1, evidence: 1}`.
+     The rule overrides in `lint.mjs` (MD013, MD022, MD024 and MD060 off) equal the repository's
+     `.markdownlint-cli2.jsonc`.
+   - I created `/tmp/agentmage-schema-cp22-review-bin/node`, linked to the node binary above, and ran
+     `PATH=/tmp/agentmage-schema-cp22-review-bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target python3 -B scripts/local_agent_fast_gate.py --base ac1c302011716226f4e50b2467fb1fb6c6ddae96 --timeout 3600`.
+     It gives rc 0 and `FAST GATE: PASS`, with diff check, untracked lint and review lint each rc 0. The
+     CLI reported `Linting: 3 files … 0 issues`. This reporting-only gate built no Rust and took about
+     2 s, so I did not put it under the build slot. I did not rerun the full source gate; the prose
+     repeats the retained FAIL count (1169/53/19) and makes no green claim.
+
+6. Post-commit receipt
+   - `sha256sum …-post-commit.json` gives `7abfd5d5…72ae` as requested. Its commit, base, bindings hash
+     and four blob hashes match what I computed in step 1. Its method hash, `bbf5b327…`, equals the
+     manifest entry for `measurement/postcommit.py`.
+
+7. Prose, privacy and policy
+   - I scanned the added lines and both new files for `/home`, `/var/home`, the host username, the
+     hostname, e-mail patterns and the names of private sibling projects, and found nothing. The
+     retained review uses `<home>`/`<repo>` placeholders. The capsule's profile files and
+     `/tools/build-slot` do contain private home paths and a private lane name, but none of that reaches
+     a committed file. The model identifier `gemma4-26b-a4b` is used as a measurement label, as in 54
+     existing scoreboard lines, not as branding. No other agent product is named or compared.
+   - Honest claims: "unavailable" passes, "not run" held-out, no task-quality claim, absent reasoning
+     metadata stated as unavailable rather than zero, no checker re-execution, no global-idle claim, the
+     unavailable wrapper status for the earlier manual pair, and no row closed or added. All of these are
+     stated and match the receipts.
+   - MEASURE FIRST: a new scoreboard section and row trace to the capsule. The context and output budgets
+     are stated, and does-not-fit (0) is counted apart from refusals. The order of work is unchanged:
+     eight tasks and five profiles remain before tuning or capabilities, and Git work stays inside T-306.
+     No new sub-row exists.
+   - Evaluation integrity: the commit is documentation only. The prose names no held-out task content,
+     and `policy.json` records held-out as "not loaded or executed". The source and task bindings
+     (2283/26) are verified and never narrowed, and the frozen corpus remains 30. No confinement or
+     permission surface changed in this commit, so no new escape attempt applies.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog, wording)** — `docs/evidence/t303-inline-schema-a4b-checkpoint22-2026-11-16.md:71-78`.
+  The prose calls the refused resume "normal-priority" and presents the first controller's stop only
+  as its existing stop handler running. The retained receipts (`graceful-scheduling-handoff.json`,
+  `launch2-before-host-priority.py`) record that this stop was a handoff to relaunch at
+  `"high (wrapper default)"` priority, and the shared wrapper's default is `high`. Nothing changed
+  because of it: actual priority stayed `low`, nice 19, with the same limits, and the receipts are
+  retained. Fix in a later reporting increment: write "the wrapper's default (high) priority" and say
+  that the first controller was stopped for that planned relaunch.
+- **L2 (low, backlog, verifier coverage)** — `verify_measurement.py:61`. "Included, never added" for pair 00
+  rests only on `launch.json['completed_pairs_skipped']==[0]`. The verifier does not itself bind the 28
+  `measurement/gemma4-26b-a4b-00/` files to the earlier sealed capsule manifest. I confirmed the binding
+  by hand (28/28 equal, step 3). Fix in future capsules: assert each carried-over file's hash against
+  the prior sealed manifest.
+
+## Per-row result
+
+- T-303 (related T-306), inline-schema A4B 22/30 checkpoint, reporting-only: **accepted as a
+  non-closing measurement checkpoint.** Every published number traces to retained raw files, both
+  independently and through the retained verifier. The two-attempt prefix is carried over, not
+  replayed. The queued stop affected only the builder's own processes and raised no priority. The
+  public text is clean. No row closes: 8 A4B tasks and 5 full profiles (158 attempts) remain, task
+  passes are unavailable, and the full source gate remains FAIL as inherited.
+
+Verdict: PASS
