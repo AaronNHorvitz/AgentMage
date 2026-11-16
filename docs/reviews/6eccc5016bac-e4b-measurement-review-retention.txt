@@ -1,0 +1,196 @@
+Commit: 6eccc5016bac278b9aedf27c3642f828b86bf525
+Scope: e4b-measurement-review-retention
+
+Reviewer: independent session (Claude Opus 5.5, extra-high effort). Read-only access to the
+repository; pinned checkout `/lane/review-checkout`. I launched no model, used no GPU, executed no
+candidate, hidden or held-out test, ran no captured helper or API binary, and imported no captured
+module. My only scratch writes were under `/tmp` and this file. `git status --porcelain` was empty
+before and after all my runs.
+
+## Methods, commands and results
+
+1. Commit identity, scope and hunks
+   - `git rev-parse HEAD` gives `6eccc5016bac278b9aedf27c3642f828b86bf525`. `git rev-parse HEAD^`
+     gives `630c211b59f1e2c64b8d03234d6135ced59010ed`. `git diff --check 630c211b…` returns rc 0.
+   - `git diff --stat <base>` lists exactly two paths, with 218 insertions and 0 deletions:
+     - `TASKS.md`: +17;
+     - `docs/reviews/630c211b59f1-inline-schema-e4b-development-measurement.txt`: +201, new.
+   - I read every hunk.
+     - TASKS.md has two prose notes inserted directly under `## Active queue: local agent mission`:
+       first the queue cancellation note, then the retained-verdict note. Nothing else changes.
+     - The 507 `|` table lines are byte-identical to the base (`diff` of the `^|` lines is empty).
+     - `docs/evidence/coding-scoreboard.md` is byte-identical to the base (`cmp`).
+   - `cmp` of the committed review against
+     `/lane/reviews/630c211b59f1-inline-schema-e4b-development-measurement.md` returns 0.
+     - It begins `Commit: 630c211b…` / `Scope: inline-schema-e4b-development-measurement`.
+     - It says "No critical, high or medium findings", has low L1/L2 only, accepts the 2/30
+       checkpoint without closing a row, and ends `Verdict: PASS`.
+     - The TASKS note describes L1 (rescan the stopped process group) and L2 (retain the check
+       invocation) accurately and puts both in the T-309 backlog.
+   - Commit message: the repository's usual author identity, Co-Authored-By trailer, no other
+     private content. Commit time 2026-11-15T23:39:38-06:00 (05:39 UTC on 2026-11-16) agrees with
+     the capsule receipts.
+
+2. Capsule verification
+   - `sha256sum bindings.json` = `cb3368c5…92ea5`. The manifest = `c923caa3…bd4f3c`. There are 32
+     manifest files plus `manifest.json` and `bindings.json`, with no symlinks. All values match the
+     request.
+   - `python3 -B /lane/reviews/e4b-review-retention-20261116/verify.py` → `status PASS`, 32 files,
+     507 ledger lines unchanged, scoreboard unchanged, 0 new attempts, 0 GPU entries,
+     `queued_seconds 1740.8609953630075`, rc 0.
+   - I read the verifier in full. It reads and hashes files and calls only `git show <base>:TASKS.md`.
+     It imports no captured module. It asserts:
+     - the on-disk file set equals the manifest;
+     - the controller equals the original with exactly one replaced line;
+     - the stop receipt is bound to the stop method's hash;
+     - the first-pair files equal the prior-prefix manifest;
+     - TASKS.md is exactly the base with the two complete notes inserted at the heading.
+   - Post-commit receipt: `sha256sum` = `15406249…c012a`, as requested. Its committed content
+     hashes (`9c16c940…5618`, `98f531b5…da89`) equal my own `sha256sum` of the checkout files, equal
+     `checks.json.file_sha256`, and the `public/` copies in the capsule are `cmp`-identical. Its
+     `postcommit_method_sha256` (`86c2eb47…`) equals the retained `postcommit.py`.
+
+3. Independent queue and outcome derivation, from receipts and method source
+   - Launch:
+     - `launch.json` records head `630c211b…` (the clean pre-commit base), source `72c002a4…`, pid
+       274, nice 19 and priority low.
+     - It records memory.max 17179869184 (16 GiB) and cpu.max `400000 100000` (4 CPUs), with
+       launch time 05:10:02.84 UTC.
+     - `launch.py` authenticates the prior capsule (`31493ff7…`), the freeze (`a92430c6…`), all 2283
+       repository inputs (in the cwd) and all 26 private inputs. It also checks:
+       - the 00 pair is completed and revoked, with no socket or key and no token;
+       - the earlier resume's controller and receipts equal the prior manifest;
+       - no owner argv is in `/proc`, there is no STOP file and the tree is clean;
+       - `BUILD_SLOT_PRIORITY=low` and the cgroup limits are set.
+     - `/proc` stat field 19 is asserted to be 19 (`stat[16]` after the comm split is correct).
+   - Controller:
+     - `diff original-controller.py controller.py` shows only line 27, the reservation-log parent.
+     - `original-controller.py` = `4d3f3e42…` = prior capsule `private/input-003`.
+     - The controller skips any pair with a completed report and refuses partial directories, so
+       pair 00 was not replayed.
+   - Queue state at the stop:
+     - `gemma4-e4b-02-reservation.log` is exactly the single build-slot line `Waiting for a shared
+       heavy-build/test reservation (2 slot(s), priority low)...`. There is no gpu-slot output.
+     - `checkpoint-stop.json.signalled_own_session` lists only three processes, all with
+       sid = pgid = 274:
+       - pid 274, the controller, whose argv and start ticks match the launch;
+       - pid 275, the `bash /tools/build-slot bash /tools/gpu-slot … gemma4-e4b 2` wrapper;
+       - pid 4906, `sleep 1`, the build-slot poll.
+     - No `gpu-slot` or `batch.py` process exists in the group, so neither the GPU reservation nor
+       the task was entered.
+   - Queue time:
+     - Wrapper start ticks 12564489 against the poll child's 12738538 gives ≥ 1740.49 s.
+     - Launch at 05:10:02.84 against `killpg` at 05:39:03.67 gives 1740.83 s.
+     - Both agree with the recorded 1740.861 s within clock granularity. 1740.861/60 = 29.014 min,
+       which is the TASKS text.
+     - `/tools/build-slot` sets `BUILD_SLOT_LOW_MAX_WAIT` to 1200 s by default: after twenty
+       minutes a low-priority caller stops yielding. "Past the twenty-minute low-priority
+       threshold" is factual.
+     - Low callers create no waiter marker, so the cancellation leaves no stale shared state.
+   - Stop method (`stop_checkpoint.py`, `30eabe61…`, equals the receipt's `method_sha256`):
+     - It verifies controller identity, the completed-prefix reports, the absence of the next pair
+       directory and the unchanged log.
+     - It accepts only own-session members with argv[0] in python3/bash/sleep/flock, and exactly
+       one wrapper ending `gemma4-e4b 2`.
+     - It sends one `killpg(274, SIGTERM)`. It then really rescans: `after=group(p['pgid'])`
+       iterates `/proc` inside the wait loop and again after it.
+     - It asserts the group is empty, writes the observed `after` list (`[]`) and re-asserts the
+       absence of the directory and the unchanged log.
+     - This fixes the prior L1 from now on. The earlier sealed receipt is not rewritten.
+   - Exit: `controller-exit.json` gives exit 1, pid 274, matching start ticks and the launch hash.
+     `controller.log` is just the `job failed: gemma4-e4b 2` traceback, the expected result of the
+     wrapper exiting non-zero after SIGTERM. It has no progress line, because no pair completed in
+     this run. Queue time is recorded as resource contention, not as a model failure. No scoreboard
+     line is added.
+   - Check invocation (prior L2):
+     - `invoke_check.py` runs `check.py` directly (`wrapped: false`) and records argv, rc 0, the
+       method hash `79119a7f…`, the invoker hash `246c9e5d…` and the log hash `86ade8ec…`. All three
+       hashes match the retained files.
+     - `check.log` is the stdout summary of `checks.json` without the per-file map, as the code
+       prints it.
+     - It ran at 05:39:12, after the stop.
+   - `check.py` asserts:
+     - the exact two paths and the frozen bindings;
+     - that the first-pair files equal both the prior manifest and `launch.json`;
+     - no owner argv in `/proc`, unchanged ledger rows and a byte-identical scoreboard;
+     - the verbatim review and that each writing-method note appears exactly once;
+     - prose hygiene.
+
+4. Prose reproduction
+   - I copied `git show 630c211b:TASKS.md`, `retain_review.py`, `write_queue_note.py` and
+     `checkpoint-stop.json` into `/tmp`. I ran `retain_review.py` and then `write_queue_note.py`
+     (the order implied by both inserting at the heading).
+   - The resulting `TASKS.md`, the review copy, `review-retention.json` and `queue-note.json` are all
+     `cmp`-identical to the committed and retained files. The final public prose is fully
+     reproducible from the retained methods, with no unrecorded edit.
+
+5. Preservation and source freeze
+   - The prior-prefix capsule `bindings.json` = `31493ff7…7280c` and its manifest = `80ba55b7…`. Both
+     are `cmp`-identical to the retained `prior-prefix-*`.
+   - `python3 -B /lane/reviews/inline-schema-e4b-20261116/verify_measurement.py` (read and hash
+     only) → PASS:
+     - 2400 files, 2283/26 inputs and 2 tasks;
+     - 1 strict ungraded proposal, causes unchanged, tokens 19062/4081;
+     - no candidate or hidden execution.
+   - `queue/frozen-inputs-v2.json` = `a92430c6…`, the same as the prior manifest entry. All 2283
+     repository entries match both `git cat-file blob 72c002a4:<path>` and the checkout (0 and 0
+     mismatches). No path changed between `72c002a4` and HEAD is a frozen input; all are under
+     TASKS/docs. `/lane/state` is not visible to me, so I judge the 26 private inputs through the
+     bindings, as in earlier reviews.
+   - `package.py` refuses to overwrite and to copy symlinks, tokens, keys, sockets or `.gguf` files,
+     and re-hashes every copy. `postcommit.py` and `request_review.py` derive the receipt and the
+     request from the commit and `checks.json`. Their output matches what I received.
+
+6. Lint and reporting gate
+   - `sha256sum /lane/reviews/42612ca9787f-a4b-node` = `d1de76d8…bd932c`. Running it on `lint.mjs`
+     gives `{"status":"PASS","files":{"TASKS.md":0}}`.
+   - `PATH=/tmp/agentmage-e4b-retention-review-bin:$PATH python3 -B scripts/local_agent_fast_gate.py --base 630c211b59f1e2c64b8d03234d6135ced59010ed --timeout 3600`
+     → diff check, untracked lint and review lint each exit 0, and markdownlint-cli2 reports 0
+     issues. Result: `FAST GATE: PASS`, rc 0.
+   - The full source gate was not rerun. This increment changes no source, so the inherited
+     FAIL 1169/53/19 stands, and no overall-green claim is made.
+
+7. Mission checks
+   - Hygiene: the added lines contain no home path, username, hostname, e-mail, credential,
+     private sibling-project name, trademark branding or other-agent-product comparison. My grep
+     hits are only "token(s)/keys" in the retained review's technical text and its own checklist
+     word "hostname".
+   - Evaluation integrity: no source, prompt, checker, suite, policy, profile or threshold change.
+     No held-out or hidden test ran, nothing was tuned and no score was added.
+   - MEASURE FIRST:
+     - No new batch changes what the model sees, how edits are applied or how tests run, so no new
+       line is required.
+     - The latest line, the 2026-11-16 E4B checkpoint, is the same UTC day.
+     - The queued time is kept apart from model failures. The 28 pending E4B tasks and the four
+       other profiles are stated as preceding tuning.
+   - Rows: no row is added, ticked, split or closed. T-303/T-306 stay open. There is no
+     qualification, release or owner-ready claim.
+   - Owner planning notes (one runtime, memory linking) were already recorded in earlier commits.
+     This commit does not touch the plan or the order of work.
+
+## Findings
+
+No critical, high or medium findings.
+
+- L1 (low, backlog T-309): the verifier does not itself check the post-stop rescan.
+  - Location: `/lane/reviews/e4b-review-retention-20261116/verify.py`, the `process_group_rescanned`
+    output and the `post_stop_scan` assertion.
+  - Problem: it reports `process_group_rescanned: True` as a literal and checks only the
+    `post_stop_scan` label prefix plus `matching_processes_after == []`. The real evidence is the
+    hash-bound `stop_checkpoint.py` source, which I read and which does rescan. The rescan is also
+    by pgid only, so a descendant that had called `setsid`/`setpgid` would not be seen. No such
+    process could exist here, because neither gpu-slot nor batch was entered.
+  - Fix: have the verifier assert that the bound stop source contains the post-loop
+    `group(p['pgid'])` rescan, or record the rescan's scanned-PID count. For future stops, also
+    rescan by `sid`.
+
+## Per-row result
+
+- T-303 (related T-306): this non-closing reporting increment is **accepted**.
+  - The verbatim retention of the 630c211b PASS and the T-309 backlog notes for its two low
+    findings are correct.
+  - The zero-attempt E4B resume, cancelled in the shared build queue after 1740.861 s with no GPU
+    or task entry, is traceable to raw receipts and honestly labelled as no new measurement.
+  - No row closes; T-303 and T-306 remain open.
+
+Verdict: PASS

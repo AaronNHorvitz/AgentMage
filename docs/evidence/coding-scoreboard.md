@@ -2593,3 +2593,34 @@ open; independent core review is required. See [evidence](t303-inline-schema-e4b
 The next pair was cancelled while waiting for shared build capacity, before GPU
 entry or any further attempt. The completed prefix is 2/30; 28 E4B tasks remain
 unattempted. Queue cancellation adds no model failure or retry.
+
+## Inline-schema E4B resumed development repeat — 2026-11-16 UTC
+
+| Date | Source commit | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU reserved work min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-16 | 72c002a42957340de0b6fa0eb4d48385db2c7e62 | gemma4-e4b (4/30; 26 pending) | 32768 / 23174–29515 | Unavailable | Unavailable | 3/4 | Not run | 156.464 | 3.064 | 27033 / 12342 (4/4 counters) |
+
+Changed variable: trusted named inline `json_schema` request with `strict: true`.
+Contexts/messages, model/profile, runtime, helper, prompts, strict checker,
+complete framing, requested thinking option, deadlines and output formula match
+the preceding repeat. Input 3221–9562; does not fit: 0.
+Causes: `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 3}`. Captures:
+`{"complete-choice-json": 4}`; reasoning metadata:
+`{"unavailable": 4}`. Missing metadata is not zero.
+
+These are generation/checker outcomes. Task passes and retries remain unavailable:
+native admission and original grading controls still block effects, tests,
+feedback and retries. No candidate, hidden or held-out test ran.
+The remaining 26 E4B tasks and four other full profiles (120 attempts) remain before tuning or capability work.
+These cumulative totals include the earlier two attempts; checkpoints are never added.
+
+Reserved-work timers total 183.857 seconds after frozen-input validation,
+excluding queues, wrapper/pre-entry overhead and released pauses. GPU kernel time
+and continuous elapsed time remain unmeasured. Both wrappers release between
+two-task jobs; resource limits and host low priority remain fixed. Audit,
+comparison, original-helper reproduction and cleanup pass. T-303/T-306 remain
+open; independent core review is required. See [evidence](t303-inline-schema-e4b-resumed-2026-11-16.md).
+
+The next pair was cancelled while queued for independent checkpoint review,
+before GPU entry or any further task. Its queue time is excluded from model
+work; it adds no model failure or retry. The 26 pending tasks stay unattempted.

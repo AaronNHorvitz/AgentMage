@@ -2,6 +2,22 @@
 
 ## Active queue: local agent mission
 
+The [inline-schema E4B repeat](docs/evidence/t303-inline-schema-e4b-resumed-2026-11-16.md)
+records 4/30 frozen development attempts: 3/4 strict ungraded proposals.
+Task passes and retries remain unavailable; no candidate, hidden or held-out
+test ran. Source/outcome audit, comparison, original-helper reproduction and
+cleanup pass. The remaining 26 E4B tasks and four other full profiles (120 attempts) remain before tuning or
+new capabilities. T-303/T-306 stay open; no row is added or closed.
+This reporting increment requires independent core review.
+
+The retained [independent E4B reporting review](docs/reviews/6eccc5016bac-e4b-measurement-review-retention.txt)
+returns **Verdict: PASS** for exact
+`6eccc5016bac278b9aedf27c3642f828b86bf525`, with no high or medium finding.
+It accepts reporting only and closes no row. Its low L1 joins the T-309 backlog:
+bind the process-rescan check to the retained stop method, and check the exact
+session as well as its process group on future queued stops. Prior sealed
+artifacts and measured counts stay unchanged. T-303/T-306 remain open.
+
 The next E4B measurement resume remained in the shared build queue for
 1740.861 seconds (29.014 minutes), past the scheduler's twenty-minute
 low-priority threshold, and was cancelled before GPU entry or a new attempt.
