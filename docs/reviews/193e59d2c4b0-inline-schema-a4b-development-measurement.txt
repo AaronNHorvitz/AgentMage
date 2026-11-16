@@ -1,0 +1,222 @@
+Commit: 193e59d2c4b00d009269ba43b5c8d95fd2165ee7
+Scope: inline-schema-a4b-development-measurement
+
+Reviewer: independent Claude Opus 5.5 session (extra-high effort), read-only, working in the pinned
+checkout `/lane/review-checkout`. Row: T-303 (related T-306), non-closing full-profile measurement,
+reporting only. Tier: core. Base `5b72d1d43cf789b5477a8fe27d72bba3b73a9818`; measured source
+`72c002a42957340de0b6fa0eb4d48385db2c7e62`. I judged only this commit. I launched no model, repeated
+no attempt, executed no candidate, hidden or held-out test, ran no captured API/helper binary and
+reconstructed no grading control. I did not modify the repository. `/lane/state` (other than
+`review-target` and `tmp`) is not visible in this sandbox, so builder-side state is judged only through
+the retained receipts.
+
+## Methods, commands and results
+
+1. Commit identity and scope
+   - `git rev-parse HEAD` gives `193e59d2c4b00d009269ba43b5c8d95fd2165ee7`. `git rev-parse HEAD^` gives
+     `5b72d1d43cf789b5477a8fe27d72bba3b73a9818`. `git diff --check <base>` returns rc 0, and
+     `git status --porcelain` prints nothing.
+   - `git diff --name-status <base>` lists exactly five paths: M `TASKS.md`, M
+     `docs/evidence/coding-scoreboard.md`, A `docs/evidence/t303-inline-schema-a4b-2026-11-16.md`, M
+     `docs/evidence/t303-inline-schema-a4b-checkpoint22-2026-11-16.md`, A
+     `docs/reviews/5b72d1d43cf7-inline-schema-a4b-checkpoint22.txt`. I read every hunk.
+   - `git diff --name-only 72c002a4… HEAD`, filtered to drop `docs/` and `TASKS.md`, is empty. No
+     source, prompt, task, threshold, permission, profile or supply-chain file has changed since the
+     measured source. `DEVELOPMENT_SHA256` in `scripts/coding_eval_suite.py:33` is `0c2a0624…1570` at
+     both commits, and all 15 batch reports record that digest.
+   - `cmp docs/reviews/5b72d1d43cf7-inline-schema-a4b-checkpoint22.txt /lane/reviews/5b72d1d43cf7-inline-schema-a4b-checkpoint22.md`
+     returns rc 0, so the retained review is verbatim. It ends `Verdict: PASS` and has no
+     high or medium finding.
+   - Preservation: `git show <base>:TASKS.md | grep '^|'` and the same lines at HEAD are identical, all
+     507 of them. The base scoreboard (185441 bytes) is an exact byte prefix of the new one (187515
+     bytes). `completion-preservation.json` matches this: 507 lines, `prior_scoreboard_exact_prefix`
+     true. No row is added or closed.
+   - The checkpoint22 evidence diff changes only wording. It adds "It was stopped for a planned relaunch
+     at the wrapper's default (high) priority." and replaces "normal-priority" with "at the wrapper's
+     default (high) priority". This is exactly the fix L1 of the 5b72 review asked for.
+
+2. Capsule and retained verifier
+   - `sha256sum` gives `bindings.json` `8444940c…bfab3` and `manifest.json` `64890d54…080d6d`, both as
+     requested. `bindings.json` records 2883 files, source `72c002a4…`, and `candidate_execution` and
+     `held_out` both false. On disk there are 2885 files: the 2883 listed, plus the manifest and
+     bindings.
+   - I read all of `verify_measurement.py` before running it. It only reads and hashes files. Its only
+     subprocesses are `git diff`/`git show` on the pinned checkout. It imports no captured module and
+     executes nothing captured. It refuses symlinks, `..` and absolute names, token, key and socket
+     names and `.gguf` files.
+   - `python3 -B /lane/reviews/inline-schema-a4b-20261116/verify_measurement.py` returns rc 0 and prints
+     `PASS`: 2883 verified files, 2283 repository and 26 private inputs, 30 tasks, 19 proposals.
+     Causes are `{"ungraded-proposal": 19, "strict-edit-refused:code.proposal.edit": 10,
+     "generation-refused:complete:length": 1}`. Tokens are 215953 in and 94310 out, with 30/30
+     counters. Request/check time is 1201.8778623990074 s and reserved work is
+     1811.3581834220095 s.
+   - Independent recomputation (`/tmp/rev193/recompute.py`, my own code, which reads only raw
+     `events.ndjson`, `checked.json`, `record.json`, `backend-slice.log` and `upstream-response-*.bin`):
+     - The causes derived from the raw terminal events plus the strict-checker output equal the claim:
+       19/10/1.
+     - The backend `prompt eval`/`eval` counters sum to 215953/94310. Every task has exactly one of
+       each, and each prompt count equals the preflight count.
+     - Preflight input ranges over [3225, 9734] and the output budget over [23002, 29511]. Every task's
+       budget equals `min(32768, 32768 - n - 32)`. No task fails to fit.
+     - Finish reasons are stop for 29 tasks and length for 1. The length case is dev-rust-001, which
+       produced 29039 tokens, exactly its budget. This matches
+       `{"output-cap": 1, "stopped-below-token-limits": 29}`.
+     - No response message carries reasoning content (30/30), which supports "unavailable", not zero.
+     - The sum of `generation_seconds` is 1201.8778623990074 s. The sum of `reserved_work_seconds` is
+       1811.3581834220095 s (30.18930 min). Adding the 189.86591242800932 s preparation gives
+       2001.224 s / 33.354 min. Sampled GPU peaks range from 19323 to 20091 MiB. Every published
+       number matches.
+   - Independent strict-edit check (`/tmp/rev193/strict.py` and `strict2.py`, my own code, which executes
+     no answer):
+     - For all 19 proposals, undoing each edit (`new`→`old`) on `checked.json.changes[0].content`
+       reproduces exactly the recorded `before_sha256`, so each proposal is the base file plus exactly
+       the stated edits.
+     - Each of the 10 refusals has a reason visible in the raw answer:
+       - old equal to new: dev-003, dev-022;
+       - old not in any supplied excerpt: dev-007, dev-008, dev-017;
+       - empty old: dev-028;
+       - overlapping or duplicated edits: dev-004, dev-006, dev-011, dev-014.
+     - dev-rust-001 has no answer, so it is correctly counted as generation-refused, not as a checker
+       refusal.
+   - Prior-checkpoint binding:
+     - `prior22-manifest.json` and `prior22-bindings.json` are byte-identical (`cmp`) to
+       `/lane/reviews/inline-schema-a4b-checkpoint22-20261116/{manifest,bindings}.json`, whose bindings
+       hash is still `8d15ac67…a5fdd`.
+     - All 2719 files of that earlier capsule still match its manifest.
+     - With my own loop, every one of those 2719 entries is in the new capsule with the same hash,
+       either at its own name or at its declared `prior22-superseded/` location. The five superseded
+       files are byte-identical to the originals.
+     - The earlier `inline-schema-20261115/capsule-bindings.json` is still `b19883b2…`, and all 507 of
+       its manifest entries still match.
+     - The verifier's new block (lines 87-93) asserts that the 28 carried pair00 files match the
+       earlier sealed manifest. That closes L2 of the 5b72 review.
+   - Verifier repair:
+     - `diff failed-validation-v1/verify_measurement.py verify_measurement.py` differs only at line 49:
+       the over-broad `load(...)` call with four arguments became a one-argument call.
+     - Comparing the failed and corrected manifests, 2877 files are unchanged except
+       `verify_measurement.py`. Six repair and receipt files are added and no other metadata changes.
+       The hashes in `completion-verifier-repair.json` (`493b438f…` → `4b81d6b8…`) match the retained
+       files.
+     - The task-identity correction (`before-task30-id` → `before-load-call`) changes only the
+       dev-030/dev-rust-001 name construction.
+     - The full verifier chain is a1e76c6d → b458a8bf → 493b438f → 4b81d6b8. Each version is retained,
+       and each hash matches its receipt.
+     - The failed first sealed capsule itself lives in builder state that I cannot see. I could verify
+       only its retained `manifest.json`, `bindings.json` (`65f0c592…`) and verifier copies.
+
+3. Lint and reporting gate
+   - `/lane/reviews/42612ca9787f-a4b-node` is v24.15.0, SHA-256 `d1de76d8…bd932c`.
+   - Running it on `…/measurement/completion-lint.mjs` from the checkout prints `PASS`, with 0 issues in
+     each of the 4 files and rendered tables `{scoreboard: 1, evidence: 1}`. Its rule overrides
+     (MD013/22/24/60 off) equal the repository's `.markdownlint-cli2.jsonc`.
+   - I linked `/tmp/agentmage-schema-full-review-bin/node` to that node and ran
+     `PATH=/tmp/agentmage-schema-full-review-bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target python3 -B scripts/local_agent_fast_gate.py --base 5b72d1d43cf789b5477a8fe27d72bba3b73a9818 --timeout 3600`.
+     It returns rc 0 with `FAST GATE: PASS`. The diff check, untracked lint and review lint each return
+     rc 0, and markdownlint-cli2 reports `Linting: 4 files … 0 issues`. The builder's
+     `completion-reporting-gate.log` matches.
+   - No Rust was built, so I did not put it under the build slot. I did not rerun the full source gate.
+     The prose discloses it as still FAIL, 1169/53/19, citing the retained ac1c3020 review, which
+     records those numbers. There is no overall-green claim.
+
+4. Post-commit receipt
+   - `inline-schema-a4b-20261116-post-commit.json` has SHA-256 `921e3bf2…3beb`. It records commit
+     `193e59d2…`, base `5b72d1d4…`, bindings `8444940c…`, clean true and method `53f18717…`. That
+     method hash equals `completion-postcommit.py`. Despite the request's wording, its five
+     `committed_sha256` values are content SHA-256s, not Git blob ids.
+   - Each of the five equals `sha256sum` of the committed file and the corresponding value in
+     `completion-preservation.json`. For completeness, the Git blob ids are TASKS `dbfc1f43`,
+     scoreboard `178eeaab`, new evidence `0f202069`, checkpoint22 evidence `af2f93e6` and review
+     `0c9cf74b`.
+   - The method asserts the HEAD^ base, a clean tree and the exact changed path set before it writes.
+
+5. Launch, controller, checks and cleanup
+   - `finish-prepare_launch.py`:
+     - It requires the frozen-input hash `a92430c6…` and every repository and private input hash.
+     - It requires the checkpoint22 bindings `8d15ac67…`. Each of pairs 0-20 must be completed, have
+       settings revoked and the API reaped, have no key, socket or token file, and match the sealed
+       manifest file by file. Pairs 22 and later must not exist.
+     - It also requires: the earlier controller exited 1; no live owner process; no STOP file; a clean
+       tree; `BUILD_SLOT_PRIORITY=low`; cgroup limits of memory.max ≤16 GiB and cpu ≤4.
+     - It changes exactly one reservation-log path in the original controller (`4d3f3e42…`), checks
+       the result with `ast.parse`, launches it under nice and confirms nice 19 from `/proc`.
+   - The verifier checks `finish-controller.py` against the original with exactly that one replacement.
+     `finish-launch.json` records skipped pairs 0-20 (11), 8 remaining tasks, priority low, nice 19,
+     limits identical to `launch2.json`, head `5b72d1d4…` and pid 261 with start ticks `11889502`.
+   - The controller asserts `returncode==0` for every wrapper. `finish-controller.log` is completed
+     24/26/28/30 followed by `COMPLETE; no candidate execution or grading.`
+     `finish-controller-exit.json` has exit 0, the same pid and ticks, and the launch hash.
+   - The four `finish-*-reservation.log` files each show `(2 slot(s), priority low)`, the exclusive GPU
+     reservation and a `completed` status with `error: null`. The retained `build-slot` copy matches
+     `/tools/build-slot` (`8103a2d0…`).
+   - `completion-check.py` runs only the audit, reproduce, wire-audit and cleanup methods, after
+     asserting the controller exit was 0.
+   - `completion-reproduce.py`:
+     - It reruns the original helper on the context for all 30 tasks and on every available answer.
+     - It compares the results with `context.json`/`checked.json` and the candidate trees, without
+       executing a candidate.
+     - Task inputs come from `projection()`, which excludes hidden tests. Task metadata carries only
+       hidden-test paths and hashes.
+   - `completion-cleanup.py` differs from the earlier `cleanup.py` only in the range 30, count 15 and
+     the added resumed-controller path. `cleanup.json` has PASS, 15/15/15/15, no matching process and
+     8 retired token files (pairs 22-28). The scan is limited to this PID namespace, as stated.
+   - `wire_audit.py` changes only its paths and counts. `wire-audit.json` has status PASS, 30 tasks, all
+     contexts and profiles identical to the prior repeat, `{"complete-choice-json": 30}` and
+     reasoning `{"unavailable": 30}`.
+   - `completion-review_fixes.py` copies the 5b72 review verbatim, makes exactly the two L1 prose
+     replacements and inserts the L2 verifier block. `completion-review-fixes.json` hashes match.
+   - `completion-method-derivation.json`: each output hash matches its retained file.
+
+6. Integrity, privacy and IP
+   - No held-out or hidden test ran: the batch reports, audit, launch and cleanup all record false, and
+     no captured file references a held-out task. Scores can be re-derived from raw logs (step 2), and
+     failures are counted rather than dropped (10 + 1 shown).
+   - The development line is labelled ungraded proposals, not task passes. Passes are "Unavailable",
+     and the partial path (helper → chat API → strict checker, with no native effects, tests or
+     retries) is stated in so many words.
+   - The context/output change is stated, and "does not fit: 0" is reported separately from model
+     failures. The scoreboard line has date, commit, model, budgets, both pass columns, time,
+     reserved-GPU minutes, tokens and causes, as MEASURE FIRST requires.
+   - The next work is the five other profile repeats. That follows MEASURE FIRST item 1 (each local
+     model), not tuning.
+   - I scanned every added line for `/home`, `/var/home`, the host user, email, token and credential
+     patterns, and for product names. I found:
+     - sandbox paths (`/lane/...`, `/tools/...`, `/tmp/...`), only inside the retained review, which
+       is the repository's established convention (277 of 285 retained reviews);
+     - the local model identifier `gemma4-26b-a4b`, used as a model name, not branding;
+     - the reviewer self-identification line.
+   - There is no private host path, username, hostname, credential, private project name or patent.
+     The private capsule does contain home paths in model-state reports, but it is not committed.
+   - The new capsule files hold no `authorization:`/bearer strings and no retained token, key or
+     socket file.
+   - Confinement: no source or permission surface changed, so I repeated no escape tests. The
+     tool-boundary findings of earlier reviews are not affected.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog, wording)** — `docs/evidence/t303-inline-schema-a4b-2026-11-16.md:63-64`.
+  "The previous segment already retired 22 API tokens" is cumulative over two earlier segments.
+  `prior-checkpoint/short-cleanup.json` gives `retired_api_tokens: 2` for the first pair, and the
+  22-task segment's `cleanup.json` lists 20. The total of 22 is right; the attribution to one segment
+  is loose. Fix in a later reporting increment: "The earlier segments retired 22 API tokens (2 + 20)".
+- **Note (no finding)** — The claim that the first sealed but failed-validation capsule "remains
+  intact" cannot be checked from the reviewer sandbox. Only its retained manifest, bindings and
+  verifier copies, plus the repair receipt, are visible, and they are self-consistent. Nothing
+  published depends on it.
+
+## Per-row result
+
+- T-303 (related T-306), inline-schema A4B full 30-task development repeat, reporting only: **accepted
+  as a non-closing measurement.**
+  - Every published number traces to retained raw files, both through the retained verifier and
+    through my own recomputation of causes, counters, ranges, times and strict-edit outcomes.
+  - The 22 earlier attempts are authenticated and carried, not replayed. The resumed controller's
+    only change is the reservation-log parent, at low priority, nice 19 and unchanged limits.
+  - Both 5b72 low findings are addressed.
+  - Evaluation integrity holds: no held-out or hidden test, no candidate execution, a frozen suite
+    digest, and failures counted.
+  - No row is added or closed. T-303/T-306 remain open; the next work is the five other profile
+    repeats.
+
+Verdict: PASS

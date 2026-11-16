@@ -58,7 +58,7 @@ manual first pair's wrapper exit remains unavailable. Prior queued cancellation
 is not counted as an inference failure or retry.
 
 All fifteen completed jobs revoke settings, reap API/model owners and leave no
-model key or socket. The previous segment already retired 22 API tokens; this
+model key or socket. The earlier segments retired 22 API tokens (2 + 20); this
 resume retires **8** more. Exact-argument process checks cover
 this PID namespace only; they do not establish global machine idleness.
 Sampled total GPU peaks range **19323–20091 MiB**.
