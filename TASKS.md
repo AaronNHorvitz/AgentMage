@@ -2,6 +2,21 @@
 
 ## Active queue: local agent mission
 
+The [inline-schema 31B measurement](docs/evidence/t303-inline-schema-31b-finish-2026-11-16.md)
+records 30/30 frozen development attempts: 17/30 strict ungraded proposals.
+Task passes and retries remain unavailable; no candidate, hidden or held-out
+test ran. Source/outcome audit, comparison, original-helper reproduction and
+cleanup pass. Three full profiles (90 attempts) remain before tuning or new
+capabilities. T-303/T-306 stay open; no row is added or closed.
+This reporting increment requires independent core review.
+
+The retained [independent twenty-six-task 31B checkpoint review](docs/reviews/acad6a3766c2-inline-schema-31b-development-checkpoint26.txt)
+returns **Verdict: PASS** for exact
+`acad6a3766c2f526bd0a0226419450ec408d99a2`, with no high or medium finding.
+It accepts reporting only and closes no row. Its existing low queued-stop
+diagnostic remains T-309 backlog; no measurement is changed. The report is
+retained byte for byte. T-303/T-306 stay open; MEASURE FIRST is unchanged.
+
 The [inline-schema 31B measurement](docs/evidence/t303-inline-schema-31b-resume18-2026-11-16.md)
 records 26/30 frozen development attempts: 16/26 strict ungraded proposals.
 Task passes and retries remain unavailable; no candidate, hidden or held-out
