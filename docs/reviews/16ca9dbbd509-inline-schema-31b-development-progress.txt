@@ -1,0 +1,155 @@
+Commit: 16ca9dbbd50924d80a264e2b2209bc7254fe97b9
+Scope: inline-schema-31b-development-progress
+
+Reviewer: Claude Opus 5.5, separate session, read-only, working in the pinned checkout
+`/lane/review-checkout`. I used no GPU, launched no model, replayed no task, executed no candidate or test,
+loaded no hidden or held-out check, reconstructed no control and imported no archived module. The only build-slot
+use was the reporting fast gate. I modified nothing in the repository or capsules.
+
+## Methods, commands and results
+
+1. Commit and diff
+   - `git rev-parse HEAD` = `16ca9dbbd50924d80a264e2b2209bc7254fe97b9`. `git status --porcelain` is empty before
+     and after the review.
+   - `git diff --check 31e1f8aa4e6e3a0433663ff9558b562c41c090dd` exits 0.
+   - The diff is add-only: 376 insertions, 0 deletions, across 4 files. Those files are TASKS.md (+18), coding-scoreboard.md
+     (+28), the new evidence page (+98) and the retained review (+232).
+   - `git diff --name-only 72c002a4…7e62 HEAD` shows only `docs/` and `TASKS.md`, so no source, prompt, checker,
+     suite, profile or permission has changed since the frozen source.
+   - TASKS.md table lines are identical at base and HEAD (507). The new scoreboard starts with the exact bytes of the base
+     scoreboard.
+   - I read every added public line.
+     - The grep for private paths, usernames, hostnames, credentials and product names hits only the retained review.
+       Those hits are its reviewer self-identification and `/lane/...` sandbox paths, the same as earlier accepted
+       retained reviews.
+     - No other product, private project, paper or patent is named.
+     - Commit author and committer are the owner identity used on prior commits.
+   - The retained review `docs/reviews/31e1f8aa4e6e-…txt` is byte-identical (`cmp`) to
+     `/lane/reviews/31e1f8aa4e6e-inline-schema-31b-resumed-development.md`, sha256 `f55f41e0…8c28c10`. It ends
+     `Verdict: PASS`.
+   - The TASKS note correctly summarises the retained review's two low findings.
+
+2. Capsule verifier
+   - I read `verify_measurement.py` in full before running it. It reads, hashes and calls `git show` only. It is
+     identical to `measurement/verify_measurement.py`.
+   - Hashes: bindings `fe9dfba4…ab8ff47`, manifest `3c6c4494…bd59da` and postcommit `e935310d…eb8b5` all match the
+     request.
+   - `python3 -B /lane/reviews/inline-schema-31b-r8-20261116/verify_measurement.py` returns PASS with exit 0: 2675
+     files, 18 tasks, 9 proposals, causes 9/9, 124996/22993 tokens, counters 18/18, 1042.136 s and 1410.662 s.
+   - Postcommit `commit` = HEAD. For all four files, `committed_content_sha256` matches `git show HEAD:<file>` and the
+     capsule `public/` copies byte for byte (`cmp`). `method_sha256` matches `postcommit.py`.
+   - Independent recomputation (my own script, reading raw `record.json`, `checked.json`, `upstream-request-NN.json`,
+     `upstream-response-NN.bin` and `batch-report.json` for dev-001…dev-018):
+     - causes `strict-edit-refused:code.proposal.edit` 9 and `ungraded-proposal` 9
+     - response `usage` totals 124996 input and 22993 output; every `prompt_tokens` equals preflight
+     - `finish_reason` `stop` ×18
+     - every upstream request has `json_schema.strict: true`
+     - `max_tokens` range 23002–29511 and preflight input range 3225–9734
+     - generation 1042.136 s; reserved work 1410.662 s = 23.511 min
+     - GPU peaks 20582–21741 MiB
+     - every record has `graded: false`
+   - Every public number matches.
+   - Proposals are labelled ungraded. First and within-budget passes are `None` in the audit and published as
+     "Unavailable", never 0.
+   - The 6 prior plus 12 new attempts give 18, and 12 + 90 = 102 remaining attempts.
+
+3. Lint and reporting gate
+   - I read `lint.mjs`: markdownlint on the three files plus a check that one table renders.
+   - `/lane/reviews/42612ca9787f-a4b-node` is sha256 `d1de76d8…d932c`, matching `reporting-checks.json`.
+   - `node …/measurement/lint.mjs` returns PASS, with 0/0/0 issues and 1 rendered table each.
+   - `PATH=/tmp/rv-16ca/bin:$PATH CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot python3 -B
+     scripts/local_agent_fast_gate.py --base 31e1f8aa4e6e3a0433663ff9558b562c41c090dd --timeout 3600` returns
+     `FAST GATE: PASS` with exit 0. It ran the diff check, untracked lint, the retained-review lint and
+     markdownlint-cli2 (0 issues).
+   - The source gate was not rerun. Its inherited FAIL (1169 passed, 53 failed, 19 ignored) is disclosed in the
+     evidence.
+
+4. Launcher, resume and predecessor
+   - I read `launch.py` (its diff against r7 `launch.py` matches the retained `.diff` exactly), `controller.py`,
+     `resume_session.py` and `stop_checkpoint.py` in full. Before launch, the launcher:
+     - authenticates every r7 file against its manifest, plus the bindings and postcommit
+     - re-hashes the r7 committed bytes and all 2283 repository and 26 private frozen inputs
+     - checks that the 6 saved prefix tasks and their candidates match
+     - checks the r7 stop and cleanup PASS receipts
+     - checks for exact prior-owner absence
+     - checks that the tree is clean, no STOP file exists, `BUILD_SLOT_PRIORITY=low` is set and the cgroup has at
+       most 16 GiB and 4 CPUs
+   - The verifier reconstructs `controller.py` as the original with exactly one replacement (the reservation-log
+     parent). Nice 19 is asserted from `/proc/<pid>/stat` field 19.
+   - Independently, `/lane/reviews/inline-schema-31b-r7-20261116` bindings, manifest and postcommit hash to the
+     requested predecessor values, and its own verifier returns PASS. The `prefix-*` copies are byte-identical.
+     All 2402 carried files (the 6-task raw pairs 00/02/04, candidates, 2283 snapshot files and 26 private files) are
+     byte-identical to the r7 capsule.
+   - Namespace transition:
+     - `session-resume.json` binds `resume_session.py`, the original `launch.json`, the controller prefix (completed
+       8…18) and the archived queue log.
+     - Before resuming, the method re-hashes all frozen inputs and every saved raw/candidate file of all 18 tasks. It
+       checks revocation and key/socket absence for 9 pairs, owner absence, wrapper bytes and limits.
+     - It records both optional wrapper environment overrides as absent, and appends to the controller log, so the
+       prefix is preserved.
+     - The archived `session-transition-18-reservation.log` and the resumed `gemma4-31b-18-reservation.log` are each
+       exactly the single build-wait line: no GPU line, and no pair-18 directory exists.
+     - The previous controller's exit and queue duration are disclosed as unobserved.
+   - Stop:
+     - `checkpoint-stop.json` PASS. Own session only: PID/PGID/SID 288, the wrapper 289 and `sleep`. The post-scan is
+       empty, there are 0 new attempts and 0 GPU entries, and the controller exited 1.
+     - The queue time is 1238.925 s. It cross-checks by UTC: resume 18:34:08.875 to stop 18:54:47.777 is 1238.9 s.
+   - Every reservation log for a completed pair shows build wait, GPU wait, verification, readiness and
+     `"status": "completed"`.
+
+5. Comparison and reproduction
+   - `prior-manifest.json` and `prior-bindings.json` are byte-identical to the original
+     `/lane/reviews/thinking-disabled-31b-20261113-{manifest,bindings}.json`.
+   - The prior pair report matches the copy inside the original `inputs.tar`.
+   - All 18 `context.json` files are byte-identical to the originals extracted from that tar. Profiles and the runtime
+     manifest are checked by the verifier.
+   - `audit.py`, `wire_audit.py`, `reproduce.py`, `cleanup.py`, `invoke_checks.py` and `invoke_reporting.py` are
+     unchanged from r7. Each changed reporting method's diff, recomputed by me, equals its retained `.diff`.
+   - `reproduce.py` runs only the frozen helper (`852cd7f5…`) on saved answers. It reads candidates and never
+     executes them.
+   - The frozen batch and collect scripts have no hidden or held-out entry. `coding_eval_suite` loads held-out tasks
+     only from an explicit path argument, never on import.
+
+6. Cleanup
+   - `cleanup.json` PASS: 9 pairs revoked, reaped and with keys/sockets absent; matching processes `[]`; 12 retired
+     token files (pairs 06–16).
+   - The prior 6 come from hash-bound `prefix-cleanup.json` (2) and `prefix-retired.json` (4). The latter is
+     byte-identical to `retired-prefix.json`, which `write_reports.py` reads. The two lists are disjoint, 18 in total.
+   - No token, key or socket file is in the capsule. Scans cover the current PID namespace only, as disclosed.
+
+7. Earlier queued stops
+   - r7 280.559 s comes from r7 `checkpoint-stop.json` (0 GPU entries and 0 attempts).
+   - r6 1280.475 s is in r7 `previous-queue-r6`; r3 1278.079 s and r4 1519.535 s are in r5 `previous-queue*`. All
+     sit inside hash-authenticated predecessor capsules.
+   - r7's stop method and controller log are now retained (`prefix-stop-method.py` and `prefix-controller.log`,
+     hash-checked). This addresses the prior low finding for the immediate predecessor.
+   - No reservation setting or foreign process was changed: `foreign_process_signalled` is false throughout.
+
+Measure-first: the new scoreboard line gives date, frozen commit, model, context and output allowance, passes
+(Unavailable, with the reason), proposals, held-out status (not run), time, reserved GPU minutes, tokens, causes and
+does-not-fit 0. Every number traces to raw logs as above. Evaluation integrity holds: no held-out or hidden test ran,
+no tuning change was made and failures are counted.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low (backlog T-309):** `measurement/controller.py:31` asserts `result.returncode==0` before checking `stopped`.
+  When the owner's queued stop sends SIGTERM to the session, the raw `controller.log` therefore ends with
+  `AssertionError: job failed: gemma4-31b 18`. The same happened in r7 (`prefix-controller.log`). The receipts,
+  the absent pair-18 directory and the public text all correctly describe a queued stop, so no number is affected.
+  Fix: in the next controller revision, raise `SystemExit(1)` when `stopped` is set before asserting the job
+  result.
+- **Note, not a finding:** absence of the old namespace's processes cannot be scanned from the current namespace.
+  The evidence that nothing proceeded is the archived queue log, still exactly one wait line at packaging time, and
+  the absent pair-18 directory. Both are bound and disclosed.
+
+Earlier low findings stay in T-309 backlog as recorded.
+
+## Per-row result
+
+- T-303 (related T-306), non-closing development measurement: PASS for reporting. The 18/30 progress line, the
+  evidence and the retained review are accurate and traceable. T-303 and T-306 stay open; nothing closes, and no
+  release or owner-ready claim is made.
+
+Verdict: PASS
