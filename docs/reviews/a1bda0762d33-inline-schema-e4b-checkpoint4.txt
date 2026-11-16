@@ -1,0 +1,181 @@
+Commit: a1bda0762d337457e7db3d30068a2398b92da37a
+Scope: inline-schema-e4b-checkpoint4
+
+Reviewer: independent session (Claude Opus 5.5, extra-high effort). Read-only access to the
+repository; pinned checkout `/lane/review-checkout`. I launched no model, used no GPU, executed no
+candidate, hidden or held-out test, ran no captured helper or API binary, imported no archived
+module and reconstructed no control. My only scratch writes were the `/tmp/agentmage-e4b4-review-bin`
+symlink the request names, the fast gate's own build target and this file. `git status --porcelain`
+was empty before and after all my runs.
+
+## Methods, commands and results
+
+1. Commit identity, scope and hunks
+   - `git rev-parse HEAD` = `a1bda0762d337457e7db3d30068a2398b92da37a`; `HEAD^` =
+     `6eccc5016bac278b9aedf27c3642f828b86bf525`. Status clean. `git diff --check <base>` rc 0.
+   - `git diff --numstat <base>`: exactly four paths, 325 insertions, 0 deletions:
+     `TASKS.md` +16, `docs/evidence/coding-scoreboard.md` +31, new
+     `docs/evidence/t303-inline-schema-e4b-resumed-2026-11-16.md` +82, new
+     `docs/reviews/6eccc5016bac-e4b-measurement-review-retention.txt` +196.
+   - I read every hunk.
+     - TASKS.md: two prose notes inserted under `## Active queue: local agent mission`. No table
+       line changes, no row added, ticked or closed. T-303/T-306 stated open.
+     - Scoreboard: append-only (0 deletions); one new section with one table row and prose.
+     - `git diff <base> -- '*.rs' '*.py' scripts prompts` is empty. Since the measured source
+       `72c002a4…`, the 7 later commits touch only `TASKS.md` and `docs/` (13 paths, 0 others).
+   - `cmp docs/reviews/6eccc5016bac-e4b-measurement-review-retention.txt
+     /lane/reviews/6eccc5016bac-e4b-measurement-review-retention.md` rc 0. It is the PASS with
+     "No critical, high or medium findings", low L1 only, and closes no row. The TASKS backlog
+     note (bind the rescan check to the retained stop method; check the session as well as the
+     group on future stops; T-309) describes L1 accurately.
+   - Commit message: the repository's usual author identity and Co-Authored-By trailer; no other
+     private content.
+
+2. Capsule verification
+   - `sha256sum bindings.json` = `ea152c12…8375`; `manifest.json` = `c2f41bf5…a2dd1`. The post-commit
+     receipt hashes to `4bc5b317…3f7d`. There are 2492 regular files (2490 manifest entries plus
+     `manifest.json` and `bindings.json`) and no symlinks.
+   - I read `verify_measurement.py` before running it. It only hashes and reads, plus `git diff`/
+     `git show` in the checkout. It imports no archived module and runs no binary.
+   - `python3 -B …/verify_measurement.py` → `status PASS`, 2490 files, 2283 repository / 26 private
+     inputs, 4 tasks, 3 strict ungraded proposals, causes `{ungraded-proposal: 3,
+     strict-edit-refused:code.proposal.edit: 1}`, tokens 27033/12342 at 4/4 coverage,
+     `request_check_seconds 156.46399903896963`, `reserved_job_wall_seconds 183.8565590109938`;
+     rc 0.
+   - Independent derivation (my own read-only script over the raw retained files):
+     - dev-001: 9500 in, 1587 out, budget 23236, ungraded proposal, 33.510 s.
+     - dev-002: 9562 in, 2494 out, budget 23174, `code.proposal.edit` refusal, 20.966 s.
+     - dev-003: 4750 in, 2732 out, budget 27986, ungraded proposal, 59.607 s.
+     - dev-004: 3221 in, 5529 out, budget 29515, ungraded proposal, 42.381 s.
+     - Each budget equals `32768 − input − 32`. Every `finish_reason` is `stop`, retries are 0 and
+       nothing is graded. Sums: input 27033, output 12342, request/check 156.464 s. Reserved work
+       is 65.061 + 118.796 = 183.857 s = 3.064 min. GPU peaks are 5685 and 5612 MiB.
+     - In all four captured upstream requests, `response_format` is `json_schema` named
+       `coding_edits_v1` with `strict: true`, and `chat_template_kwargs` is
+       `{enable_thinking: false}`. The new pair's schema is byte-equal (sorted JSON) to the
+       carried pair's.
+     - All of these numbers match the scoreboard row, the evidence file, the TASKS note,
+       `audit.json`, `wire-audit.json` (4 complete-choice captures, reasoning unavailable 4,
+       contexts and profiles identical to the prior repeat) and `cleanup.json`.
+   - Public copies: each of the four `public/` files is `cmp`-identical to the checkout. Their
+     SHA-256 values equal `preservation.json.file_sha256` and the post-commit receipt's
+     `committed_content_sha256` (`b54b245c…`, `5a3dd5d0…`, `87dac124…`, `39e512ca…`). The receipt
+     names commit `a1bda076…`, base `6eccc501…` and `clean: true`.
+   - Earlier sealed capsules are unchanged. `inline-schema-e4b-20261116` has bindings `31493ff7…`
+     and 2400/2400 files re-hash. `e4b-review-retention-20261116` has bindings `cb3368c5…92ea5` and
+     32/32 files re-hash.
+
+3. Lint and reporting gate
+   - Node hash `d1de76d8…932c` matches. `lint.mjs` → PASS, lint 0 for all three Markdown files, and
+     exactly 1 rendered table in the new scoreboard section and 1 in the evidence file.
+   - `PATH=/tmp/agentmage-e4b4-review-bin:$PATH python3 -B scripts/local_agent_fast_gate.py --base
+     6eccc501… --timeout 3600` → `FAST GATE: PASS`, rc 0. It ran diff-check, untracked lint,
+     review lint and markdownlint-cli2 (0 issues in 3 files).
+   - I did not rerun the full source gate. The evidence correctly keeps it at inherited FAIL
+     (1169/53/19) and makes no overall-green claim.
+
+4. Measurement chain
+   - `prepare.py` (sha `354016a9…`, equals `derivation.json.method_sha256`) makes the controller by
+     one exact replacement of the reservation-log parent. It derives the launcher from the
+     preceding launcher by two exact, recorded replacements: authenticate the preceding-queue
+     capsule, and add its controller to the owner-argv set. It copies the stop, check, audit,
+     reproduce, wire-audit and cleanup methods, and their copy hashes are recorded. The verifier
+     independently asserts `controller.py == original.replace(needle, replacement)`, so the
+     controller differs only in the log parent. I read the controller: the 900 s cap, both
+     wrappers, `returncode==0` and `status=='completed'` checks, and 30 s released pauses are
+     unchanged.
+   - `launch.py`/`launch.json`, before launch:
+     - authenticates 31493ff7 and its manifest, all 2283 + 26 frozen inputs, every carried
+       `gemma4-e4b-00` raw file, the candidates, the previous segment's receipts and the
+       preceding-queue capsule `cb3368c5…`;
+     - checks that no prior owner argv is present, there is no STOP file, the checkout is clean
+       and `BUILD_SLOT_PRIORITY=low`;
+     - requires `memory.max` 17179869184 (16 GiB) and `cpu.max 400000 100000` (4 CPUs);
+     - observes nice 19 and records pid/start ticks.
+   - The carried pair is not replayed. The controller skips completed reports and refuses partial
+     directories. The `controller.log` progress lines start at `completed: 4`, and the verifier
+     requires disjoint task IDs dev-001…dev-004.
+   - Reservation logs: `-00` and `-02` show build-slot, then GPU, then `status: completed`. `-04`
+     contains only the build-slot wait line, so the stopped pair entered neither the GPU nor a task.
+   - `stop_checkpoint.py` (sha `30eabe61…`, equal to the receipt's `method_sha256`) is byte-identical
+     to the preceding-queue version the 6eccc501 review read. Before signalling, it re-authenticates
+     the controller pid, argv and start ticks, and requires pgid = sid = pid and group members
+     limited to python3/bash/sleep/flock in that session. It requires exactly one wrapper for pair
+     4, no `gemma4-e4b-04` directory and the wait-only log. It then `killpg`s its own group,
+     rescans `/proc` for that pgid until empty, and re-checks the directory and log.
+     - `checkpoint-stop.json` lists three own members (controller 278, wrapper 3475, `sleep 1`),
+       all sid 278, with `matching_processes_after: []`, 114.271 s queued, and
+       `controller_exit` equal to `controller-exit.json` (exit 1, same pid/ticks/launch hash).
+     - The controller's traceback `job failed: gemma4-e4b 4` is the expected result of the
+       signalled wrapper.
+   - `check.py`/`invoke_checks.py`/`check-invocation.json`/`checks.log`: rc 0, unwrapped, hashes
+     bound. They run audit, reproduce (original helper on context and strict check only; it reads
+     candidates and never executes them), wire-audit and cleanup.
+     - `cleanup.json`: 2 completed pairs revoked and reaped, keys and sockets absent, no matching
+       processes.
+     - It retires the 2 new `gemma4-e4b-02` token files; the previous segment's 2 are separate and
+       disjoint. `reproduction.json` verifies 4 tasks.
+     - No token, key, socket or `.gguf` file is in the capsule (the verifier asserts this per
+       entry).
+
+5. Reporting methods
+   - `retain_review.py` copies the source review verbatim, requiring its Commit header, PASS ending
+     and no-high/medium sentence, and inserts the recorded note once.
+   - `finalize_reports.py` runs `write_reports.py` (hash bound, rc 0) and appends the recorded
+     queued-stop notes, using the receipt's 114.271 s.
+   - `correct_prose.py` makes one recorded exact replacement ("neither" → "none") with before/after
+     hashes. It retains the pre-correction preservation, gate and lint files. `preservation.json`
+     after correction matches the committed hashes.
+   - `preserve.py` checks:
+     - the exact four-path scope;
+     - the verbatim review and that the note occurs once;
+     - 507 unchanged ledger table lines;
+     - the scoreboard exact-prefix;
+     - frozen source;
+     - a private-name hygiene list (which lives only in the private capsule).
+   - My own scan of the added public lines found:
+     - no home path, username, hostname, e-mail, credential or sibling-project name;
+     - no product comparison and no trademark used as branding;
+     - "token/key" hits are technical counts only.
+     The `/lane/...` sandbox paths and reviewer label in the retained review follow the 281 already
+     committed review files.
+
+6. Scope rules
+   - MEASURE FIRST: the batch has its scoreboard line, and every number traces to raw logs.
+     Context 32768, output 23174–29515 and input 3221–9562 are stated. Does-not-fit (0) is counted
+     apart from model failures.
+   - Evaluation integrity: queue cancellation is not counted as a failure or retry. Only
+     development tasks ran; held-out and hidden tests did not run. Prompts, profiles, checker and
+     suite are unchanged.
+   - No row is added, split or closed. There is no task-pass, qualification, release or
+     owner-ready claim, no plan or order-of-work change, and no capability built.
+
+## Findings
+
+No critical, high or medium findings.
+
+- L1 (low, backlog T-309): the post-run owner scan in `cleanup.py` leaves out the preceding
+  queue's controller argv.
+  - Location: `/lane/reviews/inline-schema-e4b-r1-20261116/measurement/cleanup.py`, the
+    `methods` set.
+  - Problem: the set covers `is1`, `is1-finish`, `is1-e4b-resume` and its own controller, but not
+    `/lane/state/is1-e4b-next-20261116/controller.py`. `launch.py` adds that path to its own
+    pre-launch owner scan, so the two scans disagree.
+  - Impact: none here. The launcher proved that owner absent before launch, and nothing can
+    restart it.
+  - Fix: build the owner-argv set once from the authenticated chain of prior namespaces, and use
+    it in both the launcher and cleanup.
+- The prior L1 (the rescan check is not bound in the verifier; the scan is by pgid only, not sid)
+  is unchanged. It is already in the T-309 backlog, and this commit claims no new guarantee.
+
+## Per-row result
+
+- T-303 (related T-306): this non-closing 4/30 measurement checkpoint is **accepted**.
+  - Of the four development attempts, three are strict ungraded proposals and one is a
+    `code.proposal.edit` refusal.
+  - Task passes and retries are honestly reported as unavailable.
+  - Every number traces to raw retained logs and was re-derived independently.
+  - The verbatim retention of the 6eccc501 PASS and its backlog note are correct.
+  - No row closes; T-303 and T-306 remain open.
+
+Verdict: PASS
