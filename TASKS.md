@@ -2,6 +2,23 @@
 
 ## Active queue: local agent mission
 
+The [inline-schema E4B repeat](docs/evidence/t303-inline-schema-e4b-continued-2026-11-16.md)
+records 18/30 frozen development attempts: 12/18 strict ungraded proposals.
+Task passes and retries remain unavailable; no candidate, hidden or held-out
+test ran. Source/outcome audit, comparison, original-helper reproduction and
+cleanup pass. The remaining 12 E4B tasks and four other full profiles (120 attempts) remain before tuning or
+new capabilities. T-303/T-306 stay open; no row is added or closed.
+This reporting increment requires independent core review.
+
+The retained [independent E4B fourteen-task checkpoint review](docs/reviews/a929c50fe60d-inline-schema-e4b-resumed-development.txt)
+returns **Verdict: PASS** for exact
+`a929c50fe60d33ae522c7b9acd71b8655ecc829d`, with no high or medium finding.
+It accepts reporting only and closes no row. The carried low findings stay in
+T-309: filter the unused inherited controller argument to recorded owners, and
+report queued cancellation before a wrapper-failure assertion in a future method. The report is retained byte
+for byte as plain text; earlier sealed measurements remain unchanged.
+T-303/T-306 stay open.
+
 The [inline-schema E4B repeat](docs/evidence/t303-inline-schema-e4b-next-2026-11-16.md)
 records 14/30 frozen development attempts: 11/14 strict ungraded proposals.
 Task passes and retries remain unavailable; no candidate, hidden or held-out

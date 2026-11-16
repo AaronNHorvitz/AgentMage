@@ -1,0 +1,212 @@
+Commit: a929c50fe60d33ae522c7b9acd71b8655ecc829d
+Scope: inline-schema-e4b-resumed-development
+
+Reviewer: independent session (Claude Opus 5.5, extra-high effort), read-only, pinned checkout
+`/lane/review-checkout`. I launched no model and used no GPU. I executed no candidate, hidden or
+held-out test, imported no archived module and reconstructed no control. I did not modify the
+repository. My only writes were a scratch `node` symlink under `/tmp/rv-a929/bin`, since removed,
+and this file.
+
+## Methods, commands and results
+
+1. Commit and diff
+   - `git rev-parse HEAD` gives `a929c50fe60d33ae522c7b9acd71b8655ecc829d`. `HEAD^` is
+     `935d311ce1b8601e3b5416733a3b3325175ca1b7`. `git status --porcelain` is empty.
+     `git diff --check 935d311c…` exits 0.
+   - The diff touches four paths, all additions (297 lines, 0 removed). I read every line.
+     - `TASKS.md`: two prose paragraphs under "Active queue".
+     - `docs/evidence/coding-scoreboard.md`: one appended section.
+     - New `docs/evidence/t303-inline-schema-e4b-next-2026-11-16.md`.
+     - New `docs/reviews/935d311ce1b8-inline-schema-e4b-ten-task-resume.txt`.
+   - No source, prompt, suite, checker, profile or script file changed.
+   - Ledger: `diff` of the `^|` lines of TASKS.md between base and HEAD is empty, and the count
+     is 507.
+   - Scoreboard: the base scoreboard bytes are an exact prefix of the new file (`cmp` on the
+     prefix). The change is append-only.
+   - Retained review: `cmp` against my independent original
+     `/lane/reviews/935d311ce1b8-inline-schema-e4b-ten-task-resume.md` is identical, SHA-256
+     `c81cec07…a72f9`. The TASKS.md summary of it is faithful: PASS, no high or medium finding,
+     reporting only, no row closed. Both carried lows are in T-309: the queued-cancellation
+     diagnostic was put there by the 3b92cf28 retention note at `TASKS.md:66-72`.
+   - Hygiene: I grepped the added lines for home paths, the username, the hostname, emails,
+     credentials and key patterns, private sibling names and other agent products.
+     - The only hits were false positives (`sk-` inside "task-resume" and "task-quality").
+     - The only paths are lane-internal `/lane/…` and `/tmp/…` paths inside the verbatim
+       retained review, as accepted in earlier retentions.
+     - The capsule's `preserve.py` blocklist literals do not appear in any committed file.
+2. Sealed capsule and verifier
+   - `sha256sum` gives:
+     - bindings `46291e09…1b406`, manifest `3d5681ef…2ded8`, postcommit `5e92b5d6…09c87b`, all
+       equal to the request;
+     - `previous/bindings.json` `0a6f1ed0…fc0a19e`, which is the r5 capsule I accepted.
+   - The postcommit records commit a929c50f, base 935d311c, clean, and the four committed
+     content hashes. Those equal `sha256sum` of the checkout files and `preservation.json`. The
+     capsule `public/` copies `cmp` equal the committed files. `postcommit.py` in the capsule
+     hashes to the recorded `postcommit_method_sha256` `5c856e3c…`.
+   - I read all of `verify_measurement.py` (256 lines) before running it. It reads, hashes and
+     calls `git diff`/`git show` only. There is no archived import, extraction or execution.
+   - `python3 -B …/verify_measurement.py` (from the checkout, 7 s) prints `status: PASS`:
+     - 12718 verified files, 2283 repository and 26 private inputs, 14 tasks;
+     - 11 strict ungraded proposals; causes `{ungraded-proposal: 11,
+       strict-edit-refused:code.proposal.edit: 3}`;
+     - 98269/37885 tokens with counter coverage 14;
+     - request/check 459.0522 s and reserved work 532.1693 s.
+   - Previous capsules are immutable:
+     - `diff -rq /lane/reviews/inline-schema-e4b-r5-20261116 …/r6/previous` shows no difference.
+     - `diff -rq …/r4-20261116 …/r6/previous/previous` shows no difference, and r4's bindings
+       hash is still `5641ef9e…`.
+     - The r5 postcommit hash is still `e21be6db…`.
+   - I re-derived the figures with my own script, reading the per-pair JSON, upstream
+     request/response captures and records directly, with no replay:
+     - preflight input 3221–9730, which equals the observed usage `prompt_tokens` for every task;
+     - output budget `min(32768, 32768-n-32)` = 23006–29515;
+     - every finish reason `stop` with completion below budget (14/14);
+     - no `reasoning_content` on any of the 14;
+     - sampled GPU peaks 5367–6056 MiB over 7 pairs;
+     - token sums 98269/37885, generation-time sum 459.052 s, reserved work 532.169 s
+       (8.869 min);
+     - every upstream request `response_format.type=json_schema`, name `coding_edits_v1`,
+       `strict: true`, `enable_thinking: false`, `n: 1`, `stream: false`.
+     All of these equal the public table and prose.
+   - The verifier also checks the following against the r5 manifest without replay:
+     - The 10 carried attempts are hash-equal to the r5 manifest entries, and `saved_e4b_files`
+       equals exactly the pair 00–08 file set.
+     - The contexts for all 14 tasks are byte-equal to the prior thinking-disabled repeat.
+3. Lint and fast gate
+   - I read `measurement/lint.mjs`. Its only change from `before-heading-lint.mjs` is the
+     section-heading prefix. It keeps the uniqueness assertion and the one-table-each assertion,
+     and adds no lint-rule exemption.
+   - `/lane/reviews/42612ca9787f-a4b-node …/measurement/lint.mjs` (node hash `d1de76d8…`, as
+     bound) exits 0: 0 lint issues in the three files, 1 rendered table in the new scoreboard
+     section and 1 in the evidence.
+   - With the scratch `node` symlink on PATH and `CARGO_TARGET_DIR=/lane/state/review-target`:
+     `python3 -B scripts/local_agent_fast_gate.py --base 935d311c… --timeout 3600` passes
+     `git diff --check`, `--lint-untracked`, `--lint-reviews` on the retained review and
+     markdownlint-cli2 (0 issues), and prints `FAST GATE: PASS` (rc 0). The worktree was clean
+     afterwards.
+   - The full source gate was not rerun, as the request states. The inherited FAIL
+     (1169 passed/53 failed/19 ignored) is disclosed and cites the source review.
+4. Launch, controller, queue stop and cleanup
+   - `launcher.diff` is genuine: I regenerated `diff -u` between `previous/measurement/launch.py`
+     and `measurement/launch.py`, and `cmp` matches. Its hashes equal `preparation.json`. It
+     changes three things:
+     - the r4→r5 capsule path and its bindings hash;
+     - the r4→r5 prior-state path;
+     - the owner set, which now comes from the hash-verified r5 `launch.json` `owner_arguments`
+       plus the exact previous and current controller paths. The capsule-entry derived loop
+       (carried L1) is removed from the method.
+     It still authenticates every r5 entry, the frozen inputs, the five completed pairs (revoked,
+     reaped, no keys, sockets or tokens) and the candidate sources. It checks owner absence by
+     exact argv, no STOP file, a clean tree, `BUILD_SLOT_PRIORITY=low` and cgroup limits.
+   - `launch.json`:
+     - pid 2550, start ticks 13870695, observed nice 19, priority low, head 935d311c;
+     - `memory.max` 17179869184, `cpu.max` 400000/100000;
+     - carried 10, planned 20, no candidate execution or held-out run.
+   - Controller: `diff` against the frozen `/lane/state/is1/controller.py` (`private/` copy) and
+     against r5's each shows only line 27, the reservation-log parent. Unchanged:
+     - the `build-slot` → `gpu-slot queue-run agentmage 900` wrappers;
+     - the skip of completed pairs, so carried attempts are never replayed;
+     - the 30 s released pause.
+   - Reservation logs for pairs 10 and 12 show both wrapper waits, model verification, two tasks
+     each and `"status": "completed"`. Pair 14's log is the single build-slot wait line, and no
+     pair-14 directory exists.
+   - `controller.log` shows the progress lines 12 and 14, then the carried L2 AssertionError.
+     `controller-exit.json` gives exit 1, with pid, start ticks and launch hash equal to the
+     launch.
+   - `stop_checkpoint.py` is byte-identical to r5 (`a6c0a9de…`, bound in `checkpoint-stop.json`).
+     - It authenticated the controller by argv and start ticks and required pgid = sid = pid.
+     - It signalled only pgid 2550: the controller, the pair-14 build-slot wrapper and `sleep 1`.
+     - Its fresh rescan is empty, and it signalled no foreign process.
+     - It records 0 attempts and 0 GPU entries.
+   - Stop timing is consistent. The wrapper start ticks minus the controller's are 1319.2 s, which
+     puts the queue start at about 09:09:44 UTC. That is consistent with pair 12's model-state
+     stamp plus its 48.8 s of work and the 30 s pause. Adding the 593.263 s queue gives the
+     09:19:37 stop, and the `sleep` minus wrapper ticks are 592.4 s.
+   - `cleanup.py` is byte-identical to r5. It uses the launch `owner_arguments` plus every
+     completed auth/state directory, matched by exact argv-element equality in this PID
+     namespace. `cleanup.json`:
+     - 7 pairs revoked and reaped, keys and sockets absent, no matching process;
+     - 4 new tokens retired (pairs 10 and 12).
+     The verifier confirms the 10 earlier retirements (0+2+4+2+2) are distinct and disjoint from
+     these. The text claims no global idle. As before, the live state and process table are
+     outside my session, so this rests on the hash-bound receipts.
+5. Audit and check methods
+   - `audit.py`, `reproduce.py`, `wire_audit.py`, `check.py`, `invoke_checks.py`, `cleanup.py`,
+     `policy.json` and `frozen-inputs-v2.json` are byte-identical to r5. I re-read
+     `reproduce.py`, `wire_audit.py`, `check.py` and `invoke_checks.py`:
+     - `reproduce.py` hash-checks the frozen repository and imports only the frozen
+       `scripts/coding_eval*` from the checkout.
+     - It runs only the bound context/strict-check helper (`852cd7f5…`) on saved answers.
+     - It compares candidates by reading bytes. No generated program or hidden test runs.
+   - `check-invocation.json`: rc 0, unwrapped, method, invoker and log hashes bound.
+     `wire-audit.json` gives `complete-choice-json` 14/14 and reasoning `unavailable` 14/14, with
+     contexts identical to the prior repeat.
+   - The three refusals are `code.proposal.edit` from the original checker. They stay counted as
+     strict-edit refusals, not dropped. The 11 others are labelled strict ungraded proposals,
+     never correct solutions.
+6. Reporting methods and prose
+   - `methods.json` lists 28 methods.
+     - For the 24 with an r5 parent, I recomputed each parent hash from `previous/measurement/`
+       and regenerated the unified diff with the recorded labels. All 24 match exactly.
+     - The 4 without a parent are the retained `before-*` versions and `correct_heading.py`.
+   - `owner-note-derivation.json` matches the writer change. `before-owner-note-write_reports.py`
+     differs from the final writer only by the four-line owner-scan disclosure.
+   - Heading correction:
+     - The first reporting run failed the lint uniqueness check. The old heading "resumed
+       development repeat" already exists at base `coding-scoreboard.md:2597`, and
+       `failed-heading-lint.log` retains the `Error: heading` traceback.
+     - `correct_heading.py` replaces only the new heading in the appended suffix, the new
+       evidence file and `lint.mjs`. It keeps the base bytes and the assertions.
+     - The verifier re-checks the before/after hashes, which reconstruct exactly.
+     - The receipt's `observed_reporting_invocation_returncode: 1` is a literal, but it is
+       supported by the retained uncaught-exception log.
+   - The final `reporting-check-invocation.json` records lint and fast gate rc 0 with log hashes.
+   - Every public number comes from the writer reading audit, wire-audit and cleanup results, or
+     from the finalizer formatting `checkpoint-stop.json` (593.263 s / 9.888 min, 16 pending).
+     `report-invocation.json` binds the writer and finalizer hashes and the verbatim notes. I
+     checked each literal against its source: 14/30, 11/14, 3, 0 does not fit, 16 pending,
+     120 attempts, 2,283/26, 7 jobs, 4+10 tokens, 900 s, nice 19, 16 GiB/4 CPU and 1,169/53/19.
+   - Labelling is honest:
+     - Task passes and retries are unavailable.
+     - Native admission and grading controls are absent, nothing is reconstructed and nothing
+       ran held out.
+     - Missing reasoning metadata is not counted as zero.
+     - There is no qualification, release or owner-ready claim.
+   - Evaluation integrity: the diff carries no held-out content, the hidden tests are untouched
+     and the frozen source is verified. Pending tasks are not failures, and the 3 refusals are
+     counted.
+   - MEASURE FIRST: this batch completed two pairs, and a scoreboard line was appended for it.
+     That line states context 32768 and output allowance 23006–29515, and counts does-not-fit
+     (0) apart from model outcomes. The order of work is unchanged.
+   - No method pushes, opens a socket or URL, or touches a remote. No row, sub-row or capability
+     is added.
+
+## Findings
+
+No critical, high or medium findings.
+
+- L1 (low, carried, T-309 backlog). The method fix is now in `measurement/launch.py`, but
+  `launch.json` `owner_arguments` still carries the unused `/lane/state/measurement/controller.py`
+  inherited from the r5 receipt. It is harmless, because it is an extra exact argument and the
+  effective owners are present. Fix (backlog): filter the inherited set to paths that exist or
+  that a prior receipt actually launched.
+- L2 (low, carried, T-309). `controller.py:31` asserts the wrapper return code before checking
+  `stopped`, so the queued cancellation logs an AssertionError. The controller is frozen, so this
+  is unchanged. The receipts and the prose describe it correctly as exit 1.
+
+## Per-row result
+
+- T-303 (related T-306), non-closing measurement checkpoint, scope
+  `inline-schema-e4b-resumed-development`: PASS.
+  - The cumulative 14/30 E4B attempts, with 11 strict ungraded proposals and 3 strict-edit
+    refusals, are authenticated from sealed raw captures, which I re-derived without replay. The
+    ten carried attempts are counted once and never replayed.
+  - The queued pair 14 was cancelled before GPU entry or any attempt, and only its own session
+    was signalled.
+  - The commit is append-only across four paths, with 507 unchanged ledger lines and an exact
+    scoreboard prefix. The retained 935d311c PASS is byte-exact.
+  - Reporting fast gate and direct lint pass. The source gate was not rerun and remains FAIL as
+    disclosed.
+  - No row closes. T-303 and T-306 remain open.
+
+Verdict: PASS
