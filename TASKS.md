@@ -2,6 +2,25 @@
 
 ## Active queue: local agent mission
 
+The [E4B queued-resume record](docs/evidence/t303-inline-schema-e4b-resume10-2026-11-16.md) authenticates the accepted
+10/30 checkpoint and records a further 1802.576-second (30.043-minute)
+wait for shared build capacity, cancelled before GPU entry or any new attempt.
+The scoreboard stays byte-identical: 9/10 strict ungraded proposals, task passes
+and retries unavailable. The exact own group and session were stopped and
+rescanned empty; no foreign worker was touched. Twenty E4B tasks and four full
+profiles remain before tuning or new capability work. T-303/T-306 stay open.
+This review-retention and queue report requires independent core review.
+
+The retained [independent E4B ten-task checkpoint review](docs/reviews/7f936ce6653b-inline-schema-e4b-development-progress.txt)
+returns **Verdict: PASS** for exact
+`7f936ce6653b5d3818376a8a69751316e7ca5cc5`, with no high or medium finding.
+It accepts the reporting checkpoint only and closes no row. Low L1 extends the
+T-309 owner-scan backlog: derive prior controller arguments from recorded launch
+receipts; the older capsule-path derivation yields an unused path, while the
+matching explicit owner lists support the recorded scans. The low queued-stop
+diagnostic remains backlog. The review is retained byte for byte as plain text;
+earlier sealed measurements stay unchanged. T-303/T-306 remain open.
+
 The [inline-schema E4B repeat](docs/evidence/t303-inline-schema-e4b-progress-2026-11-16.md)
 records 10/30 frozen development attempts: 9/10 strict ungraded proposals.
 Task passes and retries remain unavailable; no candidate, hidden or held-out

@@ -1,0 +1,206 @@
+Commit: 7f936ce6653b5d3818376a8a69751316e7ca5cc5
+Scope: inline-schema-e4b-development-progress
+
+Reviewer: independent session (Claude Opus 5.5, extra-high effort), read-only, pinned checkout
+`/lane/review-checkout`. I launched no model and used no GPU. I executed no candidate, hidden or
+held-out test, imported no archived module and ran no captured binary, helper or API. The only
+capsule scripts I executed were the standalone `verify_measurement.py` and the direct `lint.mjs`,
+after reading both in full. My only scratch writes were the symlink
+`/tmp/agentmage-e4b-r4-review-bin/node` and `/tmp/agentmage-e4b-r4-oldscore.md` (a `git show`
+copy of the base scoreboard). `git status --porcelain` was empty before and after my runs.
+
+## Methods and results
+
+1. Commit and diff
+   - `git rev-parse HEAD` gives `7f936ce6653b5d3818376a8a69751316e7ca5cc5`. `HEAD^` gives
+     `4e96dc93e5b1872378552f78e5a3abdd51470e68`, the requested base. `git status --porcelain` is
+     empty.
+   - `git diff --check 4e96dc93…` exits 0. `--numstat` shows exactly four paths, additions only
+     (0 removed lines): `TASKS.md` +18, `docs/evidence/coding-scoreboard.md` +31, the new
+     `docs/evidence/t303-inline-schema-e4b-progress-2026-11-16.md` +82 and the new
+     `docs/reviews/4e96dc93e5b1-e4b8-review-retention.txt` +175.
+   - I read every hunk. TASKS.md gains two prose paragraphs under "Active queue". Its `|` lines
+     are 507 at base and identical after (`diff` of the two `grep '^|'` sets is empty), so no row
+     is ticked, added or split. The scoreboard's leading bytes equal the whole base file exactly
+     (`cmp` of the base-length prefix), so the change is append-only. No source, prompt, suite,
+     checker, profile, threshold, permission or supply-chain file changes.
+   - The retained review is byte-identical (`cmp`, SHA-256 `971f60fd…289d`) to
+     `/lane/reviews/4e96dc93e5b1-e4b8-review-retention.md`. It begins with the 4e96dc93 Commit and
+     `e4b8-review-retention` Scope lines and ends with `Verdict: PASS`.
+   - The TASKS retention paragraph matches that review: PASS, no high or medium finding, L3
+     (envelope format check) into T-309 backlog, L1/L2 (owner scan, cancellation diagnostic)
+     carried as backlog, no row closed.
+   - Commit metadata uses the owner's git identity, like all earlier commits. The message
+     carries the expected co-author line.
+2. Capsule and standalone verifier
+   - `sha256sum` matches the request: `bindings.json` `5641ef9e…a5e`, `manifest.json`
+     `fcf59935…b8b`, post-commit JSON `f22227ca…61b`. Bindings record 7581 files, source
+     `72c002a4…`, no candidate execution and no held-out run.
+   - I read the whole of `verify_measurement.py` first. Its top-level copy and the
+     `measurement/` copy are byte-identical. It uses only the stdlib, and its only subprocess
+     calls are `git diff --name-only` and `git show`. It has no capsule import, exec or eval.
+   - `python3 -B …/verify_measurement.py` printed PASS in 6.0 s: 7581 verified files, 2283
+     repository and 26 private inputs, 10 tasks, 9 strict ungraded proposals, causes
+     `{"ungraded-proposal": 9, "strict-edit-refused:code.proposal.edit": 1}`, 71621/28867
+     tokens, coverage 10, request/check 350.4443196779466 s, reserved work 405.7904219680204 s.
+   - Independent derivation. I wrote my own script over the raw files, which read every
+     `batch-report.json`, `batch.json`, `checked.json`, `upstream-request-NN.json` and
+     `upstream-response-NN.bin`. It summed usage from the captured response bodies, not from the
+     verifier's log regex. Results:
+     - 10 tasks, dev-001…dev-010; the same cause counts; 0 does-not-fit;
+     - 71621 prompt and 28867 completion tokens; 10/10 `finish_reason: stop`;
+     - generation 350.4443 s; reserved work 405.7904 s = 6.7632 min (per pair 65.06, 118.80,
+       67.00, 120.92, 34.01);
+     - preflight input 3221–9730; output budgets 23006–29515, each equal to
+       `min(32768, 32768 - n - 32)`;
+     - GPU sampled peaks 5391–6056 MiB; retries 0 and graded false on every row.
+     Every number in the three public prose paths matches.
+   - Every upstream request has `response_format.type` `json_schema` with `name`
+     `coding_edits_v1` and `strict: true`, `enable_thinking: false`, `stream: false` and `n: 1`.
+     `policy.json` (`9906f925…`) and `frozen-inputs-v2.json` (`a92430c6…`) are byte-identical
+     to the previous capsule. The verifier and `wire-audit.json` bind each context to the prior
+     repeat's hash.
+   - Preservation:
+     - `diff -rq` finds `previous/` identical to `/lane/reviews/inline-schema-e4b-r2-20261116`
+       (bindings `ba57a608…`) and `queue-previous/` identical to
+       `/lane/reviews/e4b8-review-retention-20261116` (bindings `21fe3aab…`).
+     - All eight carried raw/candidate pair prefixes (`saved_e4b_files`) match the previous
+       manifest, as the verifier checks.
+     - Every earlier stop receipt (2, 2, 4, 8 and 8 tasks) records 0 new attempts, 0 GPU
+       entries, no foreign signal and an empty rescan. Each of their reservation logs holds only
+       the build-slot wait line.
+   - Public copies: all four `public/` files `cmp` identical to the committed files. The
+     post-commit JSON's `commit`, `base`, `bindings_sha256` and four `committed_content_sha256`
+     values equal my `sha256sum` of the checkout. `postcommit.py` hashes to the recorded
+     `8d0ac62f…`.
+3. Reporting checks
+   - `/lane/reviews/42612ca9787f-a4b-node …/measurement/lint.mjs` (node SHA-256 `d1de76d8…`, as
+     bound): PASS, 0 lint issues in the three Markdown files, 1 rendered table each in the new
+     scoreboard section and the evidence file.
+   - `PATH=/tmp/agentmage-e4b-r4-review-bin:$PATH python3 -B scripts/local_agent_fast_gate.py
+     --base 4e96dc93… --timeout 3600` ran `git diff --check`, `--lint-untracked`,
+     `--lint-reviews docs/reviews/4e96dc93e5b1-e4b8-review-retention.txt` and
+     markdownlint-cli2 (0 issues), and printed `FAST GATE: PASS` with rc 0.
+   - Source gate NOT RERUN. The inherited FAIL (1169 passed / 53 failed / 19 ignored) is stated
+     as FAIL in the evidence and stays open. This reporting-only commit changes no source, so no
+     source build or suite is required for this scope.
+4. Measurement methods and receipts (read in full)
+   - `launch.py` does the following before launch:
+     - re-hashes the r2 capsule and the queue-only capsule;
+     - authenticates the r3 queued-prior launch/controller/stop receipts against the queue
+       capsule;
+     - checks all 2283 repository and 26 private frozen hashes;
+     - requires exactly pairs 00/02/04/06 to exist, each completed, revoked and reaped, with no
+       key, socket or token;
+     - re-hashes every saved file and candidate source;
+     - scans `/proc` for the known prior owners;
+     - requires a clean tree, no STOP file, `BUILD_SLOT_PRIORITY=low` and cgroup limits of at
+       most 16 GiB and 4 CPUs.
+     It then asserts that the observed child niceness is 19.
+   - `launch.json` records pid 257, nice 19, priority low, `memory.max` 17179869184 and
+     `cpu.max` 400000/100000. Argv `nice -n 9` reflects a launcher already at nice 10, and the
+     receipt asserts the observed nice field.
+   - Controller change: `controller.py` equals the frozen `/lane/state/is1/controller.py` with the
+     single reservation-log parent replaced. Both the verifier and my own `diff` against the
+     previous copy, with the namespace normalised, show only that change. The 900 s cap, both
+     wrappers and the 30 s released pause are unchanged.
+   - `gemma4-e4b-08-reservation.log` shows the build-slot wait, then the GPU wait, model
+     verification, two tasks and `completed`, 34.008 s reserved work.
+   - `controller.log` has one progress line, `completed 10`, then the AssertionError from the
+     carried L2 path. `controller-exit.json` gives exit 1 with the matching pid, start ticks and
+     launch hash.
+   - `checkpoint-stop.json` (method `stop_checkpoint.py`, hash bound) records the following:
+     - it signalled only pgid/sid 257 (controller, the build-slot→gpu-slot wrapper for pair 10,
+       and `sleep 1`);
+     - its fresh rescan is empty and no foreign process was signalled;
+     - 0 attempts and 0 GPU entries;
+     - `gemma4-e4b-10-reservation.log` holds only the build-slot wait line, and no pair-10
+       directory exists.
+     The start ticks agree with the reported 1826.038 s queue time to within the stop's own
+     runtime (wrapper start to `sleep` start is 1825.5 s). So the "queued for shared build
+     capacity, neither GPU nor task" claim is supported.
+   - `check.py`/`invoke_checks.py` (unchanged from r3) ran audit, reproduce, wire_audit and
+     cleanup, rc 0, log hash bound.
+     - `audit.py` and `wire_audit.py` are read/hash only. They load development tasks and
+       nothing held out.
+     - `reproduce.py` runs only the bound context/checker helper on task statements and saved
+       answers (30 s timeout), plus `read_candidate` comparisons. It executes no candidate or
+       test.
+   - `cleanup.json` records 5 pairs revoked and reaped, keys and sockets absent, no matching
+     process, and retired `gemma4-e4b-08/auth/{control,client}.token`. The eight earlier tokens
+     (4+2+2) are distinct and disjoint from these, as the verifier checks. The live builder state
+     directory is not mounted in my session, so I could not observe the deleted tokens or the
+     process table myself; this rests on the hash-bound receipts. The text claims only a scan of
+     this PID namespace.
+   - Owner sets: the explicit prior-controller lists in `launch.py` and `cleanup.py` are the
+     same (finish, resume, next, r1, r2, r3, plus the is1 and current controllers), so the
+     request's "same known prior controller owners" holds. See L1 for the derived part.
+5. Reporting methods
+   - The prose comes from these methods: `prepare_reporting.py`/`reporting-derivation.json`
+     (executed_reporting false), `write_reports.py`, `finalize_reports.py`/`report-invocation.json`
+     (stop notes recorded verbatim), `retain_review.py`/`review-retention.json`,
+     `prepare_review_retention.py`/`review-derivation.json` and
+     `prepare_final_checks.py`/`final-check-derivation.json` (hygiene scan widened to the
+     retained review).
+   - Every number in the public prose is a format of `audit.json`, `wire-audit.json`,
+     `cleanup.json` or `checkpoint-stop.json`, which I confirmed above.
+   - `retain_methods.py`/`methods.json` hold every final `.py`/`.mjs` with complete diffs against
+     its r3 parent. `retain_method_versions.py`/`method-version-retention.json` and
+     `before-hygiene-preserve.py` keep the pre-change versions of `preserve.py`,
+     `verify_measurement.py` and `request_review.py`.
+   - `preserve.py` enforces the four paths, the 507 unchanged ledger lines, the scoreboard prefix,
+     unchanged frozen sources and the added-prose hygiene scan.
+   - `package.py`, `seal.py` and `export.py` copy with hash checks; `postcommit.py` binds the
+     commit.
+   - None of these methods pushes, opens a socket or URL, or touches a remote (grep).
+   - Hygiene: the added lines contain no home path, username, private sibling name, credential
+     or other agent product. My case-insensitive grep matched only the word "trusted". The only
+     `/lane/…`, `/tools/…` and `/tmp/…` paths and the reviewer label are inside the verbatim
+     retained review, as accepted in earlier retentions.
+6. Claims and mission checks
+   - Honest labelling. The commit says "strict ungraded proposals", that task passes and retries
+     are unavailable, that native admission and grading controls are absent, that nothing was
+     reconstructed, and that proposals are unapplied and untested. It makes no task-quality,
+     model-role, release or owner-ready claim. Exclusions are stated: queues, wrapper and
+     pre-entry overhead, released pauses, GPU kernel time and continuous elapsed time.
+   - Evaluation integrity:
+     - only development tasks dev-001…010 ran, and nothing held out was loaded or executed;
+     - prompts, suite, checker and contexts are byte-identical to the preceding repeat;
+     - the one unattempted pair is not counted as a failure or retry;
+     - the 10 attempts include the 8 carried attempts once, with no re-run.
+   - MEASURE FIRST: today's scoreboard line exists for this batch. It states the context and
+     output allowance, counts does-not-fit (0) apart from model failures, and every number
+     traces to raw logs. The work order is unchanged: the remaining 20 E4B tasks and four
+     profiles come before tuning.
+   - Delivery: no new row or sub-row; T-303/T-306 stay open.
+
+## Findings
+
+No critical, high or medium findings.
+
+- L1 (low, backlog, extends the carried T-309 owner-set item): the "derive every bound
+  controller namespace" loop added to `measurement/cleanup.py` (lines 16–20, also in
+  `launch.py:52–54`) yields only `/lane/state/measurement/controller.py`, a path that never
+  exists. That is because `name.split('/')[-2]` is the capsule directory, not a state namespace.
+  It is dead code, and the effective owner set is the explicit list, which is the same in both
+  scans. No claim depends on it. Fix (backlog): derive owners from the recorded `launch.json`
+  argv of each bound capsule, or drop the loop, and use one shared set.
+- L2 (low, carried, already backlog): `controller.py:31` still asserts the wrapper return code
+  before checking `stopped`, so a queued cancellation logs an AssertionError. The public text
+  and the stop receipt describe it correctly as exit 1.
+
+## Per-row result
+
+- T-303 (related T-306), non-closing measurement report, scope
+  `inline-schema-e4b-development-progress`: PASS.
+  - 10/30 cumulative E4B development attempts with 9 strict ungraded proposals. Every published
+    number traces to the sealed raw captures, which I re-derived independently.
+  - The queued cancellation entered neither the GPU nor a task, and only the own session was
+    signalled.
+  - The four reporting paths are append-only with 507 unchanged ledger lines, and the retained
+    4e96dc93 PASS is byte-exact.
+  - Reporting fast gate and direct lint pass. The source gate was not rerun and stays FAIL as
+    stated.
+  - No row closes. T-303 and T-306 stay open.
+
+Verdict: PASS
