@@ -2,6 +2,20 @@
 
 ## Active queue: local agent mission
 
+The [independent eight-attempt Muse review](docs/reviews/a0f8dbdbde09-inline-schema-muse-development-checkpoint8.txt)
+returns **Verdict: PASS** for exact
+`a0f8dbdbde09e2bc900956f0ed8de97aea82649c`, with no high or medium finding.
+It accepts reporting only and closes no row. It has no findings. The report
+is retained unchanged; earlier backlog notes stay recorded. No measured setting changes.
+
+The [inline-schema muse measurement](docs/evidence/t303-inline-schema-muse-checkpoint14-2026-11-17.md)
+records 14/30 frozen development attempts: 7/14 strict ungraded proposals.
+Task passes/retries remain unavailable; no candidate, hidden or held-out test
+ran. All 30 contexts reproduce before inference against this model's own prior
+repeat. Original frozen bindings, audit, comparison, reproduction and cleanup
+pass. 16 attempts remain before tuning or new capabilities. T-303/T-306
+remain open; no row closes. Independent core review is required.
+
 The [independent four-attempt Muse review](docs/reviews/801a3c52ab27-inline-schema-muse-development-checkpoint4.txt)
 returns **Verdict: PASS** for exact
 `801a3c52ab276b6fc8196ec2f7b9e1eaf0d05af4`, with no high or medium finding.
