@@ -2,6 +2,16 @@
 
 ## Active queue: local agent mission
 
+The [independent 27B completion review](docs/reviews/b37e498d9aa4-copy-original-fragment-27b-development-completion.txt) returns **Verdict: PASS** for exact `b37e498d9aa416948f18b0f3da92c0fb50a700f8`, with no new findings. Its report is retained unchanged and accepts that measurement only; no row closes. Existing T-309 backlog stays open. This increment requires independent core review.
+
+The [first ten frozen gpt-oss attempts](docs/evidence/t303-copy-original-fragments-gpt-checkpoint10-2026-11-17.md) record
+3/10 strict ungraded proposals and bring this repeat to 100/180 attempts,
+with 80 remaining before tuning or capability work. Task passes and retries
+remain unavailable; no candidate, hidden or held-out test executes. Every
+previous attempt and measured setting is preserved. No verdict is inferred
+for this increment. T-303/T-306 remain open;
+independent core review is required.
+
 The [independent prior 27B checkpoint review](docs/reviews/6367f54bf866-copy-original-fragment-27b-development-checkpoint20.txt) returns **Verdict: PASS** for exact `6367f54bf866dbc91681b713218bdaa0aca11939`, with no new findings. Its report is retained unchanged and accepts that checkpoint only; no row closes. Existing T-309 backlog stays open. This increment requires independent core review.
 
 The [completed frozen 27B measurement](docs/evidence/t303-copy-original-fragments-27b-complete-2026-11-17.md) adds ten development

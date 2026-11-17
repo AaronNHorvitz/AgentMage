@@ -3613,3 +3613,46 @@ pauses, excluding preparation and reporting. GPU kernel time, full reservation
 duration, continuous cumulative wall time and end-to-end latency are unmeasured.
 
 See [evidence](t303-copy-original-fragments-27b-complete-2026-11-17.md). Independent core review required.
+
+## Copy-original-fragment prompt repeat: ten gpt-oss attempts, 2026-11-17
+
+Source `35217c60a56a5d3e065148eb9a6aea898b5e1b16`; reporting base `b37e498d9aa416948f18b0f3da92c0fb50a700f8`.
+
+| Date | Source commit | Model | Context / output tokens | First-attempt passes | Within-budget passes | Strict ungraded proposals | Held-out | Request/check seconds | Reserved-job GPU minutes | Backend input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-17 | 35217c60a56a5d3e065148eb9a6aea898b5e1b16 | gpt-oss (10/30 complete) | 32768 / 24375–29744 | Unavailable | Unavailable | 3/10 | Not run | 610.865 | 11.248 | 61825 / 122784 (10/10 counters) |
+
+Ten new attempts (positions 1–10: dev-001 through dev-010):
+3/10 strict ungraded proposals;
+610.865 request/check seconds,
+674.878 reserved-job work seconds /
+11.248 reserved-job GPU minutes;
+61825 input / 122784 output tokens,
+with backend counters for 10/10 attempts.
+Causes: `{"generation-refused:error:chat.response.incomplete": 2, "strict-edit-refused:code.proposal.edit": 5, "ungraded-proposal": 3}`.
+Does not fit: 0.
+Rendered input: 2992–8361 tokens.
+Output budget: 24375–29744, using
+`min(32768, 32768 - rendered input tokens - 32)`.
+Backend terminations: `{"output-cap": 2, "stopped-below-token-limits": 8}`.
+
+The changed variable remains the fixed original-fragment instruction. This
+increment changes no source, helper, context, prompt, schema, model setting,
+framing, thinking request, budget or deadline. All ninety earlier attempts
+remain byte-identical and are counted once. The six-profile repeat is 100/180
+complete; 80 attempts remain before tuning or capability work.
+
+Partial path only: Rust context selection, the credential-owning chat HTTP API,
+local inference and strict edit checking. Native executable admission and
+original execution/grading-control receipts remain unavailable; effects,
+project tests, feedback and retries cannot run. No candidate, hidden or
+held-out test executes. These proposals are ungraded, not solved tasks.
+T-303/T-306 remain open and no model role qualifies.
+
+Five two-task jobs use both resource wrappers, 900-second limits, 30-second
+released pauses, low priority, nice 19, 16 GiB RAM and four CPUs. The new
+controller wall window is 1052.501 seconds, including queues and released
+pauses, excluding preparation and reporting. GPU kernel time, full reservation
+duration, continuous cumulative wall time and end-to-end latency are unmeasured.
+
+See [evidence](t303-copy-original-fragments-gpt-checkpoint10-2026-11-17.md). Independent core review required.

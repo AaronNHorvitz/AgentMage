@@ -1,0 +1,126 @@
+Commit: b37e498d9aa416948f18b0f3da92c0fb50a700f8
+Scope: copy-original-fragment-27b-development-completion
+
+Reviewer: Claude Opus 5.5 (extra-high effort), in a separate read-only session. Tier: core.
+Row: T-303/T-306, non-closing frozen development measurement. Base 6367f54bf866dbc91681b713218bdaa0aca11939;
+prompt/checker source 35217c60a56a5d3e065148eb9a6aea898b5e1b16.
+
+## Methods
+
+I read the request, the top of TASKS.md and the full four-file diff. I ran every requested command, including
+the optional portable check, in the pinned checkout /lane/review-checkout. I read reproduce.py, verify.py and
+audit.py before running them.
+
+I then recomputed each new number from the raw capsule files with my own script, independently of verify.py.
+The raw files are the reservation logs, upstream requests, response bins and captures, and the collection
+records. I compared the frozen inputs and the request shape with both earlier 27B capsules. I diffed every
+adapted method against its retained prior version, and I diffed the task-label correction against its retained
+originals.
+
+The GPU was not used. I ran no inference, no candidate and no hidden or held-out test. The repository was not
+modified.
+
+## Commands and results
+
+1. `git rev-parse HEAD` → b37e498d9aa416948f18b0f3da92c0fb50a700f8. `git status --porcelain` → empty.
+   `git diff --check 6367f54b…` → exit 0. `--numstat`: TASKS.md +9/-0, coding-scoreboard.md +42/-0, the new
+   evidence file +74/-0, the retained review +108/-0. There are no deletions.
+2. Capsule hashes match the request:
+   - manifest 9f15c517…654d, bindings 8c9297eb…23c, postcommit 7e2a1e40…e52 and post-commit.py d56c9367…519.
+   - All ten dependency manifests, bindings and postcommit receipts match the hashes listed in the request.
+   - The manifest lists 6637 files. The capsule holds 6639: the two extra files are manifest.json and
+     bindings.json, as verify.py asserts.
+3. `python3 -B …/verify.py` → PASS: attempts 90, new 10, remaining 90, 27 strict ungraded proposals, all
+   dependencies and the postcommit checked, candidate_execution false, task_passes null. live_state is
+   "unavailable" because /lane/state/ef1 is not mounted in this session.
+4. Optional portable check, `bash /tools/build-slot bwrap … --tmpfs /lane/state … verify.py` → the same PASS.
+5. Helper reproduction:
+   - The helper object authenticated to 1992c3c4…bd6de, which equals the frozen-inputs private entry. I copied
+     it to a private 0700 executable.
+   - I ran `bash /tools/build-slot bwrap --unshare-net … python3 -B …/reproduce.py --helper <copy> --output
+     <fresh dir>`. I added network isolation as an extra precaution.
+   - Result: PASS, 30 contexts and 10 answers. candidate_execution, model_inference and hidden_or_held_out are
+     all false.
+6. The node binary authenticated to d1de76d8…932c (v24.15.0) and was placed on PATH.
+   - `scripts/local_agent_fast_gate.py --base 6367f54b… --timeout 3600` → FAST GATE: PASS (exit 0).
+   - `node …/work/lint-all.mjs` → PASS: 3 files, 0 issues, one table each in the scoreboard and evidence.
+   - `scripts/private_host_paths.py --base 6367f54b…` → PRIVATE PATH CHECK: PASS.
+   - `scripts/license_policy.py` → LICENCE POLICY: PASS.
+7. Independent recount over jobs qwen35-27b-20..28:
+   - Tasks run in order: dev-021..029, then dev-rust-001. Position 30 is dev-rust-001; the task-label
+     correction says so.
+   - Causes: 10 ungraded-proposal. Each record shows generation_succeeded, no base fallback, graded false and
+     retries 0. Each checked.json has one change to the task source and no error.
+   - Generation seconds sum to 381.778. Reservation-log work sums to 533.819 s, which is 8.897 min.
+   - From response `usage`: 64036 input and 11162 output tokens, from 10/10 responses. verify.py computes the
+     same totals independently from the backend slices.
+   - All ten responses have finish_reason `stop`, nonempty content and empty reasoning_content.
+   - Every requested budget equals `min(32768, 32768 - input - 32)`. New input is 3422–8184 and new budgets are
+     24552–29314; both fall inside the stated cumulative ranges of 2940–8607 and 24129–29796.
+   - Cumulative totals check against the prior capsule:
+     - request/check seconds: 1007.583 + 381.778 = 1389.361;
+     - work seconds: 1230.292 + 533.819 = 1764.111, which is 29.402 min;
+     - tokens: 122592 + 64036 = 186628 input and 21545 + 11162 = 32707 output;
+     - proposals: 17 + 10 = 27; counters: 19 + 10 = 29.
+   - Cumulative causes (1 timeout, 2 strict-edit refusals, 27 proposals) and terminations (29 stopped, 1
+     unobserved) equal audit.json.
+   - Controller wall window: launch 16:29:59.617 to exit 16:57:32.022 UTC, which is 1652.404 s (exit 0).
+     Observed nice is 19; the cgroup limits are 16 GiB memory.max and 4 CPUs.
+8. Frozen inputs:
+   - These files are byte-identical (cmp) to the 27B checkpoint20 capsule: policy.json, frozen-inputs.json,
+     output-format.json, batch.py, collect.py and controller.py.
+   - All three 27B capsules (30 requests) share one system-message hash, 3a3c9b25…, and one parameter-set hash
+     apart from messages and max_tokens. The parameters are thinking disabled, strict `coding_edits_v1` and
+     `stream: false`.
+   - Every batch report records held_out "not loaded or executed" and split "development". Held-out ids are
+     `held-NNN` (scripts/coding_eval_rust.py); every task here is `dev-*`.
+   - Source 35217c60..HEAD changes only docs/, TASKS.md and README.md.
+9. Method adaptations: I diffed each method against its prior-methods copy.
+   - The adaptations only advance the base, capsule, offset (20..30) and counts (80→90, 40→45 pairs, 9→10
+     dependencies).
+   - preserve.py adds byte checks of the eighty earlier attempts and of the retained prior review.
+   - The one behavioural change is in launch.py: read-only snapshot hashing now runs inside the lane cgroup
+     without a heavy-build reservation. It is disclosed in method-adaptation.json. It is preparation, not a
+     measured setting, and both wrappers still take every model job.
+   - The task-label correction changes only report text ("dev-030" → "dev-029 and dev-rust-001"). verify.py
+     gains assertions and loses none. The audit timeout branch reviewed at the previous checkpoint is unchanged
+     apart from its counts.
+10. Cleanup: status PASS, api_and_model_reaped, keys_and_sockets_absent, live_owned_processes [],
+    no_foreign_signal, settings_revoked, 10 tokens retired.
+11. Public bytes and preservation:
+    - The four committed blobs equal the sealed public/ bytes and the postcommit receipt.
+    - The retained docs/reviews/6367f54bf866-…-checkpoint20.txt is byte-identical (cmp) to
+      /lane/reviews/6367f54bf866-copy-original-fragment-27b-development-checkpoint20.md.
+    - The base scoreboard is a byte prefix of the new one, and the TASKS.md change is a pure addition.
+12. Privacy and products: I grepped the added lines for home paths, the local user name, the email address,
+    credential markers and other agent products, with no matches. The private capsule's launch.json contains
+    the builder's local path, but it is uncommitted and appears in no committed file.
+
+## Checks against the brief
+
+- Evaluation integrity: no held-out or hidden content and no candidate execution. Prompt, checker, schema,
+  settings and budgets are frozen. All 30 attempts are counted, including the earlier timeout and two refusals.
+  Scores re-run with the capsule scripts and agree with the raw logs.
+- MEASURE FIRST: the batch adds a scoreboard line. Context and output budgets and the budget formula are
+  stated. Does-not-fit is counted apart (0). First-attempt and within-budget passes are labelled Unavailable.
+- Honest labelling: proposals are called ungraded and the partial path is named. Native admission and the
+  grading controls are stated as unavailable, unmeasured timings are named and no row closes.
+- Public repository: the privacy and licence checks pass, and no sibling project, product, trademark or
+  personal data appears.
+- Confinement: this commit changes no runtime code. The run used a read-only source snapshot, a loopback model
+  endpoint, cgroup limits and no candidate execution.
+
+## Findings
+
+No critical, high, medium or new low findings.
+
+Not checked: the live builder state (/lane/state/ef1) is not mounted, so live-state equality was not checked
+here. Every sealed capsule byte and every dependency was checked. Source tests were not rerun because the
+source is unchanged; the last source gate stays FAIL as disclosed. The earlier T-309 lows remain backlog.
+
+## Per-row result
+
+- T-303/T-306 completed 27B profile (dev-021..029 and dev-rust-001; repeat at 90/180): accepted as a
+  measurement for this exact commit. Both rows stay open; no row closes.
+
+Verdict: PASS
