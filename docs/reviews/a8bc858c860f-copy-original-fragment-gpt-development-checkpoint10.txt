@@ -1,0 +1,94 @@
+Commit: a8bc858c860f38658324d600283ffa2efb50d492
+Scope: copy-original-fragment-gpt-development-checkpoint10
+
+Reviewer: Claude Opus 5.5 (extra-high effort), in a separate read-only session. Tier: core.
+Row: T-303/T-306, a frozen development measurement that closes no row (ten gpt-oss attempts, dev-001..dev-010).
+
+## Methods
+
+All commands ran in the pinned checkout /lane/review-checkout at the exact commit. I read verify.py and
+reproduce.py before running them. I diffed every adapted method against its retained prior version
+(work/prior-methods, preflight-originals, completed-review-originals), and I recomputed every published
+number from the raw job files with my own script, without using the builder's audit.json or
+report-summary.json. I did not run inference, use the GPU, execute candidates or modify the repository.
+
+## Commands and results
+
+1. `git rev-parse HEAD` → a8bc858c860f38658324d600283ffa2efb50d492. `git status --porcelain` → empty.
+   `git diff --check b37e498d…` → rc 0. The diff touches exactly four files: TASKS.md, coding-scoreboard.md,
+   the new evidence file and the retained 27B review. No source changes.
+2. Capsule hashes: manifest 6661fb20…4532, bindings 00367c4d…4532a366f1, post-commit receipt e98afae2…3dc0.
+   All match the request.
+3. `python3 -B …/verify.py` → PASS (attempts 100, new 10, remaining 80, strict 3, all dependencies checked,
+   postcommit checked, live_state "unavailable"). /lane/state/ef1 is not mounted, so live-state equality
+   was not checked.
+4. Optional portable check, `bash /tools/build-slot bwrap … --tmpfs /lane/state … verify.py` → the same PASS.
+5. Helper object sha256 = 1992c3c4…bd6de. I installed a private 0700 copy (same hash) and ran
+   `bash /tools/build-slot python3 -B …/reproduce.py --helper <copy> --output <fresh dir>` → PASS,
+   contexts 30, answers 8, candidate_execution false, model_inference false.
+6. Node binary sha256 = d1de76d8…932c (v24.15.0), as a private copy on PATH.
+   `local_agent_fast_gate.py --base b37e498d… --timeout 3600` → FAST GATE: PASS (privacy, licence, review lint,
+   markdownlint 0 issues in 3 files). `lint-all.mjs` → PASS, 0 issues. `private_host_paths.py --base b37e498d…` → PASS.
+   `license_policy.py` → PASS.
+7. Retained review: docs/reviews/b37e498d9aa4-copy-original-fragment-27b-development-completion.txt is byte-identical
+   (cmp, sha256 b8ba2e3a…8818) to /lane/reviews/b37e498d9aa4-copy-original-fragment-27b-development-completion.md.
+   The TASKS.md summary of it (PASS, no new findings, closes no row) is accurate.
+8. Method chain. Adaptations from the 27B completion capsule only change base, model, offsets (0..10), totals
+   (90→100, remaining 90→80, 10→11 dependencies, 45→50 pairs) and paths. The new verify.py also checks that the
+   other three profiles' audit rows are unchanged and that gpt-oss had no prior rows. The preflight correction
+   changes one predicate, `len(results)==3` → `==4`, which is internally required with four profiles. The
+   completed-review retention only adds checks (review hash, original seal, campaign/audit/cleanup equality with
+   the first seal) and adds the review file to package's public set. Hash chain for verify.py:
+   f5627fd2 → 1d2cd63a → bde11f53, consistent. No predicate is removed or weakened.
+9. Independent recomputation from campaign/jobs/gpt-oss-{00..08}:
+   causes strict-edit-refused 5 (all code.proposal.edit), ungraded-proposal 3, generation-refused 2
+   (chat.response.incomplete, finish_reason "length", output tokens == budget). Request/check 610.865 s. Reserved work
+   674.878 s = 11.248 min. Backend prompt/eval counters 61825/122784, 10/10, and each prompt count equals
+   rendered_input_tokens_preflight. Input 2992–8361. Budgets 24375–29744 = min(32768, 32768−input−32). Terminations
+   output-cap 2, below limits 8. Every published number matches.
+10. Controller window: launch 17:05:12.992 → exit 17:22:45.493 UTC = 1052.501 s, exit 0, same pid and start ticks.
+    Limits: cpu.max 400000/100000 (four CPUs), memory.max 16 GiB, nice 19, priority low, controller `queue-run … 900`,
+    30×1 s released pauses, snapshot 9706 files. Cleanup: PASS, 50 pairs, 5 new, 10 tokens retired, 0 live owned processes,
+    no foreign signal.
+11. Evaluation integrity: the split is development in all five batches and held_out_executed is false. Tasks are dev-001..010,
+    in preflight order. Every "held" string in the jobs is ordinary source text ("held record", `held = os.fstat`), not held-out
+    content. Candidates are retained but not executed. graded=false and retries=0 everywhere. The partial-path
+    and UNAVAILABLE labelling is honest.
+12. Privacy and names. The committed diff contains no home path, username, hostname, e-mail or credential. The private home path
+    appears only in the uncommitted capsule's launch argv. Model identifiers are used as measurement labels, not branding.
+    No agent product, sibling project or patent is named.
+
+Procedural note: I also ran the capsule's work/post-commit.py by mistake, assuming it was a check. It is the
+receipt writer. It opens the receipt with exclusive create and failed with FileExistsError before writing anything.
+The receipt sha256 is still e98afae2…3dc0. The repository is unmodified.
+
+Confinement: this commit changes no source and executes no candidate. No new tool, sandbox or permission boundary is
+introduced, so I did not repeat the escape attempts in this scope.
+
+## Findings
+
+Low (backlog): the gpt-oss reasoning output is not disclosed in this increment.
+docs/evidence/t303-copy-original-fragments-gpt-checkpoint10-2026-11-17.md:28 and docs/evidence/coding-scoreboard.md:3637.
+- The text says that no "thinking request" changed, but it never states that request (`chat_template_kwargs.enable_thinking:
+  false`, with the server template's `reasoning_effort: medium`). It also leaves out the response-field counts that the
+  builder computed and sealed in work/report-summary.json: `{"content:nonempty": 8, "content:absent-or-empty": 2,
+  "reasoning:absent-or-empty": 10, "reasoning_content:nonempty": 10}`.
+- The raw captures show that reasoning_content makes up most of the output. Examples: dev-001 has 3258 content bytes against
+  50150 reasoning bytes in 12279 tokens. Both output-cap refusals (dev-003, dev-005) have empty content and only reasoning.
+- Earlier gpt-oss lines and the 31B/A4B original-fragment lines published these fields, and an earlier review required this
+  statement for gpt-oss.
+- No number is wrong and nothing claims thinking was disabled, so this does not block.
+- Fix: add the response-field line and the thinking-request and reasoning-effort statement to both locations in the next
+  reporting commit.
+
+No high or medium findings.
+
+## Per-row result
+
+T-303/T-306 (frozen development measurement that closes no row): the measurement for exact a8bc858c is accepted. Every
+number traces to the raw logs, the scoreboard line is present, the budgets are stated, fit failures are counted apart
+(0), and all preservation and evaluation-integrity checks hold. The rows stay open, as the commit says.
+
+Not checked: live builder state (not mounted); source tests (source unchanged; last source gate FAIL is disclosed).
+
+Verdict: PASS

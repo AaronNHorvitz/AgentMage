@@ -3656,3 +3656,51 @@ pauses, excluding preparation and reporting. GPU kernel time, full reservation
 duration, continuous cumulative wall time and end-to-end latency are unmeasured.
 
 See [evidence](t303-copy-original-fragments-gpt-checkpoint10-2026-11-17.md). Independent core review required.
+
+## Copy-original-fragment prompt repeat: twenty gpt-oss attempts, 2026-11-17
+
+Source `35217c60a56a5d3e065148eb9a6aea898b5e1b16`; reporting base `a8bc858c860f38658324d600283ffa2efb50d492`.
+
+| Date | Source commit | Model | Context / output tokens | First-attempt passes | Within-budget passes | Strict ungraded proposals | Held-out | Request/check seconds | Reserved-job GPU minutes | Backend input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-17 | 35217c60a56a5d3e065148eb9a6aea898b5e1b16 | gpt-oss (20/30 complete) | 32768 / 24215–29744 | Unavailable | Unavailable | 6/20 | Not run | 1344.663 | 24.725 | 124645 / 259466 (20/20 counters) |
+
+New ten attempts (positions 11–20: dev-011 through dev-020):
+3/10 strict ungraded proposals;
+733.798 request/check seconds,
+808.594 reserved-job work seconds /
+13.477 reserved-job GPU minutes;
+62820 input / 136682 output tokens,
+with backend counters for 10/10 attempts.
+New causes: `{"generation-refused:error:chat.response.incomplete": 1, "strict-edit-refused:code.proposal.edit": 6, "ungraded-proposal": 3}`.
+Cumulative causes: `{"generation-refused:error:chat.response.incomplete": 3, "strict-edit-refused:code.proposal.edit": 11, "ungraded-proposal": 6}`.
+Does not fit: 0 cumulative.
+Cumulative rendered input: 2992–8521 tokens.
+Cumulative output budget: 24215–29744, using
+`min(32768, 32768 - rendered input tokens - 32)`.
+Cumulative backend terminations: `{"output-cap": 3, "stopped-below-token-limits": 17}`.
+Cumulative response fields: `{"content:absent-or-empty": 3, "content:nonempty": 17, "reasoning:absent-or-empty": 20, "reasoning_content:nonempty": 20}`.
+The request sends `chat_template_kwargs.enable_thinking: false`; the unchanged
+server template sets `reasoning_effort: medium`. Observed reasoning output
+is reported by those response fields; the request does not prove its absence.
+
+The changed variable remains the fixed original-fragment instruction. This
+resume changes no source, helper, context, prompt, schema, model setting,
+framing, thinking request, budget or deadline. All one hundred earlier attempts
+remain byte-identical and are counted once. The six-profile repeat is 110/180
+complete; 70 attempts remain before tuning or capability work.
+
+Partial path only: Rust context selection, the credential-owning chat HTTP API,
+local inference and strict edit checking. Native executable admission and
+original execution/grading-control receipts remain unavailable; effects,
+project tests, feedback and retries cannot run. No candidate, hidden or
+held-out test executes. These proposals are ungraded, not solved tasks.
+T-303/T-306 remain open and no model role qualifies.
+
+Five two-task jobs use both resource wrappers, 900-second limits, 30-second
+released pauses, low priority, nice 19, 16 GiB RAM and four CPUs. The new
+controller wall window is 1949.934 seconds, including queues and released
+pauses, excluding preparation and reporting. GPU kernel time, full reservation
+duration, continuous cumulative wall time and end-to-end latency are unmeasured.
+
+See [evidence](t303-copy-original-fragments-gpt-checkpoint20-2026-11-17.md). Independent core review required.

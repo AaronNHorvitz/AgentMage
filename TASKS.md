@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The [independent prior gpt-oss checkpoint review](docs/reviews/a8bc858c860f-copy-original-fragment-gpt-development-checkpoint10.txt) returns **Verdict: PASS** for exact `a8bc858c860f38658324d600283ffa2efb50d492`, with no high or medium findings. The report is retained unchanged and closes no row. Its low reasoning-disclosure note joins T-309; this increment supplies the unchanged thinking request, server reasoning setting and observed response-field counts. No verdict is inferred for this increment.
+
+The [twenty-attempt frozen gpt-oss checkpoint](docs/evidence/t303-copy-original-fragments-gpt-checkpoint20-2026-11-17.md) adds ten development
+attempts: 3/10 new and 6/20 cumulative strict ungraded proposals.
+The repeat is 110/180 complete, with 70 attempts remaining before tuning or
+capability work. Every earlier attempt and measured setting is preserved.
+Task passes and retries remain unavailable; no candidate, hidden or held-out
+test executes. T-303/T-306 remain open; independent core review is required.
+
 The [independent 27B completion review](docs/reviews/b37e498d9aa4-copy-original-fragment-27b-development-completion.txt) returns **Verdict: PASS** for exact `b37e498d9aa416948f18b0f3da92c0fb50a700f8`, with no new findings. Its report is retained unchanged and accepts that measurement only; no row closes. Existing T-309 backlog stays open. This increment requires independent core review.
 
 The [first ten frozen gpt-oss attempts](docs/evidence/t303-copy-original-fragments-gpt-checkpoint10-2026-11-17.md) record
