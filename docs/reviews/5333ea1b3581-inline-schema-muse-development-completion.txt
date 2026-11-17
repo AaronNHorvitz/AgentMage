@@ -1,0 +1,116 @@
+Commit: 5333ea1b3581a0e89eb67e18bd4b33bc28606148
+Scope: inline-schema-muse-development-completion
+
+# Independent review: inline-schema Muse development completion (30/30)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Every command ran in
+the pinned checkout /lane/review-checkout (HEAD = the commit above, clean before and after). I used
+no GPU or model, and I executed no candidate, hidden or held-out test. I did not modify the
+repository.
+
+Row: T-303/T-306, a MEASURE FIRST measurement that closes no row. Base:
+0d0a7c4c0a5bb1d2c5e9a041e900657307922a26.
+
+## Methods
+
+- I read the complete public diff (5 files, +337/−1): README.md (one table row), TASKS.md (two
+  queue paragraphs), docs/evidence/coding-scoreboard.md (one appended section),
+  docs/evidence/t303-inline-schema-muse-complete-2026-11-17.md (new) and
+  docs/reviews/0d0a7c4c0a5b-inline-schema-muse-development-checkpoint20.txt (the retained
+  previous review). No code, manifest, script or licence file changed.
+- Before running them, I read both verifier methods (`verify_measurement.py` and
+  `measurement/verify_postcommit.py`). They only read and hash files, Git objects and JSON. They
+  call `git ls-tree`, `cat-file`, `show`, `diff` and `rev-parse`. They import no archived module
+  and execute no candidate. Their checks are plain `assert` statements, and I ran them without
+  `-O`, so the checks were active.
+- I recomputed the following directly from the capsule raw files, independently of the verifiers:
+  - the controller intervals;
+  - the per-task response-field table;
+  - the failed-attempt records;
+  - the audit summary and the cleanup receipt;
+  - the README's per-profile figures against the scoreboard.
+
+## Commands and results
+
+1. `git rev-parse HEAD` printed 5333ea1b3581a0e89eb67e18bd4b33bc28606148. `git status --porcelain`
+   printed nothing. `git diff --check 0d0a7c4c…` exited 0 with no output.
+2. `sha256sum` of the capsule files:
+   - manifest.json = cba12ad4…2799 and bindings.json = f3797219…7a2a, both as requested.
+   - `python3 -B …/inline-schema-muse-r5-20261117/verify_measurement.py` printed PASS: tasks 30,
+     strict_ungraded_proposals 19, causes {timeout 4, code.proposal.edit 3, code.proposal.format 4,
+     ungraded-proposal 19}, 166355/150086 tokens, 29,495 files, candidate_execution false,
+     hidden_or_held_out false. Exit 0, 9.8 s.
+   - `python3 -B …/measurement/verify_postcommit.py` printed PASS: the commit matches, sealed
+     public equals the Git tree, 5 files. Exit 0. The receipt's path set equals
+     `git diff --name-only base..commit`, and each committed blob equals the sealed public bytes.
+3. The node binary `/lane/reviews/42612ca9787f-a4b-node` has SHA256 d1de76d8…bd932c, which
+   matches. I copied it to a private scratch PATH as `node` (v24.15.0). Then I ran:
+   - `CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base 0d0a7c4c… --timeout 3600`
+     printed **FAST GATE: PASS** (rc 0). It ran the untracked lint, the private-path check (PASS),
+     the licence policy (PASS), the retained-review lint and markdownlint-cli2 on 4 files
+     ("0 issues").
+   - `python3 -B scripts/private_host_paths.py --base 0d0a7c4c…` printed PRIVATE PATH CHECK: PASS.
+   - `python3 -B scripts/license_policy.py` printed LICENCE POLICY: PASS.
+
+## Independent cross-checks
+
+- **Timing.** Current segment: 4688.373 s. Earlier segments: 2456.941 + 1558.080 + 3437.408 +
+  2169.571 = 9622.000 s. Total: 14310.373 s, as published. The five UTC intervals (01:53–02:29,
+  02:44–03:41, 03:49–04:15, 04:49–05:30, 05:37–06:55) do not overlap. Each one appears once, and
+  the gaps between sessions are excluded. Reserved work is 5557.855 s, which is 92.631 min.
+  Request/check time is 4851.758 s. Both match the audit.
+- **Failures.** All 11 failed attempts are counted, none dropped:
+  - 4 transport timeouts (dev-004, 011, 012, 027) stopped at exactly 300.0 s. They are the same
+    4 tasks with missing captures and unavailable counters (26/30 coverage).
+  - 7 strict-edit refusals.
+  - Inputs range from 2910 to 8341 tokens and output budgets from 24395 to 29826, so "does not
+    fit: 0" is correct.
+- **Response-field table.** All 30 evidence rows equal `response-fields.json` (capture, finish,
+  answer and reasoning characters), with 0 mismatches. The non-empty `reasoning_content` under a
+  thinking-disabled request is reported as an observed field, not a claim about the model's
+  internal reasoning. That labelling is honest.
+- **Cleanup.** 15 pairs, all with settings revoked and owners reaped, and no matching processes.
+  GPU peaks ranged 17324–18013 MiB. There are 30 unique retired token files, and the first 20
+  equal the previous checkpoint's list.
+- **README.** It now claims 19/17/17/28/6/19 strict ungraded proposals for A4B, E4B, 31B, 27B,
+  gpt-oss and Muse. Each figure matches the latest 30/30 inline-schema scoreboard line (lines
+  2542, 2787, 2954, 2980, 3046 and 3237). It removes "One profile remains", which is now correct.
+  Only one line changed. The ownership paragraph is untouched, and the dates paragraph is outside
+  the diff.
+- **Retained review.** The committed `.txt` is byte-identical (`cmp`) to
+  /lane/reviews/0d0a7c4c0a5b-inline-schema-muse-development-checkpoint20.md. It ends with
+  `Verdict: PASS` and says "None at critical, high, medium or low". TASKS.md's statement "It has no
+  findings" is therefore accurate.
+- **Evaluation integrity.**
+  - The diff contains documents only and no held-out task content.
+  - The verifier confirmed that no candidate, hidden or held-out test executed.
+  - The source commit (72c002a4…), the 2,283 + 26 frozen bindings and the 9,630-file
+    Git-verified snapshot all hold.
+  - All 30 contexts equal this model's preceding repeat.
+  - The changed variable (strict inline `json_schema`) is verified in every upstream request.
+  - Earlier saved attempts are hash-identical, and none was replayed.
+- **MEASURE FIRST.** The scoreboard has a line for this batch with traceable numbers, the stated
+  context and output budgets, and "does not fit" counted apart from model failures. The previous
+  scoreboard is an exact prefix, and the TASKS table rows are unchanged.
+- **Public-repository hygiene.**
+  - No added line contains a private home path, username, hostname, credential, other agent
+    product, private project or branding. The private home path appears only in the capsule
+    verifier's mount argv under /lane/reviews, which is not committed.
+  - The retained review mentions lane infrastructure paths and the reviewer model, as the earlier
+    retained reviews do.
+  - The path check passes.
+
+## Findings
+
+None at critical, high, medium or low.
+
+Backlog: none new.
+
+## Per-row result
+
+T-303/T-306: this reporting increment is accepted as an honest, traceable, non-closing MEASURE
+FIRST measurement. 30/30 frozen Muse development attempts produced 19 strict ungraded proposals.
+First-attempt and within-budget task passes and retries remain unavailable. Both rows stay open,
+and nothing is promoted.
+
+Verdict: PASS

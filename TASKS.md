@@ -2,6 +2,38 @@
 
 ## Active queue: local agent mission
 
+The [independent completed Muse review](docs/reviews/5333ea1b3581-inline-schema-muse-development-completion.txt)
+returns **Verdict: PASS** for exact
+`5333ea1b3581a0e89eb67e18bd4b33bc28606148`, with no findings at any severity.
+It accepts the completed measurement only and closes no row. The report is
+retained unchanged; T-303/T-306 and the existing backlog remain open. It does
+not supply a verdict for the new diagnosis below.
+
+The [read-only exact-edit diagnosis](docs/evidence/t303-exact-edit-refusal-diagnosis-2026-11-17.md)
+accounts for the completed six-profile repeat: 180 development attempts,
+106 strict ungraded proposals, 56 edit refusals, four format refusals and
+14 generation refusals. Among edit refusals, the first failed condition is
+absent original text in 25 answers, overlapping ranges in 11, ambiguous text
+in eight, empty text in five, unchanged edits in five and invisible text in
+two. These select exact original-fragment generation as the next T-303/T-306
+work. No prompt or checker changes in this batch. Task passes and retries
+remain unavailable; no candidate, hidden or held-out test runs. Independent
+core review is required; no row closes.
+
+The owner's November 15 service-action notes are recorded explicitly as later
+T-319 (P0), T-320 (P1) and T-321 (code-host issues and pull requests). All remain
+planning only until separately released; this does not start tools or vendor
+documentation research. The November 15 resumption released only Git repository
+reads and approved pushes, already placed inside T-306 under Decision 0209 at
+the first capability boundary after this measurement work, once completion
+reliability can be measured. MEASURE FIRST continues to select the work.
+Service actions are shown with exact arguments before execution and need the
+user's yes. Connections are made once and shared with the service's reading
+integration; this runtime keeps no second sign-in and does not own keeping
+what that integration reads. Use open standards first, including SMTP, CalDAV,
+WebDAV, Git, OpenID Connect and LDAP. Named-service tools and their vendor
+documentation wait for the owner's release of their row.
+
 The [independent twenty-attempt Muse review](docs/reviews/0d0a7c4c0a5b-inline-schema-muse-development-checkpoint20.txt)
 returns **Verdict: PASS** for exact
 `0d0a7c4c0a5bb1d2c5e9a041e900657307922a26`, with no high or medium finding.
@@ -3822,6 +3854,9 @@ hidden tests or weaken thresholds. Desktop UI work is deferred to a separate she
 | [ ] | T-316 | Later CAP-03 work, after MEASURE FIRST coding measurement; preserves current coding priorities and queue order | Under [Decision 0205](docs/decisions/0205-one-runtime-for-model-driven-work.md), freeze a synthetic everyday-tool task set, its development/held-out split and qualification scores before any run. Score the right tool and exact arguments, no invented result, asking first respected, and instructions hidden in tool results or documents not followed. Measure per model profile and again after changes to prompts, tool descriptions, runtime or profile. Never tune on held-out results or weaken existing thresholds. Planning only now; actual evidence and independent PASS required for closure. |
 | [ ] | T-317 | Later CAP-49 work after MEASURE FIRST; preserves coding priority | Typed graphs of model, tool, memory and approval steps on this runtime under Decision 0205. Bind each step's exact inputs, outputs, order, retries and limits to its record. Replay without new inference or effects; re-running from a step is a new run with current permissions. Planning only; no implementation now. |
 | [ ] | T-318 | T-317 and T-312; T-313 evaluation and held-out retention condition | Direct several agents through typed flows on this same runtime. T-313 remains the bounded coding-team measurement and must improve held-out results to be kept; this later general composition introduces no second runtime or duplicate team implementation. Preserve isolation, separate review, approval and budget boundaries. Planning only; no implementation now. |
+| [ ] | T-319 | Later P0 service actions; separate owner release; MEASURE FIRST coding reliability and current priorities first | Action tools for mail (send, reply, file), calendar (create/change entries), files (write/move), team chat (post), trackers and knowledge tools (create/update items/pages), and organisation identity sign-in. Git commit/push stays in T-306, already released there; do not duplicate it. Start with SMTP, CalDAV, WebDAV and OpenID Connect or LDAP where applicable. Each action shows exact arguments and needs the user's yes; share one connection with the reading integration, never a second sign-in or an authoritative store of what it reads. Named-service tools and vendor documentation need the owner's row release. Planning only; build nothing now. |
+| [ ] | T-320 | T-319 disposition; later P1 service actions; separate owner release; preserves MEASURE FIRST | Later action tools for customer records, meetings/calls, service desks, support desks, approved database queries and content archives. Preserve exact-call presentation and the user's yes for every action, shared service connections, open-standards-first ordering, and the separate release before named-service tools or vendor documentation. Planning only; build nothing now. |
+| [ ] | T-321 | Later code-host issues/pull requests; separate owner release; T-306 Git boundary remains distinct; preserves MEASURE FIRST | Create pull requests or read issues through a code-host service as a separate capability from Git repository reads and approved pushes. The Git release does not release this row. Preserve engine permissions, exact-call presentation and the user's yes for every consequential action, and shared connections without a second sign-in. No named-service implementation or vendor documentation before owner release. Planning only; build nothing now. |
 
 ## Current Delivery Amendment (2026-09-24)
 

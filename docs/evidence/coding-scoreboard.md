@@ -3266,3 +3266,26 @@ Observed response field combinations: `{"non-empty content / non-empty reasoning
 These describe captured fields; internal reasoning is not inferred.
 Audit, comparison, original-helper reproduction and cleanup pass.
 T-303/T-306 remain open. See [evidence](t303-inline-schema-muse-complete-2026-11-17.md).
+
+## Read-only edit-refusal diagnosis — 2026-11-17 UTC
+
+This summarizes the six completed inline-schema development measurements above;
+**it is not a new inference run or a task score**. Frozen source remains
+`72c002a42957340de0b6fa0eb4d48385db2c7e62`; the individual run entries retain
+budgets, timings and token accounting. No measured variable changes, no GPU
+work is added, and first-attempt/within-budget task passes remain unavailable.
+
+| Existing outcome / cause | Attempts |
+| --- | --- |
+| Strict ungraded proposal | 106 |
+| `code.proposal.edit` refusal | 56 |
+| `code.proposal.format` refusal | 4 |
+| Generation refusal | 14 |
+| Total | 180 |
+
+The 56 edit refusals fail first on absent original text (25), overlapping
+original ranges (11), ambiguous text (8), empty text (5), unchanged edits (5)
+or invisible text (2). The next T-303/T-306 generation work must address exact
+original-fragment fidelity while retaining strict checking; no runtime change
+is made here. See the [diagnosis and reproduction method](t303-exact-edit-refusal-diagnosis-2026-11-17.md).
+No candidate, hidden or held-out test ran. T-303/T-306 stay open.
