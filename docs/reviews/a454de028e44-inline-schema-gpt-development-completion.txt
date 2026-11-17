@@ -1,0 +1,110 @@
+Commit: a454de028e44d4835fe7957d07646eddede6c3f0
+Scope: inline-schema-gpt-development-completion
+
+# Independent review: gpt-oss inline-schema development completion
+
+Reviewer: independent Claude Opus 5.5 session at extra-high effort. It had read-only access
+to the pinned checkout /lane/review-checkout. It used no GPU, model, candidate, hidden or
+held-out test.
+Row: T-303/T-306, a non-closing MEASURE FIRST measurement. Base: bd02f603f8753e0d55a7aa03aa92cf18cfa06bef.
+
+## Methods and commands (all run in /lane/review-checkout)
+
+1. `git rev-parse HEAD` gave a454de028e44d4835fe7957d07646eddede6c3f0. `git status --porcelain`
+   was empty. `git diff --check bd02f603…` exited 0. The diff changes 5 files: README.md (one
+   table row), TASKS.md (17 lines added above the existing rows) and coding-scoreboard.md (appended
+   section). It adds the new evidence file and the retained review
+   docs/reviews/bd02f603f875-inline-schema-gpt-development-checkpoint4.txt.
+2. I read both verifiers in full before running them. verify_measurement.py (250 lines) and
+   measurement/verify_postcommit.py (14 lines) only read and hash files and Git objects. They run
+   `git` subprocesses and import no archived module or candidate. The manifest SHA256 is
+   9dced75f…d9bb97 and the bindings SHA256 is 6df65ecb…08f8e, both matching the request.
+   - `python3 -B …/verify_measurement.py` exited 0 with status PASS. It reported 30 tasks, 6
+     strict ungraded proposals, causes {incomplete 8, code.proposal.edit 15, ungraded-proposal 6,
+     complete:length 1}, 188409 input / 470692 output tokens and 29481 files.
+   - `python3 -B …/measurement/verify_postcommit.py` exited 0 with status PASS. It reported
+     sealed_public_equals_git_tree true for 5 files. I checked separately that those 5 files are
+     exactly the 5 paths in `git diff --name-status bd02f603`.
+3. The node binary /lane/reviews/42612ca9787f-a4b-node passed `sha256sum -c` against d1de76d8…bd932c.
+   I put it on a private scratch PATH as `node`.
+   - `bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base bd02f603… --timeout 3600`
+     ended with FAST GATE: PASS. Its steps were diff check, untracked lint, private-path check,
+     licence policy, review lint and markdownlint (0 issues in 4 files).
+   - `python3 -B scripts/private_host_paths.py --base bd02f603…` gave PRIVATE PATH CHECK: PASS.
+   - `python3 -B scripts/license_policy.py` gave LICENCE POLICY: PASS.
+4. Independent recomputation. I wrote my own script that reads the raw capsule bytes, not the
+   verifier's outputs.
+   - The per-task table in the evidence (finish, answer characters, reasoning-field characters)
+     matches `choices[0]` in all 30 raw `upstream-response-*.bin` files, with 0 mismatches.
+   - Summing the response `usage` fields gives 188409 prompt and 470692 completion tokens. This
+     matches the backend-log counters the evidence quotes.
+   - The sum of `generation_seconds` is 2605.278 s.
+   - The controller intervals are 623.220 s and 7633.984 s, totalling 8257.204 s. The run ended
+     2026-11-17T01:31:35 UTC, which matches the "2026-11-17 UTC" date.
+   - Every output budget equals 32768 − input − 32. The range is 24219–29748 and input preflight
+     is 2988–8517.
+   - All 9 `finish=length` responses are the 9 generation refusals (8 incomplete plus 1
+     complete:length on dev-013) and the 9 output-cap terminations. All 15 strict-edit refusals
+     carry `code.proposal.edit`.
+   - All 30 upstream requests carry `chat_template_kwargs.enable_thinking=false` and the inline
+     schema with `strict: true`.
+5. I checked the retained review byte for byte. `cmp /lane/reviews/bd02f603f875-…checkpoint4.md
+   docs/reviews/bd02f603f875-…checkpoint4.txt` reported them identical. The file ends with
+   `Verdict: PASS`.
+6. I grepped the diff for private paths, user name, e-mail and other agent-product names and
+   found nothing. The only hits are the existing "OpenAI-style" transport wording and the
+   retained review's reviewer line. The commit author and Signed-off-by lines are the owner's
+   attribution and are not tree content.
+
+## Checks against the brief
+
+- **Evaluation integrity.** Only development tasks dev-001…dev-029 and dev-rust-001 appear. No
+  candidate, hidden or held-out test ran (manifest, launch, audit, projections and preflight
+  flags, plus the verifier checks). The frozen source commit is 72c002a4… with 2283 + 26 bindings
+  intact. The full 9630-file snapshot is checked against Git blob OIDs. The 195-file licence drift
+  is recomputed and kept outside the frozen-source measurement.
+  - Contexts for all 30 tasks match this model's preceding repeat byte for byte.
+  - Attempts 00/02 are carried with the prior capsule's hashes. The controller log starts at
+    completed 6, so they were not replayed.
+  - The controller differs from the original only in the reservation-log parent (exact
+    string-replace assertion).
+  - Failures are counted, not dropped: 24 non-proposals in three causes.
+- **Honest claims.**
+  - README says "6 strict ungraded proposals" for gpt-oss and states that these are not solved
+    tasks. "One profile remains" is accurate.
+  - The README paragraph beginning "AgentMage is an independent…" is untouched; only one table
+    row changed.
+  - The scoreboard is an exact prefix plus one appended section. It states context and output
+    budgets, "does not fit: 0", causes, the timing basis and unmeasured quantities.
+  - TASKS.md table rows are unchanged, and no row closes.
+  - The reasoning-field counts are presented as captured fields, with no inference about the
+    model's internal reasoning. 30/30 responses carry non-empty `reasoning_content` even though
+    `enable_thinking=false` was requested. The evidence reports this plainly without explaining it
+    away, which is acceptable.
+- **Owner notes.** This commit changes no plan, criterion, order of work, permission, prompt,
+  checker or profile. It claims nothing built, names no other product or private project, and
+  adds no second runtime, desktop interface or memory store.
+- **Confinement.** This commit adds no source, so no tool-boundary change was in scope.
+  - The run used the established read-only bwrap mount of the archive and .git.
+  - Cleanup reports 30 disjoint retired tokens, settings revoked and owners reaped for 15/15
+    pairs, model keys and sockets absent, and an empty exact-owner process scan.
+  - There is no foreign signalling.
+- **Prior lows.** L1 (field split) is addressed by the per-task table. L2 (bind sealed public bytes
+  to the tree) is addressed by the post-commit comparison, which I re-ran.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (backlog, T-309):
+- L1: measurement/verify_postcommit.py:10-12 compares only the files listed in the receipt. It
+  does not assert that the list equals `git diff --name-only <base> <commit>`, so an extra
+  committed file outside the receipt would go unnoticed. I checked the set by hand here (5 = 5).
+  Fix: add `assert set(p['committed_content_sha256'])==set(git diff --name-only base commit)`.
+
+## Per-row result
+
+T-303/T-306: this non-closing MEASURE FIRST reporting increment is accepted. Both rows stay open,
+and nothing is promoted.
+
+Verdict: PASS

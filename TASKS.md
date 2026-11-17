@@ -2,6 +2,22 @@
 
 ## Active queue: local agent mission
 
+The [independent completed gpt-oss review](docs/reviews/a454de028e44-inline-schema-gpt-development-completion.txt)
+returns **Verdict: PASS** for exact
+`a454de028e44d4835fe7957d07646eddede6c3f0`, with no high or medium finding.
+It accepts reporting only and closes no row. Its low finding stays T-309:
+assert that the postcommit receipt's path set covers the whole committed diff.
+The independent report is retained byte for byte. Existing lows remain backlog;
+no verdict is inferred for this new measurement increment.
+
+The [inline-schema muse measurement](docs/evidence/t303-inline-schema-muse-2026-11-17.md)
+records 4/30 frozen development attempts: 1/4 strict ungraded proposals.
+Task passes/retries remain unavailable; no candidate, hidden or held-out test
+ran. All 30 contexts reproduce before inference against this model's own prior
+repeat. Original frozen bindings, audit, comparison, reproduction and cleanup
+pass. 26 attempts remain before tuning or new capabilities. T-303/T-306
+remain open; no row closes. Independent core review is required.
+
 The [independent four-attempt gpt-oss review](docs/reviews/bd02f603f875-inline-schema-gpt-development-checkpoint4.txt)
 returns **Verdict: PASS** for exact
 `bd02f603f8753e0d55a7aa03aa92cf18cfa06bef`, with no high or medium finding.
