@@ -1,0 +1,149 @@
+Commit: a17e9595273683fcdc477cba4ef2601a1b3f0688
+Scope: copy-original-fragment-a4b-development-completion
+
+# Independent review: completed frozen A4B copy-original-fragment development repeat
+
+Reviewer: Claude Opus 5.5 (extra-high effort), in a separate read-only session. Tier: core.
+Base 35afab91240af28c2099fe61dd99851d177abfff; prompt/checker source
+35217c60a56a5d3e065148eb9a6aea898b5e1b16. Every command ran in the pinned checkout
+/lane/review-checkout, with private scratch under /lane/state/tmp and
+CARGO_TARGET_DIR=/lane/state/review-target. `git status --porcelain` was empty before and after.
+I did not modify the repository. I ran no model, used no GPU and executed no candidate, hidden or
+held-out test.
+
+## Methods
+
+1. Read the complete four-file diff (`git diff 35afab91..a17e9595`): TASKS.md (two prose
+   paragraphs), coding-scoreboard.md (one appended section with one table row), the new evidence
+   page and the retained review docs/reviews/35afab91240a-copy-original-fragment-checkpoint10.txt.
+2. Confirmed that only documentation changed since the source commit:
+   `git diff --name-only 35217c60 HEAD` lists only README.md, TASKS.md and docs/. No runtime,
+   prompt, helper, permission, sandbox, test, profile or budget code is in scope. No TASKS.md table
+   line was added or removed.
+3. Read verify.py, reproduce.py and the post-commit method before running them. verify.py only
+   reads, hashes and runs `git show`/`diff`/`rev-parse`/`status`. reproduce.py authenticates all
+   three capsules and the helper, then runs only the effect-free helper (stdin→stdout). The
+   post-commit method checks HEAD^ == base, a clean tree and the four committed blobs against the
+   sealed public bytes.
+4. Reviewed the correction. The failed capsule /lane/reviews/copy-fragments-a4b-complete-20261117
+   exists, and its manifest (e8a4b577…) and bindings (8a024206…) match correction.json. All 12413
+   of its files still match its own manifest. Every file in the failed capsule is also in v2, and
+   only four differ: verify.py, work/package.py, work/write-reports.py and the public evidence page.
+   In each, the change replaces the numeric `dev-{n:03d}` assumption with task IDs taken from the
+   frozen preflight3/batch records, adds the correction files to the package list or corrects the
+   task-range wording. v2 adds 39 files: the 34 dev-rust-001 candidate files, correction.json,
+   correct-report-bundle.py, capsule-verification.log (the AssertionError at the numeric-ID check),
+   reporting-gate-corrected.log and lint-all-corrected.json. No raw job, request, response, backend
+   log, record or checked file differs between the two capsules, so nothing in the inference or
+   evaluation data was changed or rerun.
+5. Recomputed every published number from the raw per-job records with my own script, separately
+   from verify.py: batch-report.json, collection/batch.json, checked.json, upstream-response-*.bin
+   usage and finish_reason, and the launch/exit timestamps.
+6. Ran the fast gate, the Markdown/table lint, the private-path check and the licence policy. I
+   grepped the diff for home paths, usernames, e-mail, credentials and product names.
+
+## Exact commands and results
+
+- `git rev-parse HEAD` → a17e9595273683fcdc477cba4ef2601a1b3f0688. `git status --porcelain` → empty.
+  `git diff --check 35afab91…` → no output, exit 0. Four files changed, 286 insertions, 0 deletions.
+- sha256: manifest.json f9a7c3c7…9050539072 and bindings.json 03da602e…cfda (12452 files). The
+  post-commit JSON is dace7afb…4bd3 and the post-commit method is f6558589…3d4. All four equal the
+  request. The receipt names commit a17e9595…, base 35afab91…, the four public files and
+  complete_diff_covered true.
+- `python3 -B /lane/reviews/copy-fragments-a4b-complete-20261117-v2/verify.py` →
+  `{"status": "PASS", "attempts": 30, "new_attempts": 20, "remaining_attempts": 150,
+  "strict_ungraded_proposals": 17, "original_capsule_all_inputs_checked": true,
+  "postcommit_checked": true, "candidate_execution": false, "task_passes": null,
+  "hidden_or_held_out": false}`, rc 0. It checks every file and the closed file set of both prior
+  capsules (5027 and 5859 files) and their complete-diff receipts. It checks the 2283 + 44 frozen
+  inputs and that the campaign scripts and policy are byte-identical. For all 30 jobs it checks the
+  upstream requests (messages, strict inline schema, `enable_thinking: false`, budget), the HTTP 200
+  captures and the backend counters. It also checks the candidate hashes, that no token or socket
+  remains, cleanup, preservation, the TASKS.md table lines, the scoreboard prefix and the
+  post-commit binding.
+- `install -m700 …/inputs/objects/1992c3c4… "$review_copy/helper"`. Its sha256 is
+  1992c3c40cd00f5b460585fe3934e661bf8f6004f1c77ea7c27635309c3bd6de, checked before execution.
+  `bash /tools/build-slot python3 -B …-v2/reproduce.py --helper "$review_copy/helper" --output
+  "$review_copy/reproduction"` → `{"status": "PASS", "contexts": 30, "answers": 30, …,
+  "candidate_execution": false, "model_inference": false, "hidden_or_held_out": false}`, rc 0.
+- Node: /lane/reviews/42612ca9787f-a4b-node has sha256 d1de76d8…932c. A private copy on PATH
+  reports v24.15.0.
+- `python3 -B scripts/local_agent_fast_gate.py --base 35afab91… --timeout 3600` → **FAST GATE:
+  PASS**, exit 0. This covers reporting only: diff check, untracked lint, private paths, licence,
+  review lint and markdownlint of 3 files with 0 issues. No source changed, so no Rust target was in
+  scope. The last source gate remains FAIL (1030/53/11/0) as disclosed.
+- `node …-v2/work/lint-all.mjs` → PASS, 0 issues, tables {scoreboard 1, evidence 1}.
+- `python3 -B scripts/private_host_paths.py --base 35afab91…` → PRIVATE PATH CHECK: PASS.
+- `python3 -B scripts/license_policy.py` → LICENCE POLICY: PASS.
+- `cmp docs/reviews/35afab91240a-copy-original-fragment-checkpoint10.txt
+  /lane/reviews/35afab91240a-copy-original-fragment-checkpoint10.md` → identical, so the retained
+  review is byte-identical. It ends `Verdict: PASS`.
+
+## Evidence tracing (my own recomputation)
+
+- Task order is the frozen preflight3 list: dev-001 … dev-029, then dev-rust-001. Each task has
+  exactly one attempt, and the 20 new ones are dev-011..029 plus dev-rust-001.
+- Causes over 30 attempts: ungraded-proposal 17, strict-edit-refused:code.proposal.edit 12,
+  strict-edit-refused:code.proposal.format 1. The 20 new attempts contribute 11 strict proposals
+  and 9 edit refusals. This matches the scoreboard, the evidence page and TASKS.md (17/30).
+- Rendered input is 3229–9738 tokens. Every requested budget equals 32768 − input − 32, giving
+  22998–29507. Response usage sums to 216073 prompt and 89292 completion tokens, which equals the
+  backend-log counters that verify.py parses (30/30 coverage). Every finish_reason is `stop`, and
+  every completion count is below its budget, so "stopped-below-token-limits: 30" is accurate.
+  Does-not-fit is 0.
+- Time: request/check is 1260.250 s in total and 752.070 s for the new attempts. Reserved work is
+  1827.192 s in total (30.453 GPU-slot work minutes) and 1167.491 s new. The new controller
+  interval runs from launch 09:00:18.897093 to exit 09:46:12.971838 UTC, 2754.075 s. With the
+  earlier 943.593 s the total is 3697.668 s. All of these match.
+- Resources: launch records nice 19, low priority, cpu.max 400000/100000 (four CPUs) and memory.max
+  17179869184 (16 GiB). Sampled GPU peaks for the new jobs are 18783–19198 MiB, all ≤ 22528.
+  Cleanup records 15 completed and 10 new pairs, 20 retired tokens, no live owned process and no
+  foreign signal.
+
+## Integrity, safety and labelling
+
+- Evaluation integrity: only development-split tasks ran (verify.py asserts
+  `split == development` and `held_out_executed` false), in frozen order, each once. No prompt,
+  checker, task or hidden-test file changed. Task passes are "Unavailable", not zero and not
+  estimated. The 13 refusals are counted, not dropped or repaired. The first ten attempts come
+  from the hash-verified earlier capsules and were not replayed.
+- MEASURE FIRST: a dated scoreboard line follows the batch. It gives the source commit, model,
+  context and output budget, first/within-budget passes (Unavailable), strict ungraded count,
+  held-out (Not run), time, GPU-slot minutes, tokens, does-not-fit (0) and causes. It states that no
+  measured variable changed on resume. The previous scoreboard is a byte-exact prefix.
+- Honest claims: the text describes a partial-path measurement and names the unavailable stages
+  (native admission, grading controls, effects, tests, feedback, retries). It claims no
+  qualification, promotion or row close. TASKS.md adds no row or sub-row.
+- Confinement: no runtime, permission, sandbox or tool code changed. Inference used a read-only
+  bwrap view of the source snapshot, and no candidate executed.
+- Privacy and branding: the committed diff has no home path, username, hostname, e-mail or
+  credential. The capsule's launch argv contains the builder's home path, but the capsule is outside
+  the repository and that path is not committed. The model identifier is used descriptively, as in
+  earlier scoreboard lines. No other agent product, sibling project, paper or patent is named.
+
+## Findings
+
+No critical, high or medium findings.
+
+- L1 (low, backlog; reporting provenance only). The correction method does not record every edit
+  it describes. Fix: record every edited reporting script in the correction record, or patch it from
+  the correction method itself.
+  - What happened: /lane/reviews/copy-fragments-a4b-complete-20261117-v2/work/write-reports.py
+    differs from the failed capsule's copy (the task-range wording at lines 24 and 45). But
+    work/correct-report-bundle.py patches only package.py, finish-session.py, verify.py and the
+    evidence page, and work/correction.json does not mention write-reports.py.
+  - Also: finish-session.py, which the correction method edits, is not in either capsule.
+  - Impact: none on any number. All raw data is identical across the two capsules, I recomputed
+    every value independently, and the committed evidence equals the sealed bytes.
+- Earlier L1 (helper build provenance) and L2 (native executable admission wording) remain T-309
+  backlog as recorded.
+
+## Per-row result
+
+- T-303/T-306 (non-closing frozen development measurement): this increment is accepted. The A4B
+  repeat is complete at 17/30 strict ungraded proposals for gemma4-26b-a4b, with 150/180 frozen
+  attempts remaining before further tuning or capability work. Every number traces to raw capsule
+  records, all three capsules authenticate, all 30 contexts and 30 saved answers reproduce, the
+  correction is reporting-only, and the reporting gates pass. The rows stay open, and no row closes.
+
+Verdict: PASS

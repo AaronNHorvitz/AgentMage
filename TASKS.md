@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The [independent A4B completion review](docs/reviews/a17e95952736-copy-original-fragment-a4b-development-completion.txt) returns **Verdict: PASS** for exact `a17e9595273683fcdc477cba4ef2601a1b3f0688`, with no high or medium finding. The report is retained unchanged, closes no row and gives no verdict for this increment. Its low L1 joins T-309: record every reporting-script edit in correction provenance and retain every edited method. Earlier T-309 notes remain open.
+
+The [first four frozen 31B attempts](docs/evidence/t303-copy-original-fragments-31b-checkpoint4-2026-11-17.md)
+record 2/4 strict ungraded proposals; task passes and retries stay
+unavailable. There are 34/180 attempts recorded and 146 left before tuning or
+capability work. All earlier A4B attempts and measured settings are preserved;
+no candidate, hidden or held-out test executes. T-303/T-306 remain open and
+independent core review is required for this non-closing measurement.
+
 The [independent ten-attempt checkpoint review](docs/reviews/35afab91240a-copy-original-fragment-checkpoint10.txt)
 returns **Verdict: PASS** for exact
 `35afab91240af28c2099fe61dd99851d177abfff`, with no new findings. It accepts the

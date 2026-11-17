@@ -3373,3 +3373,29 @@ duration and total end-to-end latency are unmeasured. Saved attempts are counted
 once and never replayed. Native executable admission and original grading
 controls still block effects, tests, feedback and retries. See [evidence](t303-copy-original-fragments-a4b-complete-2026-11-17.md).
 T-303/T-306 stay open; no model role or capability is qualified.
+
+## Copy-original-fragment prompt repeat: first four 31B attempts — 2026-11-17 UTC
+
+Development only: four new 31B attempts; 34/180 cumulative, 146 remain.
+No candidate, hidden or held-out test executes; task pass scores are unavailable.
+
+| Date (UTC) | Prompt/checker source | Model / attempts | Context / output tokens | First pass | Within budget | Strict ungraded | Held-out | Request/check seconds | GPU-slot work minutes | Backend input / output |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-17 | 35217c60a56a5d3e065148eb9a6aea898b5e1b16 | gemma4-31b (4/30) | 32768 / 23166–29507 | Unavailable | Unavailable | 2/4 | Not run | 309.096 | 6.401 | 27065 / 8960 (4/4 counters) |
+
+The campaign's changed variable remains the fixed original-fragment instruction;
+this resumes the next frozen profile. Its model settings, context, source
+excerpts, helper, API, schema, framing, thinking request and deadlines stay frozen.
+Rendered input: 3229–9570; output: `min(32768, 32768 - rendered input tokens - 32)`.
+Does not fit: 0. Causes: `{"strict-edit-refused:code.proposal.edit": 2, "ungraded-proposal": 2}`.
+Backend terminations: `{"stopped-below-token-limits": 4}`.
+Response fields: `{"content:nonempty": 4, "reasoning:absent-or-empty": 4, "reasoning_content:absent-or-empty": 4}`; internal reasoning is not inferred.
+
+This controller interval is 416.471 seconds, including queues and the
+released pause. Outer authentication, preparation and reporting are excluded.
+Completed-job work excludes wrapper overhead, pre-entry checks and queues.
+GPU kernel time, full reservation duration and total end-to-end latency remain
+unmeasured. Previous attempts are preserved and counted once. Native executable
+admission and original grading controls still block effects, tests, feedback
+and retries. See [evidence](t303-copy-original-fragments-31b-checkpoint4-2026-11-17.md). T-303/T-306 remain open; no model role or
+capability is qualified.
