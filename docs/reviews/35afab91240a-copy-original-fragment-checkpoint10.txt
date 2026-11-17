@@ -1,0 +1,147 @@
+Commit: 35afab91240af28c2099fe61dd99851d177abfff
+Scope: copy-original-fragment-checkpoint10
+
+# Independent review: ten-attempt frozen copy-original-fragment checkpoint
+
+Reviewer: Claude Opus 5.5 (extra-high effort), in a separate read-only session. Tier: core.
+Base b7ab16d0c628280c52d8ba98567758165d0a8f04; prompt/checker source
+35217c60a56a5d3e065148eb9a6aea898b5e1b16. Every command ran in the pinned checkout
+/lane/review-checkout, with private scratch under /lane/state/tmp and
+CARGO_TARGET_DIR=/lane/state/review-target. `git status --porcelain` was empty before and after.
+I did not modify the repository. I ran no model, used no GPU and executed no candidate, hidden or
+held-out test.
+
+## Methods
+
+1. Read the brief sections that apply: MEASURE FIRST, REFOCUS, the 2026-11-02 directive, the
+   2026-11-11 owner notes and the README/licence orders. Read the complete four-file diff
+   (`git diff b7ab16d0..35afab91`): TASKS.md, coding-scoreboard.md, the new checkpoint evidence page
+   and the retained review docs/reviews/b7ab16d0c628-copy-original-fragment-generation.txt.
+2. Confirmed that no source, script, lockfile or manifest changed since the source commit
+   (`git diff --name-only 35217c60 HEAD` lists only README.md, TASKS.md and files under docs/). So the
+   previous reviewer's rebuild of the helper against the pinned repository-map source still applies
+   to this checkpoint.
+3. Read verify.py and reproduce.py before running them. verify.py only reads, hashes and inspects Git;
+   it executes no archived code. reproduce.py authenticates both capsules and the helper, then runs
+   only the helper (object 8f2481c7…, a stdin→stdout wrapper around `prepare_coding_proposal` /
+   `check_coding_proposal` with no filesystem, process or network effect).
+4. Read the capsule's launch.py and the frozen controller.py. The controller loops over pairs, skips
+   pairs whose report exists, refuses to continue over a partial job directory ("never replay
+   silently") and takes `/tools/build-slot` plus `/tools/gpu-slot` separately for each pair.
+5. Recomputed every published number from the raw per-job records with my own script, separately
+   from verify.py. I also inspected the four refused answers.
+6. Ran the fast gate, the Markdown/table lint, the private-path check and the licence policy. I
+   grepped the diff for private data and for product names.
+
+## Exact commands and results
+
+- `git rev-parse HEAD` → 35afab91240af28c2099fe61dd99851d177abfff. `git status --porcelain` → empty.
+  `git diff --check b7ab16d0…` → no output, exit 0. Four files changed, 299 insertions, 0 deletions.
+- sha256: manifest.json 4d9f9c12…e24520b, bindings.json 6353a400…1ecc (it records 5859 files), the
+  post-commit JSON 44cacdaa…80f9 and the post-commit method 9637ee40…45cd. All four equal the request.
+- `python3 -B /lane/reviews/copy-fragments-checkpoint10-20261117/verify.py` →
+  `{"status": "PASS", "attempts": 10, "new_attempts": 8, "remaining_attempts": 170,
+  "strict_ungraded_proposals": 6, "original_capsule_all_inputs_checked": true,
+  "postcommit_checked": true, "candidate_execution": false, "task_passes": null,
+  "hidden_or_held_out": false}`, exit 0. It hashes all 5027 files of the original capsule and checks
+  that it holds no extra file. It also checks the original receipt, the 2283 + 44 frozen inputs, the
+  byte-identical frozen campaign scripts and policy, and each upstream request against the prepared
+  messages, inline strict schema, `enable_thinking: false` and budget. Finally it checks HTTP 200
+  captures, the backend counters, the absence of tokens and sockets, and that the receipt covers the
+  complete four-file diff at HEAD.
+- `install -m700 …/inputs/objects/1992c3c4… "$review_copy/helper"`. Its sha256 is
+  1992c3c40cd00f5b460585fe3934e661bf8f6004f1c77ea7c27635309c3bd6de, checked before execution.
+  `bash /tools/build-slot python3 -B …/reproduce.py --helper "$review_copy/helper" --output
+  "$review_copy/reproduction"` → `{"status": "PASS", "contexts": 30, "answers": 10, …,
+  "candidate_execution": false, "model_inference": false, "hidden_or_held_out": false}`, rc 0.
+- Node: /lane/reviews/42612ca9787f-a4b-node has sha256 d1de76d8…932c. A private copy on PATH
+  reports v24.15.0.
+- `python3 -B scripts/local_agent_fast_gate.py --base b7ab16d0… --timeout 3600` →
+  **FAST GATE: PASS**, exit 0. This covers reporting only: the private-path check, the licence policy,
+  lint of the retained review and markdownlint of 3 files with 0 issues. No source changed, so no
+  Rust target was in scope. The last source gate remains FAIL (1030/53/11/0) as disclosed. The
+  previous reviewer confirmed those 53 inherited, fail-closed admission failures at b7ab16d0, and
+  nothing that could affect them has changed since.
+- `node …/work/lint-all.mjs` → PASS, 0 issues, tables {scoreboard 1, evidence 1}.
+- `python3 -B scripts/private_host_paths.py --base b7ab16d0…` → PRIVATE PATH CHECK: PASS.
+- `python3 -B scripts/license_policy.py` → LICENCE POLICY: PASS.
+- `cmp docs/reviews/b7ab16d0c628-copy-original-fragment-generation.txt
+  /lane/reviews/b7ab16d0c628-copy-original-fragment-generation.md` → identical, so the retained
+  review is byte-identical. It ends `Verdict: PASS`.
+
+## Evidence tracing (my own recomputation from raw per-job records)
+
+| Task | Cause (checker id) | Input | Budget | Request/check s |
+| --- | --- | --- | --- | --- |
+| dev-001 | ungraded-proposal (saved) | 9508 | 23228 | 38.360 |
+| dev-002 | ungraded-proposal (saved) | 9570 | 23166 | 22.204 |
+| dev-003 | strict-edit-refused: code.proposal.edit | 4758 | 27978 | 52.001 |
+| dev-004 | strict-edit-refused: code.proposal.format | 3229 | 29507 | 180.154 |
+| dev-005 | ungraded-proposal | 8466 | 24270 | 33.955 |
+| dev-006 | ungraded-proposal | 9316 | 23420 | 8.327 |
+| dev-007 | ungraded-proposal | 9738 | 22998 | 40.117 |
+| dev-008 | strict-edit-refused: code.proposal.edit | 9378 | 23358 | 103.629 |
+| dev-009 | ungraded-proposal | 3417 | 29319 | 24.856 |
+| dev-010 | strict-edit-refused: code.proposal.edit | 4321 | 28415 | 4.576 |
+
+- Counts: 6 strict ungraded proposals overall, 4 of them new (dev-005/006/007/009). The other four
+  are 3 edit refusals and 1 format refusal. These match the scoreboard, TASKS.md and the evidence.
+  Every budget equals 32768 − input − 32, and the published ranges 3229–9738 and 22998–29507 are
+  correct.
+- Time: the new request/check time is 447.615 s; with the first pair the total is 508.180 s. New
+  reserved work is 257.536 + 73.242 + 173.518 + 58.338 = 562.634 s; with the first pair's 97.066 s
+  the total is 659.701 s, or 10.995 GPU-slot work minutes. The new controller interval runs from
+  08:37:56.169028 to 08:52:01.624615, 845.456 s. With the first pair's 98.138 s the total is
+  943.593 s. All of these match.
+- Sampled GPU peaks for the new jobs are 19330–19660 MiB, all within the 22528 MiB limit that
+  verify.py checks. The launch records low priority and nice 19 (read from /proc). The scope has
+  cpu.max 400000/100000 (four CPUs) and memory.max 16 GiB; the 900 s per-job cap is in the frozen
+  batch policy. Cleanup records 8 new retired tokens, no live owned process, no foreign signal, and
+  API and model reaped.
+- The dev-004 format refusal is a degenerate answer: 80,255 bytes, which exceeds the checker's
+  `MAX_ANSWER` of 64 KiB (capabilities/repository-map/src/coding_proposal.rs:23, :416), with 31 of 32
+  edits identical. The backend recorded `finish_reason: stop` with `truncated = 0` and 23,156
+  completion tokens, below the 29,507 budget, so "stopped below token limits" is accurate. It is
+  counted as a refusal and is not repaired or dropped.
+
+## Integrity, safety and labelling
+
+- Evaluation integrity: only development tasks dev-001..010 ran, in fixed order, each once
+  (verify.py asserts split `development`, `held_out_executed` false and no duplicate task). No
+  evaluation, hidden-test or held-out path is in the diff. Task passes are "Unavailable", not zero
+  and not estimated. Refusals are counted, not dropped. The two saved first-pair attempts come from
+  the hash-verified original capsule and were not replayed.
+- MEASURE FIRST: a dated scoreboard line follows the batch. It gives the source commit, model,
+  context and output budget, first/within-budget passes (Unavailable), strict ungraded count,
+  held-out (Not run), time, GPU-slot minutes, tokens, does-not-fit (0) and causes. It states that no
+  measured variable changed on resume. The previous scoreboard is a byte-exact prefix (verify.py),
+  and the TASKS.md table lines are unchanged.
+- Honest claims: TASKS.md adds two prose paragraphs and no row, sub-row or close. The text makes no
+  improvement or grade claim, and it names the unavailable parts of the loop (native admission,
+  grading controls, effects, tests, feedback, retries) and marks them unavailable.
+- Confinement: no runtime, permission, sandbox or tool code changed. Inference used a read-only
+  bwrap view of the source snapshot; no candidate executes.
+- Privacy and branding: the diff contains no home path, username, hostname or credential. The
+  capsule's launch argv contains the builder's home path, but the capsule is outside the repository
+  and that path is not committed. The only product-like name added is the reviewer-model attribution
+  inside the retained review, which follows the 303 committed reviews before it and is not branding.
+  No other agent product, sibling project, paper or patent is named.
+
+## Findings
+
+No critical, high or medium findings.
+
+No new low findings. L1 (helper build provenance) and L2 (native executable admission wording) from
+the previous review remain T-309 backlog as recorded. Informational, for the post-repeat diagnosis
+only (not a finding): dev-004's format refusal comes from a repetitive answer that exceeds the 64 KiB
+answer ceiling, not from malformed JSON.
+
+## Per-row result
+
+- T-303/T-306 (non-closing frozen development checkpoint): this increment is accepted. 6/10 strict
+  ungraded proposals for gemma4-26b-a4b; 170/180 frozen attempts remain before further tuning or
+  capability work. Every number traces to the raw capsule records, both capsules authenticate, all
+  30 contexts and all 10 saved answers reproduce, and the reporting gates pass. The rows stay open,
+  and no row closes.
+
+Verdict: PASS

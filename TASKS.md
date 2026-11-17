@@ -2,6 +2,19 @@
 
 ## Active queue: local agent mission
 
+The [independent ten-attempt checkpoint review](docs/reviews/35afab91240a-copy-original-fragment-checkpoint10.txt)
+returns **Verdict: PASS** for exact
+`35afab91240af28c2099fe61dd99851d177abfff`, with no new findings. It accepts the
+previous checkpoint only, closes no row and gives no verdict for this increment.
+The report is retained unchanged; earlier T-309 backlog notes remain open.
+
+The [completed frozen A4B repeat](docs/evidence/t303-copy-original-fragments-a4b-complete-2026-11-17.md)
+records 17/30 strict ungraded proposals, including 20 new development attempts.
+Task passes/retries remain unavailable; no candidate, hidden or held-out test
+executes. Five profiles and 150/180 attempts remain before tuning or capability
+work. Source, settings and all saved attempts stay frozen. T-303/T-306 remain
+open; this non-closing measurement requires independent core review.
+
 The [independent original-fragment review](docs/reviews/b7ab16d0c628-copy-original-fragment-generation.txt)
 returns **Verdict: PASS** for exact
 `b7ab16d0c628280c52d8ba98567758165d0a8f04`, with no high or medium finding.

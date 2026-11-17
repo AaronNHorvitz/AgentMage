@@ -3346,3 +3346,30 @@ reservation duration and total end-to-end latency are unmeasured. Saved attempts
 are preserved and counted once. Native admission and original grading controls
 still block effects, project tests, feedback and retries. See [evidence](t303-copy-original-fragments-checkpoint10-2026-11-17.md).
 T-303/T-306 remain open; no model role or capability is qualified.
+
+## Copy-original-fragment prompt repeat: completed A4B — 2026-11-17 UTC
+
+Development only: 20 new attempts, 30 A4B attempts cumulative; 150/180 remain.
+No candidate, hidden or held-out test executes; task pass scores are unavailable.
+
+| Date (UTC) | Prompt/checker source | Model / attempts | Context / output tokens | First pass | Within budget | Strict ungraded | Held-out | Request/check seconds | GPU-slot work minutes | Backend input / output |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-17 | 35217c60a56a5d3e065148eb9a6aea898b5e1b16 | gemma4-26b-a4b (30/30 cumulative) | 32768 / 22998–29507 | Unavailable | Unavailable | 17/30 | Not run | 1260.250 | 30.453 | 216073 / 89292 (30/30 counters) |
+
+No measured variable changes on resume. The campaign's changed variable remains
+the fixed original-fragment instruction; model/profile, context, excerpts,
+runtime, schema, framing, thinking request and deadlines stay frozen.
+Rendered input: 3229–9738; output: `min(32768, 32768 - rendered input tokens - 32)`.
+Does not fit: 0. Causes: `{"strict-edit-refused:code.proposal.edit": 12, "strict-edit-refused:code.proposal.format": 1, "ungraded-proposal": 17}`.
+Backend terminations: `{"stopped-below-token-limits": 30}`.
+Response fields: `{"content:nonempty": 30, "reasoning:absent-or-empty": 30, "reasoning_content:absent-or-empty": 30}`; internal reasoning is not inferred.
+
+The 20 new attempts add 752.070 request/check seconds and 1167.491
+completed-job reserved-work seconds. This controller interval is 2754.075
+seconds including queues and released pauses. Three recorded controller intervals
+total 3697.668 seconds, excluding between-session gaps, outer
+authentication, preparation and reporting. GPU kernel time, complete reservation
+duration and total end-to-end latency are unmeasured. Saved attempts are counted
+once and never replayed. Native executable admission and original grading
+controls still block effects, tests, feedback and retries. See [evidence](t303-copy-original-fragments-a4b-complete-2026-11-17.md).
+T-303/T-306 stay open; no model role or capability is qualified.
