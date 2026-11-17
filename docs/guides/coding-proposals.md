@@ -342,3 +342,16 @@ only). JSON bytes are not rendered prompt tokens, and this record grants no
 disclosure or effect authority. It is process-local metadata, not a durable run
 or native context. The full coordinator's native contracts remain unchanged;
 endpoint run/turn composition and measured coding workflows remain open.
+
+## Constructing exact original fragments
+
+The fixed generation instruction asks the model to copy `old` from original
+visible source before deriving `new`, then check all edits against that same
+source. Insertions keep an existing nonempty anchor; deletions may use an empty
+replacement. Changes sharing source characters are combined into one edit,
+with no unchanged edits. JSON escaping must decode to the exact original
+fragment, including whitespace and line endings. This guidance grants no
+permission and adds no output repair: the existing strict checker still refuses
+the whole proposal when any fragment is absent, ambiguous, invisible or
+conflicts with another edit. [Decision 0212](../decisions/0212-copy-original-fragments-before-replacement.md)
+records the development-only measurement hypothesis and repeat requirement.
