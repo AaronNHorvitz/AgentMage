@@ -1,0 +1,125 @@
+Commit: 3434027d85e1a9d93f6184a0702dc6fab2dd7d3b
+Scope: inline-schema-muse-development-checkpoint14
+
+# Independent review: inline-schema Muse development checkpoint14
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Every command ran in
+the pinned checkout /lane/review-checkout (HEAD = the commit above, clean). I used no GPU, model,
+candidate, hidden test or held-out task. This is not a UI row, so no UI or browser check applies.
+
+## Scope read
+
+I read the complete public diff from base a0f8dbdbde09e2bc900956f0ed8de97aea82649c. It touches four
+files and only adds lines (14/39/127/105):
+- TASKS.md
+- docs/evidence/coding-scoreboard.md
+- docs/evidence/t303-inline-schema-muse-checkpoint14-2026-11-17.md
+- docs/reviews/a0f8dbdbde09-inline-schema-muse-development-checkpoint8.txt
+
+I also read these parts of the capsule /lane/reviews/inline-schema-muse-r3-20261117:
+- verify_measurement.py and measurement/verify_postcommit.py
+- controller.diff and stop_checkpoint.py.diff
+- the batch reports and records, checked.json and events.ndjson
+- the raw upstream requests and responses, launch.json, controller-exit.json, controller.log and
+  cleanup.json
+
+## Commands and results
+
+1. `git rev-parse HEAD` → 3434027d85e1a9d93f6184a0702dc6fab2dd7d3b. `git status --porcelain` →
+   empty. `git diff --check a0f8dbdb…` → exit 0.
+2. I read both verifiers before running them. They only read and hash files and call
+   `git ls-tree`, `cat-file`, `show`, `rev-parse` and `diff`. They import nothing from the capsule
+   and execute no candidate.
+   - `python3 -B …/verify_measurement.py` → PASS: 14 tasks, 7 strict ungraded proposals, causes
+     exactly as requested, 72544/75130 tokens, 19969 files, no candidate execution, no hidden or
+     held-out test. Exit 0.
+   - `python3 -B …/measurement/verify_postcommit.py` → PASS: commit 3434027d…, 4 files, sealed
+     public bytes equal the committed blobs, and the path set equals the complete committed diff.
+     Exit 0.
+   - `sha256sum manifest.json bindings.json` → 3ff83e69…2ebbdb and 604f9d3e…d72452. Both match
+     the request.
+3. `/lane/reviews/42612ca9787f-a4b-node` passed `sha256sum -c` against d1de76d8…bd932c. I copied
+   it to a private mode-700 /tmp scratch directory, checked its hash again there and put it first
+   on PATH (v24.15.0).
+   - With CARGO_TARGET_DIR=/lane/state/review-target:
+     `bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base a0f8dbdb… --timeout 3600`
+     → **FAST GATE: PASS**, exit 0. It ran diff check, untracked lint, private-path check, licence
+     policy, review lint on the retained review and markdownlint (0 issues in 3 files).
+   - `python3 -B scripts/private_host_paths.py --base a0f8dbdb…` → PRIVATE PATH CHECK: PASS.
+   - `python3 -B scripts/license_policy.py` → LICENCE POLICY: PASS.
+
+## Independent checks (my own scripts, not the builder's)
+
+- **Numbers from the raw captures.** I recomputed each published figure from the raw upstream
+  responses and the task records:
+  - Tokens: the `usage` blocks of the 11 complete captures sum to 72544 prompt and 75130
+    completion tokens. dev-004, dev-011 and dev-012 have no capture, so coverage is 11/14.
+  - Budgets: every `max_tokens` equals 32768 − input − 32. The output range is 24403–29826 and
+    the input preflight range is 2910–8333.
+  - Times: generation seconds sum to 2689.397 s. Reserved work sums to 2971.395 s (49.523 min).
+  - Controller intervals: the resumed segment runs from 03:49:27.860 to 04:15:25.940 UTC, which
+    is 1558.080 s. The preceding 5606.979 s matches the figure I verified in the checkpoint8
+    review. The total is 7165.059 s, as published.
+  - The per-task finish reasons and the answer and reasoning character counts match the evidence
+    table row by row.
+  - Failures: all three missing captures are `chat.transport.timeout` error events at 300.0 s,
+    with 0 retries, not graded and with a base-file fallback. They are counted as failures, not
+    dropped, and not counted as "does not fit" (which is 0). Strict refusals are 2
+    `code.proposal.edit` and 2 `code.proposal.format`.
+  - GPU peaks range from 17381 to 18013 MiB.
+  - Cleanup reports 7 pairs revoked, reaped and with model keys and sockets absent, 14 distinct
+    retired token files and no matching processes.
+- **No replay.** `diff -rq` shows that the muse-00/02/04/06 run directories and reservation logs,
+  and candidate-sources dev-001..008, are byte-identical between the r2 capsule and r3. The r2
+  capsule has no muse-08/10/12 directory.
+  - The controller's only change is the reservation-log parent (controller.diff). It still
+    refuses to run over a partial directory.
+  - controller.log shows only completions 10, 12 and 14.
+- **Clean checkpoint stop.**
+  - stop_checkpoint.py changes only the pair index (6→12) and the counts. It checks the
+    controller's PID, start ticks and parent, and sends SIGTERM only to the controller.
+  - The muse-12 pair completed and no muse-14 directory or reservation log exists. The verifier
+    asserts the same.
+- **Single changed variable.** I hash-checked the dev-009..014 upstream requests (muse-08/10/12)
+  in the preceding repeat's inputs tar (045ed1f0…) against its manifest (575ff9bb…) and compared
+  them key by key with r3. All six differ only in `response_format`: `json_object` became the named
+  `coding_edits_v1` `json_schema` with `strict: true`. Messages, model, n, stream, `max_tokens` and
+  `chat_template_kwargs` (thinking disabled) are identical.
+- **Preservation.**
+  - The base scoreboard is an exact byte prefix of the new one.
+  - The `|` table lines of TASKS.md are unchanged.
+  - The retained checkpoint8 review is byte-identical to
+    /lane/reviews/a0f8dbdbde09-inline-schema-muse-development-checkpoint8.md and ends
+    `Verdict: PASS`.
+  - All relative links in the new text resolve.
+- **Privacy and branding.** I grepped the added lines for home paths, user or host names, e-mail
+  addresses, keys and tokens, and found none.
+  - The only product-like hit is the reviewer self-identification line in the retained review, the
+    same pattern that earlier PASS reviews accepted.
+  - The word "patent" appears only in that review's statement that none is named.
+  - "muse" is a local model label, not branding.
+  - The private home path appears only in the capsule verifier's mount argv under /lane/reviews,
+    which is not committed.
+- **Evaluation integrity.** Only dev-001..dev-014 ran. Every record has `graded` false and
+  `retries` 0, `held_out_executed` is false, and no candidate executed. Prompts, contexts (30/30
+  reproduce against the prior repeat), the checker, the helper and the profile are unchanged, so
+  nothing was tuned. The diff changes no task, hidden test or base commit.
+- **MEASURE FIRST and honest claims.** The scoreboard has a dated line for this batch.
+  - It states the context and output budgets and counts "does not fit" separately (0).
+  - Task passes and retries are "Unavailable", and strict acceptance is explicitly not called
+    correctness.
+  - Non-empty `reasoning_content` under a thinking-disabled request is reported as an observed
+    field, with no claim about internal reasoning.
+  - No row is claimed closed.
+
+## Findings
+
+None at critical, high, medium or low.
+
+## Per-row result
+
+- T-303/T-306 (non-closing MEASURE FIRST measurement, 14/30 Muse attempts): the reporting increment
+  is accepted. The figures trace to the raw logs, confinement and evaluation integrity hold for this
+  batch, and both rows stay open. Nothing is promoted.
+
+Verdict: PASS

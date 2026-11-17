@@ -3190,3 +3190,42 @@ Audit, comparison, original-helper reproduction and cleanup pass.
 T-303/T-306 remain open. See [evidence](t303-inline-schema-muse-checkpoint14-2026-11-17.md).
 
 The builder requested a checkpoint through the exact controller's stop flag. The active reserved pair finished normally; the next pair never started. No model attempt was cancelled by the checkpoint. Original request deadlines still apply. The stop method, process identity, request and exit are retained for a resume without replay.
+
+## Inline-schema Muse development checkpoint20 — 2026-11-17 UTC
+
+| Date | Source commit | Model | Context / output allowance | First task passes | Within-budget task passes | Strict ungraded proposals | Held-out | Request/check s | GPU reserved work min | Input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-17 | 72c002a42957340de0b6fa0eb4d48385db2c7e62 | muse (20/30) | 32768 / 24395–29826 | Unavailable | Unavailable | 13/20 | Not run | 3299.220 | 63.313 | 111197 / 99327 (17/20 counters) |
+
+Changed variable: trusted named inline `json_schema` request with `strict: true`.
+Contexts/messages, model/profile, runtime, helper, prompts, strict checker,
+framing, thinking request, deadlines and output formula match the preceding
+muse repeat. Profile `reasoning_strength: medium` and the transport's thinking
+disabled request are unchanged; internal reasoning is not inferred.
+Input 2910–8341; does not fit: 0.
+Causes: `{"generation-refused:error:chat.transport.timeout": 3, "strict-edit-refused:code.proposal.edit": 2, "strict-edit-refused:code.proposal.format": 2, "ungraded-proposal": 13}`. Captures:
+`{"complete-choice-json": 17, "missing": 3}`; reasoning metadata:
+`{"non-empty": 17}`. Missing metadata is not zero.
+
+Native admission/original grading controls still block effects, project tests,
+feedback and retries. Task passes remain unavailable. No candidate, hidden or
+held-out test ran. 10 attempts remain before tuning or new capabilities.
+Earlier attempts are preserved and counted once; none is replayed. All original frozen input bindings
+pass against the complete read-only Git-backed source snapshot; the licence
+batch's working-tree changes are outside this measurement. All 30 contexts
+were reproduced before inference against this model's own preceding repeat.
+
+Completed-job reserved work 3798.786 seconds excludes queues, pre-entry
+validation, wrapper overhead and released pauses. The sum of recorded controller
+launch-to-exit UTC intervals is 9622.000 seconds including queues and
+released pauses; the gap between sessions, outer authentication, preflight
+and reporting are outside it.
+The preceding segments total 7165.059 seconds and the resumed
+segment is 2456.941 seconds. GPU kernel time and complete
+end-to-end latency are unmeasured.
+Observed response field combinations: `{"non-empty content / non-empty reasoning_content": 17, "unavailable content / unavailable reasoning_content": 3}`.
+These describe captured fields; internal reasoning is not inferred.
+Audit, comparison, original-helper reproduction and cleanup pass.
+T-303/T-306 remain open. See [evidence](t303-inline-schema-muse-checkpoint20-2026-11-17.md).
+
+The builder requested a checkpoint through the exact controller's stop flag. The active reserved pair finished normally; the next pair never started. No model attempt was cancelled by the checkpoint. Original request deadlines still apply. The stop method, process identity, request and exit are retained for a resume without replay.
