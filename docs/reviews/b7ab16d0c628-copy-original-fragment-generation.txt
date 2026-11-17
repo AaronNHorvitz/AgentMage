@@ -1,0 +1,161 @@
+Commit: b7ab16d0c628280c52d8ba98567758165d0a8f04
+Scope: copy-original-fragment-generation
+
+# Independent review — copy-original-fragment generation change and first frozen A4B pair
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate read-only session. Tier: core.
+Base 9cd1a07d1128dc21ae5e1b6c7278c233e428c03c; source commit 35217c60a56a5d3e065148eb9a6aea898b5e1b16;
+reviewed commit b7ab16d0c628280c52d8ba98567758165d0a8f04. All commands ran in the pinned checkout
+/lane/review-checkout with private scratch under /lane/state/tmp. The repository was not modified
+(`git status --porcelain` was empty before and after). No model, GPU, candidate, hidden or held-out
+test was run by me.
+
+## Methods
+
+1. Read the brief sections that apply (MEASURE FIRST, REFOCUS, the 2026-11-02 directive, the
+   2026-11-11 owner notes, the README/licence orders) and the complete eight-file diff across both
+   commits (`git diff 9cd1a07d..b7ab16d0`): README.md, TASKS.md,
+   capabilities/repository-map/src/coding_proposal.rs, Decision 0212, coding-scoreboard.md, the new
+   evidence page, docs/guides/coding-proposals.md and the retained diagnosis review.
+2. Checked the new instruction against the strict checker it describes
+   (capabilities/repository-map/src/coding_proposal.rs:24 `MAX_EDITS = 32`, :433 the 1..=32 edit count,
+   :442 nonempty `old`, `old != new` and NUL refusal; nothing refuses an empty `new`). Every claim the
+   instruction makes ("1-32 edits", "for deletion new may be empty", "omit unchanged edits", "combine
+   edits sharing source characters", all-or-nothing refusal) matches the checker. The untrusted-data
+   sentence is kept word for word. The instruction adds no authority, tool, task content or held-out
+   material. It is still the system message for the local API (platforms/local-api/src/lib.rs:1042)
+   and the repair path's prefix (coding_repair_api.rs:408, lib.rs:1070).
+3. Measured the instruction's byte length at base, source and reviewed commits: 1072, 1072, 1072.
+4. Ran verify.py after reading it. It only reads, hashes and inspects Git, including hashing archive
+   members in memory; it executes nothing that was archived.
+5. Read reproduce.py and the helper source (object 8f2481c7…, a stdin→stdout wrapper around
+   `prepare_coding_proposal` / `check_coding_proposal` with no filesystem, process or network effect).
+   Then I ran it with an authenticated private copy of the helper.
+6. **Independent rebuild.** The capsule helper's Cargo.toml depends on the repository-map crate by the
+   builder's live repository path, so the binary hash alone does not prove which library source it
+   compiled. I rebuilt the same helper source and Cargo.lock against
+   /lane/review-checkout/capabilities/repository-map (`cargo build --offline --locked` through the build
+   slot, private target dir). I then ran my own comparison loop with it. The loop makes the same 30
+   context, 166 old-answer and 2 new-answer comparisons, and also checks that the system message is
+   the 1,072-byte constant in the pinned source and that user messages and excerpts equal the
+   preceding repeat.
+7. Ran both fast gates, the Markdown/table lint, the private-path check and the licence policy.
+   I compared my source-gate failure names with the retained lists.
+8. Traced the published numbers to the raw capsule records. I resolved one apparent discrepancy about
+   niceness and checked the rejected draft's retained source, the controls on inference input, cleanup
+   and the privacy of the diff.
+
+## Exact commands and results
+
+- `git rev-parse HEAD` → b7ab16d0c628280c52d8ba98567758165d0a8f04; `git status --porcelain` → empty;
+  `git diff --check 9cd1a07d1128dc21ae5e1b6c7278c233e428c03c` → no output, exit 0. Eight files are
+  changed, 359 insertions and 2 deletions. The only Rust change is the instruction constant
+  (35217c60, 5 lines).
+- sha256 of manifest.json b578ea87…cf0c2, bindings.json 93b10757…7582da6, post-commit JSON
+  1cbdfef6…de096 and post-commit method b48222f4…633ca1: all equal the request.
+- `python3 -B /lane/reviews/exact-fragments-20261117/verify.py` → `{"status": "PASS", attempts 2,
+  strict_ungraded_proposals 2, remaining_attempts 178, frozen_repository_inputs 2283,
+  frozen_private_inputs 44, unchanged_user_contexts 30, old_answer_checks 166, task_passes null,
+  candidate_execution false, hidden_or_held_out false, postcommit_checked true}`, exit 0.
+- Helper copy: `install -m700 …/inputs/objects/1992c3c4… "$review_copy/helper"`; its sha256 is
+  1992c3c40cd00f5b460585fe3934e661bf8f6004f1c77ea7c27635309c3bd6de, as required.
+  `bash /tools/build-slot python3 -B …/reproduce.py --helper "$review_copy/helper" --output
+  "$review_copy/reproduction"` → PASS: contexts 30, original_answers 166, new_answers 2, rc 0.
+- My rebuild compiled `agentmage-capability-repository-map (/lane/review-checkout/…)`. Its binary
+  sha256 is 61e88692…aa400b; it differs from the capsule's, as expected for a different path and target.
+  My comparison loop → `{"contexts": 30, "old_answers": 166, "new_answers": 2, "status": "PASS"}`.
+  So the claims about preserved contexts and checker outputs hold for the exact pinned source, not
+  only for the supplied binary.
+- Node: /lane/reviews/42612ca9787f-a4b-node, sha256 d1de76d8…bd932c; a private copy on PATH reports
+  v24.15.0. CARGO_TARGET_DIR was private scratch.
+- `python3 -B scripts/local_agent_fast_gate.py --base 9cd1a07d… --timeout 3600` → **FAST GATE: FAIL**,
+  exit 1. Summing the `test result:` lines gives 1030 passed / 53 failed / 11 ignored / 0 filtered
+  across 29 targets; only the `-p agentmage-host --lib` target fails. My 53 FAILED names equal
+  `failure_names` and `prior_failure_names` in work/final-gate-comparison.json exactly: none added,
+  none missing. Causes: 51 panic on `LinuxSandboxError { kind: InvalidManifest }`
+  (shells/host/src/linux_coding_runtime.rs:11307, shells/host/src/linux_read.rs:2345). One is the
+  parent of a child that panics with InvalidManifest (linux_coding_runtime.rs:7338). One is
+  `/usr/bin/git` artifact verification, `InvalidGitArtifact`
+  (shells/host/src/linux_repository_map.rs:748). All 53 fail closed on native executable admission.
+  I did not filter or allowlist any of them, and I do not call this gate green.
+- `python3 -B scripts/local_agent_fast_gate.py --base 35217c60… --timeout 3600` → FAST GATE: PASS,
+  exit 0. This covers reporting only.
+- `node /lane/reviews/exact-fragments-20261117/work/lint-all.mjs` → PASS, 0 issues, tables
+  {scoreboard 1, evidence 2}.
+- `python3 -B scripts/private_host_paths.py --base 9cd1a07d…` → PRIVATE PATH CHECK: PASS.
+- `python3 -B scripts/license_policy.py` → LICENCE POLICY: PASS.
+- The retained diagnosis review docs/reviews/9cd1a07d1128-exact-edit-refusal-diagnosis.txt is
+  byte-identical (`cmp`, sha256 6b2f275f…105ca) to /lane/reviews/9cd1a07d1128-exact-edit-refusal-diagnosis.md
+  and ends with `Verdict: PASS`.
+
+## Evidence tracing
+
+- Budgets: the preflight inputs for dev-001/dev-002 are 9508 and 9570 (work/audit.json,
+  collection/batch.json). 32768 − input − 32 gives 23228 and 23166, matching the published range
+  23166–23228. The backend input sum, 19078, equals 9508 + 9570.
+- Request/check time: 38.360 + 22.204 = 60.564 s. Reserved work is 97.066 s (batch-report.json);
+  97.066 / 60 = 1.618 GPU-slot minutes. Controller time is 98.138 s, from launch.json utc
+  08:17:12.134 to controller-exit.json utc 08:18:50.272, with exit 0.
+- verify.py binds each upstream request to the prepared messages, which use the 1,072-byte final
+  instruction; the inline schema with `strict: true`; `enable_thinking: false`; and
+  `max_tokens` = budget. It also binds HTTP 200 captures, `finish_reason: stop`, empty or absent
+  reasoning fields, the backend `truncated = 0` lines and candidate bytes against checked.json. So
+  inference used the final instruction, not the 1,447-byte draft.
+- Rejected draft: work/draft-coding-proposal.rs differs from 35217c60 only in the instruction
+  constant, which is 1,447 bytes. work/draft-gate-comparison.json shows 1029/54/11 with exactly one
+  added failure, `…endpoint_model_edit_checks_task_exclusions_and_targets_before_replacing_preview`.
+  The final source resolves it (my gate: 53, identical to prior). No test or limit changed in the
+  diff. work/compact-instruction.txt equals the committed constant.
+- Niceness: launch.json argv shows `nice -n 9`, but launch.py computes `19 - os.nice(0)` from a
+  parent already at 10, and the recorded `"nice": 19` is read from /proc. Consistent with the evidence.
+  Scope limits: cpu.max 400000/100000 (four CPUs), memory.max 16 GiB.
+- Cleanup (work/cleanup.json): PASS. Settings are revoked, the API and model are reaped, 2 tokens
+  are retired, no owned process is live, no foreign process was signalled, and the capsule's jobs
+  tree contains no token or socket files.
+
+## Integrity, safety and labelling
+
+- Evaluation integrity: no evaluation, hidden-test or held-out path is in the diff. The instruction is
+  generic and contains no task content. Only the first two development tasks in fixed order ran, and
+  both are labelled strict **ungraded** proposals. Task passes stay "Unavailable", not zero or
+  estimated. The evidence says explicitly that these two tasks also produced proposals before, so no
+  improvement is shown.
+- MEASURE FIRST: a scoreboard line follows the batch that changed what the model sees. It gives the
+  date, commit, model, context/output budget, first/within-budget passes (Unavailable), time, GPU-slot
+  minutes, tokens, does-not-fit (0) and causes. The changed variable is named. The previous scoreboard
+  is an exact byte prefix (checked by verify.py).
+- Honest claims: README changes one word ("completed"), which is accurate. TASKS.md adds prose only,
+  with no new row or sub-row and no row closed. The decision and the guide state the question as a
+  hypothesis. The independence paragraph and licence state are untouched by this diff.
+- Confinement: the instruction carries no permission. The strict checker, selection, ceilings and
+  admission are byte-identical outside the constant (verify.py's regex substitution check, and my
+  rebuild). The measurement controller runs no candidate, and the agent's tool sandbox is not
+  touched by this change.
+- Privacy: the diff contains no home path, username, hostname or credential. Only lane paths appear,
+  inside the retained review text, as in earlier committed reviews. The path check passes. Model
+  names identify models under measurement and are not used as branding.
+
+## Findings
+
+No critical, high or medium findings.
+
+Backlog (low, non-blocking):
+- L1 (capsule provenance, not in the repository): the helper's Cargo.toml
+  (inputs/objects/c5650bf4…) depends on repository-map through the builder's live repository path, not
+  a frozen snapshot. The binary's hash therefore does not by itself prove which library source it
+  compiled. My rebuild against the pinned checkout gave identical results here. Fix for later
+  capsules: build the helper against the frozen source archive, or record the library source tree
+  hash at build time. Backlog for T-309.
+- L2 (wording): the evidence calls all 53 inherited failures "native-manifest failures". One is
+  `/usr/bin/git` artifact verification (`InvalidGitArtifact`, shells/host/src/linux_repository_map.rs:748).
+  "native executable admission" would be exact. Backlog.
+
+## Per-row result
+
+- T-303/T-306 (non-closing MEASURE FIRST source change and first frozen pair): this increment is
+  accepted. The change and the evidence match what was claimed, and the numbers trace to raw records.
+  The source gate stays honestly FAIL with the identical 53 inherited, fail-closed admission failures
+  and no new one. The rows remain open. 178/180 frozen attempts remain before further tuning or
+  capability work.
+
+Verdict: PASS

@@ -2,6 +2,21 @@
 
 ## Active queue: local agent mission
 
+The [independent original-fragment review](docs/reviews/b7ab16d0c628-copy-original-fragment-generation.txt)
+returns **Verdict: PASS** for exact
+`b7ab16d0c628280c52d8ba98567758165d0a8f04`, with no high or medium finding.
+Its report is retained unchanged and accepts the earlier source/first-pair
+increment only; it closes no row and gives no verdict for this new checkpoint.
+Low L1 (helper build source provenance) and L2 (native executable admission
+wording) remain T-309 backlog. The helper is unchanged during this frozen repeat.
+
+The [frozen original-fragment checkpoint](docs/evidence/t303-copy-original-fragments-checkpoint10-2026-11-17.md)
+now records ten A4B development attempts: 6/10 strict ungraded proposals,
+including eight new attempts. Task passes/retries remain unavailable; no
+candidate, hidden or held-out test runs. There are 170/180 attempts left before
+further tuning or capability work. Source, settings and all earlier attempts
+remain frozen. T-303/T-306 stay open; independent core review is required.
+
 The [independent exact-edit diagnosis review](docs/reviews/9cd1a07d1128-exact-edit-refusal-diagnosis.txt)
 returns **Verdict: PASS** for exact
 `9cd1a07d1128dc21ae5e1b6c7278c233e428c03c`, with no findings at any severity.
