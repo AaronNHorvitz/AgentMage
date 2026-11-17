@@ -2,6 +2,23 @@
 
 ## Active queue: local agent mission
 
+The [independent four-attempt gpt-oss review](docs/reviews/bd02f603f875-inline-schema-gpt-development-checkpoint4.txt)
+returns **Verdict: PASS** for exact
+`bd02f603f8753e0d55a7aa03aa92cf18cfa06bef`, with no high or medium finding.
+It accepts reporting only and closes no row. Its two low notes stay T-309:
+report observed answer/reasoning field splits and bind sealed public bytes to
+the committed tree. The next report supplies the field split and its post-commit
+receipt checks sealed public bytes directly. No measured setting changes.
+The independent report is retained byte for byte; earlier lows remain backlog.
+
+The [inline-schema gpt-oss measurement](docs/evidence/t303-inline-schema-gpt-complete-2026-11-17.md)
+records 30/30 frozen development attempts: 6/30 strict ungraded proposals.
+Task passes/retries remain unavailable; no candidate, hidden or held-out test
+ran. All 30 contexts reproduce before inference against this model's own prior
+repeat. Original frozen bindings, audit, comparison, reproduction and cleanup
+pass. 30 attempts remain before tuning or new capabilities. T-303/T-306
+remain open; no row closes. Independent core review is required.
+
 The [independent completed 27B measurement review](docs/reviews/2b62d6501ad6-inline-schema-qwen-development.txt)
 returns **Verdict: PASS** for exact
 `2b62d6501ad644e7cf069d4b52b5f925cb873a4d`, with no high or medium finding.

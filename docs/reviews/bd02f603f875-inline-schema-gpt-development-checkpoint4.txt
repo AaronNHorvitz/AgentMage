@@ -1,0 +1,108 @@
+Commit: bd02f603f8753e0d55a7aa03aa92cf18cfa06bef
+Scope: inline-schema-gpt-development-checkpoint4
+
+Reviewer: independent Claude Opus 5.5 session, extra-high effort, read-only, pinned checkout
+`/lane/review-checkout`. Base `2b62d6501ad644e7cf069d4b52b5f925cb873a4d`. Rows T-303/T-306: a
+MEASURE FIRST checkpoint that does not close either row. No GPU, model, candidate, hidden-test or
+held-out execution by the reviewer. The repository was not modified.
+
+## Methods and results
+
+1. Identity and diff
+   - `git rev-parse HEAD` gives `bd02f603f8753e0d55a7aa03aa92cf18cfa06bef`. `git status --porcelain`
+     is empty before and after all runs.
+   - `git diff --check 2b62d650…` exits 0.
+   - The diff touches 4 files, all documentation: TASKS.md (+16), docs/evidence/coding-scoreboard.md
+     (+34, appended only), the new docs/evidence/t303-inline-schema-gpt-2026-11-16.md (+96) and the
+     retained review docs/reviews/2b62d6501ad6-inline-schema-qwen-development.txt (+134). No source,
+     prompt, checker, profile, task, threshold or permission change. Nothing from a held-out task
+     appears in the diff.
+   - The retained review has SHA256 `9c3827c0…0769594`, the same as
+     `/lane/reviews/2b62d6501ad6-inline-schema-qwen-development.md`, and ends with `Verdict: PASS`.
+2. Capsule and verifier
+   - I read `verify_measurement.py` (207 lines) in full before running it. It only reads and hashes
+     files, Git objects and JSON, and it imports no archived module.
+   - Manifest SHA256 is `781d401c…e55` and bindings SHA256 is `619f9c6c…1f37`, both as stated. There
+     are 12,693 files on disk: 12,691 manifest entries plus `manifest.json` and `bindings.json`.
+   - `python3 -B /lane/reviews/inline-schema-gpt-r1-20261116/verify_measurement.py` exits 0 with
+     `status PASS`, 4 tasks, 0 strict proposals, causes
+     `{chat.response.incomplete: 3, code.proposal.edit: 1}`, 23752 input / 88912 output tokens and
+     12,691 files.
+   - The assembly receipt `/lane/reviews/inline-schema-gpt-r1-20261116-assembly.json` has SHA256
+     `ec529871…73e1`. Its first verifier call wrote empty stdout and a stderr of
+     "can't open file … verify_measurement.py" (the file was not copied yet). The later complete call
+     and `-verification.json` are PASS, as disclosed.
+   - In the post-commit receipt, the commit, base and the four committed-content hashes match
+     `git show HEAD:<file>` and the capsule `public/` copies byte for byte (I checked this myself).
+3. Independent checks against raw captures
+   - I parsed the raw `upstream-response-*.bin` usage fields:
+     - dev-001: 8176 in / 24560 out, finish `length`
+     - dev-002: 8239 in / 24497 out, finish `length`
+     - dev-003: 4349 in / 10107 out, finish `stop`
+     - dev-004: 2988 in / 29748 out, finish `length`
+   - These sum to 23752 / 88912. The three `length` outputs equal their budgets
+     `min(32768, 32768 − input − 32)`, so "output-cap 3" is correct. Per-task seconds sum to 500.353.
+     The audit's reserved 531.759 s / 8.863 min matches.
+   - The launch-to-exit interval recomputes to 623.220 s (23:07:05.556896 → 23:17:28.776548).
+   - The dev-003 `checked.json` error is `code.proposal.edit`, so it is counted as a strict refusal,
+     not dropped. "Does not fit" is 0 and counted apart from model failures.
+   - Upstream requests carry `response_format.json_schema.strict: true` and
+     `enable_thinking: false`. All 4 contexts match the prior gpt-oss repeat's capsule hashes. The
+     verifier checks all 30 preflight contexts against that repeat.
+4. Checkpoint stop
+   - The controller's SIGTERM, SIGINT and SIGHUP handler only sets `stopped`. The flag is checked
+     before each pair and during the 30 s pause. `subprocess.run` is not interrupted.
+   - `stop_checkpoint.py` signals only the single exact-argv PID 784. Its parent is the recorded
+     launch PID 783 and its start ticks match. It signalled only after `gpt-oss-02` existed.
+   - The request was at 23:13:26. Pair 02 completed normally, the controller exited 1 at 23:17:28,
+     and `gpt-oss-04` and its reservation log are absent. No model attempt was cancelled.
+5. Cleanup
+   - Two pairs revoked settings and reaped the API.
+   - Four disjoint token files were retired; keys and sockets are absent; the matching-process scan
+     is empty (current PID namespace only, as disclosed).
+   - GPU peaks were 13819–13876 MiB, and nice 19 was observed from `/proc`.
+6. Gates, with the pinned node (`sha256sum` gives `d1de76d8…c932c`) on a private scratch PATH and
+   `CARGO_TARGET_DIR=/lane/state/review-target`
+   - `bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base 2b62d650… --timeout 3600`
+     gives FAST GATE: PASS (exit 0). This includes diff check, untracked lint, the private-path
+     check, the licence policy, review lint and markdownlint-cli2 with 0 issues in 3 files.
+   - `python3 -B scripts/private_host_paths.py --base 2b62d650…` gives PASS.
+   - `python3 -B scripts/license_policy.py` gives PASS.
+7. Privacy, IP and claims
+   - I grepped the added lines for the user name, home paths, hostnames, credentials and other
+     agent products. The only hits are in the retained review: `/lane/...` lane paths and the
+     reviewer attribution, the same accepted pattern as earlier retained reviews.
+   - Model names identify the systems measured; none is used as branding.
+   - The documents claim no task pass, improvement, admission or row close, and they state honestly
+     that native admission and grading controls are unavailable.
+   - The count of 56 remaining attempts (60 − 4) is consistent.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **Low L1 (backlog, T-309):** docs/evidence/t303-inline-schema-gpt-2026-11-16.md:30 reports only
+  "reasoning metadata non-empty 4". The raw responses show more: on the three output-cap attempts
+  `message.content` is empty and the whole completion budget went to `reasoning_content`, although
+  the request disabled thinking. This is an observed fact about the response, not an inference about
+  internal reasoning. Stating it would help the next MEASURE FIRST interpretation.
+  - Fix: add the per-attempt split between empty content and filled reasoning field in a later
+    reporting increment. Do not change any measured setting before the 56 frozen attempts finish.
+- **Low L2 (backlog, T-309):** `verify_measurement.py` ties `public/` bytes to `preservation.json`
+  hashes but never to the commit. Only the post-commit receipt binds them, and the verifier does not
+  read that receipt. I closed the gap by hand (item 2).
+  - Fix: have a later verifier, or the post-commit step, also compare `git show <commit>:<file>`
+    with `public/<file>`.
+
+Note, not a finding: the checkpoint was requested after the first pair's results (2× output-cap) were
+visible. No setting changed, every attempt is counted, and the documents keep "56 attempts remain
+before tuning", so evaluation integrity holds. It must also hold when the run resumes.
+
+## Per-row result
+
+- T-303/T-306 (non-closing MEASURE FIRST checkpoint): the reporting increment is accepted. Every
+  number traces to the raw logs, budgets and context are stated, "does not fit" is counted
+  separately, and no held-out, hidden or candidate run took place. The rows remain open; this review
+  closes no row.
+
+Verdict: PASS
