@@ -3530,3 +3530,44 @@ Native executable admission and original grading controls remain unavailable;
 effects, project tests, feedback and retries cannot run. No candidate, hidden
 or held-out test executes. See [evidence](t303-copy-original-fragments-27b-checkpoint10-2026-11-17.md).
 T-303/T-306 remain open; no model role or capability qualifies.
+
+## Copy-original-fragment prompt repeat: twenty 27B attempts, 2026-11-17
+
+Source `35217c60a56a5d3e065148eb9a6aea898b5e1b16`; reporting base `15d409083b921e71ef98d1033325908560cd12f6`.
+Ten new frozen development attempts, dev-011 through dev-020, bring this
+profile to 20/30 and the six-profile repeat to 80/180. There are 100 attempts
+left before tuning or capability work. Every earlier attempt is preserved
+and counted once. No measured variable changes on resume.
+
+| Date | Source commit | Model | Context / output tokens | First-attempt passes | Within-budget passes | Strict ungraded proposals | Held-out | Request/check seconds | Reserved-job GPU minutes | Backend input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-17 | 35217c60a56a5d3e065148eb9a6aea898b5e1b16 | qwen35-27b (20/30 cumulative) | 32768 / 24129–29796 | Unavailable | Unavailable | 17/20 | Not run | 1007.583 | 20.505 | 122592 / 21545 (19/20 counters) |
+
+New ten attempts only: 8/10 strict ungraded
+proposals; 641.948 request/check seconds,
+728.470 reserved-job work seconds,
+12.141 reserved-job GPU minutes,
+60249 input and 10313 output tokens
+(9/10 counters).
+New causes: `{"generation-refused:error:chat.transport.timeout": 1, "strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 8}`.
+Cumulative causes: `{"generation-refused:error:chat.transport.timeout": 1, "strict-edit-refused:code.proposal.edit": 2, "ungraded-proposal": 17}`.
+Does not fit: 0 cumulative.
+
+The campaign's changed variable remains the fixed original-fragment instruction.
+Rendered input: 2940–8607;
+output: `min(32768, 32768 - rendered input tokens - 32)`.
+Context, excerpts, schema, model settings, framing, thinking request and
+deadlines stay frozen. Cumulative backend terminations:
+`{"stopped-below-token-limits": 19, "unobserved-or-ambiguous": 1}`.
+The new controller wall window is 853.908 seconds, including queues and
+released pauses, excluding preparation and reporting. GPU kernel time, full
+reservation duration, continuous cumulative wall time and end-to-end latency
+are unmeasured.
+
+Partial path only: Rust context selection, credential-owning chat HTTP API,
+local inference and strict edit checking. Native executable admission and
+original execution/grading-control receipts remain unavailable; effects,
+project tests, feedback and retries cannot run. No candidate, hidden or
+held-out test executes. These proposals are not solved tasks. See
+[evidence](t303-copy-original-fragments-27b-checkpoint20-2026-11-17.md).
+T-303/T-306 remain open; no model role or capability qualifies.

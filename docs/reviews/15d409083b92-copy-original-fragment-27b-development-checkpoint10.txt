@@ -1,0 +1,92 @@
+Commit: 15d409083b921e71ef98d1033325908560cd12f6
+Scope: copy-original-fragment-27b-development-checkpoint10
+
+Reviewer: Claude Opus 5.5 (extra-high effort), in a separate read-only session. Tier: core.
+Row: T-303/T-306, non-closing frozen development measurement. Base 49a41f1c7e8919de52462fb60d04010662df16c3;
+prompt/checker source 35217c60a56a5d3e065148eb9a6aea898b5e1b16.
+
+## Methods
+
+I read IP-POLICY.md, Decision 0212, the MEASURE FIRST section of the builder brief, the top of TASKS.md and
+the full four-file diff. I ran every requested command in the pinned checkout /lane/review-checkout. Then I
+recomputed each published number from the raw capsule files with my own script, independently of the
+builder's verify.py. The GPU was not used. No inference, candidate execution, or hidden or held-out test
+was run. The repository was not modified.
+
+## Commands and results
+
+1. `git rev-parse HEAD` → 15d409083b921e71ef98d1033325908560cd12f6; `git status --porcelain` → empty;
+   `git diff --check 49a41f1c…` → exit 0. Diff: exactly TASKS.md, docs/evidence/coding-scoreboard.md,
+   docs/evidence/t303-copy-original-fragments-27b-checkpoint10-2026-11-17.md,
+   docs/reviews/49a41f1c7e89-copy-original-fragment-31b-development-completion.txt (263 insertions, 0 deletions).
+2. Capsule hashes match the request. manifest.json 1a006ba6…b2b7, bindings.json 9e77a474…5b90 (7348 files),
+   post-commit receipt 67c915ce…a1e5a.
+3. `python3 -B …/verify.py` → PASS. 70 attempts, 10 new, 110 remaining, 9 strict ungraded proposals,
+   all eight dependencies checked, postcommit checked. live_state "unavailable": /lane/state/ef1 is not
+   mounted in this session, so the live-state branch was not exercised.
+4. Optional portable check: `bash /tools/build-slot bwrap … --tmpfs /lane/state … verify.py` → the same PASS.
+5. The helper object authenticated to 1992c3c4…bd6de and was copied to a private executable. Then
+   `bash /tools/build-slot python3 -B …/reproduce.py --helper <copy> --output <fresh dir>` → PASS:
+   30 contexts and 10 answers reproduce. candidate_execution false, model_inference false,
+   hidden_or_held_out false.
+6. The node binary authenticated to d1de76d8…932c and was placed on PATH.
+   `scripts/local_agent_fast_gate.py --base 49a41f1c… --timeout 3600` → FAST GATE: PASS (exit 0).
+   `node …/work/lint-all.mjs` → PASS: 3 files, 0 issues, scoreboard and evidence tables each 1.
+   `scripts/private_host_paths.py --base 49a41f1c…` → PASS. `scripts/license_policy.py` → PASS.
+7. Independent recount from the raw files of the five jobs (qwen35-27b-00..08):
+   - Causes: 9 ungraded-proposal; 1 strict-edit-refused (dev-008, checked.json `code.proposal.edit`).
+   - Generation seconds sum to 365.635; reserved work is 501.822 s (8.364 min).
+   - From the backend slices and the response `usage` fields: input 62343 tokens, output 11232 tokens,
+     counters present for 10/10.
+   - All 10 responses: finish_reason `stop`, completion tokens far below budget, reasoning and
+     reasoning_content empty, content nonempty.
+   - Rendered input ranges from 2940 to 8457. Every budget equals `min(32768, 32768 - input - 32)`,
+     giving 24279 to 29796. Does not fit: 0.
+   - Controller wall window: launch utc 14:59:57.389 to exit utc 15:42:34.093, which is 2556.705 s.
+   - nice is 19 (recorded from /proc; the argv's `-n 9` is relative). cpu.max 400000/100000 (four CPUs),
+     memory.max 16 GiB, priority low.
+   - The upstream endpoint is only 127.0.0.1. The task list is dev-001..030 only, and these ten are
+     dev-001..010.
+   - Source 35217c60..HEAD changes only README.md, TASKS.md and docs/. No prompt or checker change.
+8. Reporting correction: the retained original verify.py and prepare-reporting.py differ from the final
+   versions in one lookup only, for the previous 27B batch report. That file is now the sealed and
+   authenticated `exact-fragments-20261117/provenance/previous-qwen35-27b-batch-report.json`. No predicate
+   was removed. Compared with the previous checkpoint's verify.py, the adaptations are model, base, counts
+   and the new zero baseline. The A4B and 31B audit rows are asserted byte-equal to the prior audit.
+9. `docs/reviews/49a41f1c7e89-…-completion.txt` is byte-identical (cmp) to
+   /lane/reviews/49a41f1c7e89-copy-original-fragment-31b-development-completion.md.
+10. Grepping the diff for private paths, the local user name and other agent products finds only the
+    reviewer identification line in the retained report.
+
+## Checks against the brief
+
+- Evaluation integrity: no held-out or hidden content and no candidate execution. The prompt and checker
+  are frozen at the source commit. Failures are counted (1 refusal reported). Scores are re-runnable by
+  the two capsule scripts and agree with the raw logs.
+- MEASURE FIRST: the batch adds a scoreboard line. Context and output budgets are stated, does-not-fit
+  is counted apart (0), and the changed variable (the fixed instruction) is stated. Task passes are
+  labelled Unavailable, not inferred.
+- Honest labelling: proposals are called ungraded. The partial path and the unavailable native admission
+  and grading controls are stated. No row closes and no capability qualifies.
+- Preservation: the TASKS.md table rows and the scoreboard prefix are byte-identical to the base
+  (asserted by verify.py). Prior capsules authenticate.
+- Public-repository hygiene: the private-path and licence checks pass, and no sibling project, product
+  or trademark is used as branding.
+- Confinement: this commit changes no runtime code. The measurement ran against a read-only snapshot,
+  with a loopback-only model endpoint and no candidate execution.
+
+## Findings
+
+No critical, high, medium or new low findings.
+
+Not checked: the live builder state (/lane/state/ef1) was not mounted, so live-state equality is
+unverified here. Every sealed capsule byte was verified. Source tests were not rerun because the source
+is unchanged. The earlier T-309 lows (helper source, native admission, reporting provenance) remain
+backlog.
+
+## Per-row result
+
+- T-303/T-306 checkpoint (27B dev-001..010; repeat at 70/180): accepted as a measurement for this exact
+  commit. Both rows stay open; no row closes.
+
+Verdict: PASS
