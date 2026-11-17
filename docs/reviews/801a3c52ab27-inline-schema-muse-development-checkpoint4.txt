@@ -1,0 +1,124 @@
+Commit: 801a3c52ab276b6fc8196ec2f7b9e1eaf0d05af4
+Scope: inline-schema-muse-development-checkpoint4
+
+# Independent review: muse inline-schema development checkpoint (4/30)
+
+Reviewer: independent Claude Opus 5.5 session at extra-high effort. It had read-only access
+to the pinned checkout /lane/review-checkout. It used no GPU, model, candidate, hidden or
+held-out test.
+Row: T-303/T-306, a non-closing MEASURE FIRST measurement. Base: a454de028e44d4835fe7957d07646eddede6c3f0.
+
+## Methods and commands (all run in /lane/review-checkout)
+
+1. `git rev-parse HEAD` gave 801a3c52ab276b6fc8196ec2f7b9e1eaf0d05af4. `git status --porcelain`
+   was empty. `git diff --check a454de02…` exited 0. The diff changes 4 files:
+   - TASKS.md: 16 lines of prose added above the existing entries; no table row changed.
+   - coding-scoreboard.md: one appended section.
+   - New evidence file docs/evidence/t303-inline-schema-muse-2026-11-17.md.
+   - New retained review docs/reviews/a454de028e44-inline-schema-gpt-development-completion.txt.
+2. I read both verifiers in full before running them.
+   - verify_measurement.py and measurement/verify_postcommit.py only read and hash files and Git
+     objects (`git ls-tree`, `cat-file --batch`, `show`, `rev-parse`). They import no archived
+     module or candidate.
+   - `sha256sum` of manifest.json gave 0ff1cd25…a02a0bb and of bindings.json gave 4e7ce43c…b7d74e. Both match the request.
+   - `python3 -B …/verify_measurement.py` exited 0 with status PASS. It reported 4 tasks, 1 strict
+     ungraded proposal, causes {strict-edit-refused:code.proposal.edit 2, ungraded-proposal 1,
+     generation-refused:error:chat.transport.timeout 1}, 20645 input / 19594 output tokens and
+     12705 files.
+   - `python3 -B …/measurement/verify_postcommit.py` exited 0 with status PASS. It reported
+     sealed_public_equals_git_tree true for 4 files. I checked separately that those 4 files are
+     exactly the 4 paths in `git diff --name-only a454de02… HEAD`.
+3. The node binary /lane/reviews/42612ca9787f-a4b-node passed `sha256sum -c` against d1de76d8…bd932c.
+   I copied it to a private scratch directory as `node`, re-hashed it there and put it on PATH
+   (v24.15.0).
+   - `bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base a454de02… --timeout 3600`
+     ended with FAST GATE: PASS. Its steps were diff check, untracked lint, private-path check,
+     licence policy, review lint of the retained review, and markdownlint (0 issues, 3 files).
+   - `python3 -B scripts/private_host_paths.py --base a454de02…` gave PRIVATE PATH CHECK: PASS.
+   - `python3 -B scripts/license_policy.py` gave LICENCE POLICY: PASS.
+4. Independent recomputation. My own script read the raw capsule bytes, not the verifier's outputs.
+   - Request/check time: the sum of `generation_seconds` is 771.168 s (200.318 + 136.477 + 134.356
+     + 300.018).
+   - Reserved work: the batch reports sum to 382.121 + 523.645 = 905.766 s, or 15.096 min.
+   - Controller interval: the controller exit time 02:29:56.840 minus the launch time
+     01:53:47.269 UTC is 2169.571 s. The run is dated 2026-11-17 UTC, which matches.
+   - Tokens: the `usage` blocks of the 3 captured responses sum to 20645 prompt and 19594
+     completion tokens. dev-004 has no capture, so coverage is 3/4.
+   - Budgets: every `max_tokens` equals 32768 − input − 32. The range is 24509–29805 and input
+     preflight is 2931–8227.
+   - Per-task fields: finish, answer characters and reasoning characters for dev-001…003 match
+     `choices[0]` exactly: 4079/31318, 3521/22424 and 2536/20651, all `stop`.
+   - dev-004: its event log ends with `error chat.transport.timeout` at 300.018 s. This is the
+     original 300 s deadline.
+   - Request shape: all 4 upstream requests carry the named `coding_edits_v1` json_schema with
+     `strict: true`, `enable_thinking: false` and `retries 0`, and none is graded.
+   - Cleanup reports 4 retired token files from 2 pairs and GPU peaks of 17381–17775 MiB.
+5. Changed variable. I took muse-00/upstream-request-00.json from the preceding sealed muse
+   repeat (/lane/reviews/thinking-disabled-muse-20261115-inputs.tar) and compared it key by key
+   with the new request. Only `response_format` differs: `{"type":"json_object"}` became the
+   strict inline json_schema. Messages, model, n, stream, max_tokens and chat_template_kwargs are
+   identical. The verifier separately checks all 30 preflight contexts and the 4 used contexts
+   against the prior manifest hashes, and checks the profile against the prior pair report.
+6. Checkpoint stop. I read stop_checkpoint.py and the controller.
+   - The stop method finds exactly one process with the exact controller argv. It checks that
+     process's parent PID and start ticks, waits for muse-02 to start, then sends SIGTERM to that
+     PID only, not to its process group.
+   - The controller's handler only sets a flag. `subprocess.run` keeps waiting on the active job,
+     and the controller exits 1 at the next check.
+   - The receipts agree: completed 2 and 4, no muse-04 directory or reservation log, and
+     matching_processes_after is empty.
+   - dev-004's timeout came from its own 300 s deadline, not from the stop. The batch was never
+     signalled.
+   - The queued authentication-wrapper stop (authentication-queue-stop.json) happened before
+     preparation began. It records no model start and no attempt.
+7. The launcher records nice from /proc stat field 19, which reads 19. `nice -n 0` in the argv is
+   the computed increment `max(0, 19 - os.nice(0))` under a build-slot LOW parent that was already
+   at nice 19. The memory and CPU caps are 16 GiB and 4 CPUs.
+8. The retained gpt-oss review matches its original byte for byte:
+   `cmp /lane/reviews/a454de028e44-…completion.md docs/reviews/a454de028e44-…completion.txt`
+   reported them identical. It ends with `Verdict: PASS`.
+9. I grepped the diff for the home path, user name, e-mail, credentials and other agent-product
+   names and found none. The hits are lane paths (/lane/…, /tools/…) inside the retained review,
+   which earlier reviews also had and the path check accepts, and the existing "OpenAI-style"
+   wording. The author and Signed-off-by lines are commit metadata, not tree content.
+
+## Checks against the brief
+
+- **Evaluation integrity.** Only dev-001…dev-004 ran.
+  - No candidate, hidden or held-out test ran. This is shown by the manifest, launch, audit,
+    projection and preflight flags, and by the verifier.
+  - The frozen source is 72c002a4…, with 2283 + 26 bindings intact. All 9630 snapshot files are
+    checked against Git blob OIDs.
+  - The 195-file licence drift is recomputed and kept outside the measurement.
+  - The diff contains no task or held-out content, and no prompt, checker or profile changed.
+  - Failures are counted: one timeout and two strict-edit refusals, alongside the one proposal.
+- **Honest claims.**
+  - The evidence, scoreboard and TASKS.md say "strict ungraded proposals" and say task passes are
+    unavailable. They state the context and output budgets and "does not fit: 0", separate the
+    reserved-work and controller-interval timing bases, and name what is unmeasured.
+  - The reasoning-field counts are given as captured fields only. 3/3 captures have non-empty
+    `reasoning_content` even though thinking was requested disabled, and the evidence reports this
+    without inferring anything.
+  - The scoreboard is an exact prefix plus an appended section, so the MEASURE FIRST line is
+    present. TASKS.md table rows are unchanged, and no row closes.
+- **Owner notes.** This commit changes no plan, criterion or order of work. It claims nothing
+  built and names no other product, private project or future product. It adds no second runtime,
+  desktop interface or memory store.
+- **Confinement.** No source changed. The run used the established read-only bwrap mount of the
+  snapshot and .git. Cleanup reaped the owners, revoked settings, left no keys or sockets, and
+  signalled no foreign process.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (backlog, already on T-309, not new): measurement/verify_postcommit.py:10-12 still compares
+only the paths listed in the receipt. It does not assert that they equal
+`git diff --name-only <base> <commit>`. I checked the set by hand here: 4 = 4.
+
+## Per-row result
+
+T-303/T-306: this non-closing MEASURE FIRST reporting increment (4/30 muse attempts) is accepted.
+Both rows stay open, and nothing is promoted.
+
+Verdict: PASS

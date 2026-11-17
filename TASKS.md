@@ -2,6 +2,22 @@
 
 ## Active queue: local agent mission
 
+The [independent four-attempt Muse review](docs/reviews/801a3c52ab27-inline-schema-muse-development-checkpoint4.txt)
+returns **Verdict: PASS** for exact
+`801a3c52ab276b6fc8196ec2f7b9e1eaf0d05af4`, with no high or medium finding.
+It accepts reporting only and closes no row. Its existing low note remains
+T-309: require the postcommit receipt to cover the complete committed diff.
+This resume checks that coverage before inference, and its new receipts check
+it directly. No measured setting changes. The review is retained unchanged.
+
+The [inline-schema muse measurement](docs/evidence/t303-inline-schema-muse-checkpoint8-2026-11-17.md)
+records 8/30 frozen development attempts: 4/8 strict ungraded proposals.
+Task passes/retries remain unavailable; no candidate, hidden or held-out test
+ran. All 30 contexts reproduce before inference against this model's own prior
+repeat. Original frozen bindings, audit, comparison, reproduction and cleanup
+pass. 22 attempts remain before tuning or new capabilities. T-303/T-306
+remain open; no row closes. Independent core review is required.
+
 The [independent completed gpt-oss review](docs/reviews/a454de028e44-inline-schema-gpt-development-completion.txt)
 returns **Verdict: PASS** for exact
 `a454de028e44d4835fe7957d07646eddede6c3f0`, with no high or medium finding.
