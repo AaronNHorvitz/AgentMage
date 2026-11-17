@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The [independent previous checkpoint review](docs/reviews/306f762d8353-copy-original-fragment-31b-development-checkpoint12.txt) returns **Verdict: PASS** for exact `306f762d8353c3df3d63bb3e4a8f880d30fdd3b4`. Its unchanged report accepts that checkpoint only and closes no row. Existing T-309 backlog remains open. Earlier backlog remains; this increment still requires independent review.
+
+The [twenty-attempt frozen 31B checkpoint](docs/evidence/t303-copy-original-fragments-31b-checkpoint20-2026-11-17.md)
+adds eight development attempts: 7/8 new and 16/20 cumulative strict ungraded
+proposals. Task passes/retries remain unavailable; no candidate, hidden or
+held-out test executes. There are 50/180 attempts recorded and 130 left before
+tuning or capability work. Every earlier attempt and measured setting is
+preserved. T-303/T-306 remain open; independent core review is required.
+
 The [independent previous checkpoint review](docs/reviews/d6eb2abf29f8-copy-original-fragment-31b-development-checkpoint4.txt) returns **Verdict: PASS** for exact `d6eb2abf29f8391f072171d97162de716cadd987`. Its unchanged report accepts that checkpoint only and closes no row. Low L1 (live-builder-state availability for reviewer verification) joins T-309; the new verifier reports unavailable when that mount is absent. Earlier backlog remains; this increment still requires independent review.
 
 The [twelve-attempt frozen 31B checkpoint](docs/evidence/t303-copy-original-fragments-31b-checkpoint12-2026-11-17.md)

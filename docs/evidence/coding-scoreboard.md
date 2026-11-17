@@ -3428,3 +3428,38 @@ unmeasured. Earlier attempts are preserved and counted once. Native executable
 admission and original grading controls still block effects, tests, feedback
 and retries. See [evidence](t303-copy-original-fragments-31b-checkpoint12-2026-11-17.md). T-303/T-306 remain open; no model role or
 capability is qualified.
+
+## Copy-original-fragment prompt repeat: twenty 31B attempts — 2026-11-17 UTC
+
+Development only: eight new attempts; 20/30 on 31B, 50/180 overall, 130 remain.
+No candidate, hidden or held-out test executes; task pass scores are unavailable.
+
+| Date (UTC) | Prompt/checker source | Model / attempts | Context / output tokens | First pass | Within budget | Strict ungraded | Held-out | Request/check seconds | GPU-slot work minutes | Backend input / output |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-17 | 35217c60a56a5d3e065148eb9a6aea898b5e1b16 | gemma4-31b (20/30 cumulative) | 32768 / 22998–29507 | Unavailable | Unavailable | 16/20 | Not run | 1276.633 | 29.274 | 142894 / 30076 (20/20 counters) |
+
+No measured variable changes on resume. The campaign's changed variable remains
+the fixed original-fragment instruction. Context, excerpts, schema, framing,
+model settings, thinking request and deadlines stay frozen. Rendered input:
+3229–9738; output: `min(32768, 32768 - rendered input tokens - 32)`.
+Does not fit: 0. Causes: `{"strict-edit-refused:code.proposal.edit": 4, "ungraded-proposal": 16}`.
+Backend terminations: `{"stopped-below-token-limits": 20}`.
+Response fields: `{"content:nonempty": 20, "reasoning:absent-or-empty": 20, "reasoning_content:absent-or-empty": 20}`; internal reasoning is not inferred.
+
+Eight new attempts add 7/8 strict ungraded proposals,
+408.506 request/check seconds and
+603.942 completed-job reserved-work seconds.
+The initial controller stopped between sessions with exit/end time unobserved.
+Two complete pairs are retained; the two never-started pairs resume once,
+with the original waiting log preserved and all inputs reauthenticated.
+New batch wall window: 7143.612 seconds including interruption, session gap,
+queues and released pauses. Recovery controller: 1442.440 seconds.
+Adding the two previous controller intervals gives 9897.930
+seconds; that sum is not continuous controller runtime. Original controller
+duration is unavailable. Outer preparation before initial launch and reporting
+after completion are excluded.
+GPU kernel time, complete reservation duration and end-to-end latency remain
+unmeasured. Earlier attempts are preserved and counted once. Native executable
+admission and original grading controls still block effects, tests, feedback
+and retries. See [evidence](t303-copy-original-fragments-31b-checkpoint20-2026-11-17.md). T-303/T-306 remain open; no model role or
+capability is qualified.
