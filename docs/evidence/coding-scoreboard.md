@@ -3463,3 +3463,38 @@ unmeasured. Earlier attempts are preserved and counted once. Native executable
 admission and original grading controls still block effects, tests, feedback
 and retries. See [evidence](t303-copy-original-fragments-31b-checkpoint20-2026-11-17.md). T-303/T-306 remain open; no model role or
 capability is qualified.
+
+## Copy-original-fragment prompt repeat: 31B completed, 2026-11-17
+
+Source `35217c60a56a5d3e065148eb9a6aea898b5e1b16`; reporting base `b140a69ffb402fd93f2f97e759b0d5497f6079a9`.
+This completes the 31B profile's 30 development attempts. The frozen repeat is
+60/180 attempts complete; 120 remain on four profiles before further tuning or
+capability work. All earlier attempts are preserved and counted once.
+
+| Date | Source commit | Model | Context / output tokens | First-attempt passes | Within-budget passes | Strict ungraded proposals | Held-out | Request/check seconds | Reserved-job GPU minutes | Backend input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-17 | 35217c60a56a5d3e065148eb9a6aea898b5e1b16 | gemma4-31b (30/30 cumulative) | 32768 / 22998–29507 | Unavailable | Unavailable | 22/30 | Not run | 1840.248 | 45.712 | 216073 / 41676 (30/30 counters) |
+
+No measured variable changes on resume. The campaign's changed variable remains
+the fixed original-fragment instruction. Context, excerpts, schema, framing,
+model settings, thinking request and deadlines stay frozen. Rendered input:
+3229–9738; output:
+`min(32768, 32768 - rendered input tokens - 32)`. Does not fit: 0.
+Causes: `{"strict-edit-refused:code.proposal.edit": 8, "ungraded-proposal": 22}`.
+Backend terminations: `{"stopped-below-token-limits": 30}`.
+Response fields: `{"content:nonempty": 30, "reasoning:absent-or-empty": 30, "reasoning_content:absent-or-empty": 30}`;
+internal reasoning is not inferred.
+
+Ten new attempts add 6/10 strict ungraded proposals,
+563.615 request/check seconds and
+986.244 completed-job reserved-work seconds
+(16.437 reserved-job GPU minutes).
+New controller wall window: 2334.972 seconds, including queues and released
+pauses; preparation before launch and reporting after exit are excluded.
+Previous controller interruptions retain their previously disclosed unknown
+exit and duration; no cumulative continuous wall time is claimed.
+GPU kernel time, complete reservation duration and end-to-end latency remain
+unmeasured. Native executable admission and original grading controls still
+block effects, project tests, feedback and retries. No candidate, hidden or
+held-out test executes. See [evidence](t303-copy-original-fragments-31b-complete-2026-11-17.md).
+T-303/T-306 remain open; no model role or capability is qualified.

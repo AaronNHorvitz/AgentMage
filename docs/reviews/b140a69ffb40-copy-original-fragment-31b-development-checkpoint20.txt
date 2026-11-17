@@ -1,0 +1,155 @@
+Commit: b140a69ffb402fd93f2f97e759b0d5497f6079a9
+Scope: copy-original-fragment-31b-development-checkpoint20
+
+# Independent review: twenty frozen 31B copy-original-fragment development attempts
+
+Reviewer: Claude Opus 5.5 (extra-high effort), in a separate read-only session. Tier: core.
+Base 306f762d8353c3df3d63bb3e4a8f880d30fdd3b4; prompt/checker source
+35217c60a56a5d3e065148eb9a6aea898b5e1b16. Every command ran in the pinned checkout
+/lane/review-checkout. Private scratch was /lane/state/tmp/rv-b140-5yfN. `git status --porcelain`
+was empty before and after. I did not modify the repository, any capsule or any receipt. I ran no
+model, used no GPU and executed no candidate, hidden or held-out test.
+
+## Methods
+
+1. Read the complete four-file diff (311 insertions, 0 deletions):
+   - TASKS.md gains two prose paragraphs. The table lines stay the same (512 before and after).
+   - The scoreboard gains one appended section with one table row.
+   - The new evidence page.
+   - The retained review docs/reviews/306f762d8353-…-checkpoint12.txt.
+2. `git diff --name-only 35217c60 HEAD` lists only README.md, TASKS.md and docs/. This increment
+   adds no runtime, prompt, helper, permission, sandbox, profile or budget code, and so no new
+   confinement surface.
+3. Read verify.py, reproduce.py, work/recover.py, work/record-recovery-resources.py,
+   campaign/controller.py and work/lint-all.mjs before running anything.
+   - verify.py only reads, hashes and calls `git`.
+   - reproduce.py authenticates every dependency and the helper. It then runs only the effect-free
+     helper (JSON in, JSON out).
+4. Recomputed the published numbers myself from the raw job files (batch-report.json,
+   collection/batch.json, upstream-request/response files, launch and exit receipts). I did not use
+   verify.py's aggregation for this.
+5. Checked the interruption and recovery logic for replay or inference, and checked held-out
+   absence.
+6. Grepped the added lines for home paths, user names, e-mail addresses, credentials and other agent
+   product names.
+
+## Exact commands and results
+
+- `git rev-parse HEAD` → b140a69ffb402fd93f2f97e759b0d5497f6079a9.
+- `git status --porcelain` → empty.
+- `git diff --check 306f762d…` → no output, exit 0.
+- sha256 checks, all equal to the request:
+  - manifest.json 86bd2566…bc54c
+  - bindings.json 75c7e717…ed05 (`files`: 4488)
+  - post-commit JSON b9fc8608…c023e
+  - work/post-commit.py c96a8838…7774
+  The receipt names commit b140a69f…, base 306f762d… and the four public files, with
+  complete_diff_covered true.
+- `python3 -B /lane/reviews/copy-fragments-31b-checkpoint20-20261117/verify.py` → exit 0:
+  `{"status": "PASS", "attempts": 50, "new_attempts": 8, "remaining_attempts": 130,
+  "strict_ungraded_proposals": 16, "original_capsule_all_inputs_checked": true, "live_state":
+  "unavailable", "postcommit_checked": true, "candidate_execution": false, "task_passes": null,
+  "hidden_or_held_out": false}`.
+  - live_state is unavailable because /lane/state/ef1 is not mounted for me. I could not check the
+    builder's live files; the sealed copies were checked.
+- Helper:
+  - `install -m700 …/exact-fragments-20261117/inputs/objects/1992c3c4… <scratch>/helper`. Its sha256
+    is 1992c3c40cd00f5b460585fe3934e661bf8f6004f1c77ea7c27635309c3bd6de, checked before execution.
+  - `bash /tools/build-slot python3 -B …/reproduce.py --helper <scratch>/helper --output
+    <scratch>/repro` → `{"status": "PASS", "contexts": 30, "answers": 8, …, "candidate_execution":
+    false, "model_inference": false, "hidden_or_held_out": false}`, exit 0.
+- Node: /lane/reviews/42612ca9787f-a4b-node has sha256 d1de76d8…932c. A private copy on PATH
+  reports v24.15.0.
+- `python3 -B scripts/local_agent_fast_gate.py --base 306f762d… --timeout 3600` → **FAST GATE:
+  PASS**, exit 0. It covered:
+  - diff --check and the untracked lint;
+  - the private-path check and the licence policy;
+  - the review lint of the retained .txt;
+  - markdownlint of 3 files (0 issues).
+- `node …/work/lint-all.mjs` → PASS, 0 issues, tables {scoreboard 1, evidence 1}.
+- `python3 -B scripts/private_host_paths.py --base 306f762d…` → PRIVATE PATH CHECK: PASS.
+- `python3 -B scripts/license_policy.py` → LICENCE POLICY: PASS.
+- Optional portable check: `bash /tools/build-slot bwrap --die-with-parent --bind / / --dev-bind
+  /dev /dev --tmpfs /lane/state --chdir /lane/review-checkout python3 -B …/verify.py` → the same
+  PASS (live_state unavailable), exit 0.
+- `cmp /lane/reviews/306f762d8353-copy-original-fragment-31b-development-checkpoint12.md
+  docs/reviews/306f762d8353-…-checkpoint12.txt` → identical (sha256 d196ad8d…4490). My prior PASS is
+  retained byte for byte, and TASKS.md and the evidence page summarise it correctly as accepting
+  that commit only.
+
+## Evidence tracing (my own recomputation)
+
+- Tasks: dev-013..dev-020 in jobs gemma4-31b-12, -14, -16 and -18.
+  - Each has one attempt, graded false and retries 0.
+  - The task order matches preflight3 entries 12–19.
+  - 30 A4B + 20 31B = 50 attempts; 180 − 50 = 130 remain.
+- Causes: dev-020 has strict-edit-refused (checked.json error `code.proposal.edit`), and the other
+  seven are ungraded-proposal, so the new count is 7/8. Adding the prior 9/12 gives 16/20, and the
+  refusals total 4. The refusal is counted, not repaired.
+- Tokens:
+  - New rendered inputs are 3525–9738.
+  - Every upstream max_tokens equals 32768 − input − 32, giving new budgets of 22998–29211. The
+    cumulative ranges 3229–9738 and 22998–29507 are therefore correct.
+  - Every request carries `enable_thinking: false`.
+  - Response usage sums to 61252/8004. With the prior 81642/22072 that gives 142894/30076, equal to
+    the backend counters (20/20 coverage).
+  - All 8 new finish_reasons are `stop`, and every completion (190–2660 tokens) is far below its
+    budget. Does-not-fit is 0.
+- Time:
+  - Generation seconds sum to 408.506; with the prior 868.127 that gives 1276.633.
+  - Reserved work is 175.996 + 217.607 + 120.175 + 90.164 = 603.942 s (10.066 minutes). Cumulative
+    work is 1756.465 s (29.274 minutes).
+  - The wall window from launch.json 11:32:50.630097 to the recovered completion 13:31:54.242441 is
+    7143.612 s.
+  - The recovery controller ran from 13:07:51.797279 to 13:31:54.237019, 1442.440 s.
+  - 7143.612 + 416.471 + 2337.847 = 9897.930 s, labelled correctly as not continuous runtime.
+  All of these match the scoreboard, the evidence page and TASKS.md.
+- Interruption and recovery:
+  - recover.py refuses to proceed unless:
+    - the original PID is absent;
+    - no process carries an owned state path;
+    - controller.log shows exactly the 14/16 lines;
+    - pairs 00–14 are completed;
+    - neither pair 16 nor pair 18 has a directory;
+    - the pair-16 reservation log holds only the build-slot waiting line.
+  - The byte-identical controller.py asserts that a job directory without a report is never
+    replayed, so the resume can run only never-started pairs.
+  - The orphan log is retained with a matching hash (f83c8bc5…).
+  - The recovery ran at nice 19, in a cgroup with memory.max 16 GiB and cpu.max 400000/100000 (four
+    CPUs), and exited 0.
+  - controller-exit.json records exit null and original_exit_observed false. The original exit and
+    duration are not inferred.
+  - The recovery start ticks are lower than the original's, consistent with a reboot between
+    sessions.
+  - The before and after hashes of the corrected reporting methods match recovery-reporting-
+    correction.json (checked by verify.py), with measured_inputs_changed false.
+- Held-out: the only "held" strings in the new job tree are the policy flag `"held_out": "not
+  loaded or executed"` and `held_out_executed: false`. Contexts and requests contain no held-out
+  material, and no hidden test runs.
+- Honest claims (MEASURE FIRST):
+  - The scoreboard line is present and states the context (32768) and the output-budget formula.
+  - Does-not-fit is listed apart from model failures.
+  - Task passes are "Unavailable", and the held-out column is "Not run".
+  - The partial measured path and the missing native admission and grading controls are stated.
+  - No model role or capability is claimed.
+- Public-repository check: the added lines contain no home path, user name, e-mail address,
+  credential or other agent product name. The private host paths appear only inside the private
+  capsule receipts (launch argv), not in committed files.
+
+## Findings
+
+None at high, medium or low severity in this increment. Earlier low findings stay as backlog:
+- helper build provenance;
+- native executable admission wording;
+- reporting correction provenance;
+- T-309 notes;
+- live-state availability for reviewers.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing frozen development measurement): this increment is accurate,
+  reproducible from the sealed raw logs and honestly labelled. Evaluation integrity holds: no
+  tuning, no held-out use, failures counted and frozen inputs unchanged.
+- Both rows stay open; no row closes.
+
+Verdict: PASS
