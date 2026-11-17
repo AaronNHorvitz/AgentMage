@@ -1,0 +1,119 @@
+Commit: 9cd1a07d1128dc21ae5e1b6c7278c233e428c03c
+Scope: exact-edit-refusal-diagnosis
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Every command ran in
+the pinned checkout /lane/review-checkout, with CARGO_TARGET_DIR=/lane/state/review-target and
+private scratch under /lane/state/tmp. The repository was not modified; `git status --porcelain`
+was empty before and after.
+
+## Methods
+
+1. Confirmed the commit and read the complete four-file diff against base
+   5333ea1b3581a0e89eb67e18bd4b33bc28606148: TASKS.md (+35), docs/evidence/coding-scoreboard.md
+   (+23), docs/evidence/t303-exact-edit-refusal-diagnosis-2026-11-17.md (new, 123 lines) and
+   docs/reviews/5333ea1b3581-inline-schema-muse-development-completion.txt (new, 116 lines).
+2. Read verify.py, diagnose.py, the post-commit method, the original helper main.rs and
+   coding_proposal.rs. Then compared the Python classifier with the Rust `check_coding_proposal`
+   order, branch by branch.
+3. Authenticated the helper and its sources against the original Muse capsule manifest. Then
+   checked coding_proposal.rs against the frozen source commit.
+4. Ran the requested verifier, the original-helper reproduction, the fast gate, the private-path
+   check and the licence check.
+5. Wrote and ran my own byte-level reclassification of all 56 edit refusals. It reads the ORIGINAL
+   six capsules (not the diagnostic copies) and the Git source blobs, and shares no code with
+   diagnose.py.
+6. Cross-checked the per-profile ungraded counts against the existing scoreboard entries, the
+   T-319/T-320/T-321 rows against the owner's 2026-11-15 notes in the brief, and the Git
+   placement against Decision 0209.
+
+## Commands and results
+
+- `git rev-parse HEAD` → 9cd1a07d1128dc21ae5e1b6c7278c233e428c03c. `git status --porcelain` → empty.
+  `git diff --check 5333ea1b…` → exit 0.
+- `sha256sum` of the capsule files: manifest 37a42bf3…bd2e, bindings 97dc8c76…e195, post-commit
+  JSON 3567f397…a285, post-commit method a75bfb38…e35ee8, helper.bin 852cd7f5…e9ba. All equal the
+  request.
+- Helper provenance: in /lane/reviews/inline-schema-muse-r5-20261117/manifest.json the private
+  helper binary is 852cd7f5…e9ba and helper/src/main.rs is 8f2481c7…7ed. Both equal the copies in
+  the capsule. coding_proposal.rs (ca63ed0a…7329) equals
+  `git show 72c002a4…:capabilities/repository-map/src/coding_proposal.rs`, and 72c002a4 is an
+  ancestor of HEAD.
+- `python3 -B /lane/reviews/exact-edit-diagnosis-20261117/verify.py` → status PASS, 180 attempts,
+  106 strict ungraded, edit refusals {old-absent 25, overlapping-edits 11, old-ambiguous 8,
+  empty-old 5, unchanged-edit 5, old-not-visible 2}, task_scores null, postcommit_checked true.
+  exit 0.
+- `install -m 700 …/original-helper/helper.bin $review_diag/helper`: SHA256 852cd7f5…e9ba was
+  required before execution. Then
+  `bash /tools/build-slot python3 -B …/diagnose.py --helper $review_diag/helper --output $review_diag/result`
+  → exit 0 (4 min 9 s including slot wait), 16 self-tests. The context and checker result were
+  reproduced for 29+30+30+30+21+26 = 166 answers.
+  `cmp` of diagnosis.json and input-bindings.json → identical. `diff -r` of the whole result tree
+  against the capsule → identical.
+- Independent reclassification (my own script, byte offsets, original capsules) → causes
+  {ungraded-proposal 106, strict-edit-refused 60, generation-refused 14}. All 56 are
+  `code.proposal.edit` refusals: absent 25, overlap 11, ambiguous 8, empty 5, unchanged 5,
+  invisible 2. 7 absent fragments match after whitespace removal; 1 occurs in an earlier `new`.
+  These match every number in the evidence.
+- The node binary /lane/reviews/42612ca9787f-a4b-node had SHA256 d1de76d8…932c; I ran a private
+  copy (v24.15.0) on PATH.
+  `python3 -B scripts/local_agent_fast_gate.py --base 5333ea1b… --timeout 3600` → it ran git diff
+  --check, untracked lint, private paths, licence, retained-review lint and markdownlint (0 issues
+  in 3 files). Result: `FAST GATE: PASS`, exit 0. It selected no full suite (documentation-only
+  diff).
+- `python3 -B scripts/private_host_paths.py --base 5333ea1b…` → PRIVATE PATH CHECK: PASS.
+  `python3 -B scripts/license_policy.py` → LICENCE POLICY: PASS.
+- The retained review docs/reviews/5333ea1b3581-inline-schema-muse-development-completion.txt is
+  byte-identical (`cmp`) to /lane/reviews/5333ea1b3581-inline-schema-muse-development-completion.md
+  and ends `Verdict: PASS`.
+
+## Review notes
+
+- **Checker fidelity.** The Python `classify` follows the Rust order exactly. Each edit is checked
+  in array order: path, empty old, old == new, NUL in new, first occurrence, then a second
+  occurrence searched from the next character boundary, which catches overlapping matches (Rust
+  does the same through the `next` char boundary). Visibility is checked in UTF-8 byte offsets.
+  Only after all edits pass do the per-file overlap, size and net-unchanged checks run. Python's
+  sub-labels inside the single Rust condition `empty || unchanged || NUL` are labels only; every
+  one of them is a refusal either way. The diagnosis asserts that no `code.proposal.edit` answer
+  classifies as valid or net-unchanged, which is a consistency check against the Rust result.
+- **Execution boundary.** diagnose.py runs only the authenticated helper. It re-checks the helper
+  hash against each capsule manifest before use, sends saved text on stdin with a 30 s timeout and
+  executes no candidate code, tests or model. verify.py only reads and hashes files and calls
+  `git show`/`git diff`/`git status`. Neither imports archived code. The task list is asserted to
+  be dev-001…dev-029 plus dev-rust-001; no held-out content is interpreted.
+- **Evaluation integrity.** The diff contains no prompt, checker, runtime, threshold or evaluation
+  input. No held-out run, no tuning and no score is claimed. Task passes remain "Unavailable". The
+  per-profile ungraded counts (19, 17, 17, 28, 6, 19) equal the existing 30/30 scoreboard lines.
+  The 14 generation refusals (2 length, 8 incomplete, 4 transport timeouts) equal the terminal
+  events.
+- **MEASURE FIRST.** The scoreboard gains a dated line, labelled as a summary and "not a new
+  inference run or a task score". Budgets are explicitly retained from the per-run entries. The
+  next work is the largest measured cause (edit refusals, 56/180) and is chosen without relaxing
+  exact matching. The prior scoreboard is an exact byte prefix (verified by verify.py).
+- **Planning rows.** T-319 (P0), T-320 (P1) and T-321 (code-host issues/PRs) match the owner's
+  2026-11-15 notes: the groups, exact-call presentation with the user's yes, one shared connection
+  with no second sign-in and no authoritative store of read data, open standards first, and no
+  named-service tool or vendor documentation before release. They start unchecked and are marked
+  planning only. Git reads and approved pushes are correctly left inside T-306 per Decision 0209
+  §"Placement of the released Git work", not duplicated. These rows add no second runtime, no
+  desktop interface, no repository-folder requirement and no memory store. The 509 existing ledger
+  table lines are unchanged.
+- **Public-repository checks.** The diff names no private path, user name, host, sibling project or
+  other agent product. The owner's private-project word from the brief note is not reproduced, and
+  no trademark is used as branding. The only model-vendor name is the reviewer attribution inside
+  the retained review report.
+
+## Findings
+
+None at any severity.
+
+## Per-row result
+
+- T-303/T-306 (non-closing MEASURE FIRST diagnosis): accepted. The diagnosis is reproducible
+  byte for byte with the original helper and independently by a separate byte-level
+  reclassification. Every number traces to the raw records. No row closes, and the rows remain
+  open as stated.
+- T-319/T-320/T-321 (later planning rows): accepted as owner-requested planning only, unchecked
+  and unreleased.
+
+Verdict: PASS

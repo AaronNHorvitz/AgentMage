@@ -2,6 +2,22 @@
 
 ## Active queue: local agent mission
 
+The [independent exact-edit diagnosis review](docs/reviews/9cd1a07d1128-exact-edit-refusal-diagnosis.txt)
+returns **Verdict: PASS** for exact
+`9cd1a07d1128dc21ae5e1b6c7278c233e428c03c`, with no findings at any severity.
+It accepts the diagnosis and the later planning rows only; no mission row
+closes. The report is retained unchanged and supplies no verdict for this change.
+
+The [copy-original-fragment generation change](docs/evidence/t303-copy-original-fragments-2026-11-17.md)
+at `35217c60a56a5d3e065148eb9a6aea898b5e1b16` preserves the old 1,072-byte
+instruction overhead, all 30 development user contexts and all 166 old checker
+outputs. Its first frozen A4B pair yields 2/2 strict ungraded proposals;
+task passes/retries remain unavailable and 178/180 attempts remain before
+further tuning or capability work. No candidate, hidden or held-out test runs.
+The complete affected-crate source gate stays FAIL with 1,030 passed, the same
+53 inherited failures and 11 ignored; there is no new failure. T-303/T-306
+remain open. Independent core review is required for this non-closing increment.
+
 The [independent completed Muse review](docs/reviews/5333ea1b3581-inline-schema-muse-development-completion.txt)
 returns **Verdict: PASS** for exact
 `5333ea1b3581a0e89eb67e18bd4b33bc28606148`, with no findings at any severity.

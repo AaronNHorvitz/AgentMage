@@ -3289,3 +3289,33 @@ or invisible text (2). The next T-303/T-306 generation work must address exact
 original-fragment fidelity while retaining strict checking; no runtime change
 is made here. See the [diagnosis and reproduction method](t303-exact-edit-refusal-diagnosis-2026-11-17.md).
 No candidate, hidden or held-out test ran. T-303/T-306 stay open.
+
+## Copy-original-fragment prompt repeat: first pair — 2026-11-17 UTC
+
+Development-only checkpoint; no candidate, hidden or held-out test executes.
+178 of 180 frozen attempts remain before tuning or new capabilities.
+
+| Date (UTC) | Prompt/checker source | Model / attempts | Context / output tokens | First pass | Within budget | Strict ungraded | Held-out | Request/check seconds | GPU-slot work minutes | Backend input / output |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-17 | 35217c60a56a5d3e065148eb9a6aea898b5e1b16 | gemma4-26b-a4b (2/30) | 32768 / 23166–23228 | Unavailable | Unavailable | 2/2 | Not run | 60.564 | 1.618 | 19078 / 4030 (2/2 counters) |
+
+Changed variable: fixed instruction, copying original text before replacement.
+It preserves the 1,072-byte overhead; all 30 user payloads/excerpts match the
+preceding repeat. Rendered input 9508–9570; output still follows
+`min(32768, 32768 - rendered input tokens - 32)`. Does not fit: 0.
+Causes: `{"ungraded-proposal": 2}`. Both captured responses are HTTP 200,
+nonempty content with absent or empty reasoning fields; both backend logs stop
+below token limits. No inference about internal reasoning or task quality follows.
+The same two tasks also yielded ungraded proposals in the preceding repeat.
+
+The same authenticated generic transport binary remains at source
+`72c002a42957340de0b6fa0eb4d48385db2c7e62`. Schema, model/profile, runtime,
+framing, thinking request and deadlines remain fixed. Native admission and
+original grading controls still block effects, project tests, feedback and
+retries; task passes stay unavailable. Completed-job reserved work is
+97.066 seconds, excluding pre-entry validation, wrappers, queues and preparation.
+Controller launch to exit is 98.138 seconds, including queues and wrappers.
+GPU kernel time, complete reservation time and total end-to-end latency are
+unmeasured. The rejected larger draft and failed snapshot preflight produced
+no inference; their records remain separate. See [evidence](t303-copy-original-fragments-2026-11-17.md).
+T-303/T-306 remain open. No model role or capability is qualified.
