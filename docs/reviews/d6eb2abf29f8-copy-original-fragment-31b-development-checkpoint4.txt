@@ -1,0 +1,140 @@
+Commit: d6eb2abf29f8391f072171d97162de716cadd987
+Scope: copy-original-fragment-31b-development-checkpoint4
+
+# Independent review: first four frozen 31B copy-original-fragment development attempts
+
+Reviewer: Claude Opus 5.5 (extra-high effort), in a separate read-only session. Tier: core.
+Base a17e9595273683fcdc477cba4ef2601a1b3f0688; prompt/checker source
+35217c60a56a5d3e065148eb9a6aea898b5e1b16. Every command ran in the pinned checkout
+/lane/review-checkout. Private scratch was /lane/state/tmp/rv-d6eb-43tY. `git status --porcelain`
+was empty before and after. I did not modify the repository or any capsule. I ran no model, used no
+GPU and executed no candidate, hidden or held-out test.
+
+## Methods
+
+1. Read the complete four-file diff (274 insertions, 0 deletions): two TASKS.md prose paragraphs
+   with no table line added or removed; one appended scoreboard section with one table row; the new
+   evidence page; and the retained review docs/reviews/a17e95952736-…-completion.txt.
+2. `git diff --name-only 35217c60 HEAD` lists only README.md, TASKS.md and docs/. No runtime, prompt,
+   helper, permission, sandbox, test, profile or budget code is in scope, so there is no new
+   confinement surface to attack in this increment.
+3. Read verify.py, reproduce.py and work/post-commit.py before running them. verify.py only reads,
+   hashes and calls `git show`/`diff`/`rev-parse`/`status`. reproduce.py authenticates the capsules
+   and the helper, then runs only the effect-free helper (JSON on stdin, JSON on stdout). It never
+   runs proposed code. post-commit.py checks that HEAD^ is the base, that the tree is clean and that
+   the four committed blobs equal the sealed public bytes.
+4. Recomputed every published number myself from the raw job files: batch-report.json,
+   collection/batch.json, per-task record.json and checked.json, upstream-request-*.json,
+   upstream-response-*.bin (usage and finish_reason), launch.json and controller-exit.json.
+5. Checked the frozen policy model order, the reservation logs, the cleanup and
+   starting-authentication records, and the retained review against its original.
+6. Grepped the added lines for home paths, user names, e-mail addresses, credentials and other
+   agent product names.
+
+## Exact commands and results
+
+- `git rev-parse HEAD` → d6eb2abf29f8391f072171d97162de716cadd987. `git status --porcelain` → empty.
+  `git diff --check a17e9595…` → no output, exit 0.
+- sha256: manifest.json b006236e…6fde966; bindings.json b67bd7c6…ec17 (2951 files); post-commit JSON
+  9a1dad55…68cce; post-commit method 4294a047…a4ef. All four equal the request. The receipt names
+  commit d6eb2abf…, base a17e9595…, the four public files and complete_diff_covered true.
+- `python3 -B /lane/reviews/copy-fragments-31b-checkpoint4-20261117/verify.py` → **exit 1**:
+  `FileNotFoundError: /lane/state/ef1/__pycache__/batch.cpython-315.pyc`, raised in the new loop at
+  verify.py:160-163. That loop hashes the builder's live job directory, and /lane/state/ef1 is not
+  mounted in the reviewer sandbox (`ls /lane/state` shows only review-target and tmp). Every earlier
+  assertion had passed by that point. See L1.
+- I made a private copy of verify.py with two changes, shown by `diff`. It pins C to the capsule
+  path, and it replaces only that four-line live loop with a count of the 423 paths it would have
+  checked. Run: `python3 -B /lane/state/tmp/rv-d6eb-43tY/verify-nolive.py` →
+  `{"status": "PASS", "attempts": 34, "new_attempts": 4, "remaining_attempts": 146,
+  "strict_ungraded_proposals": 2, "original_capsule_all_inputs_checked": true,
+  "postcommit_checked": true, "candidate_execution": false, "task_passes": null,
+  "hidden_or_held_out": false}`, exit 0.
+  - This covers every file and the closed file set of all three dependency capsules (5027, 5859 and
+    12452 files), plus their complete-diff receipts.
+  - It covers the 2283 + 44 frozen inputs and byte-identical campaign scripts and policy.
+  - It covers the four upstream requests: messages equal to the frozen development contexts, a
+    strict inline schema, `enable_thinking: false` and the stated budget. It also covers the HTTP 200
+    captures, backend counters, candidate hashes and the absence of tokens and sockets.
+  - It covers cleanup, preservation (512 ledger lines, 49 historical path blobs), TASKS.md table
+    lines, the exact scoreboard prefix and the post-commit binding to HEAD.
+- `install -m700 …/exact-fragments-20261117/inputs/objects/1992c3c4… …/helper`. Its sha256 is
+  1992c3c40cd00f5b460585fe3934e661bf8f6004f1c77ea7c27635309c3bd6de, checked before execution.
+  `bash /tools/build-slot python3 -B …/reproduce.py --helper …/helper --output …/repro` →
+  `{"status": "PASS", "contexts": 30, "answers": 4, "helper_sha256": "1992c3c4…",
+  "candidate_execution": false, "model_inference": false, "hidden_or_held_out": false}`, exit 0.
+- Node: /lane/reviews/42612ca9787f-a4b-node has sha256 d1de76d8…932c. A private copy on PATH
+  reports v24.15.0.
+- `python3 -B scripts/local_agent_fast_gate.py --base a17e9595… --timeout 3600` → **FAST GATE:
+  PASS**, exit 0. It ran the private-path check, the licence policy, the review lint of the retained
+  .txt and markdownlint of 3 files (0 issues).
+- `node …/work/lint-all.mjs` → PASS, 0 issues, tables {scoreboard 1, evidence 1}.
+- `python3 -B scripts/private_host_paths.py --base a17e9595…` → PRIVATE PATH CHECK: PASS.
+- `python3 -B scripts/license_policy.py` → LICENCE POLICY: PASS.
+- `cmp docs/reviews/a17e95952736-copy-original-fragment-a4b-development-completion.txt
+  /lane/reviews/a17e95952736-copy-original-fragment-a4b-development-completion.md` → identical. The
+  prior PASS is retained byte for byte, and its L1 is correctly summarised as T-309 backlog.
+
+## Evidence tracing (my own recomputation)
+
+- Tasks: dev-001 and dev-002 (job gemma4-31b-00), then dev-003 and dev-004 (job gemma4-31b-02). These
+  are the first four entries of the frozen preflight3 order, one attempt each, with graded false and
+  retries 0. policy.json lists six profiles with 30 tasks each (180), and gemma4-31b comes first in
+  the order after the completed A4B profile. 30 + 4 = 34 attempts, leaving 146.
+- Causes: dev-001 and dev-002 are strict-edit-refused with checked.json `{"error":
+  "code.proposal.edit"}`. dev-003 and dev-004 are ungraded-proposal. That gives 2/4 strict ungraded
+  proposals, matching the scoreboard, the evidence page and TASKS.md. The refusals are counted as
+  failures, not repaired or dropped.
+- Tokens: rendered input is 9508, 9570, 4758 and 3229 (range 3229–9570). The budgets are 23228,
+  23166, 27978 and 29507, each equal to 32768 − input − 32 (range 23166–29507). Response usage sums
+  to 27065 prompt and 8960 completion tokens, equal to the backend counters (4/4 coverage). Every
+  finish_reason is `stop`, and every completion is below its budget, so "stopped-below-token-limits:
+  4" is accurate. Does-not-fit is 0.
+- Time: generation seconds sum to 309.096. Reserved work is 165.982 + 218.080 = 384.063 s, or
+  6.401 GPU-slot work minutes. The controller ran from 09:54:18.997009 to 10:01:15.467673 UTC,
+  416.471 s. All of these match the published figures.
+- Resources: launch.json records nice 19, low priority, cpu.max 400000/100000 (four CPUs),
+  memory.max 17179869184 (16 GiB) and a 9706-file source snapshot. The bwrap argv bind-mounts the
+  snapshot read-only over the checkout and .git read-only. Both reservation logs show both wrappers
+  acquired, a completed status and error null. The sampled GPU peak is 20603 MiB per job (≤ 22528).
+- Cleanup: settings revoked, API and model reaped, four tokens retired, no live owned process, no
+  foreign signal. This is builder-recorded; I could not observe the live host state.
+- Start-up race: work/starting-authentication.json records that the dependency verification passed
+  before launch and that the archive retry happened after the host moved the request. No evaluation
+  input changed, and verify.py's dependency checks confirm this.
+- Integrity: no held-out content, hidden test or tuning appears in the diff, and only documentation
+  changed since the source commit. Every upstream request is the frozen development context (split
+  development, held_out_executed false). The scoreboard keeps the old bytes as an exact prefix. The
+  new line states the changed variable, the context and output budgets, does-not-fit and causes, as
+  MEASURE FIRST requires. The evidence page plainly calls this a partial path (no native effects,
+  tests, feedback or retries) and claims no pass rate or model qualification.
+- Public hygiene: the added lines contain no home path, user name, e-mail, credential, other agent
+  product, sibling project or trademark branding. The private capsule's launch.json does contain a
+  home path, but it is not committed.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, backlog for T-309; verification reproducibility).** verify.py:160-163 asserts the live
+  bytes under /lane/state/ef1 for every `campaign/jobs/` file of the three dependency capsules (423
+  paths). That directory exists only in the builder's environment. So the requested command 1 cannot
+  pass in the independent reviewer sandbox, and the claim "old raw bytes unchanged" in live state is
+  attested only by the builder. It does not affect any published number: the sealed copies of those
+  jobs are fully authenticated against their manifests, and every remaining assertion passes.
+  - Fix: make the live check report `live_state: unavailable` (or skip it) when /lane/state/ef1 is
+    absent, and fail only on a mismatch. Alternatively, run it in a separate builder-only script, so
+    that verify.py stays one command a reviewer can rerun.
+- Earlier T-309 lows remain as recorded: helper build provenance, the native executable admission
+  wording and the a17e9595 L1 on correction provenance.
+
+## Per-row result
+
+T-303/T-306 (non-closing frozen development measurement): the four new attempts are measured, traced
+to raw logs, counted including failures, and labelled honestly as a partial path with task passes
+unavailable. Evaluation integrity holds: development split only, no held-out run, no tuning, frozen
+inputs, and the prior 30 A4B attempts preserved and counted once. The reporting, privacy and licence
+gates pass, and the helper reproduction passes. I reran the requested verifier without only the
+builder-only live-state loop (L1, low). Both rows stay open, and no row closes.
+
+Verdict: PASS
