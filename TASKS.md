@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The [independent 31B completion review](docs/reviews/49a41f1c7e89-copy-original-fragment-31b-development-completion.txt) returns **Verdict: PASS** for exact `49a41f1c7e8919de52462fb60d04010662df16c3`, with no new findings. Its report is retained unchanged and accepts that commit only; no row closes. Existing T-309 backlog stays open, and this checkpoint needs independent core review.
+
+The [ten-attempt frozen 27B checkpoint](docs/evidence/t303-copy-original-fragments-27b-checkpoint10-2026-11-17.md) adds
+9/10 strict ungraded proposals and brings this repeat to 70/180 attempts,
+with 110 remaining before tuning or capability work. Task passes and retries
+remain unavailable; no candidate, hidden or held-out test executes. All sixty
+earlier attempts and measured settings are preserved. T-303/T-306 remain open;
+independent core review is required.
+
 The [independent previous checkpoint review](docs/reviews/b140a69ffb40-copy-original-fragment-31b-development-checkpoint20.txt) returns **Verdict: PASS** for exact `b140a69ffb402fd93f2f97e759b0d5497f6079a9`, with no new findings. Its unchanged report accepts that checkpoint only and closes no row. Existing T-309 backlog remains open; this increment requires independent core review.
 
 The [completed frozen 31B measurement](docs/evidence/t303-copy-original-fragments-31b-complete-2026-11-17.md) adds ten development attempts:

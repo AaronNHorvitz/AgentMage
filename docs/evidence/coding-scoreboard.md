@@ -3498,3 +3498,35 @@ unmeasured. Native executable admission and original grading controls still
 block effects, project tests, feedback and retries. No candidate, hidden or
 held-out test executes. See [evidence](t303-copy-original-fragments-31b-complete-2026-11-17.md).
 T-303/T-306 remain open; no model role or capability is qualified.
+
+## Copy-original-fragment prompt repeat: ten 27B attempts, 2026-11-17
+
+Source `35217c60a56a5d3e065148eb9a6aea898b5e1b16`; reporting base `49a41f1c7e8919de52462fb60d04010662df16c3`.
+Ten new development attempts on the next frozen profile bring the repeat to
+70/180; 110 remain before tuning or capability work. All earlier attempts are
+preserved and counted once. This is proposal generation and strict checking,
+with task passes and retries unavailable.
+
+| Date | Source commit | Model | Context / output tokens | First-attempt passes | Within-budget passes | Strict ungraded proposals | Held-out | Request/check seconds | Reserved-job GPU minutes | Backend input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-17 | 35217c60a56a5d3e065148eb9a6aea898b5e1b16 | qwen35-27b (10/30) | 32768 / 24279–29796 | Unavailable | Unavailable | 9/10 | Not run | 365.635 | 8.364 | 62343 / 11232 (10/10 counters) |
+
+No measured variable changes on resume. The campaign's changed variable remains
+the fixed original-fragment instruction. Context, excerpts, schema, framing,
+model settings, thinking request and deadlines stay frozen. Rendered input:
+2940–8457; output:
+`min(32768, 32768 - rendered input tokens - 32)`.
+Does not fit: 0.
+Causes: `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 9}`.
+Backend terminations: `{"stopped-below-token-limits": 10}`.
+Response fields: `{"content:nonempty": 10, "reasoning:absent-or-empty": 10, "reasoning_content:absent-or-empty": 10}`;
+internal reasoning is not inferred.
+
+Five two-task jobs add 501.822 reserved-work seconds.
+The controller wall window is 2556.705 seconds, including queues and released
+pauses, excluding preparation before launch and reporting after exit. GPU
+kernel time, full reservation duration and end-to-end latency are unmeasured.
+Native executable admission and original grading controls remain unavailable;
+effects, project tests, feedback and retries cannot run. No candidate, hidden
+or held-out test executes. See [evidence](t303-copy-original-fragments-27b-checkpoint10-2026-11-17.md).
+T-303/T-306 remain open; no model role or capability qualifies.
