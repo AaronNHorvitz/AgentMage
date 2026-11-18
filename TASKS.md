@@ -2,6 +2,19 @@
 
 ## Active queue: local agent mission
 
+The [independent Muse ten-attempt checkpoint review](docs/reviews/1506b39551f4-copy-original-fragment-muse-development-checkpoint10.txt) returns **Verdict: PASS** for exact `1506b39551f4d20d0d4661f0d019def2c3053341`, with no high, medium or new low findings. The report is retained unchanged and accepts that measurement only; no row closes. Existing T-309 backlog remains open. No verdict is inferred for this increment.
+
+The [independent Muse fourteen-attempt checkpoint review](docs/reviews/c5dfffe17871-copy-original-fragment-muse-development-checkpoint14.txt) returns **Verdict: PASS** for exact `c5dfffe17871b79c3e034b9d5227b8aecfe8d218`, with no high, medium or new low findings. Its unchanged report accepts the prior measurement only; no row closes. Existing T-309 backlog stays open. No verdict is inferred for this increment.
+
+The [frozen Muse eighteen-attempt checkpoint](docs/evidence/t303-copy-original-fragments-muse-checkpoint18-2026-11-18.md) adds four development
+attempts: 4/4 new and 12/18 cumulative strict ungraded proposals.
+The repeat is 138/180 complete, with 42 attempts remaining before tuning or
+capability work. All earlier attempts and measured settings are preserved.
+Task passes and retries remain unavailable; no candidate, hidden or held-out
+test executes. T-303/T-306 stay open; independent core review is required.
+The preceding review was pending at session start. Its observed verdict is
+retained separately; no verdict is inferred for this increment.
+
 The [frozen Muse fourteen-attempt checkpoint](docs/evidence/t303-copy-original-fragments-muse-checkpoint14-2026-11-18.md) adds four development
 attempts: 3/4 new and 8/14 cumulative strict ungraded proposals.
 The repeat is 134/180 complete, with 46 attempts remaining before tuning or

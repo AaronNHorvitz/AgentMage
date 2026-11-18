@@ -1,0 +1,50 @@
+Commit: 1506b39551f4d20d0d4661f0d019def2c3053341
+Scope: copy-original-fragment-muse-development-checkpoint10
+
+Reviewer: independent session (Claude Opus 5.5, extra-high effort), read-only, pinned checkout /lane/review-checkout.
+Row: T-303/T-306 non-closing frozen development measurement (Muse positions 1-10). Base c6c7ca5802b800b1cec21d6fac2164e29a7e4cb2; prompt/checker source 35217c60a56a5d3e065148eb9a6aea898b5e1b16.
+
+## Methods and commands (all run in /lane/review-checkout, CARGO_TARGET_DIR=/lane/state/review-target)
+
+1. `git rev-parse HEAD` -> 1506b39551f4d20d0d4661f0d019def2c3053341; `git status --porcelain` empty; `git diff --check c6c7ca58...` exit 0.
+   `git diff --numstat` base..HEAD: four files, all additions only (TASKS.md +11, coding-scoreboard.md +47, new evidence file +78, new review copy +118; 0 deleted lines). The scoreboard prefix and the TASKS text are therefore preserved byte for byte.
+2. `bash /tools/build-slot python3 -B .../copy-fragments-muse-checkpoint10-20261118/verify.py` -> exit 0,
+   `{"status":"PASS","attempts":130,"new_attempts":10,"remaining_attempts":50,"strict_ungraded_proposals":5,"all_dependencies_checked":true,"live_state":"unavailable","postcommit_checked":true,"candidate_execution":false,"task_passes":null}`.
+   Live builder state was not mounted for me; the verifier says so explicitly.
+3. Helper object authenticated with `sha256sum` (1992c3c4...bd6de, matches). Copied to a private executable path, then `bash /tools/build-slot python3 -B .../reproduce.py --helper <copy> --output <fresh dir>` -> exit 0, `{"status":"PASS","contexts":30,"answers":9,"candidate_execution":false,"model_inference":false,"hidden_or_held_out":false}`. (My first call reused an existing output directory and failed with FileExistsError before any check ran; the call with a fresh directory is the one that counts.) The script runs only the authenticated context/check helper. Proposed code is kept as data.
+4. Node binary authenticated (d1de76d8...932c, matches) and copied privately onto PATH. Then:
+   - `python3 -B scripts/local_agent_fast_gate.py --base c6c7ca58... --timeout 3600` -> exit 0, covering all four changed paths.
+   - `node .../work/lint-all.mjs` -> PASS, 0 issues (scoreboard 1 table, evidence 1 table).
+   - `python3 -B scripts/private_host_paths.py --base c6c7ca58...` -> PRIVATE PATH CHECK: PASS.
+   - `python3 -B scripts/license_policy.py` -> LICENCE POLICY: PASS.
+5. The optional portable bwrap verifier (request item 4) was not run, because the required verifier already ran with live state unavailable. This item is optional, so its absence does not make the review inconclusive.
+
+## Independent checks against raw records
+
+- Capsule hashes match the request: manifest 1f7ca19b..., bindings efdc3bb5..., post-commit 25a8f6ee..., dependency list 39e42c39.... The manifest lists 7345 files. The post-commit record names commit 1506b395.
+- The sealed public copies of all four changed files are byte-equal to the committed blobs (`git show HEAD:<f> | cmp`).
+- The committed review copy `docs/reviews/c6c7ca5802b8-...completion.txt` is byte-identical to `/lane/reviews/c6c7ca5802b8-...completion.md` (ends `Verdict: PASS`). review-inspection.json reports 0 high/medium findings, 0 new low findings and no row closed, which agrees with that report.
+- From the ten `record.json` files, I recomputed the causes as 2x strict-edit-refused:code.proposal.edit, 2x strict-edit-refused:code.proposal.format, 1x generation-refused (dev-004, 300.010 s, transport timeout, no answer) and 5x ungraded-proposal. This equals the published cause map, and the failure is counted, not dropped. Does-not-fit is 0.
+- The `generation_seconds` sum is 1800.270, which matches the published request/check seconds.
+- The five reservation logs sum to 2079.29 reserved-work seconds, and 2079.291/60 = 34.655 GPU minutes. Both match.
+- The per-attempt backend counters (llama.cpp prompt-eval/eval lines and response `usage`) sum to 58324 input / 63045 output tokens over 9 attempts, with dev-004 having no counters. This matches "9/10 counters".
+- The rendered input is 2913-8327 tokens. Every `requested_output_tokens` equals `min(32768, 32768 - rendered - 32)`, giving 24409-29823. The stated budgets are correct.
+- The 9 response bodies show finish_reason "stop" in all 9; content is nonempty in 9, reasoning is absent in 9, and reasoning_content is nonempty in 9. These match the published termination and field maps. The note that `enable_thinking:false` does not establish an absence of reasoning is honest.
+- The campaign `batch.py`, `collect.py`, `controller.py`, `policy.json`, `output-format.json` and `frozen-inputs.json` are byte-identical to the previously reviewed gpt-oss checkpoint capsule.
+- The system prompt hash for every upstream request is the same as in the gpt-oss campaign (3a3c9b25...). For each of dev-001..dev-010, the request `messages` equal the gpt-oss request exactly; only `model` and `max_tokens` differ. So no measured input, instruction, schema or thinking setting changed.
+- Evaluation integrity: only dev-001..dev-010 were requested. "held" appears only in ordinary source/task text, and no held-out or hidden task is loaded. No candidate or test execution is recorded, and the system prompt treats task and repository text as untrusted data.
+- Cleanup record: API/model reaped, keys/sockets absent, ten retired tokens recorded by hash only, owned-process list empty, no foreign signal. Token files are absent from the capsule, and `/lane/state/ef1` no longer exists.
+- Counts: 120 earlier attempts plus 10 gives 130/180, with 50 remaining (20 Muse, 30 E4B). This agrees with the six profiles at 30 attempts each.
+- Claims: the committed text calls the proposals ungraded, reports task passes and retries as unavailable, lists the partial path, keeps T-303/T-306 open and infers no verdict. MEASURE FIRST is satisfied: there is a scoreboard line for this batch, budgets are stated, every number traces to raw logs, and does-not-fit is reported separately. "Muse" is an existing model profile name used in earlier evidence, not branding. No other agent product, private project, private host path or credential appears in the diff.
+
+## Findings
+
+High: none.
+Medium: none.
+Low: none new. The existing T-309 backlog remains as disclosed.
+
+## Per-row result
+
+- T-303/T-306 (non-closing frozen development measurement, Muse checkpoint 10): measurement accepted as reported. No row closes, and T-303/T-306 remain open, as the commit states.
+
+Verdict: PASS
