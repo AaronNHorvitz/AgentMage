@@ -1,0 +1,77 @@
+Commit: 97e4d0032aa5b96dc822cc7f250b36c8603281d0
+Scope: copy-original-fragment-muse-development-checkpoint18
+
+# Independent review: frozen original-fragment Muse eighteen-attempt checkpoint (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), a separate session with read-only access, working in the pinned checkout /lane/review-checkout.
+I did not use the GPU. I did not modify the repository.
+Base c5dfffe17871b79c3e034b9d5227b8aecfe8d218; prompt/checker source 35217c60a56a5d3e065148eb9a6aea898b5e1b16.
+
+## Methods and commands (all in /lane/review-checkout, CARGO_TARGET_DIR=/lane/state/review-target)
+
+1. Commit and diff:
+   - `git rev-parse HEAD` returned 97e4d0032aa5b96dc822cc7f250b36c8603281d0.
+   - `git status --porcelain` was empty, before and after my runs. `git diff --check c5dfffe1...` exited 0.
+   - `git diff --numstat` from base to HEAD shows exactly the five requested files, all additions with 0 deletions: TASKS.md +13, coding-scoreboard.md +50, new evidence file +88, and the two review copies +50 and +72.
+   - The scoreboard change is therefore a pure append, so every earlier scoreboard byte is preserved. TASKS.md gains only inserted paragraphs.
+2. `bash /tools/build-slot python3 -B .../copy-fragments-muse-checkpoint18-20261118/verify.py` exited 0 and printed
+   `{"status":"PASS","attempts":138,"new_attempts":4,"remaining_attempts":42,"strict_ungraded_proposals":12,"all_dependencies_checked":true,"live_state":"unavailable","postcommit_checked":true,"candidate_execution":false,"task_passes":null}`.
+   Live builder state was not mounted for me, and the verifier said so explicitly.
+3. I authenticated the helper object with `sha256sum` (1992c3c4...bd6de, matches) and made a private executable copy. Then I ran `bash /tools/build-slot python3 -B .../reproduce.py --helper <copy> --output <fresh dir>`, which exited 0 and printed
+   `{"status":"PASS","contexts":30,"answers":4,...,"candidate_execution":false,"model_inference":false,"hidden_or_held_out":false}`.
+   That is the expected 30 contexts and 4 complete new answers. reproduce.py runs only the authenticated helper, and proposed code stays as data.
+4. I authenticated the node binary (d1de76d8...932c, matches) and put a private copy on PATH as `node`. Then:
+   - `python3 -B scripts/local_agent_fast_gate.py --base c5dfffe1... --timeout 3600` gave FAST GATE: PASS. markdownlint found 0 issues in the 3 Markdown files.
+   - `node .../work/lint-all.mjs` gave PASS with 0 issues (scoreboard 1 table, evidence 1 table).
+   - `python3 -B scripts/private_host_paths.py --base c5dfffe1...` gave PRIVATE PATH CHECK: PASS.
+   - `python3 -B scripts/license_policy.py` gave LICENCE POLICY: PASS.
+5. I did not run the optional portable bwrap verifier (request item 4). The required verifier already ran with live state unavailable, and this item is optional.
+
+## Independent checks against raw records
+
+- **Capsule hashes:** all match the request. Manifest b6d4b0ad..., bindings 513c883a..., post-commit 1599acaf..., and dependency list (work/dependencies.json) 91cc0ed3... with 16 entries.
+  - The manifest records attempts 138, new 4, remaining 42, `candidate_execution: false`, `hidden_or_held_out: false` and `task_passes: null`.
+- **Causes:** I read the four `record.json` files. dev-015..dev-018 are all `ungraded-proposal`, with finish "stop", retries 0 and `graded: false`.
+  - The new map {ungraded-proposal: 4} is exact, and does-not-fit is 0.
+  - The cumulative map {timeout 2, edit 2, format 2, ungraded 12} equals the reviewed checkpoint-14 map plus these four.
+- **Request/check seconds:** 120.207 + 154.298 + 149.064 + 96.184 = 519.753. Adding the prior 2858.753 gives the cumulative 3378.506.
+- **Reserved-job time:** the reservation logs give 309.539 + 270.532 = 580.071 s, which is 9.668 GPU minutes. Adding the prior 3193.228 gives 3773.300 s, or 62.888 min.
+- **Backend counters:** the llama.cpp prompt-eval/eval lines and the response `usage` blocks agree.
+  - Inputs are 8344, 7891, 3990 and 3011 (total 23236). Outputs are 4890, 6705, 6418 and 4382 (total 22395). Coverage is 4/4.
+  - The cumulative totals 101759 / 119008 (16/18) equal the reviewed 78523 / 96613 (12/14) plus these.
+- **Budgets:** each `requested_output_tokens` equals `32768 - rendered - 32` (24392, 24845, 28746, 29725). The published ranges 3011–8344 input and 24392–29725 output are correct.
+- **Response fields:** all four bodies have finish_reason "stop", nonempty content, nonempty reasoning_content and no `reasoning` field. This matches the published maps. The caveat that `enable_thinking:false` does not establish an absence of reasoning is honest.
+- **Measured inputs unchanged:**
+  - The campaign `batch.py`, `collect.py`, `controller.py`, `policy.json`, `output-format.json` and `frozen-inputs.json` are byte-identical to the reviewed checkpoint-14 capsule.
+  - My first comparison was against copy-fragments-gpt-complete-20261117 and found no match, but that capsule holds only the last ten positions. Repeated against all gpt-oss capsules, every request `messages` array equals the gpt-oss request for the same position exactly (copy-fragments-gpt-checkpoint20-20261117, jobs gpt-oss-14 and gpt-oss-16).
+  - Every field other than `model` and `max_tokens` is identical.
+  - The system prompt hash is 3a3c9b25... throughout.
+  - Only positions 15–18 ran, so no completed attempt was replayed.
+- **Evaluation integrity:** only development tasks were requested, and the batch report records `held_out: "not loaded or executed"`.
+  - No candidate, project test or grading ran. The checked proposals are kept as data.
+  - Task passes and retries are reported as unavailable, not as zero.
+- **Cleanup:** cleanup.json shows PASS.
+  - Settings are revoked, the API and model are reaped, keys and sockets are absent, the owned-process list is empty and no foreign process was signalled.
+  - Four retired tokens are recorded by path and hash only, and no token, key or socket file exists in the capsule.
+  - /lane/state/ef1 no longer exists.
+- **Retained review copies:** both new `docs/reviews/*.txt` files are byte-identical (`cmp`) to `/lane/reviews/1506b39551f4-...checkpoint10.md` and `/lane/reviews/c5dfffe17871-...checkpoint14.md`.
+  - Both end `Verdict: PASS`, with no high, medium or new low findings.
+  - The TASKS.md paragraphs describe them accurately and close no row. review-inspection.json agrees for c5dfffe1.
+  - The timing statements check out. The checkpoint-10 report (16:21) came after c5dfffe1 was committed (15:28). The checkpoint-14 report (16:24:20) arrived while this measurement ran (model sockets 16:24:15 and 16:31:16; commit 16:38).
+- **Counts:** 134 + 4 = 138 of 180, leaving 42 (Muse 30 − 18 = 12, plus 30 E4B).
+- **Claims and naming:**
+  - Proposals are called ungraded, the partial path is listed, T-303/T-306 stay open, no model role is selected and no verdict is inferred for this increment.
+  - MEASURE FIRST is satisfied: there is a scoreboard line for this batch, budgets are stated, every number traces to raw logs, and does-not-fit is reported separately.
+  - The diff names no other agent product, private project, private host path, credential or employer. The only product-like names in the review copies identify the reviewer model. "Muse" is the existing model profile name.
+
+## Findings
+
+High: none.
+Medium: none.
+Low: none new. The existing T-309 backlog remains as disclosed.
+
+## Per-row result
+
+- T-303/T-306 (non-closing frozen development measurement, Muse checkpoint 18): measurement accepted as reported. No row closes; T-303/T-306 remain open, as the commit states.
+
+Verdict: PASS
