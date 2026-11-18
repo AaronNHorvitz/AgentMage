@@ -3771,3 +3771,50 @@ reserved-job work/GPU minutes cover the measured job body, not either queue
 window, preparation or full reservation duration. The cancelled queue window
 is separate from the reported final resumed controller wall interval; no attempt,
 answer or work time from it is invented or dropped.
+
+## Copy-original-fragment prompt repeat: Muse ten-attempt checkpoint, 2026-11-18
+
+Source `35217c60a56a5d3e065148eb9a6aea898b5e1b16`; reporting base `c6c7ca5802b800b1cec21d6fac2164e29a7e4cb2`.
+
+| Date | Source commit | Model | Context / output tokens | First-attempt passes | Within-budget passes | Strict ungraded proposals | Held-out | Request/check seconds | Reserved-job GPU minutes | Backend input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-18 | 35217c60a56a5d3e065148eb9a6aea898b5e1b16 | Muse (10/30 complete) | 32768 / 24409–29823 | Unavailable | Unavailable | 5/10 | Not run | 1800.270 | 34.655 | 58324 / 63045 (9/10 counters) |
+
+Positions 1–10 (dev-001 through dev-010) produce
+5/10 strict ungraded proposals.
+Failure causes and ungraded results: `{"generation-refused:error:chat.transport.timeout": 1, "strict-edit-refused:code.proposal.edit": 2, "strict-edit-refused:code.proposal.format": 2, "ungraded-proposal": 5}`.
+Does not fit: 0.
+Rendered input: 2913–8327 tokens.
+Output budget: 24409–29823, using
+`min(32768, 32768 - rendered input tokens - 32)`.
+Backend terminations: `{"stopped-below-token-limits": 9, "unobserved-or-ambiguous": 1}`.
+Response fields: `{"content:nonempty": 9, "reasoning:absent-or-empty": 9, "reasoning_content:nonempty": 9}`.
+The request sends `chat_template_kwargs.enable_thinking: false`; observed
+response fields are recorded separately and do not establish an absence of
+internal model reasoning.
+
+The changed variable remains the fixed original-fragment instruction. This
+checkpoint changes no source, helper, context, prompt, schema, model setting,
+framing, thinking request, budget or deadline. All 120 previous attempts remain
+byte-identical and are counted once. The six-profile repeat is 130/180 complete;
+50 attempts remain (20 Muse and 30 E4B) before tuning or capability work.
+
+Partial path only: Rust context selection, the credential-owning chat HTTP API,
+local inference and strict edit checking. Native executable admission and
+original execution/grading-control receipts remain unavailable; effects,
+project tests, feedback and retries cannot run. No candidate, hidden or
+held-out test executes. These proposals are ungraded, not solved tasks.
+T-303/T-306 remain open and no model role qualifies.
+
+Five two-task jobs use both resource wrappers, 900-second limits, 30-second
+released pauses, low priority, nice 19, 16 GiB RAM and four CPUs. The controller
+wall interval is 5972.158 seconds including queues and released pauses,
+excluding snapshot preparation and reporting. Request/check time is
+1800.270 seconds. Reserved-job body time is
+2079.291 seconds / 34.655 GPU minutes;
+it excludes queues and is not GPU kernel time or full reservation duration.
+End-to-end latency, continuous cumulative wall time and kernel time are
+unmeasured. Snapshot preparation alone takes a build slot; it releases that
+slot before the controller starts. Each pair acquires both wrappers afresh.
+
+See [evidence](t303-copy-original-fragments-muse-checkpoint10-2026-11-18.md). Independent core review required.

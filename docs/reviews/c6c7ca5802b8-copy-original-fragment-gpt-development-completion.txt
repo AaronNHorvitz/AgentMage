@@ -1,0 +1,118 @@
+Commit: c6c7ca5802b800b1cec21d6fac2164e29a7e4cb2
+Scope: copy-original-fragment-gpt-development-completion
+
+Reviewer: Claude Opus 5.5 (extra-high effort), in a separate read-only session. Tier: core.
+Row: T-303/T-306, a frozen development measurement that closes no row. Base b8e4b7ff9a4ec624b1d8801d9772196d7e162f11.
+Prompt/checker source: 35217c60a56a5d3e065148eb9a6aea898b5e1b16.
+
+## Methods
+
+I worked from the request, the brief's owner notes (MEASURE FIRST, REFOCUS, the evaluation-integrity checks) and my prior
+review of b8e4b7ff. I read the complete committed diff, which has four files and 274 insertions, all additive. I also read the
+capsule's verify.py, reproduce.py, campaign/controller.py and the launch, resume, interruption, idle-release and cleanup receipts
+before running anything.
+
+Everything ran in /lane/review-checkout at the pinned commit, and I did not modify the repository. I then recounted the ten new
+attempts myself from the raw upstream responses and the per-task backend log slices, without using the builder's audit code.
+
+## Commands and results
+
+1. **Commit and diff checks**
+   - `git rev-parse HEAD`: c6c7ca5802b800b1cec21d6fac2164e29a7e4cb2.
+   - `git status --porcelain`: empty, before and after all runs.
+   - `git diff --check b8e4b7ff…`: no output, rc 0.
+   - Diff stat: TASKS.md +9, coding-scoreboard.md +67, the new evidence file +103, the retained review +95. No line is deleted.
+2. **Capsule hashes**
+   - All four hashes match the request: manifest.json 08c61ee1…9e69, bindings.json 616b21ca…fae, post-commit.json 084bc87c…aa1fd
+     and work/dependencies.json e3ac0218…450a.
+   - The capsule has 6665 files: the 6663 in the manifest plus manifest.json and bindings.json, which verify.py checks exactly.
+3. **`python3 -B …/copy-fragments-gpt-complete-20261117/verify.py`**
+   - rc 0, `{"status":"PASS","attempts":120,"new_attempts":10,"remaining_attempts":60,"strict_ungraded_proposals":8,
+     "all_dependencies_checked":true,"live_state":"unavailable","postcommit_checked":true,"candidate_execution":false,
+     "task_passes":null}`.
+   - /lane/state/ef1 is not mounted in this session, so live builder state is explicitly unavailable.
+   - I did not run optional step 4 (bwrap with /lane/state hidden), because the state is already absent here and it would test
+     the same condition.
+4. **Helper reproduction**
+   - The helper object and its private 0700 copy both authenticate to 1992c3c4…bd6de.
+   - `bash /tools/build-slot python3 -B …/reproduce.py --helper <copy> --output <fresh dir>`: rc 0,
+     `{"status":"PASS","contexts":30,"answers":5,"candidate_execution":false,"model_inference":false,"hidden_or_held_out":false}`.
+   - This matches the expected 30 contexts and 5 complete new answers. The other five attempts have no answer, because they hit
+     the length limit.
+5. **Node-based gates**
+   - The node binary authenticates to d1de76d8…c932c (v24.15.0) and was placed on PATH from a private copy.
+   - `scripts/local_agent_fast_gate.py --base b8e4b7ff… --timeout 3600`: FAST GATE: PASS. This includes the review lint of the
+     retained report and markdownlint (0 issues in 3 files).
+   - `node …/work/lint-all.mjs`: PASS, 0 issues, one scoreboard table and one evidence table.
+   - `scripts/private_host_paths.py --base b8e4b7ff…`: PRIVATE PATH CHECK: PASS.
+   - `scripts/license_policy.py`: LICENCE POLICY: PASS.
+6. **Retained review**
+   - `docs/reviews/b8e4b7ff9a4e-…-checkpoint20.txt` is byte-identical (cmp) to my report
+     /lane/reviews/b8e4b7ff9a4e-copy-original-fragment-gpt-development-checkpoint20.md, whose verdict is PASS with no high or
+     medium finding.
+   - retained-review.json and review-inspection.json record the same SHA-256 (fb2e7d05…1894) and that disposition.
+7. **Independent recount of jobs gpt-oss-20 to gpt-oss-28** (dev-021 to dev-029 and dev-rust-001, which match preflight3 positions
+   20 to 29)
+   - **Causes:** generation-refused:error:chat.response.incomplete 5 (dev-021, 022, 025, 027, rust-001). Each has finish_reason
+     `length` and completion tokens exactly equal to its budget (25060, 25905, 28564, 24765, 29295), and each is counted as a
+     failure, not dropped.
+   - **Other causes:** strict-edit-refused:code.proposal.edit 3 (dev-023, 028, 029) and ungraded-proposal 2 (dev-024, 026).
+   - **Tokens and time:** request/check 921.164 s. Prompt/eval tokens from the backend slices are 63884/174129 and equal the
+     response `usage` for all 10 attempts.
+   - **Reserved work:** the sum of job reserved_work_seconds is 999.201 s, which is 16.653 GPU minutes.
+   - **Response fields:** content nonempty 5 and empty 5; reasoning absent 10; reasoning_content nonempty 10.
+   - **Ranges:** rendered input 3441–8161 and budgets 24575–29295, all equal to `min(32768, 32768−input−32)` and inside the
+     published cumulative ranges 2992–8521 and 24215–29744.
+   - **Cumulative:** my prior-review values plus these reproduce every published cumulative value:
+     - tokens 188529/433595;
+     - reserved 2482.673 s, which is 41.378 GPU minutes;
+     - request/check 2265.8277 s, published as 2265.828 (1344.663 + 921.164 = 2265.827 only because both addends were rounded);
+     - causes 8/14/8, terminations output-cap 8 / below-limit 22, and content fields 22/8.
+   - **Controller wall:** controller-exit.utc 17:37:43.180869 − resume-launch.utc 17:34:24.012517 = 199.168 s.
+   - **Repeat progress:** 31B, 27B, A4B and gpt-oss each have 30 attempts, so 120 of 180 are done and 60 remain (Muse and E4B).
+8. **Interruption and resume**
+   - **No replay:** controller.log shows completions 22, 24, 26 and 28, and resume-controller.log shows only 30.
+   - **Guard against silent replay:** the unchanged controller skips any pair whose batch-report says completed and asserts that
+     no partial job directory exists.
+   - **Resume launch:** resume-launch.json keeps the original argv except `--pairs 1`, with unstarted_offset 28. It uses the same
+     wrapper hashes, nice 19, priority low, memory.max 16 GiB and cpu.max 400000/100000.
+   - **Interruption record:** interrupted-controller.json records the prior exit code, exit time and cause as null/unobserved
+     rather than inventing them.
+   - **Idle-controller stop:** the idle-controller release sent SIGTERM only to the pinned group of the builder's own queued
+     launcher (pid 1051, start-ticks matched; exit −15 recorded). Its pair-20 queue log contains no GPU reservation, and no model
+     had started.
+   - **Cleanup:** PASS, 10 tokens retired, no live owned processes, no foreign signal.
+9. **Integrity and settings**
+   - split=development and held_out_executed=false in all 5 batches; graded=false, native_coding_harness=false and retries=0 hold
+     for every row.
+   - The wire requests send `enable_thinking:false` and the profile records `reasoning_effort: medium`, both as disclosed. The
+     profile is unchanged from the previous gpt-oss batch, which verify.py asserts.
+   - The other models' audit rows equal the prior audit.
+
+Confinement: this commit changes no source code and executes no candidate. Every proposal stays inert in the capsule. No tool,
+sandbox or permission boundary changes, so I did not repeat the escape attempts in this scope.
+
+Public hygiene: the committed diff adds no private path, username, hostname, credential or third-party agent product name.
+The model names already used in earlier published lines are unchanged. The capsule's launch receipts do contain a private host
+path, but the capsule is not committed and no public file carries it. No trademark is used as branding.
+
+## Findings
+
+No high or medium findings. No new low findings.
+
+Backlog (already disclosed, not blocking):
+- The last source gate remains FAIL: 1030 passed, 53 inherited failures and 11 ignored.
+- Live builder state could not be cross-checked from this session.
+- The interrupted controller's exit time and cause are unobservable.
+
+## Per-row result
+
+T-303/T-306 (frozen development measurement that closes no row): the completed gpt-oss measurement at exact c6c7ca58 is accepted.
+- The scoreboard line is present and every number traces to the raw logs.
+- Context and output budgets are stated, and tasks that do not fit are counted apart (0).
+- Failures are counted, not dropped.
+- The partial path is labelled as partial, and task passes and retries are reported as unavailable rather than inferred.
+- Preservation, the resume without replay and evaluation integrity hold.
+- T-303/T-306 remain open, as the commit says.
+
+Verdict: PASS
