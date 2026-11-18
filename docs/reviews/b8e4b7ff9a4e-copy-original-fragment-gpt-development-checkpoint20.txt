@@ -1,0 +1,95 @@
+Commit: b8e4b7ff9a4ec624b1d8801d9772196d7e162f11
+Scope: copy-original-fragment-gpt-development-checkpoint20
+
+Reviewer: Claude Opus 5.5 (extra-high effort), in a separate read-only session. Tier: core.
+Row: T-303/T-306, a frozen development measurement that closes no row. Base a8bc858c860f38658324d600283ffa2efb50d492.
+Prompt/checker source: 35217c60a56a5d3e065148eb9a6aea898b5e1b16.
+
+## Methods
+
+I read IP-POLICY.md, the brief (MEASURE FIRST, REFOCUS, the owner notes and the README/licence orders), and the newest decisions
+(the latest is 0212). I read the complete committed diff (four files, 238 insertions, all additive) and the capsule's verify.py and
+reproduce.py before running them. I ran everything in /lane/review-checkout at the pinned commit. I did not modify the repository.
+I then recounted the ten new attempts myself from the raw upstream responses and the per-task backend log slices, without
+using the builder's audit code.
+
+## Commands and results
+
+1. `git rev-parse HEAD`: b8e4b7ff9a4ec624b1d8801d9772196d7e162f11. `git status --porcelain`: empty.
+   `git diff --check a8bc858c…`: no output, rc 0. Diff stat: TASKS.md +9, coding-scoreboard.md +48, the new evidence file +87,
+   and the retained review +94.
+2. Capsule hashes: manifest.json 7813f79b…c43c, bindings.json 0c467738…7e17a4f, post-commit.json 273240ab…7852 and
+   work/dependencies.json b8ed6379…979c. All four match the request.
+3. `python3 -B …-v3/verify.py`: rc 0, `{"status":"PASS","attempts":110,"new_attempts":10,"remaining_attempts":70,
+   "strict_ungraded_proposals":6,"all_dependencies_checked":true,"live_state":"unavailable","postcommit_checked":true,
+   "candidate_execution":false,"task_passes":null}`.
+   - /lane/state/ef1 is not mounted here, so live builder state is explicitly unavailable.
+   - The post-commit receipt was checked against the exact HEAD and the committed blobs.
+   - Optional step 4 (bwrap with /lane/state hidden) would test the same condition, since the state is already absent, so I did
+     not repeat it.
+4. Helper: the object authenticates to 1992c3c4…bd6de, and so does its private 0700 copy.
+   `bash /tools/build-slot python3 -B …/reproduce.py --helper <copy> --output <fresh dir>`: rc 0,
+   `{"status":"PASS","contexts":30,"answers":9,…,"candidate_execution":false,"model_inference":false,"hidden_or_held_out":false}`.
+   This matches the expected 30 contexts and 9 retained complete new answers.
+5. Node: the binary authenticates to d1de76d8…c932c and was placed on PATH from a private copy.
+   - `scripts/local_agent_fast_gate.py --base a8bc858c… --timeout 3600`: FAST GATE: PASS. This includes the review lint of the
+     retained report and markdownlint (0 issues in 3 files).
+   - `node …/work/lint-all.mjs`: PASS, 0 issues, one scoreboard table and one evidence table.
+   - `scripts/private_host_paths.py --base a8bc858c…`: PRIVATE PATH CHECK: PASS.
+   - `scripts/license_policy.py`: LICENCE POLICY: PASS.
+   - The tree was still clean afterwards.
+6. The retained review `docs/reviews/a8bc858c860f-…-checkpoint10.txt` is byte-identical (cmp) to
+   /lane/reviews/a8bc858c860f-copy-original-fragment-gpt-development-checkpoint10.md. It says Verdict: PASS with one low
+   finding. review-inspection.json records that low finding as a T-309 backlog note.
+7. My independent recount of jobs gpt-oss-10…18, covering dev-011…dev-020:
+   - **Causes:** ungraded-proposal 3 (dev-011, 016, 020), strict-edit-refused:code.proposal.edit 6 (012, 013, 014, 015, 017,
+     019) and generation-refused:error:chat.response.incomplete 1 (dev-018).
+   - **dev-018:** it hit finish_reason `length` at exactly its 29668-token budget. Its answer is absent and it is counted as a
+     failure, not dropped.
+   - **Totals:** request/check 733.798 s. Prompt/eval tokens from the backend slices are 62820/136682, and they match the
+     response `usage` for all 10 attempts.
+   - **Response fields:** content nonempty 9 and empty 1; reasoning absent 10; reasoning_content nonempty 10. Added to the
+     prior capsule, this gives the published 17/3/20/20.
+   - **Ranges:** rendered input 3006–8521 and budgets 24215–29730, each equal to `min(32768, 32768−input−32)`. Combined with the
+     prior values (2992 → 29744), these give the published cumulative ranges 2992–8521 and 24215–29744.
+   - **Reserved work:** the sum of job reserved_work_seconds is 808.594 s, which is 13.477 GPU minutes.
+   - **Cumulative:** prior audit plus new reproduces the published values exactly: 1344.663 s, 1483.472 s, 24.725 min,
+     124645/259466 tokens, causes 3/11/6 and terminations output-cap 3 / below-limit 17.
+   - **Controller wall:** controller-exit.utc − launch.utc = 1949.934 s.
+   - **Repeat progress:** the per-model attempts are 31B 30, 27B 30, A4B 30 and gpt-oss 20, so 110 of 180 are done and 70 remain.
+   - **Thinking settings:** the wire requests send `chat_template_kwargs.enable_thinking:false`, and the batch report records the
+     server template's `reasoning_effort: medium`. Both are as now disclosed.
+8. Integrity: split=development and held_out_executed=false in all 5 batches. No held-out marker appears in any context, and
+   graded=false, native_coding_harness=false and retries=0 hold for every row. Launch limits are memory.max 16 GiB, cpu.max
+   400000/100000 and observed nice 19. Cleanup: PASS, 10 tokens retired, no live owned processes.
+9. Disclosed failures: the preflight launch log shows only "can't open file …/launch.py", so it failed before any model could
+   start. The failed package copy and the original methods are retained. Neither touches a measured input.
+
+Confinement: this commit changes no source code and executes no candidate. Every proposal stays inert in the capsule; nothing
+runs it. No tool, sandbox or permission boundary changes, so I did not repeat the escape attempts in this scope.
+
+Public hygiene: the committed diff contains no private path, username, hostname, credential or third-party agent product name.
+The capsule's launch.json does contain a private host path, but the capsule is not committed and no public file carries it.
+No trademark is used as branding.
+
+## Findings
+
+No high or medium findings.
+
+This increment resolves the low finding from the prior review (the reasoning-disclosure note): both public locations now state the
+thinking request, the reasoning_effort setting and the response-field counts.
+
+Backlog note (not blocking, already disclosed): the last source gate remains FAIL (1030 passed / 53 inherited failures / 11
+ignored), and live builder state could not be cross-checked from this session.
+
+## Per-row result
+
+T-303/T-306 (frozen development measurement that closes no row): the measurement for exact b8e4b7ff is accepted.
+- The scoreboard line is present and every published number traces to the raw logs.
+- Budgets are stated, and tasks that do not fit are counted apart (0).
+- Failures are counted, not dropped.
+- The partial path is labelled as partial, and task passes are reported as unavailable rather than inferred.
+- Preservation and evaluation integrity hold.
+- T-303/T-306 stay open, as the commit says.
+
+Verdict: PASS
