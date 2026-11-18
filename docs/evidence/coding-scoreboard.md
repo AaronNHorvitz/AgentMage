@@ -3818,3 +3818,53 @@ unmeasured. Snapshot preparation alone takes a build slot; it releases that
 slot before the controller starts. Each pair acquires both wrappers afresh.
 
 See [evidence](t303-copy-original-fragments-muse-checkpoint10-2026-11-18.md). Independent core review required.
+
+## Copy-original-fragment prompt repeat: Muse fourteen-attempt checkpoint, 2026-11-18
+
+Source `35217c60a56a5d3e065148eb9a6aea898b5e1b16`; reporting base `1506b39551f4d20d0d4661f0d019def2c3053341`.
+
+| Date | Source commit | Model | Context / output tokens | First-attempt passes | Within-budget passes | Strict ungraded proposals | Held-out | Request/check seconds | Reserved-job GPU minutes | Backend input / output tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-18 | 35217c60a56a5d3e065148eb9a6aea898b5e1b16 | Muse (new 4; 14/30 complete) | 32768 / 24400–29792 | Unavailable | Unavailable | 3/4 new; 8/14 cumulative | Not run | 1058.483 new; 2858.753 cumulative | 18.566 new; 53.220 cumulative | 20199 / 33568 (3/4 new counters); 78523 / 96613 (12/14 cumulative) |
+
+Positions 11–14 (dev-011 through dev-014) add
+3/4 strict ungraded proposals; Muse cumulative:
+8/14. The repeat is 134/180 complete, with
+46 attempts remaining (16 Muse and 30 E4B) before tuning or capability work.
+All 130 earlier attempts remain byte-identical and are counted once.
+
+New failure causes and ungraded results: `{"generation-refused:error:chat.transport.timeout": 1, "ungraded-proposal": 3}`.
+Cumulative Muse causes: `{"generation-refused:error:chat.transport.timeout": 2, "strict-edit-refused:code.proposal.edit": 2, "strict-edit-refused:code.proposal.format": 2, "ungraded-proposal": 8}`.
+Does not fit in this increment: 0.
+New rendered input: 2944–8336 tokens;
+output budget: 24400–29792, using
+`min(32768, 32768 - rendered input tokens - 32)`.
+New backend terminations: `{"stopped-below-token-limits": 3, "unobserved-or-ambiguous": 1}`.
+New response fields: `{"content:nonempty": 3, "reasoning:absent-or-empty": 3, "reasoning_content:nonempty": 3}`.
+The unchanged request sends `chat_template_kwargs.enable_thinking: false`;
+response fields do not establish an absence of internal model reasoning.
+
+The changed variable remains the fixed original-fragment instruction from
+source `35217c60a56a5d3e065148eb9a6aea898b5e1b16`. This increment changes no source,
+helper, context, prompt, schema, model setting, framing, thinking request,
+budget or deadline. It does not select a model role.
+
+Partial path only: Rust context selection, the credential-owning chat HTTP API,
+local inference and strict edit checking. Native executable admission and
+original execution/grading-control receipts remain unavailable; effects,
+project tests, feedback and retries cannot run. No candidate, hidden or
+held-out test executes. Task passes and within-budget passes stay unavailable.
+Proposals are ungraded. T-303/T-306 remain open.
+
+Two two-task jobs acquire both resource wrappers afresh, with 900-second
+limits, a 30-second released pause, low priority, nice 19, 16 GiB RAM and
+four CPUs. The controller wall interval is 1327.484 seconds including
+queues and the released pause, excluding snapshot preparation and reporting.
+New request/check time is 1058.483 seconds;
+reserved-job body time is 1113.937 seconds /
+18.566 GPU minutes. These exclude queues and are not
+GPU kernel time or full reservation duration. End-to-end latency, continuous
+cumulative wall time and kernel time are unmeasured. Snapshot preparation
+releases its own build slot before the unchanged controller starts.
+
+See [evidence](t303-copy-original-fragments-muse-checkpoint14-2026-11-18.md). Independent core review required.
