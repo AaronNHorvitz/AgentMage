@@ -2,6 +2,19 @@
 
 ## Active queue: local agent mission
 
+The [independent seventy-eight-attempt checkpoint review](docs/reviews/2614cf6ad830-raw-source-development-checkpoint78.txt)
+returns **Verdict: PASS** for exact `2614cf6ad830cbecab11e461519d1178e3bed69b`, with no critical, high, medium or low findings.
+Its report is retained unchanged; no row closes. This accepts only
+that reporting increment; the new checkpoint requires independent core review.
+Existing T-309 low findings remain backlog. Earlier scoreboard lines stay unchanged.
+
+The [frozen raw-source eighty-four-attempt checkpoint](docs/evidence/t303-raw-source-checkpoint84-2026-11-19.md) adds six development
+attempts. The repeat reaches 84/180 attempted, with 96 remaining before tuning
+or capability work. Cumulative strict ungraded proposals: gemma4-31b 10/14; qwen35-27b 13/14; gpt-oss 2/14; muse 7/14; gemma4-e4b 3/14; gemma4-26b-a4b 6/14.
+Task passes and retries remain unavailable; no candidate, hidden or held-out
+code executes. Frozen inputs and earlier attempts remain unchanged. Independent
+core review is required for this checkpoint; T-303/T-306 remain open.
+
 The [independent seventy-two-attempt checkpoint review](docs/reviews/8a0724260973-raw-source-development-checkpoint72.txt)
 returns **Verdict: PASS** for exact `8a072426097384fa893d040862dc3e966c734ae5`, with no critical, high, medium or low findings.
 Its report is retained unchanged; no row closes. This accepts only
@@ -13,7 +26,8 @@ attempts. The repeat reaches 78/180 attempted, with 102 remaining before tuning
 or capability work. Cumulative strict ungraded proposals: gemma4-31b 10/14; qwen35-27b 13/14; gpt-oss 2/14; muse 6/12; gemma4-e4b 2/12; gemma4-26b-a4b 5/12.
 Task passes and retries remain unavailable; no candidate, hidden or held-out
 code executes. Frozen inputs and earlier attempts remain unchanged. Independent
-core review is required for this checkpoint; T-303/T-306 remain open.
+core review was required when recorded; its subsequent PASS is retained above.
+T-303/T-306 remain open.
 
 T-309 backlog from the sixty-six-attempt review: record build-wrapper provenance
 per pair. The host changed the wrapper at 2026-11-19 12:47:28 UTC; this batch

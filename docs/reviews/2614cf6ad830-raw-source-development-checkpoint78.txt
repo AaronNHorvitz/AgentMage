@@ -1,0 +1,114 @@
+Commit: 2614cf6ad830cbecab11e461519d1178e3bed69b
+Scope: raw-source-development-checkpoint78
+
+# Independent core review: frozen raw-source checkpoint 78 (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate session, read-only. Pinned checkout /lane/review-checkout at the exact
+commit; base 8a072426097384fa893d040862dc3e966c734ae5; frozen product source
+eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f. No GPU use, no inference, no candidate execution, no repository
+modification.
+
+## Methods
+
+- Read the complete reporting diff (5 files: README.md, TASKS.md, docs/evidence/coding-scoreboard.md,
+  docs/evidence/t303-raw-source-checkpoint78-2026-11-19.md,
+  docs/reviews/8a0724260973-raw-source-development-checkpoint72.txt). No product source file changes.
+- Ran the requested verification, reproduction and reporting gates (below).
+- Independently re-derived every published number for the six new attempts from the raw upstream request/response
+  bytes (`campaign/jobs/<profile>-12/upstream-request-0{0,1}.json`, `upstream-response-0{0,1}.bin`) and the
+  per-attempt `collection/<task>/record.json` / `checked.json`, rather than relying only on audit.json/delta.json.
+- Diffed `work/first-verify.py` against the corrected `verify.py` and read `work/first-verification.log` and
+  `work/nested-inventory-diagnosis.log` to judge whether the helper correction weakened authentication.
+- Compared the retained prior review byte-for-byte with its original in /lane/reviews.
+- Manual privacy/branding sweep of every added line; check for leftover model/API processes visible to this sandbox.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `git rev-parse HEAD` | 2614cf6ad830cbecab11e461519d1178e3bed69b |
+| `git status --porcelain` | empty (before and after all runs) |
+| `git diff --check 8a072426…` | exit 0, no output |
+| `bash /tools/build-slot python3 -B …/checkpoint78-20261119/verify.py` | PASS: attempts 78, remaining 102, source eef17dbd…, postcommit_checked true, task_scores null, complete_prior_capsule_authenticated true (9m05s) |
+| `bash /tools/build-slot python3 -B …/checkpoint78-20261119/reproduce.py` | PASS: contexts 30, prior_checks 161, new_checks 72, generation_refusals 6, attempt_records 78, helper_sha256 4aea9726…31c53, candidate_execution false, model_inference false (23s) |
+| `sha256sum` post-commit JSON | 3840feea…a97fa5, matches request |
+| Node /lane/reviews/42612ca9787f-a4b-node | sha256 d1de76d8… OK; licence file present; private 0700 copy v24.15.0 on PATH |
+| `python3 -B scripts/local_agent_fast_gate.py --base 8a072426… --timeout 3600` | FAST GATE: PASS (licence policy PASS, review lint PASS, markdownlint 0 issues in 4 files) |
+| `node …/work/render.mjs` | PASS, 0 issues, 4 files rendered |
+| `python3 -B scripts/private_host_paths.py --base 8a072426…` | PRIVATE PATH CHECK: PASS |
+| `python3 -B scripts/license_policy.py` | LICENCE POLICY: PASS |
+| `cmp docs/reviews/8a0724260973-…-checkpoint72.txt /lane/reviews/8a0724260973-…-checkpoint72.md` | identical; ends `Verdict: PASS` |
+
+## Independent re-derivation from raw bytes
+
+| Profile / task | Rendered input (usage.prompt_tokens) | max_tokens = 32768 − input − 32 | completion_tokens | finish_reason | Cause in record | generation_seconds |
+| --- | --- | --- | --- | --- | --- | --- |
+| gemma4-31b dev-013 | 9345 | 23391 ✓ | 711 | stop | ungraded-proposal | 62.670 |
+| gemma4-31b dev-014 | 6672 | 26064 ✓ | 2460 | stop | ungraded-proposal | 80.742 |
+| qwen35-27b dev-013 | 8149 | 24587 ✓ | 851 | stop | ungraded-proposal | 44.033 |
+| qwen35-27b dev-014 | 5894 | 26842 ✓ | 1956 | stop | ungraded-proposal | 51.097 |
+| gpt-oss dev-013 | 7533 | 25203 ✓ | 14445 | stop | strict-edit-refused (`code.proposal.edit`), base fallback | 85.204 |
+| gpt-oss dev-014 | 5378 | 27358 ✓ | 27358 | length | generation-refused (`chat.response.incomplete`), base fallback | 145.146 |
+
+Sums equal the published tables exactly: gemma4-31b 16017/3171 tokens, 143.412 s; qwen35-27b 14043/2807,
+95.131 s; gpt-oss 12911/41803, 230.350 s. gpt-oss dev-014's completion equals its cap, matching the published
+`output-cap` termination; the other five are `stopped-below-token-limits`. Every request carries
+`chat_template_kwargs.enable_thinking: false`, `stream: false`, the frozen model name, and the formula's
+`max_tokens`; all HTTP 200. Records show `graded: false`, `retries: 0`, `native_coding_harness: false`.
+Does-not-fit is 0 and is counted apart from model failures. audit.json cumulative per-profile counts
+(10/14, 13/14, 2/14, 6/12, 2/12, 5/12; 78 attempted, 102 remaining) match README, TASKS.md, the scoreboard
+and the evidence file. The new scoreboard line states context and output budgets (MEASURE FIRST satisfied).
+
+## Helper correction (first verification failure)
+
+`first-verify.py` added a loop authenticating every nested `bindings.json` as a complete capsule. It failed on
+retained provenance indexes (`…/prior-diagnosis/result/provenance/*`), whose manifests list payloads that live
+elsewhere (diagnosis log: missing `campaign/*`, extra `postcommit.json`). The corrected `verify.py` handles only
+paths containing a `provenance` component differently: it checks the index's manifest hash and file count against
+its own bindings, and checks both index files' hashes against the outer complete manifest. All other nested
+capsules keep exact inventory and byte checks. The outer `authenticate(C)` still enforces exact inventory
+equality, hashes, sizes, no `..`, and no symlinks over every file, including everything under the provenance
+directories, so no retained byte goes unauthenticated. The predecessor `initial-seal/prior/verify.py` had no
+nested loop at all, so the net effect is stronger than the prior checkpoint, not weaker. The first seal
+(manifest 19009f6f…, bindings bd2c0d8c…) is asserted unchanged; its campaign bytes and audit equal the current
+ones; the failed log is asserted to end in `AssertionError`. No measured input, strict check or threshold changed.
+
+## Other checks
+
+- **Frozen inputs and evaluation integrity.** verify.py asserts byte-identity of batch.py, collect.py,
+  controller.py, policy.json and frozen-inputs.json with the prior capsule. It asserts that all 2,290 repository
+  and 62 private object hashes hold and that the 72 prior attempt details are unchanged. No held-out or hidden
+  content appears in the diff, and no tuning occurred.
+- **Wrappers and limits.** The build-slot launch hash is 4061f0e6…, equal to the retained bytes. gpu-slot is
+  unchanged from the previous launch. Slot-4..6 threshold fields are all None, nice is 19, priority is low, and
+  scope limits are unchanged. Per-pair wrapper provenance stays T-309 low backlog, as disclosed.
+- **Cleanup.** cleanup.json reports PASS: settings revoked, API/model reaped, keys/sockets absent, no live owned
+  processes, no foreign signal, receipts persisted before unlink, and 6 retired tokens (receipts list length 6).
+  My sandbox has no model or API processes. The builder's runtime state directory (/lane/state/rs1) is not
+  mounted in this review sandbox, so I could not check live token or socket absence there myself. That claim rests
+  on the authenticated cleanup.json and receipts. No high or medium finding depends on it.
+- **Honest labelling.** The text labels every result a strict ungraded proposal. It makes no solved-task, task-pass,
+  model-qualification or adoption claim. The earlier Muse dev-008 timeout is reported separately with no
+  invented counters. Controller and body timing are both described with their limits.
+- **Preservation.** The preceding scoreboard bytes are a strict prefix (asserted). TASKS.md table rows are
+  unchanged (asserted). The only edit to prior prose is the checkpoint-72 status sentence, now updated to record
+  its retained PASS, which follows the established pattern. The README independence paragraph is unchanged word
+  for word. No decision, licence, NOTICE or inventory file changed.
+- **Privacy and branding.** Added lines contain no home path, username, hostname, credential, personal data,
+  sibling-project or other-agent-product name. The `/lane/...` and `/tools/...` paths in the retained review are
+  lane mount points, already present in 328 previously committed reviews, and the path checker passes them.
+- **Delivery.** No new sub-row, no plan-only row, and no row closes.
+
+## Findings
+
+None (no critical, high, medium or low).
+
+Existing T-309 low backlog (per-pair wrapper provenance) remains backlog, unchanged.
+
+## Per-row result
+
+- T-303/T-306 (non-closing frozen development measurement, checkpoint 78): reporting increment PASS. Rows stay
+  open. This review approves no row closure and no source acceptance; the earlier source gate remains FAIL as
+  disclosed.
+
+Verdict: PASS
