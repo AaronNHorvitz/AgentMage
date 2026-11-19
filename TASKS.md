@@ -2,6 +2,17 @@
 
 ## Active queue: local agent mission
 
+The [resumed frozen E4B eleven-attempt checkpoint](docs/evidence/t303-copy-original-fragments-e4b-checkpoint11-resumed-2026-11-18.md) adds
+four completed development attempts, 1/4 strict ungraded proposals.
+E4B has 4/10 completed proposals, plus one preserved interrupted attempt;
+the six-profile repeat reaches 161/180 attempted, with 19 E4B attempts remaining.
+The earlier failed job and admission-refusal log remain unchanged. All measured
+settings stay frozen. Task passes and retries remain unavailable; no candidate,
+hidden or held-out test executes. T-303/T-306 remain open. No tuning or
+capability work starts; independent core review is required. The preceding
+exact-commit review subsequently returned PASS without findings; its unchanged
+report is retained separately. No verdict is inferred for this increment.
+
 The [independent interrupted E4B checkpoint review](docs/reviews/b6cae1f15ceb-copy-original-fragment-e4b-development-checkpoint7-interrupted.txt) returns **Verdict: PASS** for exact `b6cae1f15ceb7d6d13f12f915f2a06b9e7c5f4d2`, with no high or medium findings. Its report is retained unchanged; no row closes. Two low presentation findings join T-309: distinguish completed-attempt proposal rates from interrupted-attempt totals, and describe the previous dev-008 failure as prompt rendering after context construction. Existing backlog remains open.
 
 The [E4B resumption admission refusal](docs/evidence/t303-copy-original-fragments-e4b-admission-refusal-2026-11-18.md)

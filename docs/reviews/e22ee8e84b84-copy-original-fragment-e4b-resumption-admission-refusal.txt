@@ -1,0 +1,96 @@
+Commit: e22ee8e84b84d73a72704196ded2ad51587f3ada
+Scope: copy-original-fragment-e4b-resumption-admission-refusal
+
+# Independent review: E4B resumption refused at GPU admission
+
+Reviewer: separate Claude Opus 5.5 session, read-only, pinned checkout /lane/review-checkout.
+Row: T-303/T-306 (non-closing resource admission refusal). Base b6cae1f15ceb7d6d13f12f915f2a06b9e7c5f4d2; frozen prompt/checker source 35217c60a56a5d3e065148eb9a6aea898b5e1b16.
+
+## Methods and commands (all in /lane/review-checkout, CARGO_TARGET_DIR=/lane/state/review-target)
+
+1. Commit state.
+   - `git rev-parse HEAD` printed e22ee8e84b84d73a72704196ded2ad51587f3ada.
+   - `git status --porcelain` printed nothing, before and after every run.
+   - `git diff --check b6cae1f1…` exited 0.
+   - `git diff --stat` lists exactly the four requested files:
+
+     | File | Change |
+     | --- | --- |
+     | TASKS.md | +10 |
+     | coding-scoreboard.md | +26 |
+     | new admission-refusal evidence | +84 |
+     | retained b6cae1f15ceb review | +70 |
+
+   - No source, script, test or manifest changed.
+2. Capsule authentication.
+   - `sha256sum` matched the request for all three files:
+     - manifest.json: 68637f53…194d2
+     - bindings.json: d9424f20…5b386b3
+     - post-commit receipt: 1c82fc99…5269
+   - My own hash pass over the 64 manifest entries checked both size and SHA-256 and found 0 mismatches. The disk holds no extra files beyond manifest.json and bindings.json.
+   - I authenticated all 21 dependency capsules (manifest, bindings and, where present, post-commit) against dependencies.json, and all matched.
+   - The four `public/` copies are byte-identical (`cmp`) to the committed files.
+3. Sealed verifier.
+   - `bash /tools/build-slot python3 -B …/verify.py` exited 0 with `{"status":"PASS","attempts":157,"new_attempts":0,"remaining_attempts":23,"all_dependencies_checked":true,"live_state":"unavailable","postcommit_checked":true,"candidate_execution":false,"task_passes":null}`.
+   - /lane/state/ef1 is not mounted in this session, so live state is reported as unavailable, not as checked.
+   - I read verify.py in full. It does the following:
+     - Re-authenticates every dependency tree and its committed-blob receipts, and the 2,283 repository and 44 private frozen bindings.
+     - Checks the six campaign files byte-for-byte against the first dependency.
+     - Checks the prior-methods copies against the previous capsule, and the method-adaptation hashes.
+     - Checks the launch and exit records (same pid and start ticks, exit 1), the wrapper hashes, the exact three-line refusal log, and that the refusal string precedes `timeout` in the wrapper.
+     - Checks the traceback-only controller log (no job JSON line), the status sample, cleanup, preservation against base blobs, the retained review and the full committed diff.
+4. Optional portable run. `bash /tools/build-slot bwrap … --tmpfs /lane/state … python3 -B …/verify.py` gave the identical PASS output.
+5. Gates. Node d1de76d8…c932c authenticated and was copied privately (0700) onto PATH (v24.15.0). Then:
+   - `python3 -B scripts/local_agent_fast_gate.py --base b6cae1f1… --timeout 3600` printed `FAST GATE: PASS`. That includes review lint of the retained review and markdownlint with 0 issues in 3 files.
+   - `node …/work/lint-all.mjs` printed PASS with 0 issues (scoreboard and evidence tables: 1 each).
+   - `python3 -B scripts/private_host_paths.py --base b6cae1f1…` printed `PRIVATE PATH CHECK: PASS`.
+   - `python3 -B scripts/license_policy.py` printed `LICENCE POLICY: PASS`.
+   - A manual grep of the added lines for home paths, user or host names, e-mail addresses, credentials, private project names and other agent products found only "Claude Opus 5.5" in the retained review's reviewer line. The same reviewer attribution already appears in 323 committed review files.
+   - The capsule's launch.json and the wrapper comment contain local absolute paths, but none of these are committed.
+6. Refusal path, checked against the wrapper code.
+   - The captured wrappers hash-equal the live /tools/gpu-slot and /tools/build-slot, and the hashes recorded in launch.json.
+   - In gpu-slot, the message `GPU baseline exceeds 4 GiB or hardware is ambiguous.` is emitted by `fail` (exit 1) at line 36. The job command `timeout … "$@"` comes only at line 38. The refusal therefore happened before batch.py was invoked.
+   - The log's earlier lines show that the build slot was granted and the GPU lock was taken. The owner, compute-count and RAM checks passed silently.
+   - The launch-to-exit interval was 02:37:22.931 → 02:37:23.059 UTC (0.13 s), consistent with an immediate refusal.
+   - The controller log is the resume-controller's `AssertionError: job failed: gemma4-e4b 7`, with no completed-job line.
+   - absence-observation.json records that jobs gemma4-e4b-07 and -09 and candidates dev-008 to dev-011 are absent, and that 79 reports exist. cleanup.json records 0 new model processes and 0 new inference attempts.
+7. Resumption method.
+   - launch.py differs from the prior capsule only in the pinned HEAD and in invoking resume-controller.py with `--first 7 --pairs 2`.
+   - resume-controller.py is scheduling only:
+     - It asserts that the failed gemma4-e4b-06 report is `failed`, and that its dev-008 directory holds only context.json.
+     - It refuses any existing target job directory or candidate.
+     - It opens its reservation log with `'xb'`, so it can never overwrite.
+     - It calls the identical `build-slot → gpu-slot queue-run agentmage 900 … batch.py gemma4-e4b <first>` command as the frozen controller.
+   - batch.py accepts an arbitrary `first` and creates `{model}-{first:02d}`, so index 7 maps to dev-008/dev-009 in a fresh job, as described. The frozen worker, collector, policy and inputs are unchanged.
+   - Nice 19 is confirmed: the argv uses `nice -n 9` from a base of 10, and /proc stat recorded 19. The cgroup limits are memory.max 16 GiB and cpu.max 400000/100000, which matches the evidence's "16 GiB RAM and four CPUs".
+8. Claims against the data.
+   - The status sample at 02:38:08 UTC (45 s after the refusal) reads `18179 MiB, 24564 MiB`. The evidence correctly declines to treat it as the refused baseline or to attribute it to any process.
+   - The 79 cleaned jobs, 9,706 snapshot files, 21 dependencies, 512 ledger lines (also recounted: 512 before and after) and 49 historical blobs all match the receipts.
+   - The budget wording matches the three preceding scoreboard lines.
+   - The starting authentication shows the preceding verifier passed with live state checked before launch.
+   - The retained b6cae1f15ceb review is byte-identical to /lane/reviews/b6cae1f15ceb-…-interrupted.md. TASKS.md and the evidence quote its PASS and its two lows accurately.
+
+## Checks against the brief
+
+- **Evaluation integrity:**
+  - No model process started and no task, candidate, hidden or held-out test ran.
+  - Nothing was replayed. The failed job and its partial dev-008 are preserved, and frozen inputs and limits are unchanged.
+  - The refusal is counted as a resource admission refusal, apart from model failures and does-not-fit.
+- **MEASURE FIRST:**
+  - This increment has a scoreboard line stating the unchanged context and output budgets, 0 new attempts and unchanged progress, 157/180 with 23 remaining.
+  - No number is inferred for passes, tokens or GPU minutes.
+  - Every stated value traces to a capsule record.
+- **Honest labelling:** the measured path is still described as partial, no model role qualifies, and no row closes.
+- **Confinement:** no tool, sandbox or permission surface changed. No other GPU process was stopped and no wrapper limit was raised; the wrapper's own refusal was respected.
+
+## Findings
+
+No high or medium findings, and no new low findings.
+
+Observation (not a finding): the unchanged resume-controller hard-codes `--first 7`, and its `'xb'` reservation log name (`gemma4-e4b-07-reservation.log`) is now held by the retained refusal. It therefore cannot be rerun as is. The evidence already says the next attempt will use a fresh reservation log and launcher receipt, and the live check in verify.py would fail if that name were overwritten. The next increment's review should check that method change.
+
+## Per-row result
+
+- **T-303/T-306** (non-closing resource admission refusal; repeat unchanged at 157/180, 23 E4B attempts remaining): accepted as reported. No row closes, and T-303/T-306 remain open as the commit states.
+
+Verdict: PASS

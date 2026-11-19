@@ -4155,3 +4155,52 @@ qualifies. Resume at dev-008 through both unchanged resource wrappers, using
 fresh reservation records, when resources admit it. Finish the remaining 23
 attempts before tuning or capability work. See the [refusal evidence](t303-copy-original-fragments-e4b-admission-refusal-2026-11-18.md).
 Independent core review is required; no row closes.
+
+## Copy-original-fragment prompt repeat: E4B resumed checkpoint eleven, 2026-11-18
+
+Source `35217c60a56a5d3e065148eb9a6aea898b5e1b16`;
+reporting base `e22ee8e84b84d73a72704196ded2ad51587f3ada`.
+
+| Date | Model | Context / output tokens | Completed / total attempts | Strict ungraded proposals | First-attempt / within-budget passes | Input / output tokens | Reserved-job GPU minutes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-18 | E4B | 32768 / min(32768, 32768 - rendered input - 32), unchanged | New 4/4; cumulative 10/11 including one prior interruption | New 1/4; cumulative 4/10 completed | Unavailable / unavailable | New 23790 / 66205; cumulative 68613 / 115186 | New 12.337; cumulative 22.411 |
+
+New dev-008 through dev-011 complete in two fresh reserved jobs. The repeat is
+**161/180 attempted, 19 remaining**. The interrupted dev-007, its partial
+dev-008 context (construction completed; prompt rendering failed before
+inference), and the subsequent admission-refusal log remain unchanged.
+The prior refusal and one further pre-start admission refusal in this increment
+count as no attempts. Their logs remain separate and unchanged. A later
+low-memory sample does not establish the refused baseline or its source.
+A fresh request after a released pause was admitted without changing controls.
+No task is replayed. Proposal rates use
+completed attempts; the interruption stays in the total-attempt count.
+
+New causes: `{"generation-refused:complete:length": 2, "strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`.
+Cumulative causes: `{"generation-refused:complete:length": 3, "resource-interrupted:gpu-headroom": 1, "strict-edit-refused:code.proposal.edit": 3, "ungraded-proposal": 4}`.
+Does not fit: 0. New rendered input 3413–9374
+tokens; output budgets 23362–29323.
+New backend terminations: `{"output-cap": 2, "stopped-below-token-limits": 2}`.
+New response fields: `{"content:nonempty": 4, "reasoning:absent-or-empty": 4, "reasoning_content:absent-or-empty": 4}`.
+Backend token counters cover 4/4 new, 10/11 cumulative attempts; the original
+interruption has no complete counters. The unchanged wire request disables
+thinking; response fields do not prove absence of internal reasoning.
+
+The changed variable remains the frozen original-fragment instruction. No
+source, prompt, context, model, schema, thinking, resource or budget change.
+Successful resumed-controller wall time 773.090 seconds including queues and a released pause;
+new request/check time 704.837 seconds; new
+reserved-job body time 740.201 seconds. Body
+time excludes queues and is not GPU kernel time or full reservation duration.
+The earlier refused controller, preparation and reporting are excluded;
+continuous campaign wall time and
+end-to-end latency remain unmeasured. Both wrappers are reacquired for each
+900-second job, with a 30-second released pause, low priority, nice 19,
+16 GiB RAM and four CPUs. No other process is stopped or limit raised.
+
+Partial path only: Rust context selection, chat HTTP API, inference and strict
+checking. Native executable admission and original grading controls are
+unavailable; effects, project tests, feedback and retries cannot run. No
+candidate, hidden or held-out test executes. Task passes remain unavailable;
+proposals are ungraded. No model role qualifies. T-303/T-306 remain open.
+See the [evidence](t303-copy-original-fragments-e4b-checkpoint11-resumed-2026-11-18.md). Independent core review required.
