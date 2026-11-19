@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The [frozen E4B fifteen-attempt checkpoint](docs/evidence/t303-copy-original-fragments-e4b-checkpoint15-2026-11-18.md) adds
+four completed development attempts, 0/4 strict ungraded proposals.
+E4B has 4/14 completed proposals plus one preserved interruption;
+the repeat reaches 165/180 attempted, with 15 E4B attempts remaining.
+All prior bytes and measured settings remain unchanged. Task passes and retries
+remain unavailable; no candidate, hidden or held-out test executes.
+T-303/T-306 stay open; no tuning or capability work starts. Independent core
+review is required. The preceding exact-commit independent review returned PASS with no new findings; its report is retained unchanged. It accepts only that earlier measurement. No verdict is inferred for this increment.
+
 The [resumed frozen E4B eleven-attempt checkpoint](docs/evidence/t303-copy-original-fragments-e4b-checkpoint11-resumed-2026-11-18.md) adds
 four completed development attempts, 1/4 strict ungraded proposals.
 E4B has 4/10 completed proposals, plus one preserved interrupted attempt;
