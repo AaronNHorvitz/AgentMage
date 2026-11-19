@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The [first frozen raw-source pair](docs/evidence/t303-raw-source-first-pair-2026-11-19.md)
+records 1/2 A4B strict ungraded proposals. The new repeat is
+2/180 attempted, 178 remaining; complete all 30 development tasks on all six
+profiles before further tuning or capability work. Task passes and retries
+remain unavailable; no candidate, hidden or held-out code executes. Source,
+settings, excerpts and strict checks remain frozen. Independent core review
+is required for the source and measurement batch; T-303/T-306 stay open.
+
 The [raw-source presentation batch](docs/evidence/t303-raw-source-presentation-2026-11-19.md)
 removes the source-level JSON escape layer while preserving all 30 development
 excerpt selections and reproducing all 161 available previous checker outputs.

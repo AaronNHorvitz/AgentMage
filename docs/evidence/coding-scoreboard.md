@@ -4363,3 +4363,42 @@ does-not-fit counts, task timing and failures await those runs. First-attempt
 and within-budget task passes remain unavailable; no candidate, hidden or
 held-out code executes. No model qualifies and T-303/T-306 remain open.
 See the [source evidence](t303-raw-source-presentation-2026-11-19.md).
+
+## Raw-source presentation repeat: first A4B pair, 2026-11-19
+
+Source and reporting base: `eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f`.
+
+| Date | Model | Context / output tokens | Completed / total attempts | Strict ungraded proposals | First-attempt / within-budget passes | Input / output tokens | Reserved-job GPU minutes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-19 | A4B | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 1/2 | Unavailable / unavailable | 18392 / 4489 | 1.627 |
+
+Changed variable: raw UTF-8 source presentation. Fixed instruction, all 30
+excerpt selections, schema, thinking request, profiles, served context, output
+formula and deadlines are unchanged. The repeat is **2/180 attempted, 178
+remaining**; finish all 30 tasks on all six profiles before further tuning or
+capability work. No role is selected from this checkpoint.
+
+Causes: `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`. Does not fit: 0.
+Rendered input 9085–9307 tokens;
+output budgets 23429–23651.
+Counter coverage 2/2. Backend terminations: `{"stopped-below-token-limits": 2}`.
+Response fields: `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. The wire request disables thinking; these fields
+do not prove the absence of internal reasoning.
+
+Request/check time 60.782 seconds; reserved-job body time
+97.639 seconds / 1.627 GPU-slot minutes;
+controller wall time 98.811 seconds including queues and excluding snapshot
+preparation and reporting. Body time is neither kernel time nor the full
+reservation duration. Continuous campaign and end-to-end latency are unmeasured.
+
+One 900-second job reacquires both unchanged wrappers, low priority, nice 19,
+16 GiB RAM, four CPUs and the 22528 MiB sampled GPU guard. Reservations are
+released at the pair boundary; settings are revoked and owned processes, keys,
+sockets and both tokens are cleaned. No foreign signal or raised limit occurs.
+
+Partial path: Rust context selection, chat HTTP API, inference and strict
+checking only. Native executable admission and original grading controls remain
+unavailable; effects, project tests, feedback and retries cannot run. No
+candidate, hidden or held-out code executes. Task passes remain unavailable;
+proposals are ungraded. No model qualifies. T-303/T-306 remain open.
+See the [first-pair evidence](t303-raw-source-first-pair-2026-11-19.md).
