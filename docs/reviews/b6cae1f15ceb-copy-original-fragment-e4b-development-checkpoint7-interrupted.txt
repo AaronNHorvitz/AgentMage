@@ -1,0 +1,70 @@
+Commit: b6cae1f15ceb7d6d13f12f915f2a06b9e7c5f4d2
+Scope: copy-original-fragment-e4b-development-checkpoint7-interrupted
+
+# Independent review: frozen original-fragment E4B seven-attempt interrupted checkpoint
+
+Reviewer: separate Claude Opus 5.5 session, read-only, pinned checkout /lane/review-checkout.
+Row: T-303/T-306 (non-closing frozen development measurement). Base b1ea1bb5e8317e0b2c0a59149492b16e119ee214; prompt/checker source 35217c60a56a5d3e065148eb9a6aea898b5e1b16.
+
+## Methods and commands (all in /lane/review-checkout, CARGO_TARGET_DIR=/lane/state/review-target)
+
+1. `git rev-parse HEAD` printed b6cae1f15ceb7d6d13f12f915f2a06b9e7c5f4d2. `git status --porcelain` printed nothing, before and after every run. `git diff --check b1ea1bb5…` exited 0. `git diff --stat` shows exactly the four requested files: TASKS.md +12, coding-scoreboard.md +61, the new checkpoint7 evidence +97 and the retained checkpoint30 review +46. No source, test, script or manifest changed. `git diff --stat 35217c60 b6cae1f1 -- scripts crates` is empty.
+2. Capsule authentication. `sha256sum` gave the following, each matching the request:
+   - manifest.json: 425f1bd0…a094390
+   - bindings.json: 9453425e…97cea
+   - post-commit receipt: ec238c2e…bb93
+
+   The manifest lists 5,193 files. On disk there are 5,195: those 5,193 plus manifest.json and bindings.json. None are missing. My own hash pass over all 5,193 found 0 mismatches.
+3. Verifier. `bash /tools/build-slot python3 -B …/verify.py` exited 0 with `{"status":"PASS","attempts":157,"new_attempts":7,"remaining_attempts":23,"resource_interrupted_attempts":1,"strict_ungraded_proposals":3,"all_dependencies_checked":true,"live_state":"unavailable","postcommit_checked":true,"candidate_execution":false,"task_passes":null}`.
+   - Live state is unavailable because /lane/state/ef1 is not mounted in this session. It is reported as unavailable, not as checked.
+   - I read verify.py and interruption.py in full. verify.py authenticates the 20 dependency trees and their post-commit receipts against committed blobs, all 2,283 repository and 44 private frozen bindings, and the frozen campaign files (batch.py, collect.py, controller.py, policy, frozen inputs, output format) against the first dependency.
+   - verify.py also checks each method adaptation against the preceding capsule. It recomputes causes, request seconds, reserved work and backend counters from the raw records of the three completed jobs. It checks the exact wire request: the budget formula, the strict json_schema and `enable_thinking:false`.
+   - interruption.py separately authenticates the failed job gemma4-e4b-06. It checks the status `failed`, the guard error, peak 23868 against limit 22528 with the profile equal to the previous E4B profile, server exit −15, settings revoked and the API reaped.
+   - It also checks that dev-007 has exactly one wire request, no response capture, no answer and no checked file, with a single `chat.transport.http` event and no backend eval counters. dev-008 has only context.json, whose hash matches preflight, and has no candidate.
+4. Optional portable run: `bash /tools/build-slot bwrap --die-with-parent --bind / / --dev-bind /dev /dev --tmpfs /lane/state --chdir /lane/review-checkout python3 -B …/verify.py` gave the identical PASS output.
+5. Helper reproduction. The object 1992c3c4…bd6de authenticated to its SHA-256. I copied it to a private 0700 directory and re-hashed the copy. `bash /tools/build-slot python3 -B …/reproduce.py --helper <copy> --output <fresh dir>` gave `{"status":"PASS","contexts":30,"answers":5,…,"candidate_execution":false,"model_inference":false,"hidden_or_held_out":false}`, matching the expected 30 contexts and 5 complete new answers. reproduce.py calls only the effect-free context/check helper and never executes proposed code.
+6. Gates. Node d1de76d8…c932c authenticated and was privately copied onto PATH (v24.15.0). Then:
+   - `python3 -B scripts/local_agent_fast_gate.py --base b1ea1bb5… --timeout 3600` printed `FAST GATE: PASS`. That includes review lint of the retained review and markdownlint with 0 issues in 3 files.
+   - `node …/work/lint-all.mjs` printed PASS with 0 issues.
+   - `python3 -B scripts/private_host_paths.py --base b1ea1bb5…` printed `PRIVATE PATH CHECK: PASS`.
+   - `python3 -B scripts/license_policy.py` printed `LICENCE POLICY: PASS`.
+   - A manual grep of the full committed diff for home paths, user or host names, e-mail addresses, keys and tokens found nothing. The capsule's raw logs outside the repository do contain local absolute paths, but none of them are committed.
+7. Independent recomputation. I wrote my own script over campaign/jobs/gemma4-e4b-{00,02,04,06}.
+   - Request/check time: 36.110 + 185.529 + 72.207 + 49.859 + 131.615 + 37.519 + 49.536 = 562.374 s.
+   - Reserved work: 231.453 + 131.691 + 180.864 + 60.458 = 604.467 s, which is 10.074 GPU minutes.
+   - Backend prompt tokens are 44823 and eval tokens 48981, from six responses with exactly one counter pair each. dev-007 has none, so coverage is 6/7.
+   - Rendered input ranges from 3225 to 9734 tokens, and the budget from 23002 to 29511. Every budget equals 32768 − input − 32.
+   - Causes:
+     - dev-001 and dev-004: strict-edit-refused `code.proposal.edit`.
+     - dev-002: generation-refused, `complete:length`, with 23170 eval tokens, equal to its budget (the output cap).
+     - dev-003, dev-005 and dev-006: ungraded proposals whose checked.json holds `changes`.
+     - dev-007: resource interruption.
+   - That gives 3/7 strict ungraded proposals and terminations {output-cap 1, stopped 5, counters-unavailable 1}.
+   - Controller wall time: launch.json 02:05:14.748 UTC to controller-exit.json 02:17:25.260 UTC is 730.512 s. Every number in the scoreboard line and the evidence matches.
+8. Interruption narrative checked against code and logs.
+   - The guard in scripts/coding_model_lab.py:272-282 (unchanged from source 35217c60; its hash equals the recorded preparation_script_sha256 45e03026…) calls `terminate()` only on its own `Popen` child.
+   - The reservation log shows dev-007 recorded, then the job failing with `ConnectionRefusedError`. The traceback points to collect.py:35, the backend `/apply-template` call for dev-008, made after its context.json was published. dev-008 therefore never reached inference, as claimed.
+   - Peaks per job were 5802, 5499, 21352 and 23868 MiB. The evidence makes no attribution for the increase, which is correct given the data.
+9. Method adaptations. launch.py differs from the prior capsule only in the pinned HEAD and in `--models gemma4-e4b --pairs 5`. audit.py adds only the separately authenticated failed-job branch, restricted to `gemma4-e4b`, `first==6`, and the new totals. The controller, collector, batch launcher, policy and frozen inputs are byte-identical to the dependency. No measured input changed.
+10. Retained review. `cmp` of docs/reviews/b1ea1bb5e831-…-checkpoint30.txt against /lane/reviews/b1ea1bb5e831-…-checkpoint30.md shows the files are identical. review-inspection.json and retained-review.json record its hash, PASS, 0 high/medium findings and no row closed. TASKS.md and the evidence quote it accurately.
+
+## Checks against the brief
+
+- **Evaluation integrity:** only development tasks dev-001 to dev-007 reached the model. The split is asserted `development` for the completed jobs, and dev-007 matches preflight task index 6 by task hash. Held-out tests did not run, and no hidden test or candidate ran. Source, prompt, schema, budgets and model profile are frozen at 35217c60. The resource interruption is counted as its own cause, not dropped and not replayed.
+- **MEASURE FIRST:** this batch has a scoreboard line. It states the context and output budgets, reports does-not-fit (0) and the resource interruption apart from model failures, and every number traces to raw logs (item 7).
+- **Honest labelling:** task passes and retries are shown as Unavailable, and proposals are labelled ungraded. The evidence says response fields do not establish an absence of internal reasoning. The over-limit peak is described as an observation, not as admission. No other agent product or private project is named.
+- **Confinement:** this commit changes no tool or sandbox surface. Proposed code is retained as data and never executed. The guard signals only its own child, and cleanup records no foreign signal, no live owned processes and eight retired tokens.
+
+## Findings
+
+No high or medium findings.
+
+Low (backlog, not blocking):
+1. **docs/evidence/coding-scoreboard.md:4078.** The "Strict ungraded proposals 3/7" column includes the resource-interrupted dev-007 in its denominator. The cause is disclosed separately, so nothing is misstated, but a reader comparing models may read 3/7 as a model rate. Fix: add the completed-attempt figure (3/6) next to it in future lines, or a footnote.
+2. **docs/evidence/t303-copy-original-fragments-e4b-checkpoint7-interrupted-2026-11-18.md:26.** The sentence "the next task stopped at context construction with connection refused" is slightly imprecise. Context construction completed (context.json was written), and the refusal came from the backend `/apply-template` call that follows it (collect.py:35). The later sentence that dev-008 "never reached inference" is accurate. Fix: say "stopped after context construction, at prompt rendering".
+
+## Per-row result
+
+- **T-303/T-306** (non-closing frozen development measurement; E4B positions 1–7, six completed plus one resource interruption; repeat 157/180): accepted as reported. No row closes, and T-303/T-306 remain open as the commit states.
+
+Verdict: PASS

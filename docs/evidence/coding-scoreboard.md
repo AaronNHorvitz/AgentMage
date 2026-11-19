@@ -4129,3 +4129,29 @@ cumulative wall time and kernel time are unmeasured. Snapshot preparation
 releases its own build slot before the unchanged controller starts.
 
 See [evidence](t303-copy-original-fragments-e4b-checkpoint7-interrupted-2026-11-18.md). Independent core review required.
+
+## Copy-original-fragment prompt repeat: E4B resumption admission refusal, 2026-11-18
+
+Source `35217c60a56a5d3e065148eb9a6aea898b5e1b16`;
+reporting base `b6cae1f15ceb7d6d13f12f915f2a06b9e7c5f4d2`.
+
+| Date | Model | Planned context / output tokens | New inference attempts | First-attempt / within-budget passes | New model tokens / GPU minutes | Progress |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-18 | E4B | 32768 / min(32768, 32768 - rendered input - 32), unchanged | 0 | Unavailable / unavailable | None; model not started | Unchanged: 157/180, 23 remaining |
+
+The existing GPU wrapper refused the first fresh job before invoking the model
+worker: `GPU baseline exceeds 4 GiB or hardware is ambiguous.` The controller
+exited 1; no new job directory or candidate exists. This is a resource admission
+refusal, not a model failure or a task attempt. No score or reservation duration
+is inferred. The subsequent read-only status sample reports 18,179 MiB used of
+24,564 MiB; it does not establish the exact refused baseline or its source.
+All 157 previous attempts, the interrupted dev-007 job, its partial dev-008
+context and all frozen settings remain unchanged. The refusal log is retained.
+
+This remains a partial measurement path. Native execution and original grading
+controls are unavailable; no effects, project tests, feedback, retries,
+candidate, hidden or held-out test runs. T-303/T-306 remain open; no model role
+qualifies. Resume at dev-008 through both unchanged resource wrappers, using
+fresh reservation records, when resources admit it. Finish the remaining 23
+attempts before tuning or capability work. See the [refusal evidence](t303-copy-original-fragments-e4b-admission-refusal-2026-11-18.md).
+Independent core review is required; no row closes.

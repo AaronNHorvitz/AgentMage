@@ -2,6 +2,16 @@
 
 ## Active queue: local agent mission
 
+The [independent interrupted E4B checkpoint review](docs/reviews/b6cae1f15ceb-copy-original-fragment-e4b-development-checkpoint7-interrupted.txt) returns **Verdict: PASS** for exact `b6cae1f15ceb7d6d13f12f915f2a06b9e7c5f4d2`, with no high or medium findings. Its report is retained unchanged; no row closes. Two low presentation findings join T-309: distinguish completed-attempt proposal rates from interrupted-attempt totals, and describe the previous dev-008 failure as prompt rendering after context construction. Existing backlog remains open.
+
+The [E4B resumption admission refusal](docs/evidence/t303-copy-original-fragments-e4b-admission-refusal-2026-11-18.md)
+records the unchanged GPU wrapper refusing the first fresh job before model
+startup. No new inference attempt or task score results. The repeat stays at
+157/180 attempts with 23 E4B attempts remaining; resume at dev-008 only when
+resources admit it, retaining both this refusal and the original failed job.
+All measured inputs and limits remain unchanged. T-303/T-306 stay open;
+no capability work or tuning starts. Independent core review is required.
+
 The [independent Muse completion review](docs/reviews/b1ea1bb5e831-copy-original-fragment-muse-development-checkpoint30.txt) returns **Verdict: PASS** for exact `b1ea1bb5e8317e0b2c0a59149492b16e119ee214`, with no high or medium findings. Its unchanged report accepts only the prior measurement; no row closes. Existing T-309 backlog remains open. No verdict is inferred for this increment.
 
 The [frozen E4B seven-attempt interrupted checkpoint](docs/evidence/t303-copy-original-fragments-e4b-checkpoint7-interrupted-2026-11-18.md) records
