@@ -1,0 +1,55 @@
+Commit: 0ffdabc25b77b7552795bb135f9af9fdbb2cb167
+Scope: copy-original-fragment-muse-development-checkpoint22
+
+# Independent review: frozen original-fragment Muse twenty-two-attempt checkpoint
+
+Reviewer: Claude Opus 5.5 (extra-high effort), a separate session with read-only access, working in the pinned checkout /lane/review-checkout. Row: T-303/T-306, non-closing frozen development measurement. Base `97e4d0032aa5b96dc822cc7f250b36c8603281d0`; prompt/checker source `35217c60a56a5d3e065148eb9a6aea898b5e1b16`.
+
+## Methods and commands (all in /lane/review-checkout, CARGO_TARGET_DIR=/lane/state/review-target)
+
+1. `git rev-parse HEAD` returned `0ffdabc25b77b7552795bb135f9af9fdbb2cb167`. `git status --porcelain` printed nothing. `git diff --check 97e4d003...` exited 0.
+2. Diff scope: `git diff --stat 97e4d003 HEAD` lists exactly 4 files with 230 insertions and 0 deletions: TASKS.md, docs/evidence/coding-scoreboard.md, the new checkpoint22 evidence file and docs/reviews/97e4d0032aa5-...-checkpoint18.txt. `--diff-filter=MD` shows that TASKS.md and the scoreboard only gain added lines. The earlier scoreboard prefix is unchanged.
+3. Retained review: `cmp /lane/reviews/97e4d0032aa5-copy-original-fragment-muse-development-checkpoint18.md docs/reviews/97e4d0032aa5-copy-original-fragment-muse-development-checkpoint18.txt` reports the two files identical. Its PASS verdict is quoted accurately in TASKS.md and in the evidence.
+4. Capsule hashes: `sha256sum` matches manifest.json `83789177...0eea60`, bindings.json `11ffe0b3...13b6` and post-commit JSON `1c305aa3...490af`, as stated in the request.
+5. `bash /tools/build-slot python3 -B .../copy-fragments-muse-checkpoint22-20261118/verify.py` printed `{"status": "PASS", "attempts": 142, "new_attempts": 4, "remaining_attempts": 38, "strict_ungraded_proposals": 15, "all_dependencies_checked": true, "live_state": "unavailable", "postcommit_checked": true, "candidate_execution": false, "task_passes": null}`. Live builder state is not mounted here and is reported as unavailable, as the request anticipated.
+6. Helper reproduction: I authenticated the helper object to `1992c3c4...bd6de`, copied it to a private 0700 file and ran `bash /tools/build-slot python3 -B .../reproduce.py --helper <copy> --output <fresh dir>`. It printed `{"status": "PASS", "contexts": 30, "answers": 4, ..., "candidate_execution": false, "model_inference": false, "hidden_or_held_out": false}`. My first attempt stopped with FileExistsError because I had pre-created the output directory, which was my error. The rerun used a fresh path. I read reproduce.py (39 lines). It authenticates the dependency manifests and asserts that the helper output equals the recorded `checked.json` for all four new answers, including the dev-021 refusal.
+7. Gates, with node authenticated to `d1de76d8...c932c` and placed on PATH as a private copy:
+   - `python3 -B scripts/local_agent_fast_gate.py --base 97e4d003... --timeout 3600` returned FAST GATE: PASS (private paths PASS, licence PASS, review lint PASS, markdownlint 0 issues in 3 files).
+   - `node .../work/lint-all.mjs` returned PASS with 0 issues (1 scoreboard table, 1 evidence table).
+   - `python3 -B scripts/private_host_paths.py --base 97e4d003...` returned PASS.
+   - `python3 -B scripts/license_policy.py` returned PASS.
+8. I recomputed every new number from raw records with my own script, not the builder's reporting:
+   - All six log hashes for each of the four attempts in `campaign/jobs/muse-{18,20}/collection/batch.json` match the files.
+   - Causes: dev-019, dev-020 and dev-022 are `ungraded-proposal`. dev-021 is `strict-edit-refused` with `checked.json = {"error": "code.proposal.format"}` and `candidate_is_base_fallback: true`. The new result is therefore 3/4 strict ungraded proposals, and the failure is counted.
+   - Request/check time: the sum of `generation_seconds` is 552.676.
+   - Reserved-job time: 113.812 + 557.644 = 671.456 s, which is 11.191 minutes.
+   - Tokens: backend `prompt eval` gives 8124 + 7311 + 7561 + 6718 = 29714 input tokens. `eval` gives 645 + 2663 + 6755 + 12749 = 22812 output tokens. Both equal the upstream response `usage` fields.
+   - Every request has `max_tokens = min(32768, 32768 - input - 32)`, with values from 24612 to 26018.
+   - Every request sends `chat_template_kwargs.enable_thinking: false`, carries only system and user messages, sends no tools and has `stream: false`. Every response has `finish_reason: stop`, non-empty content, empty `reasoning` and non-empty `reasoning_content`. This matches the published response-field counts and the disclosure that these fields do not establish an absence of reasoning.
+9. Cumulative figures: the checkpoint-18 evidence values (12/18; 3378.506 s; 3773.300 s; 62.888 min; 101759 / 119008 tokens; 16/18 counter coverage) plus the new values give the published 15/22, 4444.756, 74.079, 131473 / 141820 and 20/22. `work/report-summary.json` has a raw request/check total of 3931.18123, which rounds to the published 3931.181. The 0.001 s gap from adding rounded figures is rounding only. The cumulative causes (2 + 2 + 3 + 15 = 22) are checkpoint 18 plus one format refusal and three ungraded proposals.
+10. Evaluation integrity:
+    - `git diff --name-only 35217c60..HEAD` outside TASKS.md and docs/evidence and docs/reviews shows only README.md. That change is a one-word wording edit from an earlier, already-reviewed commit, b7ab16d0. No prompt, helper, checker or source changed.
+    - The four request bodies contain no held-out reference. The collection reports `split: development` and `held_out_executed: false`.
+    - dev-019 to dev-022 follow the dev-015 to dev-018 positions of checkpoint 18, so no attempt is replayed.
+    - Proposals are retained as data. No candidate, project test or hidden test executes.
+11. Confinement and cleanup:
+    - The model-server command uses `bwrap --unshare-all --unshare-user --clearenv --cap-drop ALL`, so it has no network namespace.
+    - `work/cleanup.json` reports PASS: settings revoked, API and model reaped, keys and sockets absent, four tokens retired, no live owned processes and no foreign signal.
+    - The private capsule contains local host paths and token-file paths. That is expected for a private capsule. None of them appears in the committed diff, which I grepped for home paths, the username, email, localhost, keys and vendor or product names. The only `/lane` paths are inside the retained reviewer report, and the path check passes.
+12. Not run: the optional portable bwrap verifier (step 4 of the request). It is optional, and step 5 already ran the verifier without builder state. No GPU was used by this review.
+
+## Findings
+
+None at high, medium or low severity.
+
+## Claims checked
+
+- Measure-first: the batch has its scoreboard line. The line states the context and output budgets and the output formula, reports 0 tasks that do not fit separately from model failures, marks task passes as Unavailable and held-out as Not run, and labels timing as reserved-job time rather than kernel time.
+- Honest labelling: proposals are called ungraded, the partial path is stated, and the commit claims no qualification, model role or row close.
+- No new sub-row. No other agent product, private project or patent is named.
+
+## Per-row result
+
+- T-303/T-306 (non-closing frozen development measurement, Muse checkpoint 22): the measurement is accepted as reported. No row closes, and T-303/T-306 remain open, as the commit states.
+
+Verdict: PASS
