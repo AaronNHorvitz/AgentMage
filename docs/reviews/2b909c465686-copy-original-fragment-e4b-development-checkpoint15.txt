@@ -1,0 +1,83 @@
+Commit: 2b909c4656866425c42dceb8d4393b1ec89ab82c
+Scope: copy-original-fragment-e4b-development-checkpoint15
+
+# Independent review: frozen E4B development checkpoint fifteen (dev-012 to dev-015)
+
+Reviewer: separate Claude Opus 5.5 session at extra-high effort, read-only, using the pinned checkout /lane/review-checkout.
+Row: T-303/T-306. This is a non-closing frozen development checkpoint. Base: fc774f8ea9344efaa634bbcf5cb954fd4752a302.
+Frozen prompt/checker source: 35217c60a56a5d3e065148eb9a6aea898b5e1b16. I used no GPU, changed nothing in the repository and executed no candidate, hidden or held-out code.
+
+## Methods and commands (all in /lane/review-checkout, CARGO_TARGET_DIR=/lane/state/review-target)
+
+1. Commit identity and cleanliness.
+   - `git rev-parse HEAD` returned 2b909c4656866425c42dceb8d4393b1ec89ab82c. `git status --porcelain` was empty before and after the review.
+   - `git diff --check fc774f8e…` exited 0. `git diff --numstat` shows exactly the four requested files, all additions: TASKS.md +9, coding-scoreboard.md +53, the checkpoint15 evidence +82, the retained review copy +70. Nothing was removed.
+   - The commit message carries Signed-off-by and Co-Authored-By trailers.
+2. Capsule authentication.
+   - manifest.json SHA256 is 4d177b5b…afc3 and bindings.json is dacaadc4…b480. Both match the request.
+   - The post-commit receipt is af827ee6…0327, which matches. Its public_sha256 values equal `sha256sum` of the four committed files.
+   - work/dependencies.json is 267b2070…1010, which matches.
+   - The manifest lists 2258 files. The directory holds 2260: the other two are manifest.json and bindings.json themselves.
+   - My own hash walk found all 2258 files intact. All 23 dependency capsules authenticate by manifest, bindings and, where present, the post-commit receipt, with every file in their manifests checked: 111,625 files, 0 mismatches.
+   - The sealed public/ copies are byte-equal to the committed blobs.
+3. Sealed verifier.
+   - `bash /tools/build-slot python3 -B …/verify.py` printed `{"status": "PASS", "attempts": 165, "new_attempts": 4, "remaining_attempts": 15, "all_dependencies_checked": true, "live_state": "unavailable", "postcommit_checked": true, "candidate_execution": false, "task_passes": null}`.
+   - Optional step 3 (bwrap with a tmpfs over /lane/state) printed the same PASS line.
+   - Live state (/lane/state/ef1) is not mounted in this session, so it is reported as unavailable, not as checked.
+4. Step-2 gates. I authenticated /lane/reviews/42612ca9787f-a4b-node to d1de76d8…c932c and copied it privately onto PATH (node v24.15.0).
+   - `python3 -B scripts/local_agent_fast_gate.py --base fc774f8e… --timeout 3600` gave FAST GATE: PASS. markdownlint-cli2 found 0 issues in the 3 Markdown files, the review-copy lint exited 0, and the privacy and licence sub-steps passed.
+   - `node …/work/lint-all.mjs` returned status PASS with 0 issues, 1 scoreboard table and 1 evidence table.
+   - `python3 -B scripts/private_host_paths.py --base fc774f8e…` gave PRIVATE PATH CHECK: PASS.
+   - `python3 -B scripts/license_policy.py` gave LICENCE POLICY: PASS.
+5. Independent recomputation from the raw sealed data, done by me rather than by the builder's scripts.
+   - Wire responses:
+     - All four upstream-response-*.bin files are HTTP 200, and each matches its capture receipt in byte count and SHA256.
+     - Usage sums to input 29504 and output 41741, which matches. Cumulative: 68613 + 29504 = 98117 and 115186 + 41741 = 156927, which matches.
+     - finish_reason is `length` for dev-013 (9734 input, cap 23002, 23002 output tokens) and `stop` for dev-012, dev-014 and dev-015. That matches output-cap 1 / stopped-below-token-limits 3.
+     - Every response has non-empty content and no reasoning or reasoning_content field.
+   - Wire requests:
+     - In every request, prompt_tokens + max_tokens = 32736 = 32768 − 32. The ranges are 3247–9734 for input and 23002–29489 for output, which matches. Does not fit: 0.
+     - Every request sends `chat_template_kwargs.enable_thinking: false` and the strict `coding_edits_v1` json_schema.
+   - Timing:
+     - The generation_seconds values in record.json sum to 341.435 s.
+     - The reserved_work_seconds of the two jobs (229.015 + 130.840) sum to 359.856 s, or 5.998 GPU minutes.
+     - Controller wall time, from launch.json at 04:25:16.209 to controller-exit.json at 04:31:56.332 UTC, is 400.124 s.
+     - Summing reserved_work_seconds from the raw batch reports of all eight E4B jobs from source 35217c60 gives 1704.523 s, or 28.409 GPU minutes, which matches. Adding the two rounded committed figures (1344.668 + 359.856) would give 1704.524; the difference is rounding of addends only.
+   - Outcomes and attempt counts:
+     - Prior cumulative causes {length 3, gpu-headroom 1, strict-edit 3, ungraded 4} plus the new {length 1, strict-edit 3} give the committed cumulative causes. The proposal count is 4/14 completed, and 15 attempts including the dev-007 interruption.
+     - controller.log shows E4B at 13/30 and then 15/30, so 165/180 attempted and 15 remaining.
+6. I checked the strict-check outcomes myself against the frozen checker. In the source commit, capabilities/repository-map/src/coding_proposal.rs rejects an edit with `code.proposal.edit` in these cases: an empty `old`, `old == new`, a missing or ambiguous occurrence, an occurrence outside the excerpts, overlapping edits, or no net change. Against the sealed context excerpts:
+   - dev-012: both `old` strings occur exactly once, but edit 0 has old == new (602 bytes). That is refused by the `edit.old == edit.new` branch, so the refusal is correct.
+   - dev-014: the `old` text (19922 bytes) occurs 0 times in scripts/sprint_16_linux_worker_evidence.py. Correct refusal.
+   - dev-015: the `old` text (157 bytes) occurs 0 times in scripts/model_feasibility.py. Correct refusal.
+   - dev-013: there is no answer.txt or checked.json. The stream ended at the output cap, so the classification is generation-refused:length.
+   - Every record has retries 0, graded false and candidate_is_base_fallback true. No failure is dropped or reclassified as a success.
+7. Freezing and scheduling.
+   - These files are byte-identical to the previous (checkpoint11-resumed) capsule: campaign/frozen-inputs.json (795aaba5…), batch.py, collect.py, controller.py, policy.json, output-format.json and both wrapper copies. /tools/build-slot and /tools/gpu-slot hash to the values in launch.json.
+   - resume-controller.py, launch.py and prepare-snapshot2.py differ only in the reporting HEAD, the first index (7 → 11) and one assertion (the earlier dev-008 candidate now must exist). This matches adaptation.json and the claim that scheduling advances only the next index and log paths.
+   - launch.json records nice 19, priority low, cpu.max 400000/100000, memory.max 16 GiB and a 9706-file read-only snapshot bind.
+   - The driver log shows a released build-slot reservation wait before each exclusive GPU reservation. Baseline GPU use was 1590 MiB and the sampled peak was 5820 MiB.
+   - The earlier refusals are preserved inside authenticated dependency capsules: copy-fragments-e4b-resume-admission-refusal-20261118 and the work/prior-refusal of checkpoint11-resumed.
+8. Cleanup and preservation.
+   - work/cleanup.json reports status PASS across 83 reports (81 earlier + 2 new): settings revoked, API and model processes reaped, keys and sockets absent, 4 tokens retired, no live owned processes, no foreign signal.
+   - The full old scoreboard is a byte-identical prefix of the new one.
+   - docs/reviews/fc774f8ea934-…-checkpoint11-resumed.txt is byte-identical (cmp) to my previous review file /lane/reviews/fc774f8ea934-…-checkpoint11-resumed.md. TASKS.md and the evidence say it accepts only the earlier measurement and infer no verdict for this increment.
+9. Public-repository and claims checks.
+   - Grepping the committed diff found no private home path, username, hostname, credential, sibling-project name or other agent product. The only absolute paths are /lane/… inside the retained review copy, as in earlier retained reviews.
+   - The order of work is unchanged. Nothing claims a task pass, grading, role qualification or row close.
+   - The tasks are dev-* only, and audit.json and the manifest record hidden_or_held_out false.
+   - The scoreboard line required by MEASURE FIRST is present. It states the context and output budgets, counts "Does not fit: 0" separately, and keeps the interruption in the total-attempt count, with proposal rates on completed attempts.
+
+Not run:
+- Optional step 4 (helper reproduction): the authenticated helper at /lane/state/ef1/bin is not mounted in this session. I did not rebuild or substitute it; step 6 is my helper-free cross-check against the frozen checker source.
+- Source tests: no source changed.
+
+## Findings
+
+None at high or medium severity. No new low findings.
+
+## Per-row result
+
+- **T-303/T-306** (non-closing frozen development checkpoint; repeat at 165/180, 15 E4B attempts remaining; 0/4 new and 4/14 cumulative strict ungraded proposals): accepted as reported. Every number traces to the sealed raw data, the inputs stay frozen and confinement and cleanup hold. No row closes, and T-303/T-306 remain open as the commit states.
+
+Verdict: PASS

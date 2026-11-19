@@ -4257,3 +4257,69 @@ T-303/T-306 remain open. Finish the remaining 15 attempts before tuning or
 capability work. Independent core review is required; no row closes.
 
 See the [evidence](t303-copy-original-fragments-e4b-checkpoint15-2026-11-18.md).
+
+## Copy-original-fragment prompt repeat: E4B completion, 2026-11-18
+
+Source `35217c60a56a5d3e065148eb9a6aea898b5e1b16`; reporting base `2b909c4656866425c42dceb8d4393b1ec89ab82c`.
+
+| Date | Model | Context / output tokens | Completed / total attempts | Strict ungraded proposals | First-attempt / within-budget passes | Input / output tokens | Reserved-job GPU minutes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-18 | E4B | 32768 / min(32768, 32768 - rendered input - 32), unchanged | New 15/15; cumulative 29/30 including one prior interruption | New 7/15; cumulative 11/29 completed | Unavailable / unavailable | New 108102 / 103605; cumulative 206219 / 260532 | New 16.395; cumulative 44.804 |
+
+The frozen six-profile repeat reaches **180/180 attempted, 0 remaining**:
+179 completed inference attempts and one preserved resource interruption.
+E4B proposal rates use completed attempts. The failed dev-007 job, its partial
+dev-008 context (constructed; prompt rendering failed before inference), and
+both historical pre-start admission-refusal logs remain unchanged. No task
+is replayed. There is no new admission refusal in this increment.
+
+New E4B causes: `{"generation-refused:complete:length": 2, "strict-edit-refused:code.proposal.edit": 6, "ungraded-proposal": 7}`.
+Cumulative E4B causes: `{"generation-refused:complete:length": 6, "resource-interrupted:gpu-headroom": 1, "strict-edit-refused:code.proposal.edit": 12, "ungraded-proposal": 11}`.
+New backend terminations: `{"output-cap": 2, "stopped-below-token-limits": 13}`.
+New response fields: `{"content:nonempty": 15, "reasoning:absent-or-empty": 15, "reasoning_content:absent-or-empty": 15}`.
+Does not fit: 0. Rendered input 3521–9467
+tokens; output budgets 23269–29215.
+The unchanged wire request disables thinking; response fields do not establish
+absence of internal reasoning.
+
+The changed measured variable remains Decision 0212's frozen original-fragment
+instruction. Source, prompt, helper, context selection, profiles, schema,
+thinking request, deadlines and budgets are unchanged. Served context is 32768;
+output is `min(32768, 32768 - rendered input tokens - 32)` per task.
+Eight jobs reacquire both unchanged wrappers, each with a 900-second deadline,
+30-second released pauses, low priority, nice 19, 16 GiB RAM, four CPUs and the
+unchanged 22528 MiB GPU guard. No foreign process is stopped or limit raised.
+The last odd-start job contains only dev-rust-001; its legacy count=2 is scheduling
+metadata, not evidence of two attempts. The earlier handoff and my progress
+labels incorrectly called the final task dev-030. The frozen task list and
+worker selected dev-rust-001. The scheduling preflight checked an unused
+dev-030 candidate path; the worker stayed unchanged and selected the correct
+task. Reporting and packaging now follow recorded IDs; no task is replayed.
+Snapshot preparation releases its build
+slot before the controller starts; the 9706-file Git-backed snapshot is read-only.
+
+Controller wall time is 1782.935 seconds including queues and released pauses,
+excluding preparation and reporting. New request/check time is
+915.625 seconds; reserved-job body time is
+983.720 seconds / 16.395
+GPU minutes. Body time excludes queues and is neither GPU kernel time nor full
+reservation duration. Continuous campaign wall time and end-to-end latency
+remain unmeasured. Counter coverage is 15/15 new and 29/30 cumulative E4B.
+
+Partial path only: Rust context selection, credential-owning chat HTTP API,
+local inference and strict checking. Native executable admission and original
+execution/grading controls are unavailable. Effects, project tests, feedback
+and retries cannot run. No candidate, hidden or held-out test executes. Task
+passes remain unavailable; proposals are ungraded. No model role qualifies.
+T-303/T-306 stay open; completing this partial repeat does not close either row.
+
+Across all six profiles, strict ungraded proposals are gemma4-31b: 22/30 completed; qwen35-27b: 27/30 completed; gpt-oss: 8/30 completed; muse: 22/30 completed; gemma4-e4b: 11/29 completed; gemma4-26b-a4b: 17/30 completed.
+All-profile causes: `{"generation-refused:complete:length": 6, "generation-refused:error:chat.response.incomplete": 8, "generation-refused:error:chat.transport.timeout": 4, "resource-interrupted:gpu-headroom": 1, "strict-edit-refused:code.proposal.edit": 50, "strict-edit-refused:code.proposal.format": 4, "ungraded-proposal": 107}`.
+The largest measured failure cause is `strict-edit-refused:code.proposal.edit` (50 attempts).
+Under MEASURE FIRST, that cause chooses the next work. Inspect the failing
+strict edits against their supplied source excerpts before selecting a change;
+do not weaken exact matching or treat a proposal as a solved task. Git capability
+work remains behind measured reliability; other service tools, flows and team
+mode remain later work. No new runtime capability or tuning ships here.
+
+See the [evidence](t303-copy-original-fragments-e4b-complete-2026-11-19.md).

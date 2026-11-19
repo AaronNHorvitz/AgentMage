@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The [frozen E4B completion](docs/evidence/t303-copy-original-fragments-e4b-complete-2026-11-19.md) adds 15 completed attempts,
+7/15 strict ungraded proposals; E4B totals 11/29 completed proposals
+plus one preserved interruption. The repeat reaches **180/180 attempted**.
+Task passes and retries remain unavailable; no candidate, hidden or held-out
+test executes. All prior data and measured settings are preserved. The largest
+all-profile failure cause is `strict-edit-refused:code.proposal.edit` (50 attempts), which selects
+the next work under MEASURE FIRST. T-303/T-306 remain open; no row closes.
+The preceding exact-commit independent review returned PASS with no new findings; its report is retained unchanged. It accepts only that earlier checkpoint. This increment requires independent core review.
+
 The [frozen E4B fifteen-attempt checkpoint](docs/evidence/t303-copy-original-fragments-e4b-checkpoint15-2026-11-18.md) adds
 four completed development attempts, 0/4 strict ungraded proposals.
 E4B has 4/14 completed proposals plus one preserved interruption;
