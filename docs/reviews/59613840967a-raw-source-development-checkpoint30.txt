@@ -1,0 +1,89 @@
+Commit: 59613840967aec113011f72b9f42a190d9464c1d
+Scope: raw-source-development-checkpoint30
+
+# Independent review: frozen raw-source thirty-attempt checkpoint
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Same-model review.
+Row: T-303/T-306, a non-closing frozen development measurement. No row closes.
+Base: 12dbc19b5c9137f4035c3c92a3998fdaabe831e2. Frozen product source: eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f.
+
+## Methods
+
+I ran every command in the pinned checkout /lane/review-checkout with
+CARGO_TARGET_DIR=/lane/state/review-target. I used no model, GPU or candidate process. I modified no repository file.
+
+1. Commit and diff
+   - `git rev-parse HEAD` returns 59613840967aec113011f72b9f42a190d9464c1d.
+   - `git status --porcelain` is empty.
+   - `git diff --check 12dbc19b…` exits 0.
+   - The diff from the base touches five files: README.md (one table cell), TASKS.md, docs/evidence/coding-scoreboard.md (append only), the new docs/evidence/t303-raw-source-checkpoint30-2026-11-19.md and docs/reviews/12dbc19b5c91-raw-source-development-checkpoint24.txt.
+   - `git diff --name-only eef17dbd… HEAD` lists only README, TASKS, docs/evidence and docs/reviews files. No product source changed since the frozen source.
+   - The retained checkpoint24 review is byte-identical to /lane/reviews/12dbc19b5c91-raw-source-development-checkpoint24.md. Both have SHA256 3919bc6f…828ff1.
+2. Capsule authentication
+   - The manifest, bindings and postcommit file SHA256 values equal the requested 08b280e7…4197c, 4f499f7f…152843d and 9fcadf1e…d6f.
+   - The capsule holds 141,364 files: the 141,362 manifest entries plus manifest.json and bindings.json.
+   - The helper object 4aea9726…1c53 is an ELF executable and equals the frozen-inputs private binding for the measurement helper. Object 8f2481c7…7ed is its Rust source, as the request states.
+   - `bash /tools/build-slot python3 -B …/verify.py` returns PASS: attempts 30, remaining 150, postcommit_checked true, task_scores null, complete_prior_capsule_authenticated true.
+   - `bash /tools/build-slot python3 -B …/reproduce.py` returns PASS: contexts 30, prior_checks 161, new_checks 29, generation_refusals 1, attempt_records 30, candidate_execution false, model_inference false.
+   - Before running them, I read verify.py, reproduce.py, work/audit.py, work/write-reports.py (via its diff from the initial seal) and work/cleanup.py. work/verify.py and work/reproduce.py are byte-identical to the top-level copies.
+3. Independent recomputation from raw records
+   - Sources: campaign/jobs/{gemma4-31b,qwen35-27b,gpt-oss}-04 batch-report.json, collection/batch.json, per-task record.json, checked.json, upstream request/response and backend-slice.log. This was my own parsing, not audit.json.
+   - gemma4-31b, dev-005 and dev-006:
+     - Prompt and eval counters are 8044/513 and 8877/815, so 16921 / 1328 tokens.
+     - Generation seconds sum to 72.479. reserved_work_seconds is 112.635, or 1.877 GPU minutes.
+     - dev-006 is strict-edit-refused with checked error code.proposal.edit.
+   - qwen35-27b: counters 6897/306 and 7692/501, so 14589 / 807 tokens. Seconds 43.014. GPU minutes 1.134. Both attempts are ungraded proposals.
+   - gpt-oss: counters 6173/26563 and 7093/6195, so 13266 / 32758 tokens. Seconds 168.751. GPU minutes 3.083.
+   - gpt-oss dev-005 is the refused attempt:
+     - finish_reason is `length`, usage.completion_tokens is 26563 (the requested budget) and content is empty.
+     - No answer.txt or checked.json exists for it.
+     - Input plus output plus 32 equals 32768, so the task fit the context. It is correctly counted as an output-cap model failure, with "does not fit: 0".
+   - Every requested max_tokens equals min(32768, 32768 − rendered input − 32): for example 32768−8044−32 = 24692.
+   - Every wire request carries `chat_template_kwargs.enable_thinking: false`. n_ctx is 32768, timeouts are 300000 ms, retries 0, graded false. Every batch has split `development` and held_out_executed false.
+   - Sampled peak GPU use was 20444, 18691 and 13682 MiB, all within the 22,528 MiB guard.
+   - The cumulative audit.json tallies match the published ones: gemma4-31b 5/6, qwen35-27b 6/6, gpt-oss 1/6, muse 2/4, gemma4-e4b 0/4, gemma4-26b-a4b 2/4.
+   - delta.json controller_wall_seconds is 627.643. That is consistent with 365.6 s of reserved-job body time plus two 30-second released pauses (controller.py:38-41) plus queue and load time.
+4. Initial-seal correction
+   - Between the initial-seal manifest and the final manifest, the changed entries are only verify/reproduce, write-reports, package, finish-session, preservation.json, a seal log and the two public evidence texts.
+   - Ten recovery logs and scripts were added. Nothing was removed.
+   - audit.json, delta.json and every campaign/ record are unchanged.
+   - The public-text diff only replaces "all 30 current checks" with "29 strict checks plus one authenticated refusal" and adds the correction note. No number changed.
+5. Confinement and secrets
+   - No *.token, api-key or socket exists in the capsule campaign tree, and /lane/state/rs1 no longer exists.
+   - token-retirement-receipts.json lists six receipts, two for each new pair.
+   - cleanup.py writes receipts before unlinking, re-hashes each token before unlinking, checks the earlier receipt sets (6+6+6+2+4 = 24) and scans /proc for owned processes.
+   - launch.py binds HEAD to the base and allows exactly the fifteen reporting paths changed since the frozen source. It verifies all repository and private bindings and the full read-only snapshot, enforces the 16 GiB / four-CPU cgroup limits and checks nice 19.
+   - This increment changes no product, tool or confinement code.
+6. Repository gates, with the authenticated node d1de76d8…932c (Node.js licence file present) as a private copy on PATH
+   - `python3 -B scripts/local_agent_fast_gate.py --base 12dbc19b… --timeout 3600` returns FAST GATE: PASS. That covers diff check, untracked lint, private path check, licence policy, review lint and markdownlint (0 issues in 4 files).
+   - `node …/work/render.mjs` returns PASS with 0 issues; all four files render non-empty.
+   - `python3 -B scripts/private_host_paths.py --base 12dbc19b…` returns PASS.
+   - `python3 -B scripts/license_policy.py` returns PASS.
+7. Content review
+   - The README change is limited to the "Measured coding" cell. It updates 24 to 30 attempted and the three changed profile tallies, and still says "ungraded proposals" and "not solved tasks". No independence paragraph or other text changed.
+   - The TASKS.md change prepends the retained-review note and the checkpoint note, and changes the previous note's closing sentence to past tense. Its table rows are unchanged (verify.py checks this).
+   - The scoreboard is appended only; its prefix is byte-equal to the base (verify.py checks this).
+   - The new line states context and output budgets, counts the refusal as a failure, and states "does not fit" separately.
+   - No other agent product, private project, employer or client is named. The model names are existing measured profiles.
+   - The /lane paths in the diff appear only inside the retained review text, the same generic lane paths accepted in earlier retained reviews. They are not a private home path or user name.
+
+## Evaluation integrity
+
+- No held-out task was loaded or executed: every new batch has held_out_executed false and split development.
+- Hidden tests were not touched and no product source changed.
+- The frozen inputs and every prior job and candidate are byte-identical to the prior capsule (verify.py).
+- The one failure is counted, not dropped.
+- Scores reproduce with one command, and my recomputation from raw logs agrees.
+- MEASURE FIRST: a scoreboard line exists for this batch. No variable changed and no tuning happened mid-repeat.
+
+## Findings
+
+No critical, high, medium or new low findings.
+
+## Per-row result
+
+- T-303/T-306 thirty-attempt reporting increment: accepted as a reporting-only measurement. Both rows stay open; nothing closes.
+- This is not source, native or release acceptance.
+- Existing T-309 low findings remain backlog.
+
+Verdict: PASS

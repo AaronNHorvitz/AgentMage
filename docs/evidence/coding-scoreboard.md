@@ -4579,3 +4579,34 @@ The reporting reproduction accounts for 29 strict-check results and one
 authenticated generation refusal across all 30 attempt records. The initial
 verifier assumed one strict result per attempt; its failure and full initial
 seal are preserved. No inference is rerun and no measured input changes.
+
+## Frozen raw-source repeat: thirty-six-attempt checkpoint, 2026-11-19
+
+Frozen source: `eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f`.
+Reporting base: `59613840967aec113011f72b9f42a190d9464c1d`.
+
+| Date | New profile attempts | Context / output tokens | Completed / total attempts | Strict ungraded proposals | First-attempt / within-budget passes | Input / output tokens | Request and strict-check seconds | Reserved-job GPU minutes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-19 | muse | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 2/2 | Unavailable / unavailable | 13189 / 9572 | 232.797 | 4.339 |
+| 2026-11-19 | gemma4-e4b | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 0/2 | Unavailable / unavailable | 16913 / 5346 | 65.872 | 1.289 |
+| 2026-11-19 | gemma4-26b-a4b | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 1/2 | Unavailable / unavailable | 16921 / 1738 | 49.715 | 1.562 |
+
+No changed variable. The repeat is **36/180 attempted, 144 remaining**;
+cumulative strict ungraded proposals: gemma4-31b 5/6; qwen35-27b 6/6; gpt-oss 1/6; muse 4/6; gemma4-e4b 0/6; gemma4-26b-a4b 3/6.
+Finish all 30 tasks on all six profiles before tuning or capability work.
+
+muse: causes `{"ungraded-proposal": 2}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:nonempty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+gemma4-e4b: causes `{"strict-edit-refused:code.proposal.edit": 2}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+gemma4-26b-a4b: causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+Controller wall time including queues and two released pauses: 582.466 seconds.
+Body time excludes queues and is neither kernel nor full-reservation timing;
+preparation/reporting and end-to-end latency remain unmeasured. Exact settings,
+budgets and cleanup are in the [checkpoint evidence](t303-raw-source-checkpoint36-2026-11-19.md).
+Only Rust retrieval, credential-owning chat transport, local inference and the
+exact strict checker run. Native admission and original execution/grading
+controls remain unavailable; no effects, project tests, feedback, retries,
+candidate, hidden or held-out execution. No task score or model adoption.
+T-303/T-306 remain open.
