@@ -1,0 +1,187 @@
+Commit: f278e0b36765f5cb097da4c2efdb0c30e421d6cb
+Scope: raw-source-development-checkpoint18
+
+# Independent core review: frozen raw-source eighteen-attempt checkpoint (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate session with read-only access to the repository. Pinned checkout:
+/lane/review-checkout. Base: 0766abfeb4ca3f90ecc80931ccb2532ca93a5365. Frozen product source:
+eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f. I used no GPU and ran no model inference or candidate code.
+The only binary I executed from the capsule was the authenticated, effect-free measurement helper,
+through reproduce.py.
+
+## Methods
+
+- Confirmed the commit, a clean tree and a clean `git diff --check` against the base. Read the whole
+  five-file reporting diff (+298/−5): README.md, TASKS.md, coding-scoreboard.md, the new checkpoint
+  evidence file and one retained review report.
+- Compared the retained report byte for byte with its original under /lane/reviews.
+- Before running them, read verify.py, reproduce.py, work/audit.py, work/cleanup.py, work/launch.py,
+  campaign/controller.py and the helper's Rust source.
+- Recomputed every published number for the three new pairs directly from the raw records with my own
+  script, not from audit.json or delta.json. Sources: batch-report.json, collection/batch.json,
+  per-task backend-slice.log, checked.json, upstream request and response bodies.
+- Checked:
+  - controller wall time against launch.json and controller-exit.json;
+  - the launcher's allowed reporting-path set against `git diff --name-only`;
+  - the controller's pair order against policy.json;
+  - the cleanup receipts and the three new reservation logs.
+- Ran the reporting fast gate, render, privacy and licence checks with an authenticated private copy of
+  node.
+
+## Commands and results (all in /lane/review-checkout)
+
+1. Repository state:
+   - `git rev-parse HEAD` → f278e0b36765f5cb097da4c2efdb0c30e421d6cb.
+   - `git status --porcelain` → empty.
+   - `git diff --check 0766abfe…` → exit 0.
+   - Exactly 5 files changed: 3 modified and 2 added (the evidence file and the review report). No
+     changes under crates, scripts, docs/decisions, the licence files, NOTICE or the inventory.
+2. `bash /tools/build-slot python3 -B …/raw-source-development-checkpoint18-20261119/verify.py` →
+   `{"status": "PASS", "attempts": 18, "remaining": 162, "source_commit": "eef17dbd…", "postcommit_checked": true, "task_scores": null, "complete_prior_capsule_authenticated": true}`.
+3. `bash /tools/build-slot python3 -B …/reproduce.py` →
+   `{"status": "PASS", "contexts": 30, "prior_checks": 161, "new_checks": 18, "helper_sha256": "4aea9726…", "candidate_execution": false, "model_inference": false}`.
+4. Capsule anchors:
+   - manifest.json sha256 = d8a9c85c…0d7d and bindings.json = 57f927c8…106e, both matching the request.
+   - On disk there are 31,343 files, which is the 31,341 manifest entries plus the manifest and bindings.
+   - The post-commit receipt's sha256 = 82face1a…a87, matching the request.
+   - verify.py authenticates this capsule and every nested prior capsule (prior, prior/prior,
+     prior/prior/checkpoint and prior/prior/checkpoint/prior). For each it checks the exact file set,
+     relative non-symlink names, sizes and hashes.
+5. Helper:
+   - Object 8f2481c7… (correctly labelled "Helper source entry" in the request) hashes to its name and
+     is the 24-line Rust main.rs.
+   - That source reads at most 1 MiB from stdin, calls prepare/check_coding_proposal and prints JSON. It
+     uses no file system, network, process or environment APIs, so "effect-free" holds.
+   - The executable object 4aea9726… is an ELF file that hashes to its name. reproduce.py copies it to a
+     temporary directory and re-checks its hash before running it.
+6. Retained report: `cmp docs/reviews/0766abfeb4ca-raw-source-development-checkpoint12-resumed.txt
+   /lane/reviews/0766abfeb4ca-raw-source-development-checkpoint12-resumed.md` → identical.
+7. Independent recomputation from the raw records:
+   - Method:
+     - Prompt and eval counters come from backend-slice.log, and each equals the response `usage`.
+     - Each requested output equals min(32768, 32768 − rendered input − 32), with max_tokens set to the
+       same value.
+     - Every served n_ctx is 32768, every thinking_mode is "disabled" (wire `enable_thinking: false`),
+       and every timeout is 300000/300000 ms.
+     - In every job, graded is false and retries is 0. The split is development, held_out_executed is
+       false and settings_revoked is true.
+   - gemma4-31b-02 (dev-003, dev-004):
+     - Both tasks produced checked `changes`, so 2/2 ungraded proposals.
+     - Input 4440+3044 = 7484; output 727+4653 = 5380.
+     - Both stopped below the token limits (truncated = 0, finish = stop).
+     - Budgets 28296/29692. Request and strict-check time 171.778 s. Reserved work 212.665 s =
+       3.544 min. Peak sampled GPU 20,468 MiB.
+   - qwen35-27b-02:
+     - 2/2 ungraded proposals.
+     - Input 4055+2796 = 6851; output 653+3137 = 3790.
+     - Budgets 28681/29940. Request and strict-check time 99.085 s. Reserved work 123.182 s =
+       2.053 min. Peak 18,691 MiB.
+   - gpt-oss-02:
+     - Both tasks failed the strict check with `code.proposal.edit`, so 0/2.
+     - Input 3865+2704 = 6569; output 7917+16665 = 24582.
+     - Budgets 28871/30032. Request and strict-check time 118.558 s. Reserved work 133.863 s =
+       2.231 min. Peak 13,141 MiB.
+   - Response fields agree with the published counts:
+     - gpt-oss returns non-empty `reasoning_content`; 31B and 27B return none.
+     - The evidence correctly says the thinking-disabled request does not establish an absence of
+       reasoning.
+   - Every sampled peak is at or below the 22,528 MiB guard. "Does not fit: 0" is correct.
+   - The cumulative audit (gemma4-31b 4/4, qwen35-27b 4/4, gpt-oss 0/4, muse 2/2, gemma4-e4b 0/2,
+     gemma4-26b-a4b 1/2; 18 attempts) matches README.md:34, TASKS.md:13-14, the scoreboard section and
+     the evidence file.
+   - Every published figure in the scoreboard rows, the evidence table and README matches.
+8. Controller wall time:
+   - launch.json utc 08:17:06.668193 to controller-exit.json utc 08:31:30.338977 is 863.671 s, matching
+     the published figure. Exit code 0.
+   - controller.py is byte-identical to the prior capsule's copy, as verify.py checks. It holds a
+     released 30 × 1 s pause between jobs, and with `--pairs 3` that gives exactly two pauses.
+   - The run order 31B → 27B → gpt-oss for first=2 follows policy.json's model order.
+   - Each reservation log shows a fresh build-slot plus gpu-slot acquisition, the model verified, two
+     tasks run and the job completed.
+9. launch.py:
+   - Asserts HEAD = base, a clean tree, low priority, no STOP file and the presentation capsule's
+     hashes.
+   - Checks every repository binding against both the snapshot and `git show <source>`.
+   - Checks the private bindings and the full snapshot file set.
+   - Checks memory.max ≤ 16 GiB and cpu.max ≤ 4 CPUs.
+   - Checks that no owned process is running at launch, and that the controller reaches nice 19.
+   - Mounts the snapshot read-only over the repository path.
+   - Its hard-coded set of eleven changed paths equals `git diff --name-only eef17dbd 0766abfe`, which I
+     reran: exactly those 11 files.
+   - verify.py asserts that the wrapper hashes, the wrapper environment and the scope limits equal the
+     prior checkpoint's.
+10. cleanup.py and cleanup.json:
+    - The script writes the six receipts (open mode 'x') before rehashing and unlinking each token.
+    - It asserts that all three earlier receipt sets (6 + 4 + 2 = 12) point at paths that no longer
+      exist.
+    - Its scan of owned processes is empty. Settings are revoked, the API and model are reaped, and the
+      key and socket are absent.
+    - `no_foreign_signal` is still a literal field. This is the existing T-309 low pattern, so it is not
+      new.
+11. Authenticated node: sha256 of /lane/reviews/42612ca9787f-a4b-node = d1de76d8…c932c. I read its
+    licence file and installed a private 0700 copy on PATH.
+    `python3 -B scripts/local_agent_fast_gate.py --base 0766abfe… --timeout 3600` → FAST GATE: PASS. Its
+    steps were:
+    - `diff --check`;
+    - untracked lint;
+    - PRIVATE PATH CHECK: PASS;
+    - LICENCE POLICY: PASS;
+    - review-file lint of the retained report;
+    - markdownlint over 4 files with 0 issues.
+12. `node …/work/render.mjs` → `{"status":"PASS","issues":0,…}`, with non-empty renders of all four
+    Markdown files. The script has no write, fetch or child-process calls.
+13. Privacy and licence:
+    - `python3 -B scripts/private_host_paths.py --base 0766abfe…` → PASS.
+    - `python3 -B scripts/license_policy.py` → PASS.
+    - Grepping the committed diff for home paths, the user name, the e-mail address, the hostname, keys
+      and secrets finds nothing.
+    - The capsule's launch.json argv does contain a private home path. That file is outside the
+      repository and not committed, so this is not a finding against this commit.
+
+## Assessment
+
+- Honest labelling:
+  - Every number is called a strict *ungraded proposal*.
+  - First-attempt and within-budget passes are "Unavailable". Neither a task score nor a model role is
+    claimed.
+  - The text says native admission and the original grading controls are unavailable, and that no
+    candidate, hidden or held-out code ran.
+  - Queue-inclusive controller time is kept apart from reserved-job body time, and neither is
+    presented as kernel time or end-to-end latency.
+- MEASURE FIRST:
+  - The batch adds one dated scoreboard line per new profile.
+  - Context and output budgets are stated as the formula, with ranges in the evidence.
+  - Tasks that do not fit (0) are counted apart from model failures.
+  - "No changed variable" is correct: the controller, collector, batch, policy and frozen inputs are
+    byte-identical, as verify.py checks, and every earlier attempt's audit detail is unchanged.
+- Evaluation integrity:
+  - Only development tasks dev-003 and dev-004 ran.
+  - The diff contains no held-out or hidden task content, and no tuning took place mid-repeat.
+- Preservation:
+  - verify.py checks that the TASKS.md table rows are unchanged and that the base scoreboard bytes form
+    an unchanged prefix of the new one.
+  - The README changes only the "Measured coding" cell. The independence paragraph (README.md:14) is
+    unchanged. The inventory and Decision 0051 are untouched.
+  - The post-commit receipt covers the complete diff.
+- Prior low: the 0766abfe review's stale pending-review wording is now in the past tense at TASKS.md:53-54
+  (queue block), TASKS.md:82 (first pair) and TASKS.md:90-92 (presentation), with the 12-attempt
+  paragraph updated as well (TASKS.md:34-35). Older paragraphs further down keep the same historical
+  wording. That review named only these three, and this is wording only.
+
+## Findings
+
+No critical, high or medium findings. No new low findings. The existing T-309 lows, including the
+literal `no_foreign_signal` field, remain backlog.
+
+## Per-row result
+
+- T-303/T-306 (non-closing frozen development measurement f278e0b3): PASS for this exact reporting
+  increment.
+  - Six new development attempts: gemma4-31b 2/2, qwen35-27b 2/2 and gpt-oss 0/2 strict ungraded
+    proposals. The repeat is at 18/180 attempted with 162 remaining.
+  - Every number traces to the raw records and reproduces.
+  - This is reporting-only acceptance. It is not source acceptance, native acceptance or a task score.
+    The inherited source-gate FAIL and the unavailable native admission and grading controls stand.
+  - No row closes; T-303/T-306 remain open.
+
+Verdict: PASS

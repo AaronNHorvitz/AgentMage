@@ -4512,3 +4512,34 @@ exact strict checker run. Native admission and original execution/grading
 controls remain unavailable; no effects, project tests, feedback, retries,
 candidate, hidden or held-out execution. No task score or model adoption.
 T-303/T-306 remain open.
+
+## Frozen raw-source repeat: twenty-four-attempt checkpoint, 2026-11-19
+
+Frozen source: `eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f`.
+Reporting base: `f278e0b36765f5cb097da4c2efdb0c30e421d6cb`.
+
+| Date | New profile attempts | Context / output tokens | Completed / total attempts | Strict ungraded proposals | First-attempt / within-budget passes | Input / output tokens | Request and strict-check seconds | Reserved-job GPU minutes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-19 | muse | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 0/2 | Unavailable / unavailable | 6464 / 19082 | 431.871 | 7.782 |
+| 2026-11-19 | gemma4-e4b | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 0/2 | Unavailable / unavailable | 7476 / 14800 | 120.899 | 2.164 |
+| 2026-11-19 | gemma4-26b-a4b | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 1/2 | Unavailable / unavailable | 7484 / 10810 | 101.487 | 2.258 |
+
+No changed variable. The repeat is **24/180 attempted, 156 remaining**;
+cumulative strict ungraded proposals: gemma4-31b 4/4; qwen35-27b 4/4; gpt-oss 0/4; muse 2/4; gemma4-e4b 0/4; gemma4-26b-a4b 2/4.
+Finish all 30 tasks on all six profiles before tuning or capability work.
+
+muse: causes `{"strict-edit-refused:code.proposal.edit": 1, "strict-edit-refused:code.proposal.format": 1}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:nonempty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+gemma4-e4b: causes `{"strict-edit-refused:code.proposal.edit": 2}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+gemma4-26b-a4b: causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+Controller wall time including queues and two released pauses: 1933.238 seconds.
+Body time excludes queues and is neither kernel nor full-reservation timing;
+preparation/reporting and end-to-end latency remain unmeasured. Exact settings,
+budgets and cleanup are in the [checkpoint evidence](t303-raw-source-checkpoint24-2026-11-19.md).
+Only Rust retrieval, credential-owning chat transport, local inference and the
+exact strict checker run. Native admission and original execution/grading
+controls remain unavailable; no effects, project tests, feedback, retries,
+candidate, hidden or held-out execution. No task score or model adoption.
+T-303/T-306 remain open.
