@@ -2,6 +2,13 @@
 
 ## Active queue: local agent mission
 
+The [raw-source repeat queue record](docs/evidence/t303-raw-source-build-queue-block-2026-11-19.md) adds **zero attempts**:
+the first reservation remained unavailable, all three slots were observed
+occupied, and only this session's own unstarted waiter was retired. The repeat stays 6/180 attempted, 174 remaining.
+Frozen inputs and prior attempts are unchanged; resume the same development
+measurement when capacity is available, before tuning or capability work.
+No model score or row closure is claimed. Independent core review is required.
+
 The [independent raw-source presentation review](docs/reviews/d9bbbd25fb0b-raw-source-presentation.txt)
 returns **Verdict: PASS** for exact `d9bbbd25fb0b3be4d21c731a0078a5cd7762a262`,
 with no critical, high or medium findings. Its report is retained unchanged;

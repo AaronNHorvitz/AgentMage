@@ -4430,3 +4430,23 @@ exact strict checker run. Native admission and original execution/grading
 controls remain unavailable; no effects, project tests, feedback, retries,
 candidate, hidden or held-out execution. No task score or model adoption.
 T-303/T-306 remain open.
+
+## Raw-source repeat scheduling block, 2026-11-19
+
+Reporting base: `c1bb214085bf9eca42b0a45599224fa2a77352fb`.
+Frozen source: `eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f`.
+
+No scoreboard run occurred. The first shared build reservation remained
+unavailable; the builder retired only its own unstarted waiter after more than
+30 minutes. Queue-inclusive launch time: 1940.391207 seconds, including retirement.
+No GPU wrapper, model server, API or task worker started. No context/output
+budget was served; new tokens, GPU minutes, proposals and task scores are
+unavailable. **Zero new attempts; 6/180 attempted, 174 remaining.** This is a
+resource-block record, not a zero-pass model result or a changed campaign limit.
+
+All frozen inputs and previous attempts are unchanged. Resume all 30 tasks on
+all six profiles before tuning or capability work. No candidate, project,
+hidden or held-out tests run. First-attempt and within-budget task passes and
+retries remain unavailable; T-303/T-306 stay open. See the
+[queue evidence](t303-raw-source-build-queue-block-2026-11-19.md) for retirement,
+resumption, input authentication and verification limits.
