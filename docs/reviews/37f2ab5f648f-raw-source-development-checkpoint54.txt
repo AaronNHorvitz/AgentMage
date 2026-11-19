@@ -1,0 +1,159 @@
+Commit: 37f2ab5f648f65bc0038305e78871e9a646b955a
+Scope: raw-source-development-checkpoint54
+
+# Independent review: frozen raw-source development checkpoint 54 (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. This is a same-model review.
+Base: 8fe3b1f8e30222b7fb7e54bb689ad87046c2676d. Frozen product source: eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f.
+Capsule: /lane/reviews/raw-source-development-checkpoint54-20261119.
+
+## Methods
+
+I worked only in /lane/review-checkout, with `CARGO_TARGET_DIR=/lane/state/review-target`. I did not modify
+the repository, use the GPU, run inference or execute candidate code.
+
+I read:
+
+- the complete reporting diff (5 files);
+- the capsule's verify.py, reproduce.py, work/audit.py, work/write-reports.py, work/cleanup.py and
+  work/launch.py, each diffed against its counterpart in the prior capsule;
+- work/audit.json, work/delta.json, cleanup.json, launch.json, controller-exit.json,
+  token-retirement-receipts.json and the postcommit JSON;
+- every raw record of the three new jobs (gemma4-31b-08, qwen35-27b-08, gpt-oss-08): upstream request,
+  response and capture, record.json, checked.json, backend-slice.log, batch.json, batch-report.json and
+  api-exit.json.
+
+I recomputed every published number from those raw bytes.
+
+## Commands and results
+
+- `git rev-parse HEAD`: 37f2ab5f648f65bc0038305e78871e9a646b955a. `git status --porcelain`: empty.
+  `git diff --check 8fe3b1f8…`: exit 0.
+- `git diff --stat 8fe3b1f8…` shows 5 files:
+  - README.md (1 line, Measured coding row only);
+  - TASKS.md (new paragraphs, plus the usual one-line "was required when recorded" update to the
+    checkpoint-48 paragraph, the same pattern as the previous commit);
+  - docs/evidence/coding-scoreboard.md (append only, no removed lines);
+  - new docs/evidence/t303-raw-source-checkpoint54-2026-11-19.md;
+  - new docs/reviews/8fe3b1f8e302-raw-source-development-checkpoint48.txt.
+
+  No product source changed.
+- The retained review docs/reviews/8fe3b1f8e302-raw-source-development-checkpoint48.txt is byte-identical
+  (`diff`) to /lane/reviews/8fe3b1f8e302-raw-source-development-checkpoint48.md.
+- Capsule hashes all match the request:
+  - manifest.json: 56d0dfab…8af
+  - bindings.json: 6aae7a83…5f5
+  - postcommit JSON: d7fc91ec…2899
+
+  The manifest lists 272,423 files. The capsule holds 272,425 regular files: those plus manifest.json and
+  bindings.json. The postcommit JSON's five public-file SHA256 values equal those of the committed files.
+- `bash /tools/build-slot python3 -B …/verify.py`: `{"status": "PASS", "attempts": 54, "remaining": 126,
+  "source_commit": "eef17dbd…", "postcommit_checked": true, "task_scores": null,
+  "complete_prior_capsule_authenticated": true}`, exit 0. This matches the request.
+- `bash /tools/build-slot python3 -B …/reproduce.py`: `{"status": "PASS", "contexts": 30, "prior_checks": 161,
+  "new_checks": 51, "generation_refusals": 3, "attempt_records": 54, "helper_sha256": "4aea9726…1f53",
+  "candidate_execution": false, "model_inference": false}`, exit 0. This matches the request.
+  - The helper copied from the inputs objects is asserted equal to the frozen-inputs hash 4aea9726…1f53.
+  - The named helper source entry object 8f2481c7…7ed hashes to its own name.
+- Node: SHA256 of /lane/reviews/42612ca9787f-a4b-node is d1de76d8…932c (verified), and the licence file is
+  present. I ran a private copy at /lane/state/tmp/rv54bin/node (v24.15.0).
+- `python3 -B scripts/local_agent_fast_gate.py --base 8fe3b1f8… --timeout 3600`: FAST GATE: PASS. It ran the
+  diff check, untracked lint, private path check, licence policy and review lint, and markdownlint found
+  0 issues in 4 files.
+- `node …/work/render.mjs`: PASS, 0 issues, 4 files rendered.
+- `python3 -B scripts/private_host_paths.py --base 8fe3b1f8…`: PASS.
+- `python3 -B scripts/license_policy.py`: PASS.
+- Manual grep of the added lines for home paths, the user name, host names, credentials and other
+  agent-product names found none. The only matches were the generic words "token"/"host build wrapper", the
+  model profile names already accepted in earlier lines, and the reviewer self-identification inside the
+  retained review. A private home path does appear in the capsule's launch.json, which is not committed.
+
+## Independent checks of the claims
+
+- **Six new attempts (dev-009 and dev-010 on gemma4-31b, qwen35-27b and gpt-oss).**
+  - In the raw records, five attempts are `ungraded-proposal`: checked.json holds `changes` and
+    candidate_is_base_fallback is false.
+  - gpt-oss dev-010 is `strict-edit-refused`, with checked.json `{"error": "code.proposal.edit"}` and a
+    base fallback.
+  - That gives 2/2, 2/2 and 1/2. The cumulative totals recomputed from all 54 audit details are gemma4-31b
+    8/10, qwen35-27b 10/10, gpt-oss 2/10, muse 4/8, gemma4-e4b 0/8 and gemma4-26b-a4b 4/8. They match
+    README, TASKS, the scoreboard and the evidence file.
+  - verify.py asserts that the 48 earlier audit details are unchanged.
+- **Tokens.** Upstream `usage`, summed per model:
+  - gemma4-31b: 3220+4099=7319 in, 194+329=523 out.
+  - qwen35-27b: 2845+3736=6581 in, 204+821=1025 out.
+  - gpt-oss: 2697+3591=6288 in, 2175+12083=14258 out.
+
+  Each backend `prompt eval` line equals its preflight count. Each `stop processing: n_tokens` equals
+  prompt+completion−1 (3413, 4427, 3048, 4556, 4871, 15673), with truncated = 0, and every finish_reason is
+  `stop`. Counter coverage is 2/2 for all three models, so no table cell needs the partial-coverage marker
+  that write-reports.py now adds (prior L2). The "does not fit" count is 0.
+- **Response fields.** gemma4-31b and qwen35-27b return content only. gpt-oss returns content plus
+  non-empty `reasoning_content`, as reported. The documents correctly say that response fields alone do
+  not prove an absence of internal reasoning.
+- **Budgets.**
+  - Every new request has `max_tokens` = 32768 − preflight − 32: 29516, 28637, 29891, 29000, 30039 and
+    29145. Over all 54 records no budget violates the formula.
+  - All 54 wire requests share one system-message hash and one response_format hash, and all send
+    `chat_template_kwargs.enable_thinking=false`.
+  - Each task's context.json is identical across models (one hash for each of dev-001…dev-010).
+- **Timing.**
+  - Request plus strict-check seconds per model: 35.696+14.259=49.955, 19.248+23.393=42.641 and
+    16.722+62.952=79.674.
+  - Reserved-job GPU minutes: reserved_work_seconds/60 = 1.668, 1.157 and 1.724.
+  - Controller wall time runs from launch 11:41:51.372Z to exit 11:47:29.411Z, which is 338.039 s, as
+    reported.
+  - Sampled peak GPU use (19768, 18105 and 13654 MiB) stays below the 22,528 MiB guard.
+- **Launcher.** It differs from the previous launcher only in BASE and the allowed-path set.
+  - `git diff --name-only eef17dbd 8fe3b1f8` gives exactly 23 paths, all under docs/ or README/TASKS. This
+    equals the asserted set.
+  - The wrapper hashes (build-slot 35416996…, gpu-slot 9804180e…) are equal to the previous launch and to
+    the current /tools files.
+  - wrapper_environment has all three fields null, BUILD_SLOT4_MIN_AVAIL_KB included.
+  - scope_limits are 16 GiB max, 4 CPUs and 1 GiB swap. nice is 19 and priority is low.
+  - The snapshot holds 9,760 files and is bound read-only.
+- **Unchanged controller and inputs.** controller.py, batch.py, collect.py, policy.json and
+  frozen-inputs.json are byte-identical (`cmp`) to the prior capsule. The verify.py, reproduce.py,
+  audit.py and cleanup.py diffs are mechanical (base, nesting depth, counts and the added checkpoint-42
+  receipt check), and no check is weakened. audit.py is unchanged.
+- **Cleanup.**
+  - cleanup.json has status PASS with 27 completed pairs and 6 retired tokens. It records settings revoked,
+    API and model reaped, keys and sockets absent, no live owned processes and no foreign signal.
+  - Every new api-exit.json shows exit −15 and reaped. Every batch-report shows settings_revoked and
+    status completed.
+  - Across the capsule there are 54 distinct token receipts (48 earlier and 6 new).
+- **Evaluation integrity.**
+  - All new batch.json files have split=development and held_out_executed=false.
+  - The audit records hidden_or_held_out=false, candidate_execution=false and task_passes=null.
+  - No tuning change exists between batches, since the frozen inputs are byte-identical.
+  - The one refusal is counted, not dropped, and the earlier Muse timeout stays preserved without invented
+    counters.
+- **MEASURE FIRST.** The scoreboard has a dated line for this batch with context and output budgets,
+  observed tokens, timing, GPU-minutes and causes. Changed budgets: none.
+- **Honest labelling.** The reports say these are ungraded proposals from a partial path, make no
+  solved-task or qualification claim, and keep T-303/T-306 open.
+- **README order.** Only the Measured coding row changed, and the independence paragraph is untouched.
+- **Prior lows.**
+  - L1: the request's expected outputs (54/126, 51 strict checks, 3 refusals) now match the script output.
+  - L2: the coverage marker is implemented in write-reports.py, and earlier lines are unchanged.
+
+## Limitations
+
+My sandbox has its own PID namespace and /lane/state/rs1 is not mounted. I therefore could not see the
+builder's processes myself, or confirm that the token files and sockets are gone. The claims of no live
+owned process and of tokens being removed rest on the authenticated cleanup.json, api-exit.json and
+batch-report.json records and on the cleanup.py logic I read. No required run was missing.
+
+## Findings
+
+No critical, high, medium or low findings.
+
+## Per-row result
+
+- T-303/T-306 (non-closing frozen development measurement, attempts 49–54): reporting increment accepted.
+  - Every number traces to the raw records.
+  - Frozen inputs, controller and the earlier 48 attempts are preserved.
+  - Wrappers, limits and measured variables are unchanged.
+  - No row closes, and T-303/T-306 remain open.
+
+Verdict: PASS
