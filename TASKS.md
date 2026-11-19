@@ -2,6 +2,16 @@
 
 ## Active queue: local agent mission
 
+The [independent raw-source presentation review](docs/reviews/d9bbbd25fb0b-raw-source-presentation.txt)
+returns **Verdict: PASS** for exact `d9bbbd25fb0b3be4d21c731a0078a5cd7762a262`,
+with no critical, high or medium findings. Its report is retained unchanged;
+it accepts that preceding source and first-pair batch only. No row closes.
+Three low findings join T-309: label the raw source context after repair
+feedback in a later measured batch; test the boundary where the retained
+JSON-sized selection allowance binds; and separately count header-like-source
+refusals when analysing the completed repeat. None changes this frozen repeat.
+The new six-attempt checkpoint still requires independent core review.
+
 The [frozen raw-source six-attempt checkpoint](docs/evidence/t303-raw-source-checkpoint6-2026-11-19.md) adds four development
 attempts. The repeat reaches 6/180 attempted, with 174 remaining before tuning
 or capability work. Cumulative strict ungraded proposals: gemma4-31b 2/2; qwen35-27b 2/2; gemma4-26b-a4b 1/2.

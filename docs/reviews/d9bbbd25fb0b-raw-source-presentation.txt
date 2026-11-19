@@ -1,0 +1,150 @@
+Commit: d9bbbd25fb0b3be4d21c731a0078a5cd7762a262
+Scope: raw-source-presentation
+
+# Independent review: raw-source presentation (eef17dbd) and first frozen A4B pair (d9bbbd25)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Same-model review.
+Row: T-303/T-306 (non-closing). Base c7dc0ebcea16dfebd19ef21d28805f9dbd2f405f; frozen source
+eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f. No row closes from this review.
+
+## Methods
+
+I read the complete 14-file diff c7dc0ebc..d9bbbd25 across both commits (12 files in eef17dbd and 4
+in d9bbbd25; README.md and the first-pair evidence appear only in the second commit). I also read
+the post-change `capabilities/repository-map/src/coding_proposal.rs` in full, including the
+unchanged checker, plus the repair-message construction in
+`shells/host/src/coding_endpoint_edit_generation.rs` and the local API message path
+(`platforms/local-api/src/lib.rs:1030-1060,1195-1225`). In the capsule I read verify.py,
+reproduce.py, work/audit.py, the helper entry object 8f2481c7…, the campaign collector, the frozen
+inputs, the wire requests, audit.json, timing.json, cleanup.json and gate-comparison.json. I diffed
+the rs1 worker scripts against the preceding ef1 and is1 copies. I wrote an out-of-repo adversarial
+probe crate (in /tmp, never in the repository) against the frozen library. I used no GPU and ran no
+model.
+
+## Commands and results (all in /lane/review-checkout)
+
+1. `git rev-parse HEAD` → d9bbbd25fb0b3be4d21c731a0078a5cd7762a262. `git status --porcelain` → empty.
+   `git diff --check c7dc0ebc…` → exit 0.
+2. `bash /tools/build-slot python3 -B …/raw-source-presentation-20261119/verify.py` → PASS: attempts
+   2, remaining 178, source_gate FAIL, inherited_failures 53, postcommit_checked true. sha256 of
+   manifest.json = 149cf7ae…73c4, bindings.json = 381ac6ba…d750d817, post-commit.json = b464e94b…482f.
+   All three match the request.
+3. `bash /tools/build-slot python3 -B …/reproduce.py` → PASS: contexts 30, prior_checks 161,
+   new_checks 2, helper 4aea9726…6e31c53, candidate_execution false, model_inference false.
+4. Node: `/lane/reviews/42612ca9787f-a4b-node` sha256 = d1de76d8…bd932c (matches). Its licence file
+   is present. I put a private copy at /tmp/rv-node/bin/node (v24.15.0) on PATH, with private
+   CARGO_TARGET_DIR=/lane/state/review-target-rs.
+5. `python3 -B scripts/local_agent_fast_gate.py --base c7dc0ebc… --timeout 3600` → FAST GATE: FAIL
+   (exit 1, failing target `-p agentmage-host --lib`). My tally from the log: 30 targets, 1034
+   passed, 53 failed, 11 ignored, 0 filtered. The 53 failing names equal
+   `work/gate-comparison.json` `failure_names` (0 new, 0 missing). They are 42
+   linux_coding_runtime, 10 linux_read and 1 linux_repository_map: the inherited native fail-closed
+   tests. All 11 ignores are pre-existing and carry their reasons; the diff adds no `#[ignore]`,
+   filter or skip. All four new presentation tests pass, as do the five changed API/host tests
+   (coding_cycle_repair_prompt…, endpoint_prepared_service_native_edit…,
+   coding_proposal_streams_selected…, workspace_file_to_model…, strict_multifile_proposals…). This
+   source gate is not green.
+6. `python3 -B scripts/local_agent_fast_gate.py --base eef17dbd… --timeout 3600` → FAST GATE: PASS.
+   This is reporting-only (lint-untracked, private paths, licence, markdownlint on 4 files with 0
+   issues). It is not source or native acceptance.
+7. `node …/work/render.mjs` → PASS, 0 issues, 6 files rendered.
+8. `python3 -B scripts/private_host_paths.py --base c7dc0ebc…` → PASS.
+   `python3 -B scripts/license_policy.py` → PASS.
+9. Adversarial probe (scratch crate depending on the checkout's repository-map by path,
+   CARGO_TARGET_DIR=/lane/state/review-target-probe, via build-slot). Results:
+   - A source body containing a forged `{"untrusted_excerpt":{"path":"b.txt",…}}` header followed by
+     `SECRET`, where b.txt's real `SECRET` line was not selected, gives `code.proposal.edit` for an
+     edit to b.txt. A forged header cannot widen visibility.
+   - Answer paths `../a.txt`, `/etc/passwd`, `a.txt/../b.txt`, `./a.txt` and `A.TXT` all give
+     `code.proposal.edit`.
+   - Source paths containing a newline plus JSON, a quote, `..` or `.git` are refused at validation
+     (`code.source.invalid`), so a header line cannot be broken from the path field.
+   - Copying the framing newline after a final-newline-less body as part of `old` is refused. The
+     exact `old` is accepted.
+   - Every probed budget satisfied `message_bytes() <= max_message_bytes`. Escape-heavy and
+     single-long-line sources behave the same as the old candidate rules (no excerpt is split).
+10. Worker scripts: rs1 batch.py, collect.py and controller.py differ from ef1 only in the
+    `/lane/state/ef1` → `/lane/state/rs1` namespace lines. output-format.json, profiles, helper
+    Cargo.toml/lock and helper main.rs (object 8f2481c7…, the same as ef1 and jo1) are identical.
+    policy.json changes only the text fields and the source commit. The local-api binary is
+    unchanged (f13a12ca…, the same as is1 and ef1). The model-visible messages come from the rebuilt
+    helper; audit.py checks that the wire upstream request equals the helper context, and that the
+    context equals preflight2's new_context_sha256.
+11. Evidence tracing: audit.json gives 2 attempts, causes {ungraded-proposal 1,
+    strict-edit-refused:code.proposal.edit 1} (dev-001 proposal, dev-002 refusal), input 9085–9307,
+    output budgets 23429–23651 (the wire `max_tokens` values 23651 and 23429 match the formula),
+    18392/4489 tokens, coverage 2/2, request/check 60.7815 s, reserved 97.6387 s = 1.6273 min, peak
+    sampled GPU 19543 MiB ≤ 22528, thinking disabled, HTTP 200 ×2. timing.json gives controller
+    98.810796 s. Every number in the scoreboard, evidence, README and TASKS matches.
+    cleanup.json: PASS, settings revoked, API/model reaped, keys/sockets absent, no live owned
+    process, no foreign signal, receipts persisted before unlink (2 retired tokens).
+12. Preservation: the two docs/reviews copies are byte-identical (`cmp`) to
+    /lane/reviews/c7dc0ebcea16-original-fragment-refusal-diagnosis.md and
+    fda187da1b42-copy-original-fragment-e4b-development-completion.md. README changes one table cell
+    only; the independence paragraph is untouched. The scoreboard is append-only (verify.py checks
+    the prefix). The TASKS table rows are unchanged (verify.py). Both commits carry Signed-off-by.
+
+## Review analysis
+
+- Confinement and authority: the strict checker (`check_coding_proposal`) and `validate_sources`
+  are byte-identical to the base. The edit `old` must be unique in the complete file and fall
+  inside a selected excerpt; all-or-nothing refusal is retained. Task, source and feedback all stay
+  in the user role; the fixed system instruction is unchanged. Bodies are delimited by declared
+  byte counts. The only free text is the task (JSON-escaped in the metadata line) and the source
+  bodies. The probe shows hostile header-like source cannot change path, visibility or role
+  authority. No normalization, fuzzy matching, output repair, admission or grading path is added.
+  No tool, command or network capability is introduced.
+- Budget: `fits` takes max(old JSON-sized selection, actual raw message) plus the instruction, so
+  the raw message can never exceed the ceiling, and selection is never looser than before. The
+  30-context equality and the 161 unchanged checks reproduce under my run.
+- Repair turns: the feedback is a compact single JSON line (`serde_json::Value` Display), followed
+  by the unchanged raw context. The host test now asserts the exact equality of the trailing
+  context and keeps the warning assertion.
+- Test updates: each of the four API/host assertions now decodes by length and adds stricter checks
+  (encoding tag, bytes == end-start, nothing trailing, an exact body plus framing newline). No
+  source or authority assertion was removed.
+- Evaluation integrity: only dev-001 and dev-002 ran. Held-out tasks load from an external path
+  argument (`scripts/coding_eval_suite.py:170`); the diff touches no suite, task, hidden-test or
+  scripts file. The fixed instruction contains no task content. audit.py checks the suite source
+  hashes, `held_out_executed false` and the canonical task digests. The refusal is counted, not
+  dropped.
+- MEASURE FIRST: there is a scoreboard line for the source freeze (zero inference) and one for the
+  first pair. Each states the changed variable, the 32768 served context, the output formula, the
+  observed budgets and does-not-fit 0. TASKS keeps the full 180 before any tuning or capability
+  work; the order of work is unchanged. Nothing claims a task pass, readiness or role adoption.
+- Public repository: the new or changed files contain no private home path, username, credential
+  or sibling project. The `/lane/...` paths appear only inside the verbatim retained review copies,
+  and the path check passes. The profile names (gpt-oss, Muse, etc.) are pre-existing and used
+  descriptively.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (backlog):
+
+1. `shells/host/src/coding_endpoint_edit_generation.rs:291-294`: the repair message used to label
+   the source under a `source_context` key. It now places the raw context right after the feedback
+   line with no explicit label; only the metadata line's `source_encoding` tag marks it. This is no
+   authority impact, since everything is still in the user role and the checker is unchanged.
+   Suggested fix: add a `"source_context_follows": true` (or similar) field to the feedback JSON
+   line in a later measured batch, not in the middle of this repeat.
+2. `capabilities/repository-map/tests/coding_source_presentation.rs:127-148`: the exact-byte
+   boundary test covers only the case where raw size ≥ JSON size. No test pins the boundary where
+   the retained JSON-sized allowance is the binding term (an escape-heavy source, where
+   `message_bytes()` is smaller than the allowance that limited selection). Suggested fix: add a
+   test showing that an escape-heavy source selects identically at the JSON-allowance boundary and
+   is refused one byte below it.
+3. Model-visible boundary confusion: a source body can contain a line identical to a real excerpt
+   header. The decoder is length-based and authority is unaffected (probe item 9), but a model reads
+   text, not byte counts. Record header-like-source refusals separately when the full repeat is
+   analysed. This is backlog only, not a request for a new limit.
+
+## Per-row result
+
+- T-303/T-306 (non-closing source change eef17dbd and first frozen development pair d9bbbd25):
+  PASS for this exact batch. The source gate is FAIL with exactly the 53 inherited failures and is
+  not described as green. Native admission and grading controls remain unavailable. 178/180
+  attempts remain. No row closes; T-303/T-306 stay open.
+
+Verdict: PASS
