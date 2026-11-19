@@ -1,0 +1,143 @@
+Commit: 1502e631e7b8ef08979430ec4d8de19ccf7f1b82
+Scope: raw-source-development-checkpoint66
+
+# Independent review: frozen raw-source development checkpoint at 66/180 attempts
+
+Reviewer: independent same-model session, read-only, run in the pinned checkout /lane/review-checkout.
+Row: T-303/T-306. This is a non-closing development measurement on the reporting diff
+b1ddd7ab9a3ae3575f703e41fde1004225f1afb5..1502e631e7b8ef08979430ec4d8de19ccf7f1b82. The frozen product
+source is eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f.
+
+## Methods
+
+I read the brief sections MEASURE FIRST and REFOCUS, the complete reporting diff (four files: README.md,
+TASKS.md, docs/evidence/coding-scoreboard.md and the new docs/evidence/t303-raw-source-checkpoint66-2026-11-19.md),
+and these capsule scripts: verify.py, reproduce.py, work/audit.py, work/write-reports.py, work/cleanup.py,
+work/launch.py, the diff of launch.py against prior/work/launch.py, and campaign/controller.py.
+
+I then re-derived every published number from the raw captures in campaign/jobs/{gemma4-31b-10,qwen35-27b-10,gpt-oss-10}.
+I used no GPU and ran no inference or candidate code.
+
+## Commands and results
+
+1. Commit and tree state:
+   - `git rev-parse HEAD` returned 1502e631e7b8ef08979430ec4d8de19ccf7f1b82.
+   - `git status --porcelain` was empty before and after all runs.
+   - `git diff --check b1ddd7ab…` exited 0.
+   - Capsule hashes: manifest.json 27d52737…b947, bindings.json e037a9c8…748b and post-commit.json aa9e1e88…cdb914.
+     All three match the request.
+2. `bash /tools/build-slot python3 -B …/verify.py` returned PASS: attempts 66, remaining 114,
+   postcommit_checked true, complete_prior_capsule_authenticated true. It took 2m26s.
+3. `bash /tools/build-slot python3 -B …/reproduce.py` returned PASS: contexts 30, prior_checks 161,
+   new_checks 63, generation_refusals 3, attempt_records 66, helper 4aea9726…6a31c53,
+   candidate_execution false, model_inference false.
+4. Node binary:
+   - /lane/reviews/42612ca9787f-a4b-node has SHA256 d1de76d8…bd932c, as expected.
+   - Its licence file is present.
+   - I installed a private copy (mode 0700) at /tmp/rv66/bin/node and put it first on PATH. It reports v24.15.0.
+5. Reporting gates:
+   - `python3 -B scripts/local_agent_fast_gate.py --base b1ddd7ab… --timeout 3600` returned FAST GATE: PASS.
+     That run includes the private path check PASS, the licence policy PASS and markdownlint with 0 issues in 4 files.
+   - `node …/work/render.mjs` returned PASS with 0 issues; all four files rendered with non-zero output.
+   - `python3 -B scripts/private_host_paths.py --base b1ddd7ab…` returned PASS.
+   - `python3 -B scripts/license_policy.py` returned PASS.
+
+## Independent checks against raw records
+
+- **Tokens.** I checked each upstream-response-NN.bin against its capture SHA256. Summing usage.prompt_tokens and
+  usage.completion_tokens gives the published totals:
+  - gemma4-31b 9326 / 5029
+  - qwen35-27b 8476 / 8499
+  - gpt-oss 7986 / 39473
+
+  These match audit.json, which takes them from the backend-log counters. Coverage is 2/2 for each profile.
+- **Output budgets.** For all six requests, max_tokens equals min(32768, 32768 − prompt − 32):
+  26495, 29651, 27064, 29932, 27464 and 30022. The published input and budget ranges match.
+- **Request parameters.** All 66 upstream requests in the campaign share:
+  - one system message;
+  - one parameter set apart from model and max_tokens: non-streaming, n=1, the strict schema and enable_thinking=false.
+
+  Across all 33 jobs, the API, launcher, policy, preparation, profile and runtime-manifest hashes each take
+  a single value. Peak sampled GPU use over all jobs is 20,816 MiB, below the 22,528 MiB guard. For the
+  three new jobs, settings_revoked is true, server_exit_code is −15 and resource_guard_error is null.
+- **Timing.**
+  - Request and check seconds are sums of generation_seconds: 123.308+75.089=198.397, 126.225+104.740=230.966
+    and 79.763+140.593=220.356.
+  - GPU minutes are reserved_work_seconds/60: 269.472→4.491, 272.552→4.543 and 243.870→4.064.
+  - Controller wall time is 12:53:09.176 − 12:32:28.527 = 1240.649 s.
+- **Causes.**
+  - All six responses have finish_reason stop and HTTP status 200.
+  - qwen35-27b dev-011 is the only strict ungraded proposal.
+  - The other five return `{"error":"code.proposal.edit"}`. I inspected the answers; the refusals are genuine
+    edit faults. For example, gpt-oss dev-012 has an edit whose `old` text exists only after its own previous
+    edit, and gemma4-31b dev-011 anchors on a non-unique blank-line sequence. reproduce.py re-derives every
+    checked.json with the authenticated helper.
+  - "Does not fit: 0" is correct. The frozen collector emits `does-not-fit` only when the reserve is below 1
+    (campaign/collect.py:46), rendered inputs are at most 6,241 tokens, and there is no context-exhausted termination.
+  - The gpt-oss response field reasoning_content is non-empty, and the evidence says correctly that response
+    fields do not establish an absence of reasoning.
+- **Cumulative counts.**
+  - The previous counts were 8/10, 10/10 and 2/10.
+  - Adding 0/2, 1/2 and 0/2 gives 8/12, 11/12 and 2/12. Muse 6/10, E4B 2/10 and A4B 5/10 are unchanged.
+  - These match audit.json, README, TASKS, the scoreboard and the evidence file.
+  - In audit.json, the 60 earlier detail rows are identical to the prior audit (asserted by verify.py).
+- **Launcher.**
+  - work/launch.py differs from the prior launcher only in BASE and the allowed-path set. That set equals exactly
+    the 27 paths of `git diff --name-only eef17dbd b1ddd7ab`; I checked it with a literal evaluation.
+  - launch.json differs from the prior launch only in head, launcher_sha256, pid, start_ticks and utc.
+  - wrapper_environment is all null, including BUILD_SLOT4_MIN_AVAIL_KB. Nice is 19, priority low and
+    scope_limits are unchanged.
+  - The gpu-slot hash 9804180e… equals both the retained bytes and the live /tools/gpu-slot.
+- **Cleanup.**
+  - cleanup.json reports PASS, 33 completed pairs, 6 retired tokens, receipts persisted before unlinking and
+    no live owned process.
+  - cleanup.py checks all sixty earlier receipts (6×9 + 2 + 4) as already absent.
+  - /lane/state/rs1 is not mounted in the reviewer sandbox, so I could not re-check token or socket absence
+    live; I rely on the recorded cleanup.json and its script.
+  - The only process matching agent or controller names is this reviewer's own sandbox.
+- **Preservation and privacy.**
+  - The README diff is one table cell. The independence paragraph is present and unchanged.
+  - Agent-Scaffolding-Inventory.md, LICENSE*, NOTICE, CONTRIBUTING.md and docs/decisions have no diff.
+  - verify.py asserts that the TASKS table lines are unchanged and that the earlier scoreboard bytes are a prefix.
+  - No added line contains a private path, user name, host name, credential or other-product name.
+  - Decision 0213, which the evidence links to, exists.
+- **Prior review status.** /lane/reviews/b1ddd7ab9a3a-raw-source-development-checkpoint60.md was written at
+  07:09 local, after this commit at 06:58 local. Saying that no verdict is inferred for the preceding
+  checkpoint is therefore accurate.
+- **Evaluation integrity.**
+  - Only development tasks dev-011 and dev-012 ran.
+  - In every record, graded is false, retries is 0 and native_coding_harness is false.
+  - audit.py asserts `split=='development'` and `held_out_executed is False` for every batch summary.
+  - No held-out, hidden or candidate code executed, and nothing was tuned mid-repeat.
+  - The MEASURE FIRST line is present with budgets, timing, GPU minutes and causes.
+
+## Findings
+
+1. **Low (backlog, T-309).** The build-wrapper provenance does not cover a host change in the middle of the
+   campaign.
+   - **Where:** campaign/controller.py:30 and work/launch.json.
+   - **What happened:** the controller calls `/tools/build-slot` again for every pair, but the wrapper hash is
+     recorded only once, at launch (12:32:28 UTC, 35416996…). The live host wrapper is now 4061f0e6…, modified
+     at 12:47:28 UTC; the new version adds guarded fifth and sixth slots. The gpt-oss pair started at about
+     12:49 UTC, after that change.
+   - **What is unknown:** whether the builder's sandbox saw the old or the new inode. The gpt-oss reservation
+     log reads "plus 2", the same as the old wrapper, but that is also what the new wrapper prints when
+     heavy5/heavy6 are not bound. So "exact wrapper bytes retained" is proven only for the bytes at launch.
+   - **Impact:** this is host-side CPU build scheduling. It changes no model input, budget, GPU guard or lane
+     limit, and no published number depends on it.
+   - **Fix (backlog):** record the wrapper hash in each pair's reservation log or batch report. The next
+     checkpoint should state the new host wrapper hash and the time it changed.
+
+No critical, high or medium findings.
+
+## Per-row result
+
+T-303/T-306, frozen development checkpoint at 66/180 attempts: PASS for this reporting increment.
+
+- The reported numbers trace to raw captures and reproduce with the authenticated effect-free helper.
+- Frozen inputs, controller and all 60 earlier attempts are preserved.
+- Measured variables and the GPU wrapper are unchanged.
+- No row closes, and T-303/T-306 remain open.
+- The one low finding goes to the T-309 backlog.
+
+Verdict: PASS

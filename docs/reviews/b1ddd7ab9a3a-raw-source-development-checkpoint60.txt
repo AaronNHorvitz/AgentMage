@@ -1,0 +1,126 @@
+Commit: b1ddd7ab9a3ae3575f703e41fde1004225f1afb5
+Scope: raw-source-development-checkpoint60
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. This is a same-model review.
+Row: T-303/T-306, a frozen development measurement that closes no row. Tier: core.
+Base: 37f2ab5f648f65bc0038305e78871e9a646b955a. Frozen product source: eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f.
+
+## Methods
+
+I ran every command in the pinned checkout /lane/review-checkout with
+CARGO_TARGET_DIR=/lane/state/review-target. Heavy scripts went through
+/tools/build-slot. I did not modify the repository. I did not use the GPU or run
+inference, candidate code, hidden tests or held-out tests.
+
+I read the complete reporting diff and these capsule scripts: verify.py,
+reproduce.py, work/audit.py, work/launch.py (compared with prior/work/launch.py)
+and work/render.mjs. I also read work/delta.json, work/cleanup.json and
+work/launch.json. I then recomputed every reported number from the raw job files.
+
+## Commands and results
+
+1. `git rev-parse HEAD` printed b1ddd7ab9a3ae3575f703e41fde1004225f1afb5. `git status --porcelain` was empty.
+   `git diff --check 37f2ab5f…` exited 0.
+   The diff against the base touches 5 files: README.md, TASKS.md, docs/evidence/coding-scoreboard.md,
+   docs/evidence/t303-raw-source-checkpoint60-2026-11-19.md and
+   docs/reviews/37f2ab5f648f-raw-source-development-checkpoint54.txt.
+   The diff from the frozen source to HEAD outside README, TASKS, docs/evidence and docs/reviews is empty,
+   so no product source changed.
+2. Capsule hashes match the request:
+   - manifest.json: 9ec15e1a…c334c9
+   - bindings.json: 31f0e22c…f876b5
+   - post-commit.json: 8fcea9e9…a411aa
+   The manifest lists 316,084 files. The directory holds 316,086, which is those
+   files plus manifest.json and bindings.json, exactly what verify.py asserts.
+   The helper object 4aea9726… is an ELF executable whose SHA256 matches its name.
+   It is the hash bound in frozen-inputs.json and preflight2.json. The named
+   "helper source entry" 8f2481c7… is the Rust source of the helper, and its SHA256 also matches.
+3. `bash /tools/build-slot python3 -B …/verify.py` printed
+   `{"status":"PASS","attempts":60,"remaining":120,"postcommit_checked":true,"complete_prior_capsule_authenticated":true,…}`.
+4. `bash /tools/build-slot python3 -B …/reproduce.py` printed
+   `{"status":"PASS","contexts":30,"prior_checks":161,"new_checks":57,"generation_refusals":3,"attempt_records":60,"candidate_execution":false,"model_inference":false}`.
+5. The node binary at /lane/reviews/42612ca9787f-a4b-node has SHA256 d1de76d8…bd932c, which matches.
+   Its licence file is present. I installed a private copy with mode 700 as `node` on PATH; it reports v24.15.0.
+   - `python3 -B scripts/local_agent_fast_gate.py --base 37f2ab5f… --timeout 3600` returned FAST GATE: PASS.
+     That covers diff check, untracked lint, private paths, licence, review lint, and
+     markdownlint with 0 issues in 4 files.
+   - `node …/work/render.mjs` returned PASS with 0 issues; all 4 files rendered with non-zero output.
+   - `python3 -B scripts/private_host_paths.py --base 37f2ab5f…` returned PASS.
+   - `python3 -B scripts/license_policy.py` returned PASS.
+
+## Independent checks against raw records
+
+- **Tokens.** For campaign/jobs/{muse-08,gemma4-e4b-08,gemma4-26b-a4b-08}, I verified each
+  upstream-response-NN.bin against its capture hash. Summing usage.prompt_tokens and
+  usage.completion_tokens gives the published totals:
+  - muse 6138 / 9306
+  - gemma4-e4b 7311 / 1690
+  - gemma4-26b-a4b 7319 / 553
+
+  These match the backend-log counters in audit.json and delta.json. Preflight input
+  equals backend prompt tokens for every attempt.
+- **Output budgets.** For all six new requests, max_tokens equals
+  min(32768, 32768 − rendered input − 32): 30124, 29210, 29520, 28641, 29516 and 28637.
+- **Request parameters.** All 60 upstream requests in the campaign have the same parameters
+  apart from model and max_tokens: non-streaming, n=1, the strict coding_edits_v1 schema and
+  enable_thinking=false. All 60 share the same system message, so nothing the model sees
+  changed mid-repeat.
+- **Batch reports.** Across all 30 jobs, the API, launcher, policy, preparation, profile and
+  runtime-manifest hashes each take a single value. The peak sampled GPU use over all jobs is
+  20,816 MiB, below the 22,528 MiB guard.
+- **Timing.**
+  - Request and check seconds are the sums of generation_seconds: 55.64+189.54=245.18,
+    55.44+10.79=66.23 and 66.84+5.38=72.22.
+  - GPU minutes are reserved_work_seconds/60: 279.78→4.663, 80.87→1.348 and 137.55→2.293.
+  - Controller wall time is controller-exit utc minus launch utc: 12:17:47.753 − 12:00:18.549 = 1049.204 s.
+- **Causes.**
+  - gemma4-26b-a4b dev-010 has `generation_succeeded` false, `candidate_is_base_fallback`
+    true and checked.json `{"error":"code.proposal.edit"}`. The answer's replacement
+    text contains a stray quote. reproduce.py re-derives the same checker output with the
+    authenticated helper.
+  - The other five new attempts are strict ungraded proposals that stopped below their token limits.
+  - There are no context exhaustions, so "does not fit: 0" is correct.
+  - The muse dev-008 transport timeout is preserved with no response capture and is not counted in the token totals.
+- **Cumulative counts.** The previous counts were muse 4/8, gemma4-e4b 0/8 and gemma4-26b-a4b 4/8.
+  Adding 2/2, 2/2 and 1/2 gives 6/10, 2/10 and 5/10. The other profiles are unchanged at 8/10, 10/10
+  and 2/10. These match README, TASKS, the scoreboard and the evidence file.
+- **Launcher.** The launcher differs from the prior one only in BASE and the allowed-path set.
+  That set equals exactly the 25 paths in `git diff --name-only eef17dbd 37f2ab5f`.
+  In launch.json, wrapper_environment, nice 19, low priority, scope_limits and the
+  gpu-slot hash are unchanged. BUILD_SLOT4_MIN_AVAIL_KB is null. The build-slot hash
+  matches the retained wrapper bytes.
+- **Cleanup.**
+  - cleanup.json reports PASS with 6 retired tokens, 2 per new pair.
+  - The retained receipt chain holds 54 earlier receipts (8×6 + 4 + 2), giving 60 for 30 pairs.
+  - No token file or auth directory remains under /lane/state/rs1.
+  - The only process matching the controller, batch or API names is this review session,
+    whose prompt contains those names.
+- **Preservation.**
+  - The committed docs/reviews/37f2ab5f648f-raw-source-development-checkpoint54.txt is
+    byte-identical to /lane/reviews/37f2ab5f648f-raw-source-development-checkpoint54.md.
+  - The README independence paragraph is unchanged word for word.
+  - Agent-Scaffolding-Inventory, LICENSE*, NOTICE, CONTRIBUTING and docs/decisions have no diff.
+  - verify.py asserts that the TASKS table lines are unchanged and that the scoreboard's earlier bytes are a prefix.
+- **Privacy and branding.** In the added lines, the only model or vendor name is the
+  reviewer-attribution line in the retained review, a pattern accepted in earlier
+  checkpoints. No added line carries a private home path, username, hostname or credential.
+  The /lane/… paths are generic lane paths.
+- **Evaluation integrity.** Only development tasks dev-009 and dev-010 ran. In every
+  record, `graded` is false, `retries` is 0 and `held_out_executed` is false. No tuning
+  happened mid-repeat, and the scoreboard has the new line required by MEASURE FIRST
+  with budgets and causes stated.
+
+## Findings
+
+No critical, high, medium or low findings.
+
+## Per-row result
+
+T-303/T-306 frozen development checkpoint at 60/180 attempts: PASS for this reporting increment.
+
+- The reported numbers trace to raw logs and reproduce.
+- Frozen inputs, controller and all 54 earlier attempts are preserved.
+- Wrappers, limits and measured variables are unchanged.
+- No row closes, and T-303/T-306 remain open.
+
+Verdict: PASS
