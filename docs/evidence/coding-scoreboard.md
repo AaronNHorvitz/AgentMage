@@ -4838,3 +4838,50 @@ exact strict checker run. Native admission and original execution/grading
 controls remain unavailable; no effects, project tests, feedback, retries,
 candidate, hidden or held-out execution. No task score or model adoption.
 T-303/T-306 remain open.
+
+## Frozen raw-source repeat: seventy-eight-attempt checkpoint, 2026-11-19
+
+Frozen source: `eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f`.
+Reporting base: `8a072426097384fa893d040862dc3e966c734ae5`.
+
+| Date | New profile attempts | Context / output tokens | Recorded / total attempts | Strict ungraded proposals | First-attempt / within-budget passes | Observed input / output tokens | Request and strict-check seconds | Reserved-job GPU minutes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-19 | gemma4-31b | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 2/2 | Unavailable / unavailable | 16017 / 3171 | 143.412 | 3.370 |
+| 2026-11-19 | qwen35-27b | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 2/2 | Unavailable / unavailable | 14043 / 2807 | 95.131 | 2.155 |
+| 2026-11-19 | gpt-oss | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 0/2 | Unavailable / unavailable | 12911 / 41803 | 230.350 | 4.207 |
+
+No measured variable changes. The host build wrapper still offers up to six slots,
+with slots three through six guarded by 30/36/38/40 GiB available RAM; this changes scheduling, with exact wrapper
+bytes and checksum retained at launch; per-pair provenance remains T-309 backlog. Model inputs, GPU wrapper and lane limits are
+unchanged. The repeat is **78/180 attempted, 102 remaining**;
+cumulative strict ungraded proposals: gemma4-31b 10/14; qwen35-27b 13/14; gpt-oss 2/14; muse 6/12; gemma4-e4b 2/12; gemma4-26b-a4b 5/12.
+Finish all 30 tasks on all six profiles before tuning or capability work.
+
+gemma4-31b: causes `{"ungraded-proposal": 2}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+qwen35-27b: causes `{"ungraded-proposal": 2}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+gpt-oss: causes `{"generation-refused:error:chat.response.incomplete": 1, "strict-edit-refused:code.proposal.edit": 1}`; backend terminations `{"output-cap": 1, "stopped-below-token-limits": 1}`; response fields `{"content:absent-or-empty": 1, "content:nonempty": 1, "reasoning:absent-or-empty": 2, "reasoning_content:nonempty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+The earlier Muse dev-008 transport timeout remains preserved with no terminal
+usage. Its missing counters are not invented and the attempt is not rerun.
+The new attempts are reported separately from that earlier timeout.
+
+No new transport timeout was observed.
+
+Controller wall time including queues and two released pauses: 650.453 seconds.
+Body time excludes queues and is neither kernel nor full-reservation timing;
+preparation/reporting and end-to-end latency remain unmeasured. Exact settings,
+budgets and cleanup are in the [checkpoint evidence](t303-raw-source-checkpoint78-2026-11-19.md).
+Only Rust retrieval, credential-owning chat transport, local inference and the
+exact strict checker run. Native admission and original execution/grading
+controls remain unavailable; no effects, project tests, feedback, retries,
+candidate, hidden or held-out execution. No task score or model adoption.
+T-303/T-306 remain open.
+
+Checkpoint78 reporting correction: the first verification seal and failed log
+are retained unchanged. A provenance index was incorrectly treated as a complete
+capsule; the reporting helper now applies each artifact's contract. Full capsule
+inventories and every retained byte remain hash-bound. The audit, campaign,
+strict checks, model inputs, attempts and thresholds are unchanged; no inference
+or candidate execution was repeated.

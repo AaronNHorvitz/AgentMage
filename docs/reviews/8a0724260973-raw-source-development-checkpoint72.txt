@@ -1,0 +1,96 @@
+Commit: 8a072426097384fa893d040862dc3e966c734ae5
+Scope: raw-source-development-checkpoint72
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. This is a same-model review.
+Row: T-303/T-306, a frozen development measurement that closes no row. Tier: core.
+Base: 1502e631e7b8ef08979430ec4d8de19ccf7f1b82. Frozen product source: eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f.
+
+## Methods
+
+I worked in the pinned checkout /lane/review-checkout, which is clean at the exact commit. I read the full
+reporting diff (6 files, +437/−3), the capsule's verify.py, reproduce.py, work/audit.py, work/write-reports.py,
+work/cleanup.py and work/launch.py, and I diffed launch.py against the prior one. I also read the raw records,
+backend slices, upstream requests and responses, the event streams, launch.json, controller-exit.json and
+cleanup.json. Separately from the builder's audit, I wrote my own recount script over every raw record in the
+capsule and compared it with the published numbers. I used no GPU and ran no inference or candidate code. I
+modified nothing in the repository.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `git rev-parse HEAD` | `8a072426097384fa893d040862dc3e966c734ae5` |
+| `git status --porcelain` | empty |
+| `git diff --check 1502e631…` | exit 0 |
+| `bash /tools/build-slot python3 -B …/checkpoint72-20261119/verify.py` | PASS: attempts 72, remaining 108, postcommit_checked true, complete_prior_capsule_authenticated true (4m26s) |
+| `bash /tools/build-slot python3 -B …/checkpoint72-20261119/reproduce.py` | PASS: contexts 30, prior_checks 161, new_checks 67, generation_refusals 5, attempt_records 72, helper 4aea9726…, candidate_execution false, model_inference false |
+| `sha256sum` of bindings.json / manifest.json / post-commit.json | 2903da4a… / 4e8bb8a7… / 55d17aae…, as requested; bindings say 832931 files |
+| Node at /lane/reviews/42612ca9787f-a4b-node | sha256 d1de76d8… OK; licence file present; private copy v24.15.0 on PATH |
+| `python3 -B scripts/local_agent_fast_gate.py --base 1502e631… --timeout 3600` | FAST GATE: PASS. diff-check, untracked lint, private paths, licence, review lint and markdownlint all pass (0 issues in 4 files) |
+| `node …/work/render.mjs` | PASS, 0 issues, 4 files rendered |
+| `python3 -B scripts/private_host_paths.py --base 1502e631…` | PASS |
+| `python3 -B scripts/license_policy.py` | PASS |
+
+I ran no source suite, SBOM or long acceptance gate. This increment does not require them, and the evidence says
+the earlier source gate remains FAIL.
+
+## Independent checks
+
+- **Diff scope.** Only README.md (one table cell), TASKS.md (prose, no table rows), the appended scoreboard
+  section, the new evidence file and two retained review copies change. Neither review copy differs by a single
+  byte (`cmp`) from /lane/reviews/1502e631e7b8-…-checkpoint66.md and /lane/reviews/b1ddd7ab9a3a-…-checkpoint60.md.
+  No product source, test, task, held-out or hidden-test content changes. verify.py confirms that the earlier
+  scoreboard bytes are a prefix of the new file and that the TASKS.md table rows are unchanged. The README
+  independence paragraph is present and unchanged; only the Measured coding cell changes.
+- **Recount from raw records.** I used my own script. Every log hash in each record matches. All six profiles have
+  12 attempts each, with 0 retries and nothing graded. Cumulative `ungraded-proposal` counts are gemma4-31b 8,
+  qwen35-27b 11, gpt-oss 2, muse 6, gemma4-e4b 2 and gemma4-26b-a4b 5, which match README, TASKS, the scoreboard
+  and the evidence.
+- **New attempts.** The token counts come from the captured upstream response `usage`:
+  - e4b: 6237+3081 = 9318 in, 5394+1607 = 7001 out.
+  - a4b: 6241+3085 = 9326 in, 1681+2186 = 3867 out.
+  - muse: no response file for either attempt, so 0/2 coverage. No counters were invented.
+- **Budgets.** Every `max_tokens` equals `min(32768, 32768 − preflight − 32)`, for example 32768−5215−32 = 27521.
+  The wire requests carry `enable_thinking: false`, `stream: false` and `n: 1`.
+- **Timings.** Request seconds are the sums of `generation_seconds` (600.029 / 89.468 / 75.891). GPU minutes are
+  the reserved-job seconds divided by 60 (643.015 / 101.901 / 122.941 s). Controller wall time is launch 13:11:49.145
+  to exit 13:27:23.797 = 934.651 s.
+- **Muse timeouts.** dev-011 and dev-012 each record `chat.transport.timeout`, partial, `generation_seconds` 300.017
+  and 300.013, no answer, a base fallback, and no upstream response. Their backend slices show steady `n_gen`
+  progress (about 12.9K and 13.0K tokens) and no terminal counters.
+- **Reproduction fix.** The first reproduction failed (work/first-reproduction.log ends in AssertionError; the seal
+  is preserved under initial-seal/, and verify.py authenticates it). The cause is that dev-012's slice begins with
+  dev-011's server-side `stop: cancel task` and `release … stop processing` at 5.29.196–5.29.206. dev-012's own
+  `launch_slot_` (task 12976) follows at 5.29.207, so the two requests did not overlap and dev-012 lost no
+  measurable time. The corrected helper requires exactly one launch per slice, then applies the same
+  no-terminal-counter check that audit.py already used. This is a correct isolation, not a weaker check.
+  dev-008 and all 66 earlier details stay identical (verify.py).
+- **Launch and wrapper.** The argv is identical to the prior launch, with nice 19, low priority and the same scope
+  limits. The launch.py diff changes only BASE, the allowlist (exactly the 28 paths changed between eef17dbd and
+  1502e631; I counted 28 with `git diff --name-only`) and two added recording-only environment fields, both null.
+  The batch launched at 13:11:49 UTC, after the build wrapper changed at 12:47:28 UTC. The recorded hash 4061f0e6…
+  equals the live /tools/build-slot now, and its mtime is unchanged, so no wrapper change happened during this
+  batch. The GPU wrapper hash 9804180e… is unchanged. Per-pair provenance stays a T-309 low backlog item, as stated.
+- **Cleanup.** cleanup.json lists 6 retired token receipts. cleanup.py checks all 66 earlier receipts
+  (10×6 + 2 + 4). Live check: no `*.token`, api-key or model.sock files under /lane/state/rs1, no owned
+  controller, batch, API or server process, and no GPU compute apps.
+- **Evaluation integrity.** Only the development split ran (`held_out_executed` false and audited). Hidden tests
+  were not touched and task bases are frozen (audit.py checks `canonical_digest`, the snapshot and private
+  bindings). Failures count as attempts. "Does not fit: 0" is reported separately from the transport timeouts.
+- **Measure first.** This batch has a dated scoreboard line with context and output budgets, causes,
+  terminations, token coverage and timing. It also states that no measured variable changed.
+- **Privacy and branding.** The added lines contain no home path, username, hostname, credential, sibling project
+  or other agent product. The only model-vendor mention is the reviewer attribution in the retained review copy,
+  which follows prior accepted practice and is not branding.
+
+## Findings
+
+No critical, high, medium or low findings.
+
+## Per-row result
+
+- T-303/T-306, checkpoint at 72/180: the reporting increment is accurate, traceable to raw logs and honestly
+  labelled (strict ungraded proposals, not task passes). No row closes and both rows stay open.
+- Existing T-309 low findings remain backlog.
+
+Verdict: PASS
