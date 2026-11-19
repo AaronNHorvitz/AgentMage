@@ -1,0 +1,46 @@
+Commit: b1ea1bb5e8317e0b2c0a59149492b16e119ee214
+Scope: copy-original-fragment-muse-development-checkpoint30
+
+# Independent review: frozen original-fragment Muse thirty-attempt completion
+
+Reviewer: separate Claude Opus 5.5 session, read-only, pinned checkout /lane/review-checkout.
+Row: T-303/T-306 (non-closing frozen development measurement). Base a4d6edf93983c146eb55859a41269eafc9935b10.
+
+## Methods and commands (all in /lane/review-checkout, CARGO_TARGET_DIR=/lane/state/review-target)
+
+1. `git rev-parse HEAD` printed b1ea1bb5e8317e0b2c0a59149492b16e119ee214. `git status --porcelain` printed nothing. `git diff --check a4d6edf9…` exited 0. `git diff --stat` shows exactly the four requested files (TASKS.md +11, coding-scoreboard.md +50, new checkpoint30 evidence +87, retained checkpoint26 review +69). No source, test, script or manifest changed.
+2. Capsule authentication: `sha256sum` of manifest.json gave e69752001c51974c…ae80, bindings.json gave 4a783ecff15dd421…9b6388 and the post-commit receipt gave ee5d6ee142449082…690a2. All three match the request. The manifest lists 2,302 files, and every file on disk is listed except manifest.json and bindings.json (2,304 on disk). None are missing.
+3. `bash /tools/build-slot python3 -B …/verify.py` exited 0 with `{"status":"PASS","attempts":150,"new_attempts":4,"remaining_attempts":30,"strict_ungraded_proposals":22,"all_dependencies_checked":true,"live_state":"unavailable","postcommit_checked":true,"candidate_execution":false,"task_passes":null}`. Live state is unavailable because /lane/state/ef1 is not mounted in this session, so it is reported as unavailable, not as checked. I read verify.py in full. It authenticates all 19 dependency trees and their post-commit receipts against committed blobs, and all 2,283 repository and 44 private frozen bindings. It recomputes new causes, request seconds, reserved-work seconds, backend token counters and coverage from raw per-task records and server logs, and checks them against the cumulative audit. It also checks the exact wire request (budget formula, strict json_schema, `enable_thinking:false`), the split (`development`, held-out not executed, retries 0, ungraded), cleanup, preservation of the ledger rows and scoreboard prefix, and the complete committed diff.
+4. Optional portable run: `bash /tools/build-slot bwrap --die-with-parent --bind / / --dev-bind /dev /dev --tmpfs /lane/state --chdir /lane/review-checkout python3 -B …/verify.py` gave the same PASS output.
+5. Helper reproduction: the object 1992c3c4…bd6de authenticated to its SHA-256. I copied it to a private 0700 file and confirmed the copy's hash, then ran `bash /tools/build-slot python3 -B …/reproduce.py --helper <copy> --output <fresh dir>`. Result: `{"status":"PASS","contexts":30,"answers":3,"candidate_execution":false,"model_inference":false,"hidden_or_held_out":false}`. Reading reproduce.py confirms it only calls the effect-free context/check helper and never executes the proposed code.
+6. Node 1d1de76d…c932c authenticated and was copied privately onto PATH (v24.15.0). Then:
+   - `python3 -B scripts/local_agent_fast_gate.py --base a4d6edf9… --timeout 3600` printed `FAST GATE: PASS`, including review lint and markdownlint (0 issues).
+   - `node …/work/lint-all.mjs` printed PASS (3 files, 0 issues).
+   - `python3 -B scripts/private_host_paths.py --base a4d6edf9…` printed `PRIVATE PATH CHECK: PASS`.
+   - `python3 -B scripts/license_policy.py` printed `LICENCE POLICY: PASS`.
+7. Independent recomputation from raw records (my own script over campaign/jobs/muse-26 and muse-28):
+   - Request/check time: 300.021 + 140.097 + 126.425 + 137.191 = 703.733 s.
+   - Reserved work: 484.123 + 394.762 = 878.885 s = 14.648 GPU minutes.
+   - Rendered input ranges from 3370 to 8134 tokens, and the output budget from 24602 to 29366 tokens; each equals 32768 − input − 32.
+   - Backend usage for the three responses: prompt tokens 8134 + 7855 + 3370 = 19359 and completion tokens 5531 + 5061 + 6137 = 16729, giving coverage 3/4.
+   - dev-027 is a 300 s `chat.transport.timeout` with no response captured. The other three tasks finish with `stop`, have non-empty content and non-empty `reasoning_content`, and their checked.json contains `changes`.
+   - Cumulative figures equal the checkpoint26 evidence plus the new increment, up to rounding: 4370.941 + 703.733 ≈ 5074.675, 4935.904 + 878.885 = 5814.789, 153020 + 19359 = 172379, 160646 + 16729 = 177375, 19 + 3 = 22 proposals and 24 + 3 = 27 counters. The cumulative causes sum to 30.
+8. Retained review: `cmp` of docs/reviews/a4d6edf93983-…-checkpoint26.txt against /lane/reviews/a4d6edf93983-…-checkpoint26.md shows the files are identical. Its verdict (PASS, "None at high, medium or low severity") is quoted accurately in TASKS.md and in the evidence.
+
+## Checks against the brief
+
+- Evaluation integrity: only development tasks dev-027, dev-028, dev-029 and dev-rust-001 ran (split asserted `development`). Held-out tests did not execute, no hidden test or candidate ran, and the source and prompt are frozen at 35217c60. No tuning change appears in the diff, and failures (the timeout) are counted, not dropped.
+- MEASURE FIRST: a scoreboard line exists for this batch. It states the context and output budgets, counts does-not-fit (0) separately from model failures, and every number traces to raw logs (item 7).
+- Honest labelling: task passes and retries are marked Unavailable, and proposals are labelled ungraded. The text says the thinking-disabled request does not establish an absence of reasoning, which is accurate given the non-empty `reasoning_content`. It names no other agent product and no private project.
+- Confinement: no tool or sandbox surface changed in this commit, and the proposed code is retained as data and never executed.
+- Privacy and licence: the path and licence checks pass, and a manual grep of the diff found no home paths, credentials or e-mail addresses.
+
+## Findings
+
+None at high, medium or low severity.
+
+## Per-row result
+
+- T-303/T-306 (non-closing frozen development measurement, Muse positions 27–30, 30/30 Muse complete, repeat 150/180): the measurement is accepted as reported. No row closes, and T-303/T-306 remain open, as the commit states.
+
+Verdict: PASS
