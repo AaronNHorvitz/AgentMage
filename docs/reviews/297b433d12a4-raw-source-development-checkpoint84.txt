@@ -1,0 +1,105 @@
+Commit: 297b433d12a4b4bb54e37b297942c9cca167d3d2
+Scope: raw-source-development-checkpoint84
+
+# Independent review: frozen raw-source development checkpoint 84 (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate session, read-only. Pinned checkout /lane/review-checkout at the exact
+commit. I did not modify the repository and did not use the GPU. Base 2614cf6ad830cbecab11e461519d1178e3bed69b;
+frozen product source eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f.
+
+## Methods
+
+- Read the complete reporting diff (5 files: README.md, TASKS.md, docs/evidence/coding-scoreboard.md, new
+  docs/evidence/t303-raw-source-checkpoint84-2026-11-19.md, retained docs/reviews/2614cf6ad830-raw-source-development-checkpoint78.txt).
+- Read verify.py, reproduce.py, work/audit.py, work/write-reports.py, work/cleanup.py. Diffed every work/ helper and
+  launch.json against the preceding capsule's copies under prior/.
+- Retallied the six new attempts myself from the raw capsule records (collection/batch.json, record.json,
+  backend-slice.log, upstream-response-NN.bin, checked.json, batch-report.json), without using audit.json.
+- Ran the requested verification, reproduction and reporting gates.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `git rev-parse HEAD` | 297b433d12a4b4bb54e37b297942c9cca167d3d2 |
+| `git status --porcelain` | empty |
+| `git diff --check 2614cf6a…` | exit 0 |
+| sha256 of manifest.json / bindings.json / post-commit.json | 646cd95c… / 893cb601… / 6f125c86…, all match the request |
+| `bash /tools/build-slot python3 -B …/verify.py` | PASS: attempts 84, remaining 96, postcommit_checked true, complete_prior_capsule_authenticated true (21 min) |
+| `bash /tools/build-slot python3 -B …/reproduce.py` | PASS: contexts 30, prior_checks 161, new_checks 78, generation_refusals 6, attempt_records 84, candidate_execution false, model_inference false |
+| Helper binary object | sha256 4aea9726… equals frozen-inputs `rs1/bin/…-measurement-helper`; source object 8f2481c7… is the 24-line main.rs (stdin JSON → prepare/check → stdout JSON; no file, network or process effects) |
+| Node /lane/reviews/42612ca9787f-a4b-node | sha256 d1de76d8… OK; licence file present; private 0700 copy v24.15.0 on PATH |
+| `python3 -B scripts/local_agent_fast_gate.py --base 2614cf6a… --timeout 3600` | FAST GATE: PASS (diff check, untracked lint, private paths, licence, review lint, markdownlint 0 issues in 4 files) |
+| `node …/work/render.mjs` | PASS, 0 issues, all four files render non-empty |
+| `python3 -B scripts/private_host_paths.py --base 2614cf6a…` | PRIVATE PATH CHECK: PASS |
+| `python3 -B scripts/license_policy.py` | LICENCE POLICY: PASS |
+| `cmp docs/reviews/2614cf6ad830-…-checkpoint78.txt /lane/reviews/2614cf6ad830-…-checkpoint78.md` | identical; ends `Verdict: PASS` |
+
+## Independent raw tally (new jobs muse-12, gemma4-e4b-12, gemma4-26b-a4b-12)
+
+| Profile / task | Prompt tokens (backend = usage) | max_tokens requested | Completion tokens | finish_reason | Cause | generation_seconds |
+| --- | --- | --- | --- | --- | --- | --- |
+| muse dev-013 | 7542 | 25194 | 6028 | stop | strict-edit-refused (code.proposal.edit) | 149.642 |
+| muse dev-014 | 5316 | 27420 | 12154 | stop | ungraded-proposal | 287.773 |
+| gemma4-e4b dev-013 | 9341 | 23395 | 3737 | stop | strict-edit-refused (code.proposal.edit) | 52.470 |
+| gemma4-e4b dev-014 | 6668 | 26068 | 1615 | stop | ungraded-proposal | 13.598 |
+| gemma4-26b-a4b dev-013 | 9345 | 23391 | 1005 | stop | ungraded-proposal | 53.753 |
+| gemma4-26b-a4b dev-014 | 6672 | 26064 | 8396 | stop | strict-edit-refused (code.proposal.edit) | 69.461 |
+
+- Requested outputs equal `min(32768, 32768 − input − 32)` in every case. All six backend slices have exactly one
+  slot launch and one prompt/eval/stop counter set, with `truncated = 0`. Backend counters equal HTTP `usage`.
+  All six responses are HTTP 200. No new transport timeout: the longest request (muse dev-014, 287.8 s) completed
+  under the 300 s deadline.
+- Per-profile sums equal the published tables exactly. muse: 12858/18182 tokens, 437.416 s, 498.323 s reserved =
+  8.305 min. gemma4-e4b: 16009/5352, 66.068 s, 1.283 min. gemma4-26b-a4b: 16017/9401, 123.214 s, 2.867 min.
+  Sampled GPU peaks are 17672, 5064 and 19712 MiB, all within 22528. n_ctx is 32768 and thinking_mode is
+  disabled in every report.
+- Cumulative tally over all 42 job directories: gemma4-31b 10/14, qwen35-27b 13/14, gpt-oss 2/14, muse 7/14,
+  gemma4-e4b 3/14, gemma4-26b-a4b 6/14; 84 attempts. These match README, TASKS, the scoreboard and the evidence.
+- Controller wall time: launch 14:35:48.421431 → exit 14:49:20.787320 UTC = 812.366 s, matching the published
+  figure. Controller exit is 0, and controller.log shows each profile at 14/30.
+
+## Preservation, confinement and integrity checks
+
+- verify.py passed with every preceding attempt detail (78) unchanged. Campaign batch.py, collect.py,
+  controller.py, policy.json and frozen-inputs.json are byte-identical to prior/. All prior jobs/candidates are
+  hash-equal. All 2,290 repository and 62 private bindings are exact. The TASKS table rows are unchanged and the
+  scoreboard is append-only relative to base.
+- launch.json differs from the preceding launch only in head, launcher hash, pid, start ticks and time. launch.py
+  differs only in BASE and in the allowed-path set growing from 31 to 33 entries. I confirmed independently that
+  `git diff --name-only eef17dbd 2614cf6a` lists exactly 33 paths, all README.md, TASKS.md or docs/. Wrapper
+  hashes, scope limits (cpu 4, memory.max 16 GiB), nice 19 and low priority are unchanged. All slot-threshold
+  environment fields are null. The source snapshot is read-only-bound in bwrap.
+- Every work/ helper diff is a base/path/count rename. Two changes go further: (a) retain-review.py and preserve.py
+  now handle an "in-flight" preceding review without inferring a verdict, and (b) cleanup.py additionally checks
+  the checkpoint78 receipts. Neither changes a measured input, threshold or check. audit.py is byte-identical.
+- Cleanup: cleanup.json reports PASS with 42 completed pairs, settings revoked, API/model reaped, keys/sockets
+  absent, no live owned processes, and 6 receipts persisted before unlink (the script writes them with `open('x')`
+  before `unlink`). The capsule retains 78 distinct preceding receipts and none overlap with the new six.
+  Limitation: /lane/state/rs1 is not mounted in this sandbox and my PID namespace is private, so I could not check
+  live token, socket or process absence on the host myself. That claim rests on the hash-bound capsule records,
+  as at the preceding checkpoint.
+- Evaluation integrity: this is a reporting-only diff with no prompt, code, task or checker change. No held-out or
+  hidden content appears in the added lines. Records show graded false, retries 0 and native_coding_harness false.
+  No candidate code executes in reproduction.
+- MEASURE FIRST: the batch has its scoreboard line with context/output budgets, causes, coverage and a
+  "does not fit" count (0). No measured variable changed.
+- Privacy and branding: the added lines contain no home path, username, hostname, credential, personal data,
+  sibling-project name or other-agent-product name. The retained review contains `/lane/...` lane paths and the
+  reviewer attribution in the same form previously accepted. The README independence paragraph is untouched; the
+  only README change is the Measured coding cell.
+- Claims: the documents make no task-pass, solved-task, model-qualification or row-closure claim. The note on
+  Muse's non-empty `reasoning_content` under a disabled thinking request is stated honestly.
+
+## Findings
+
+None (no critical, high, medium or low).
+
+Existing T-309 low backlog (per-pair wrapper provenance) remains backlog and is unchanged by this commit.
+
+## Per-row result
+
+- T-303/T-306 (non-closing frozen development measurement, checkpoint 84): reporting increment accepted. The
+  numbers trace to raw records, preservation holds and no row closes. T-303 and T-306 remain open.
+
+Verdict: PASS
