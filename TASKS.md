@@ -2,6 +2,23 @@
 
 ## Active queue: local agent mission
 
+The [independent queue-block review](docs/reviews/9c093878d3a9-raw-source-build-queue-block.txt)
+and [independent review-retention review](docs/reviews/208a631a9537-raw-source-checkpoint6-review-retention.txt)
+return **Verdict: PASS** for their respective exact commits, with no critical,
+high or medium findings. Both reports are retained unchanged; no row closes.
+The latter review's low stale-status wording finding is corrected here. The
+queue review's low finding joins T-309: derive wrapper/startup claims from the
+recorded process list rather than literal receipt fields. No frozen input,
+prior attempt or measurement boundary changes. This new measurement batch
+requires independent core review.
+
+The [frozen raw-source twelve-attempt checkpoint](docs/evidence/t303-raw-source-checkpoint12-2026-11-19.md) adds six development
+attempts. The repeat reaches 12/180 attempted, with 168 remaining before tuning
+or capability work. Cumulative strict ungraded proposals: gemma4-31b 2/2; qwen35-27b 2/2; gpt-oss 0/2; muse 2/2; gemma4-e4b 0/2; gemma4-26b-a4b 1/2.
+Task passes and retries remain unavailable; no candidate, hidden or held-out
+code executes. Frozen inputs and earlier attempts remain unchanged. Independent
+core review is required for this checkpoint; T-303/T-306 remain open.
+
 The [independent six-attempt checkpoint review](docs/reviews/c1bb214085bf-raw-source-development-checkpoint6.txt)
 returns **Verdict: PASS** for exact `c1bb214085bf9eca42b0a45599224fa2a77352fb`,
 with no critical, high or medium findings. Its report is retained unchanged;
@@ -9,9 +26,9 @@ it accepts that preceding reporting batch only. No row closes. Its one low
 finding is addressed here: the earlier checkpoint's pending-review sentence
 now states when it was pending. Frozen inputs and attempts stay unchanged;
 the repeat remains 6/180 attempted, with 174 remaining before tuning or
-capability work. The later queue-block record is under independent core review;
-no verdict is inferred. This retention increment also requires independent
-core review. Existing T-309 backlog remains.
+capability work. The later queue-block record and this retention increment
+were under independent core review when recorded; their subsequent PASS
+reports are retained above. Existing T-309 backlog remains.
 
 The [raw-source repeat queue record](docs/evidence/t303-raw-source-build-queue-block-2026-11-19.md) adds **zero attempts**:
 the first reservation remained unavailable, all three slots were observed
@@ -28,7 +45,8 @@ Three low findings join T-309: label the raw source context after repair
 feedback in a later measured batch; test the boundary where the retained
 JSON-sized selection allowance binds; and separately count header-like-source
 refusals when analysing the completed repeat. None changes this frozen repeat.
-The new six-attempt checkpoint still requires independent core review.
+The six-attempt checkpoint required independent core review when this note
+was retained; its subsequent PASS is recorded above.
 
 The [frozen raw-source six-attempt checkpoint](docs/evidence/t303-raw-source-checkpoint6-2026-11-19.md) adds four development
 attempts. The repeat reaches 6/180 attempted, with 174 remaining before tuning

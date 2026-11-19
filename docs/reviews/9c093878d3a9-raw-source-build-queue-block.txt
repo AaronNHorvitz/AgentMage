@@ -1,0 +1,127 @@
+Commit: 9c093878d3a9d9292fdffb15a632bbd84253dd35
+Scope: raw-source-build-queue-block
+
+# Independent review: raw-source repeat build-queue block (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate read-only session.
+Checkout: /lane/review-checkout (pinned). Base: c1bb214085bf9eca42b0a45599224fa2a77352fb.
+Frozen source: eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f. Date: 2026-11-19.
+
+## Methods and results
+
+1. Commit and tree
+   - `git rev-parse HEAD` -> 9c093878d3a9d9292fdffb15a632bbd84253dd35 (matches request).
+   - `git status --porcelain` -> empty, before and after all runs.
+   - `git diff --check c1bb2140...` -> exit 0.
+   - `git diff --stat`: 3 files, 76 insertions, 0 deletions: TASKS.md (+7, a paragraph added at the
+     top of the active queue), docs/evidence/coding-scoreboard.md (+20, appended),
+     docs/evidence/t303-raw-source-build-queue-block-2026-11-19.md (new, 49 lines). No product source,
+     no row close, no removed line (`git diff -U0 | grep '^-'` gives 0 lines).
+   - I read the whole diff. Both relative links resolve. No private path, user name, host name,
+     model or profile name, sibling project, other product or trademark appears in the diff (grep for
+     home paths, the user name, /lane, a sibling-project name and model names: no hits).
+
+2. Capsule `python3 -B /lane/reviews/raw-source-build-queue-block-20261119/verify.py` (3.3 s):
+   `{"status": "PASS", "new_attempts": 0, "attempts": 6, "remaining": 174,
+   "complete_prior_capsule_authenticated": true, "postcommit_checked": true,
+   "model_or_candidate_execution": false, "task_scores": null}`.
+   - manifest.json SHA256 4164c794...a721bf and bindings.json SHA256 a25108ab...0e2623 match the
+     request. Post-commit receipt SHA256 d35bd77a...c87f matches. It binds commit 9c093878, base c1bb2140,
+     the same manifest and bindings, and `complete_diff_covered: true`.
+   - verify.py checks that the set of capsule files equals the manifest (no extra or missing files,
+     no absolute, `..` or symlinked entries), hashes every byte, authenticates prior/ against its
+     pinned digests and its post-commit receipt, and compares the three public files with
+     `git show 9c093878:<path>` and with the exact diff name set. It also checks that the TASKS
+     table rows and the old scoreboard prefix are unchanged. I read all of it.
+   - Method digests recorded in the receipts match the shipped scripts: audit.py d2fff6ca...,
+     retire-waiter.py 46199a2b..., confirm-retirement.py 86d2d207..., launch.py 0d470fc3...,
+     launch.json 41c30141... (as referenced by intent and exit), waiter-retirement.json dbf4e2f0...
+     (as referenced by audit.json), post-commit.py 9b3cc8fd....
+
+3. Node: /lane/reviews/42612ca9787f-a4b-node SHA256 d1de76d8...d932c, matching the request. The
+   licence file is the Node.js licence. I copied it to a private /tmp directory (copy hash
+   identical, v24.15.0) and put it on PATH.
+   - `python3 -B scripts/local_agent_fast_gate.py --base c1bb2140... --timeout 3600` -> FAST GATE:
+     PASS (diff check, untracked lint, private paths PASS, licence policy PASS, markdownlint 0
+     issues on the 3 files).
+   - `node .../work/render.mjs` -> PASS, 0 issues; TASKS.md 3,334,551 bytes, scoreboard 375,064, new
+     record 3,248 rendered.
+   - `python3 -B scripts/private_host_paths.py --base c1bb2140...` -> PRIVATE PATH CHECK: PASS.
+   - `python3 -B scripts/license_policy.py` -> LICENCE POLICY: PASS.
+   No heavy build, suite, GPU or model was run. None is requested for this scope.
+
+4. Queue and retirement record (read in full: work/audit.py, verify.py,
+   attempted-launch/launch.py, retire-waiter-v1.py, retire-waiter.py, confirm-retirement.py and all
+   their JSON/log outputs; /tools/build-slot read to interpret the lock state).
+   - Timing: launch utc 07:12:55.846434 and controller exit utc 07:45:16.237641 give exactly
+     1940.391207 s, which is more than 30 minutes and matches the published figure. The record calls
+     it queue-inclusive time, not GPU or model time.
+   - Wrappers and priority: launch.json has the /tools/build-slot and /tools/gpu-slot digests
+     87624e08... / 9804180e.... These equal the live wrappers I hashed and, per verify.py, the
+     prior checkpoint launch. Priority is low, process nice is 19, and the cgroup scope limits equal
+     the prior launch. BUILD_SLOT_LOW_MAX_WAIT and BUILD_SLOT3_MIN_AVAIL_KB are unset, so the
+     wrapper defaults apply. There is no new limit, deadline, priority or cancellation mechanism in
+     product or wrapper code.
+   - Slot state: /tools/build-slot holds no slot while waiting. It tries each lock with `flock -n`
+     and closes the descriptor on failure. So the three "held" probes in the intent were not held by
+     the builder's own waiter. The archived reservation log shows only the "Waiting for..." line.
+   - Process state at retirement (intent `owned_before`): the bwrap leader 2552, controller 2553,
+     `bash /tools/build-slot bash /tools/gpu-slot queue-run ... batch.py gpt-oss 0` (2554) and its
+     `sleep 1` (the wrapper's wait loop). No gpu-slot process and no batch.py interpreter existed.
+     The process for 2554 still has the build-slot command line, so it had not yet run its command.
+     This supports "GPU wrapper, model server, API and task worker never started".
+   - Signal scope: `os.killpg(2552, SIGTERM)` runs only after re-checking the leader's start ticks
+     against launch.json. The launcher created the group with `start_new_session=True`, and every
+     member recorded is its descendant. Exit is -15 for the same PID and start ticks.
+     confirm-retirement found no live process with the controller, batch or API path, and none in
+     the group. No foreign signal.
+   - The v1 guard refusal is plausible from the recorded argv: the build-slot command line contains
+     `/lane/state/rs1/batch.py` as an argument. The v1 method, its log and the corrected v2 are
+     retained. The difference between them is exactly one line.
+   - Archived log: the original path and SHA256 f83c8bc5... are recorded. The file was renamed, not
+     altered. The three prior job directories (completed, settings revoked, API reaped, no key,
+     socket or token) are re-checked by audit.py. No attempt is replayed, removed or relabelled.
+   - "Never run" twelve-attempt methods: none of their output files (attempted-launch/audit.json,
+     cleanup.json, token-retirement-receipts.json, preservation.json, reproduction.log, package.log)
+     exists in the capsule. The manifest note says the same.
+   - Counts: prior/checkpoint/work/audit.json gives 6 attempted, 174 remaining. The new audit gives
+     2290 repository and 62 private bindings and 9760 snapshot files, 0 new attempts, and
+     `task_passes: null`. The published text matches.
+
+5. Evaluation integrity and honest claims: no candidate, project, hidden or held-out execution; no
+   tuning, profile, prompt or checker change; no score is presented. The record says explicitly that
+   it is a resource block, not a zero-pass model result. Measure first: a dated scoreboard line for
+   this scheduling try is present. It states that no context or output budget was served and that
+   tokens, GPU minutes and scores are unavailable. It counts zero attempts instead of presenting
+   failures. No sub-row is added.
+
+### Limitation (stated plainly)
+/lane/state/rs1 and /lane/state/raw-source-checkpoint12-20261119 are not visible from this review
+sandbox (`ls` returns "No such file or directory"). So I could not rerun work/audit.py's live checks
+(snapshot bytes, private bindings, prior job bytes and absence of keys and sockets in the current
+state), and I could not observe the live process table of the builder's lane. Those claims rest on
+the sealed, authenticated receipts and on the method code I read, not on my own live run. None of the
+requested commands depends on them, and all requested commands ran and passed.
+
+## Findings
+
+No critical, high or medium findings.
+
+- LOW (backlog), attempted-launch/confirm-retirement.py:21 and
+  attempted-launch/retire-waiter.py:29-31: `gpu_wrapper_reached: False` and
+  `new_model_or_api_started: False` are literal constants in the receipt, not computed. The
+  pre-signal guard asserts only that no interpreter is running batch.py; it does not assert that no
+  `/tools/gpu-slot` process is in the group. The recorded `owned_before` list does support the claim
+  here, so this is evidence hygiene, not a wrong statement. Fix: derive both fields from the
+  recorded process list. Assert that no member's argv[0..1] is `bash /tools/gpu-slot`, and that
+  build-slot's only child is its `sleep` loop, before signalling.
+
+## Per-row result
+
+- T-303/T-306 (non-closing resource-block record): the reporting increment is accurate, traceable to
+  sealed receipts, preserves all prior bytes and counts, and claims no score or close. Accepted as a
+  record; T-303 and T-306 remain open. This verdict does not renew the earlier source-gate FAIL
+  (1,034 passed / 53 inherited failures) or the supply-chain limits, which the commit itself states
+  remain.
+
+Verdict: PASS

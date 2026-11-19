@@ -1,0 +1,102 @@
+Commit: 208a631a9537050591ee631fe451f6915d1b25f8
+Scope: raw-source-checkpoint6-review-retention
+
+# Independent review: retention of the six-attempt checkpoint review (208a631a)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Same-model review.
+Row: T-303/T-306 (non-closing review retention). Base 9c093878d3a9d9292fdffb15a632bbd84253dd35;
+frozen product source eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f. No row closes from this review.
+
+## Methods
+
+I read the complete two-file diff 9c093878..208a631a. It changes TASKS.md (one new paragraph at the
+top of the active queue and a three-line rewording in the 434de57f checkpoint paragraph) and adds
+docs/reviews/c1bb214085bf-raw-source-development-checkpoint6.txt. No product source, script, checker,
+manifest, scoreboard, permission, profile or executable changes. I read all nine capsule files listed
+in the manifest (verify.py, render.mjs, session.json, post-commit.json, preservation.json,
+independent-review.md, review-in-flight-at-start.md, public/TASKS.md and the public review copy). I
+compared the new TASKS.md wording with the retained review's low finding. I also checked the
+remaining queue text for other stale review-status sentences. I used no GPU and ran no model, helper
+or candidate code.
+
+## Commands and results (all in /lane/review-checkout)
+
+1. `git rev-parse HEAD` gives 208a631a9537050591ee631fe451f6915d1b25f8. `git status --porcelain` is
+   empty. `git diff --check 9c093878…` exits 0. `git diff --stat` shows exactly two files, +142/−2.
+2. `python3 -B …/raw-source-checkpoint6-review-retention-20261119/verify.py` exits 0 with status PASS
+   and postcommit_checked true. It also reports:
+   - ledger_table_lines 512 and historical_path_blobs 49;
+   - new_attempts 0, row_closures 0 and model_or_candidate_execution false;
+   - review_sha256 8c8b6404…967c1d.
+   README.md, Agent-Scaffolding-Inventory.md, architecture/status-model.json,
+   architecture/private-path-exceptions.json, Decision 0051 and docs/evidence/coding-scoreboard.md are
+   byte-identical to base. I read verify.py itself. It checks that:
+   - TASKS.md equals base with exactly one paragraph inserted after the active-queue heading and the
+     exact old two-line sentence replaced by the new three lines;
+   - all 512 table lines are unchanged;
+   - all 49 exempted historical files are byte-equal to base;
+   - the diff and untracked set is exactly the two paths;
+   - the post-commit receipt names this commit and the same public hashes.
+3. Manifest sha256 is 1adf774e…4d79, which matches the request. All nine entries in its files map
+   match their recorded sha256 and byte length. `cmp` shows that the committed review .txt, the
+   capsule's independent-review.md and the original /lane/reviews/c1bb214085bf-raw-source-development-checkpoint6.md
+   are identical (sha256 8c8b6404…, 8702 bytes). The capsule's public/ copies of TASKS.md and of the
+   review equal the committed files. The retained report begins with the exact c1bb2140 `Commit:`
+   line and ends with `Verdict: PASS`.
+4. The node binary /lane/reviews/42612ca9787f-a4b-node has sha256 d1de76d8…bd932c, which matches. Its
+   licence file is present. I installed a private copy at /tmp/rv208/bin/node (v24.15.0) on PATH.
+   - `python3 -B scripts/local_agent_fast_gate.py --base 9c093878… --timeout 3600` gives FAST GATE: PASS.
+     The diff check, untracked lint, PRIVATE PATH CHECK, LICENCE POLICY and review lint of the retained
+     .txt all pass, and markdownlint-cli2 reports 0 issues in TASKS.md.
+   - `node …/render.mjs` gives `{"status":"PASS","issues":0,"rendered":[{"file":"TASKS.md","bytes":3335428}]}`.
+     Its disabled rules (MD013/MD022/MD024/MD060) are the same as the repository's
+     .markdownlint-cli2.jsonc, so the check is not weakened.
+5. Commit metadata: the message is accurate. It carries the Co-Authored-By and Signed-off-by lines.
+
+## Review notes
+
+- The claims are accurate. The new top paragraph summarises the retained review correctly:
+  - the verdict is PASS for exact c1bb2140, with no critical, high or medium findings;
+  - it accepts only that reporting batch, and no row closes;
+  - the repeat stays at 6/180, with 174 remaining.
+  The paragraph also says the queue-block record (9c093878) is under review and infers no verdict.
+  That was true when the commit was made. The request in review-in-flight-at-start.md is the queue-block
+  request and is untouched.
+- The reworded sentence (TASKS.md:38-40) removes the contradiction that the retained low named. The
+  checkpoint's preceding commit, d9bbbd25, now reads as pending "when this checkpoint was recorded",
+  and its PASS is in the d9bbbd25 retention paragraph above. The checkpoint batch's own PASS is in the
+  new top paragraph. Both uses of "above" are correct, though they point to different paragraphs.
+- Nothing changes that a measurement depends on: no inference, waiter, reservation, scoreboard line,
+  proposal or score. MEASURE FIRST does not need a new scoreboard line for a zero-attempt review
+  retention that changes nothing the model sees.
+- Evaluation integrity: no held-out, hidden or candidate content appears in the diff, and no tuning
+  is involved.
+- Privacy and naming: the only paths in the new text are the `/lane/...` paths inside the verbatim
+  retained review. Earlier retained reviews set the same precedent, and the path check passes. No
+  other product, private project, sibling, employer, home path or username is named in the committed
+  diff.
+- The capsule's description of its own limits ("no measurement revalidation, fresh source suite,
+  portable helper reproduction, SBOM or long acceptance") matches what it contains.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (backlog):
+
+1. `TASKS.md:31`: the c1bb2140 paragraph (the d9bbbd25 review retention) still ends "The new
+   six-attempt checkpoint still requires independent core review." The new paragraph at
+   `TASKS.md:5-14` records that checkpoint's PASS. So this is the same stale-pending-status pattern as
+   the low this commit fixes, in the next paragraph down. Fix: on the next reporting commit, reword it
+   to the past tense (for example "required independent core review when retained; its PASS is
+   retained above"), or drop it. This is wording only and changes no claim about measurements.
+
+## Per-row result
+
+- T-303/T-306 (non-closing review retention 208a631a): PASS for this exact two-file reporting diff.
+  The c1bb2140 checkpoint review is retained byte-exact, and its one low finding is corrected. The
+  repeat stays 6/180 attempted with 174 remaining, with no new attempts, scores or proposals. This is
+  reporting-only acceptance, not source or native acceptance. The inherited source-gate FAIL and the
+  unavailable native admission and grading controls stand. No row closes; T-303/T-306 stay open.
+
+Verdict: PASS
