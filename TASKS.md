@@ -2,6 +2,20 @@
 
 ## Active queue: local agent mission
 
+The [independent twelve-attempt checkpoint review](docs/reviews/0766abfeb4ca-raw-source-development-checkpoint12-resumed.txt)
+returns **Verdict: PASS** for exact `0766abfeb4ca3f90ecc80931ccb2532ca93a5365`, with no critical, high or medium
+findings. Its report is retained unchanged; no row closes. Its low stale
+pending-review wording finding is corrected in the earlier queue, first-pair
+and source-presentation notes. This accepts only that preceding reporting
+increment; the new checkpoint needs its own independent core review.
+
+The [frozen raw-source eighteen-attempt checkpoint](docs/evidence/t303-raw-source-checkpoint18-2026-11-19.md) adds six development
+attempts. The repeat reaches 18/180 attempted, with 162 remaining before tuning
+or capability work. Cumulative strict ungraded proposals: gemma4-31b 4/4; qwen35-27b 4/4; gpt-oss 0/4; muse 2/2; gemma4-e4b 0/2; gemma4-26b-a4b 1/2.
+Task passes and retries remain unavailable; no candidate, hidden or held-out
+code executes. Frozen inputs and earlier attempts remain unchanged. Independent
+core review is required for this checkpoint; T-303/T-306 remain open.
+
 The [independent queue-block review](docs/reviews/9c093878d3a9-raw-source-build-queue-block.txt)
 and [independent review-retention review](docs/reviews/208a631a9537-raw-source-checkpoint6-review-retention.txt)
 return **Verdict: PASS** for their respective exact commits, with no critical,
@@ -17,7 +31,8 @@ attempts. The repeat reaches 12/180 attempted, with 168 remaining before tuning
 or capability work. Cumulative strict ungraded proposals: gemma4-31b 2/2; qwen35-27b 2/2; gpt-oss 0/2; muse 2/2; gemma4-e4b 0/2; gemma4-26b-a4b 1/2.
 Task passes and retries remain unavailable; no candidate, hidden or held-out
 code executes. Frozen inputs and earlier attempts remain unchanged. Independent
-core review is required for this checkpoint; T-303/T-306 remain open.
+core review was required when recorded; its subsequent PASS is retained above.
+T-303/T-306 remain open.
 
 The [independent six-attempt checkpoint review](docs/reviews/c1bb214085bf-raw-source-development-checkpoint6.txt)
 returns **Verdict: PASS** for exact `c1bb214085bf9eca42b0a45599224fa2a77352fb`,
@@ -35,7 +50,8 @@ the first reservation remained unavailable, all three slots were observed
 occupied, and only this session's own unstarted waiter was retired. The repeat stays 6/180 attempted, 174 remaining.
 Frozen inputs and prior attempts are unchanged; resume the same development
 measurement when capacity is available, before tuning or capability work.
-No model score or row closure is claimed. Independent core review is required.
+No model score or row closure is claimed. Independent core review was required
+when recorded; its subsequent PASS is retained above.
 
 The [independent raw-source presentation review](docs/reviews/d9bbbd25fb0b-raw-source-presentation.txt)
 returns **Verdict: PASS** for exact `d9bbbd25fb0b3be4d21c731a0078a5cd7762a262`,
@@ -63,7 +79,7 @@ records 1/2 A4B strict ungraded proposals. The new repeat is
 profiles before further tuning or capability work. Task passes and retries
 remain unavailable; no candidate, hidden or held-out code executes. Source,
 settings, excerpts and strict checks remain frozen. Independent core review
-is required for the source and measurement batch; T-303/T-306 stay open.
+was required when recorded; its subsequent PASS is retained above. T-303/T-306 stay open.
 
 The [raw-source presentation batch](docs/evidence/t303-raw-source-presentation-2026-11-19.md)
 removes the source-level JSON escape layer while preserving all 30 development
@@ -71,7 +87,9 @@ excerpt selections and reproducing all 161 available previous checker outputs.
 The fixed instruction and exact checker are unchanged. Freeze this source,
 then repeat all 30 development tasks on all six profiles before further tuning
 or capability work. This source increment runs no inference and establishes
-no task score; T-303/T-306 stay open. Independent core review is required.
+no task score; T-303/T-306 stay
+open. Independent core review was required when recorded; its subsequent PASS
+is retained above.
 Both preceding exact-commit reviews returned PASS and are retained unchanged;
 the completion review's two low scheduling/cleanup notes join T-309 backlog.
 
