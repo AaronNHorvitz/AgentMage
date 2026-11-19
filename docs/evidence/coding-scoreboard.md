@@ -4323,3 +4323,26 @@ work remains behind measured reliability; other service tools, flows and team
 mode remain later work. No new runtime capability or tuning ships here.
 
 See the [evidence](t303-copy-original-fragments-e4b-complete-2026-11-19.md).
+
+## Read-only diagnosis of the original-fragment repeat: 2026-11-19
+
+This is a diagnosis of the completed frozen run, not another inference run.
+It adds zero attempts and zero GPU minutes; recorded timing, tokens, context
+and output budgets remain unchanged. First-attempt and within-budget task
+passes remain unavailable. The repeat still has 107 strict ungraded proposals
+in 179 completed attempts plus one preserved resource interruption.
+
+Of 50 strict-edit refusals, the first failing condition is an absent original
+in 28, overlapping edits in seven, a repeated original in five, an unchanged
+edit in five, an invisible original in four and an empty original in one.
+Seven absent originals have a diagnostic visible-source match after literal
+newline/quote substitution; no transformed edit is accepted or executed.
+On the same 179 completed profile/task pairs, the preceding instruction had
+105 strict ungraded proposals and the current one has 107, with 27 gains and
+25 losses. These are mechanical transitions, not task results or evidence of
+a reliable instruction improvement.
+
+The next measured work targets source-copy presentation and its escape layer,
+keeping exact checking and untrusted-data boundaries. No prompt, runtime,
+profile, hidden test or held-out task changes here. See the
+[diagnosis](t303-original-fragment-refusal-diagnosis-2026-11-19.md).

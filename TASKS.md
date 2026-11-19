@@ -2,6 +2,19 @@
 
 ## Active queue: local agent mission
 
+The [read-only refusal diagnosis](docs/evidence/t303-original-fragment-refusal-diagnosis-2026-11-19.md)
+classifies all 50 strict-edit refusals: 28 absent originals, seven overlaps,
+five repeated originals, five unchanged edits, four invisible originals and
+one empty original. Seven absent originals show a visible-source match only
+after diagnostic newline/quote substitution; no repair is applied. On the
+same 179 completed profile/task pairs, the instruction repeat changes strict
+ungraded proposals from 105 to 107, with 27 gains and 25 losses; task scores
+remain unavailable. Next work targets source-copy presentation and its escape
+layer while preserving exact matching and authority boundaries. This batch
+changes no runtime or model input and runs no new inference. T-303/T-306 stay
+open; no row closes. The preceding completion review has no available verdict
+at session start; the pending increments still require independent core review.
+
 The [frozen E4B completion](docs/evidence/t303-copy-original-fragments-e4b-complete-2026-11-19.md) adds 15 completed attempts,
 7/15 strict ungraded proposals; E4B totals 11/29 completed proposals
 plus one preserved interruption. The repeat reaches **180/180 attempted**.
