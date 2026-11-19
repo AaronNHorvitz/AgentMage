@@ -4684,3 +4684,41 @@ exact strict checker run. Native admission and original execution/grading
 controls remain unavailable; no effects, project tests, feedback, retries,
 candidate, hidden or held-out execution. No task score or model adoption.
 T-303/T-306 remain open.
+
+## Frozen raw-source repeat: fifty-four-attempt checkpoint, 2026-11-19
+
+Frozen source: `eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f`.
+Reporting base: `8fe3b1f8e30222b7fb7e54bb689ad87046c2676d`.
+
+| Date | New profile attempts | Context / output tokens | Completed / total attempts | Strict ungraded proposals | First-attempt / within-budget passes | Observed input / output tokens | Request and strict-check seconds | Reserved-job GPU minutes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-19 | gemma4-31b | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 2/2 | Unavailable / unavailable | 7319 / 523 | 49.955 | 1.668 |
+| 2026-11-19 | qwen35-27b | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 2/2 | Unavailable / unavailable | 6581 / 1025 | 42.641 | 1.157 |
+| 2026-11-19 | gpt-oss | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 1/2 | Unavailable / unavailable | 6288 / 14258 | 79.674 | 1.724 |
+
+No measured variable changes. The host build wrapper retains its fourth slot
+guarded by 36 GiB available RAM; this changes scheduling, with exact wrapper
+bytes and checksum retained. Model inputs, GPU wrapper and lane limits are
+unchanged. The repeat is **54/180 attempted, 126 remaining**;
+cumulative strict ungraded proposals: gemma4-31b 8/10; qwen35-27b 10/10; gpt-oss 2/10; muse 4/8; gemma4-e4b 0/8; gemma4-26b-a4b 4/8.
+Finish all 30 tasks on all six profiles before tuning or capability work.
+
+gemma4-31b: causes `{"ungraded-proposal": 2}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+qwen35-27b: causes `{"ungraded-proposal": 2}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+gpt-oss: causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:nonempty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+The earlier Muse dev-008 transport timeout remains preserved with no terminal
+usage. Its missing counters are not invented and the attempt is not rerun.
+The new attempts are reported separately from that earlier timeout.
+
+Controller wall time including queues and two released pauses: 338.039 seconds.
+Body time excludes queues and is neither kernel nor full-reservation timing;
+preparation/reporting and end-to-end latency remain unmeasured. Exact settings,
+budgets and cleanup are in the [checkpoint evidence](t303-raw-source-checkpoint54-2026-11-19.md).
+Only Rust retrieval, credential-owning chat transport, local inference and the
+exact strict checker run. Native admission and original execution/grading
+controls remain unavailable; no effects, project tests, feedback, retries,
+candidate, hidden or held-out execution. No task score or model adoption.
+T-303/T-306 remain open.

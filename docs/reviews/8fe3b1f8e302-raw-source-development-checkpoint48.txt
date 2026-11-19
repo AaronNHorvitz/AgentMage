@@ -1,0 +1,139 @@
+Commit: 8fe3b1f8e30222b7fb7e54bb689ad87046c2676d
+Scope: raw-source-development-checkpoint48
+
+# Independent review: frozen raw-source development checkpoint 48 (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. This is a same-model review.
+Base: 979223db8ba401435d4fea78e4ff85b20df74428. Frozen product source: eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f.
+Capsule: /lane/reviews/raw-source-development-checkpoint48-20261119.
+
+## Methods
+
+I worked only in /lane/review-checkout, with `CARGO_TARGET_DIR=/lane/state/review-target`. I did not
+modify the repository, use the GPU, run inference or execute candidate code. I read the complete reporting
+diff (5 files), the capsule's verify.py, reproduce.py, work/audit.py, work/cleanup.py and work/launch.py
+(and diffed launch.py against the previous one), plus work/audit.json, work/delta.json, cleanup.json,
+launch.json, controller-exit.json, and every raw record of the three new jobs (muse-06, gemma4-e4b-06,
+gemma4-26b-a4b-06): record.json, checked.json, events.ndjson, upstream request/response/capture,
+backend-slice.log, server.log, api-exit.json and batch-report.json. I also tallied the numbers myself from
+the raw bytes.
+
+## Commands and results
+
+- `git rev-parse HEAD`: 8fe3b1f8e30222b7fb7e54bb689ad87046c2676d. `git status --porcelain`: empty.
+  `git diff --check 979223db…`: exit 0.
+- `git diff --stat 979223db…`: README.md (1 line), TASKS.md, docs/evidence/coding-scoreboard.md (append
+  only, no removed lines), new docs/evidence/t303-raw-source-checkpoint48-2026-11-19.md, new
+  docs/reviews/979223db8ba4-raw-source-development-checkpoint42.txt. No product source changes.
+- The retained review docs/reviews/979223db8ba4-raw-source-development-checkpoint42.txt is
+  byte-identical (`cmp`) to /lane/reviews/979223db8ba4-raw-source-development-checkpoint42.md.
+- Capsule hashes: manifest.json 33162642…20f, bindings.json 2f09c60a…6e8, post-commit JSON c4ac0e46…aef.
+  All match the request.
+- `bash /tools/build-slot python3 -B …/verify.py`: `{"status": "PASS", "attempts": 48, "remaining": 132,
+  "source_commit": "eef17dbd…", "postcommit_checked": true, "task_scores": null,
+  "complete_prior_capsule_authenticated": true}`. (The request said to expect "42 attempts"; the script
+  asserts and prints 48. See L1.)
+- `bash /tools/build-slot python3 -B …/reproduce.py`: PASS, with 30 contexts, 161 prior checks, 45 new
+  checks, 3 generation refusals, 48 attempt records, helper 4aea9726…1f53, `candidate_execution: false`,
+  `model_inference: false`.
+- Node: SHA256 of /lane/reviews/42612ca9787f-a4b-node is d1de76d8…932c (verified) and the licence file is
+  present. I ran a private copy at /lane/state/tmp/rv48bin/node (v24.15.0).
+- `python3 -B scripts/local_agent_fast_gate.py --base 979223db… --timeout 3600`: FAST GATE: PASS. It ran
+  diff check, untracked lint, private path check, licence policy and review lint, and markdownlint found
+  0 issues in 4 files.
+- `node …/work/render.mjs`: PASS, 0 issues, 4 files rendered.
+- `python3 -B scripts/private_host_paths.py --base 979223db…`: PASS. `python3 -B scripts/license_policy.py`:
+  PASS.
+- Manual grep of added lines for home paths, user name, host names, credentials and other agent-product
+  names: none found. The only matches were the generic words "host-provided"/"host build wrapper" and the
+  reviewer self-identification inside the retained review. Those match previously accepted practice.
+
+## Independent checks of the claims
+
+- **Six new attempts (tasks dev-007, dev-008 on muse, gemma4-e4b, gemma4-26b-a4b).**
+  - From the raw records:
+    - muse dev-007: strict-edit-refused `code.proposal.format`.
+    - muse dev-008: generation-refused `chat.transport.timeout` at 300.0 s, with no upstream response
+      file and a single partial error event.
+    - e4b dev-007 and dev-008: both `code.proposal.edit`.
+    - a4b dev-007: `code.proposal.edit`.
+    - a4b dev-008: ungraded-proposal (checked.json holds one change).
+  - These give muse 0/2, e4b 0/2 and a4b 1/2. The cumulative totals recomputed from audit.json details
+    (muse 4/8, e4b 0/8, a4b 4/8, 31b 6/8, 27b 8/8, gpt-oss 1/8) match README, TASKS, scoreboard and the
+    evidence file.
+- **Tokens.** The upstream `usage` values and the backend `prompt eval`/`eval` lines agree:
+  - muse: 7521/10558. There are no counters for dev-008: its backend slice has `n_gen` progress lines but
+    no `prompt eval time` and no `stop processing`.
+  - e4b: 9296+9066=18362 input and 4028+12568=16596 output.
+  - a4b: 9300+9070=18370 input and 4025+2594=6619 output.
+
+  No usage is invented for the timed-out attempt.
+- **Budgets.** Every new request has `max_tokens` = 32768 − preflight − 32 (25215, 25414, 23440, 23670,
+  23436, 23666) and `chat_template_kwargs.enable_thinking=false`. All 48 wire requests share one system
+  message hash, all 24 jobs share one response_format hash, and each task's context.json is identical
+  across models.
+- **Timing.**
+  - Request plus strict-check seconds: 275.1+300.0=575.1, 54.6+107.5=162.1 and 64.8+24.4=89.2.
+  - Controller wall time runs from launch 10:39:01.57Z to exit 11:30:24.62Z, which is 3083.05 s, as
+    reported.
+- **Launcher.** It differs from the previous launcher only in BASE and the allowed-path set.
+  - `git diff --name-only eef17dbd 979223db` gives exactly the 21 documentation/review paths the launcher
+    asserts. None of them is product source.
+  - The wrapper hashes (build-slot 35416996…, gpu-slot 9804180e…) are equal to the previous launch and to
+    the current /tools files.
+  - wrapper_environment matches the previous launch (all three fields are null, BUILD_SLOT4_MIN_AVAIL_KB
+    included).
+  - scope_limits are unchanged: 16 GiB max, 4 CPUs, 1 GiB swap. nice is 19 and priority is low.
+- **Unchanged controller and inputs.** verify.py byte-compares controller.py, batch.py, collect.py,
+  policy.json and frozen-inputs.json with the prior capsule. It also checks every earlier job and
+  candidate file and confirms that the 42 earlier audit details are unchanged. It authenticates all
+  nested prior capsules, and I read its logic.
+- **Cleanup.**
+  - cleanup.json lists 6 retired tokens. The receipts are written with open('x') before unlink, and each
+    hash is re-checked before unlinking.
+  - Across the capsule there are 48 distinct token receipts (42 earlier and 6 new).
+  - The muse API exited with -15 and was reaped. The muse server log ends while the abandoned dev-008
+    generation is still running (n_gen 12468), consistent with the server being reaped at job end.
+- **Evaluation integrity.**
+  - Every new summary has split=development and held_out_executed=false.
+  - The audit records hidden_or_held_out=false, candidate_execution=false and task_passes=null.
+  - No tuning change exists between batches.
+  - Failures are counted: the timeout is a generation refusal and is not dropped or rerun.
+  - "Does not fit" is reported separately (0).
+- **MEASURE FIRST.** The scoreboard has a dated line for this batch, with context and output budgets,
+  observed tokens, timing, GPU-minutes and causes. Changed budgets: none.
+- **Honest labelling.** The reports say these are ungraded proposals from a partial path, make no
+  solved-task or qualification claim, and keep T-303/T-306 open.
+- **README order.** Only the Measured coding row changed, and the independence paragraph is unchanged.
+  The fast-gate privacy and licence checks pass.
+
+## Limitations
+
+My sandbox has its own PID namespace and /lane/state/rs1 is not mounted. I therefore could not see the
+builder's processes myself, or confirm that the token files and sockets are gone. The claims of no live
+owned process and of tokens being removed rest on the authenticated cleanup.json, api-exit.json and
+batch-report.json records and on the cleanup.py logic I read. No required run was missing.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L1 (low, request wording; backlog T-309).** The review request expected verify.py to report
+  "42 attempts, 132 remaining". verify.py actually asserts and prints 48 (and 42+132≠180). The commit and
+  capsule are correct; only the request text is wrong. Fix: generate the expected-output lines in future
+  requests and handoffs from the verify output.
+- **L2 (low, presentation; backlog T-309).** Line 4656 of docs/evidence/coding-scoreboard.md (and the
+  muse table row in the checkpoint evidence file) shows muse "7521 / 10558" in the observed-token column
+  with no marker in the cell that this covers 1/2 attempts. The coverage is stated two paragraphs below
+  and in the evidence prose, so the claim is honest. Someone reading only the table could still take it
+  as a two-attempt total. Fix: append the coverage, e.g. "(1/2 attempts)", to partial-coverage token cells
+  in future lines. Existing lines stay as they are.
+
+## Per-row result
+
+- T-303/T-306 (non-closing frozen development measurement, attempts 43–48): reporting increment accepted.
+  Every number traces to the raw records. Frozen inputs, controller and the earlier 42 attempts are
+  preserved. Wrappers, limits and measured variables are unchanged. No row closes, and T-303/T-306 remain
+  open.
+
+Verdict: PASS
