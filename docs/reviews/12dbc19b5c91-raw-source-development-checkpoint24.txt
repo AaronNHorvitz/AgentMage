@@ -1,0 +1,117 @@
+Commit: 12dbc19b5c9137f4035c3c92a3998fdaabe831e2
+Scope: raw-source-development-checkpoint24
+
+# Independent core review: frozen raw-source twenty-four-attempt checkpoint
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only.
+Row: T-303/T-306, non-closing frozen development measurement. Tier: core.
+Base: f278e0b36765f5cb097da4c2efdb0c30e421d6cb. Frozen product source: eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f.
+All commands were run in the pinned checkout /lane/review-checkout. No model, GPU or candidate process was run.
+The repository was not modified.
+
+## Methods and commands
+
+1. Commit identity and cleanliness
+   - `git rev-parse HEAD` returned 12dbc19b5c9137f4035c3c92a3998fdaabe831e2.
+   - `git status --porcelain` was empty, both before and after all runs.
+   - `git diff --check f278e0b3...` exited 0.
+   - `git diff --name-status f278e0b3...` lists exactly five paths:
+     - M README.md (one table cell)
+     - M TASKS.md
+     - M docs/evidence/coding-scoreboard.md (append only)
+     - A docs/evidence/t303-raw-source-checkpoint24-2026-11-19.md
+     - A docs/reviews/f278e0b36765-raw-source-development-checkpoint18.txt
+   - No product source changed.
+2. Retained prior review
+   - `cmp /lane/reviews/f278e0b36765-raw-source-development-checkpoint18.md docs/reviews/f278e0b36765-raw-source-development-checkpoint18.txt` shows the files are byte-identical.
+   - The file begins with the f278e0b3 commit and scope lines and ends with `Verdict: PASS`.
+3. Capsule verification
+   - `bash /tools/build-slot python3 -B .../verify.py` returned PASS:
+     - attempts 24, remaining 156
+     - source_commit eef17dbd…
+     - postcommit_checked true, complete_prior_capsule_authenticated true
+   - Manifest SHA256 3c97c6ac…a41a22 and bindings SHA256 af5236e7…5fe match the request. The manifest lists 48,824 files.
+   - Postcommit JSON SHA256 5a1d1c93…92da4 matches. Its five public hashes equal `sha256sum` of the committed files.
+4. Portable reproduction
+   - `bash /tools/build-slot python3 -B .../reproduce.py` returned PASS:
+     - 30 contexts, 161 prior checks, 24 new checks
+     - candidate_execution false, model_inference false
+   - Helper object 8f2481c7… hashes to its name. The authenticated helper hash is 4aea9726…e31c53, as requested.
+5. Node
+   - `/lane/reviews/42612ca9787f-a4b-node` SHA256 is d1de76d8…932c, as requested. The licence file is the Node.js licence.
+   - I made a private 0700 copy in /tmp/rv24bin/node (v24.15.0) and put it on PATH.
+6. Repository gates (CARGO_TARGET_DIR=/lane/state/review-target)
+   - `python3 -B scripts/local_agent_fast_gate.py --base f278e0b3... --timeout 3600` returned FAST GATE: PASS. It ran:
+     - diff check
+     - untracked lint
+     - private-path check
+     - licence policy
+     - review lint of the retained review
+     - markdownlint-cli2 on the four Markdown files: 0 issues
+   - `node .../work/render.mjs` returned PASS, 0 issues; all four files rendered non-empty.
+   - `python3 -B scripts/private_host_paths.py --base f278e0b3...` returned PASS.
+   - `python3 -B scripts/license_policy.py` returned PASS.
+   - My own grep of the diff for home paths and the local user name found nothing.
+7. Independent recount from the raw records
+   - I wrote my own script (/tmp/rv24-recount.py, outside the repo) rather than trusting audit.py. It reads the three new jobs: muse-02, gemma4-e4b-02 and gemma4-26b-a4b-02, each first=2 (dev-003, dev-004).
+   - For each attempt it reads:
+     - record.json and checked.json
+     - the wire upstream-request
+     - the raw upstream-response usage
+     - the backend-slice prompt/eval token counters
+   - Results:
+     - muse: dev-003 refused code.proposal.edit; dev-004 refused code.proposal.format. Input 3817+2647=6464. Output 7256+11826=19082. Seconds 171.193+260.678=431.871. Body 466.890 s = 7.782 GPU-min.
+     - gemma4-e4b: both attempts refused code.proposal.edit. Input 4436+3040=7476. Output 8838+5962=14800. Seconds 80.163+40.736=120.899. Body 129.810 s = 2.164 GPU-min.
+     - gemma4-26b-a4b: dev-003 ungraded proposal; dev-004 refused code.proposal.edit. Input 4440+3044=7484. Output 1070+9740=10810. Seconds 32.241+69.246=101.487. Body 135.507 s = 2.258 GPU-min.
+   - The backend counters equal the response `usage` for all six attempts.
+   - All six finish reasons are `stop`, below their budgets, so "does not fit" is 0.
+   - Each `max_tokens` equals min(32768, 32768 − preflight − 32). Every wire request carries `enable_thinking: false`, and thinking_mode is disabled.
+   - The sampled GPU peaks (19543, 5411 and 17512 MiB) are all at or below 22,528 MiB.
+   - Cumulative totals match the README, TASKS, scoreboard and evidence: muse 2/2+0/2=2/4; e4b 0/4; a4b 1/2+1/2=2/4. The other three profiles are unchanged at 4/4, 4/4 and 0/4.
+   - Controller wall time: launch at 08:41:40.346166Z, exit at 09:13:53.583944Z, a difference of 1933.238 s. This matches the published figure, and the controller exit code is 0.
+8. Controls and cleanup
+   - verify.py asserts that batch.py, collect.py, controller.py, policy.json and frozen-inputs.json are byte-identical to the prior capsule. It also asserts that all earlier jobs/candidates are byte-identical and that the 18 earlier audit details are equal.
+   - work/launch.py differs from the prior launcher only in BASE and the allowed-path set. That set equals `git diff --name-only eef17dbd f278e0b3` exactly (13 paths).
+   - The launch argv `nice -n 9` is relative (`19 - os.nice(0)`). The recorded nice of 19 is read from /proc. It matches the prior launch.
+   - Wrapper hashes, wrapper environment and scope limits equal the prior launch: 16 GiB memory.max, cpu.max 400000/100000.
+   - The controller has two released 30-second pauses across three pairs, each pair under `queue-run agentmage 900`.
+   - cleanup.json:
+     - PASS, settings revoked, API and model reaped
+     - keys and sockets absent, no live owned processes, no foreign signal
+     - six retired tokens with receipts persisted before unlink
+   - Earlier receipts are preserved in the nested prior capsules: 6+6+4+2 = 18.
+9. Preservation
+   - verify.py checks that the TASKS.md table lines equal the base and that the scoreboard begins with the base bytes, i.e. it is append only.
+   - The README diff is the single Measured-coding cell. The independence paragraph, dates, Decision 0051 and the inventory are untouched, since no other file changed.
+   - The only prose edit to prior TASKS text is the checkpoint-18 paragraph's last sentence: "required" becomes "was required … PASS retained above". This is accurate and consistent with earlier retention commits.
+
+## Assessment against the brief
+
+- **Evaluation integrity:**
+  - Development split only; `held_out_executed` is false. No candidate, hidden or held-out code executed.
+  - The frozen inputs are bound exactly.
+  - Scores re-run by one command (reproduce.py) and agree with the raw logs. Failures are counted with their causes, not dropped.
+- **Measure first:** the scoreboard has a dated line for this batch. It states:
+  - context and output budgets
+  - tokens and timing
+  - causes and backend terminations
+  - a separate "does not fit" count (0)
+  - "no changed variable"
+- **Honest labelling:**
+  - The counts are labelled "strict ungraded proposals".
+  - First-attempt and within-budget passes are stated as unavailable.
+  - There is no solved-task claim, no model adoption and no row closure.
+  - The labels separate queue-inclusive controller time from reserved-job body time.
+  - No other agent product is named or compared.
+- **Privacy and licence:** the gates pass, and no private path, user name, credential or sibling project name appears in the committed diff. The private host path in the capsule's launch.json is not committed.
+- **Confinement:** no product, tool or confinement code changed in this reporting increment. No boundary is newly in scope.
+
+## Findings
+
+None: no critical, high, medium or new low findings. Existing T-309 lows remain backlog.
+
+## Per-row result
+
+- T-303/T-306 (non-closing frozen development measurement, checkpoint 24/180): reporting increment accepted. Both rows remain open; nothing closes.
+
+Verdict: PASS

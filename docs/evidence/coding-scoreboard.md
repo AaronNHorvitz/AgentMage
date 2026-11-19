@@ -4543,3 +4543,39 @@ exact strict checker run. Native admission and original execution/grading
 controls remain unavailable; no effects, project tests, feedback, retries,
 candidate, hidden or held-out execution. No task score or model adoption.
 T-303/T-306 remain open.
+
+## Frozen raw-source repeat: thirty-attempt checkpoint, 2026-11-19
+
+Frozen source: `eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f`.
+Reporting base: `12dbc19b5c9137f4035c3c92a3998fdaabe831e2`.
+
+| Date | New profile attempts | Context / output tokens | Completed / total attempts | Strict ungraded proposals | First-attempt / within-budget passes | Input / output tokens | Request and strict-check seconds | Reserved-job GPU minutes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-19 | gemma4-31b | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 1/2 | Unavailable / unavailable | 16921 / 1328 | 72.479 | 1.877 |
+| 2026-11-19 | qwen35-27b | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 2/2 | Unavailable / unavailable | 14589 / 807 | 43.014 | 1.134 |
+| 2026-11-19 | gpt-oss | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 1/2 | Unavailable / unavailable | 13266 / 32758 | 168.751 | 3.083 |
+
+No changed variable. The repeat is **30/180 attempted, 150 remaining**;
+cumulative strict ungraded proposals: gemma4-31b 5/6; qwen35-27b 6/6; gpt-oss 1/6; muse 2/4; gemma4-e4b 0/4; gemma4-26b-a4b 2/4.
+Finish all 30 tasks on all six profiles before tuning or capability work.
+
+gemma4-31b: causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+qwen35-27b: causes `{"ungraded-proposal": 2}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+gpt-oss: causes `{"generation-refused:error:chat.response.incomplete": 1, "ungraded-proposal": 1}`; backend terminations `{"output-cap": 1, "stopped-below-token-limits": 1}`; response fields `{"content:absent-or-empty": 1, "content:nonempty": 1, "reasoning:absent-or-empty": 2, "reasoning_content:nonempty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+Controller wall time including queues and two released pauses: 627.643 seconds.
+Body time excludes queues and is neither kernel nor full-reservation timing;
+preparation/reporting and end-to-end latency remain unmeasured. Exact settings,
+budgets and cleanup are in the [checkpoint evidence](t303-raw-source-checkpoint30-2026-11-19.md).
+Only Rust retrieval, credential-owning chat transport, local inference and the
+exact strict checker run. Native admission and original execution/grading
+controls remain unavailable; no effects, project tests, feedback, retries,
+candidate, hidden or held-out execution. No task score or model adoption.
+T-303/T-306 remain open.
+
+The reporting reproduction accounts for 29 strict-check results and one
+authenticated generation refusal across all 30 attempt records. The initial
+verifier assumed one strict result per attempt; its failure and full initial
+seal are preserved. No inference is rerun and no measured input changes.
