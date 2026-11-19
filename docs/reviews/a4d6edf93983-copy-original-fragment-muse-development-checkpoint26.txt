@@ -1,0 +1,69 @@
+Commit: a4d6edf93983c146eb55859a41269eafc9935b10
+Scope: copy-original-fragment-muse-development-checkpoint26
+
+# Independent review: frozen original-fragment Muse twenty-six-attempt checkpoint
+
+Reviewer: Claude Opus 5.5 (extra-high effort), a separate session with read-only access, working in the pinned checkout /lane/review-checkout. Row: T-303/T-306, non-closing frozen development measurement. Base `0ffdabc25b77b7552795bb135f9af9fdbb2cb167`; prompt/checker source `35217c60a56a5d3e065148eb9a6aea898b5e1b16`.
+
+## Methods and commands (all in /lane/review-checkout, CARGO_TARGET_DIR=/lane/state/review-target)
+
+1. `git rev-parse HEAD` and `git rev-parse a4d6edf9...` both returned `a4d6edf93983c146eb55859a41269eafc9935b10`. `git status --porcelain` printed nothing, both before and after my runs. `git diff --check 0ffdabc2...` exited 0.
+2. Diff scope: `git diff --stat 0ffdabc2 HEAD` lists exactly 4 files with 203 insertions and 0 deletions: TASKS.md, docs/evidence/coding-scoreboard.md, the new checkpoint26 evidence file and docs/reviews/0ffdabc25b77-...-checkpoint22.txt. `--diff-filter=MD` shows no removed lines, so TASKS.md and the scoreboard only gain additions. The earlier scoreboard prefix is unchanged.
+3. Retained review: `cmp /lane/reviews/0ffdabc25b77-copy-original-fragment-muse-development-checkpoint22.md docs/reviews/0ffdabc25b77-copy-original-fragment-muse-development-checkpoint22.txt` exited 0, so the files are identical. Its PASS verdict, with no findings, is quoted accurately in TASKS.md and in the evidence.
+4. Capsule hashes: `sha256sum` matches every stated value:
+   - manifest.json `c73b3e16...bcf0`;
+   - bindings.json `5cf8c20e...a2a9`;
+   - post-commit JSON `c96dddad...73f8`;
+   - finalization JSON `07238174...d546`.
+
+   The manifest lists 2,964 files. The capsule holds 2,966 on disk; the two extra files are manifest.json and bindings.json, and verify.py asserts exactly that set. The finalization JSON records the builder's precommit verifier PASS and the repeated postcommit verifier as NOT RUN. That disposition matches the request, and the finalization JSON does not claim a PASS for the run that never started.
+5. Sealed verifier, run at the exact clean commit: `bash /tools/build-slot python3 -B /lane/reviews/copy-fragments-muse-checkpoint26-20261118/verify.py`. It waited about 18 minutes for a shared slot, then printed `{"status": "PASS", "attempts": 146, "new_attempts": 4, "remaining_attempts": 34, "strict_ungraded_proposals": 19, "all_dependencies_checked": true, "live_state": "unavailable", "postcommit_checked": true, "candidate_execution": false, "task_passes": null}` and exited 0.
+   - This is the postcommit run that the builder could not start, and it now passes.
+   - Live builder state is not mounted here and is reported as unavailable, as the request anticipated.
+   - I read verify.py (138 lines). It authenticates all 18 dependency trees and their postcommit receipts against committed blobs. It checks the 2,283 repository and 44 private frozen inputs, the method-adaptation hashes, the launch and exit receipts, the resource limits, and the wire request bodies, which must be exact. It checks positions 22–25 against the preflight order, recomputes causes, timing and tokens from the backend logs, and checks cleanup, preservation, the TASKS table rows, the scoreboard prefix and the complete committed diff.
+6. Helper reproduction: I authenticated the helper object to `1992c3c4...bd6de` and copied it to a private 0700 directory. `bash /tools/build-slot python3 -B .../reproduce.py --helper <copy> --output <fresh dir>` printed `{"status": "PASS", "contexts": 30, "answers": 4, "helper_sha256": "1992c3c4...bd6de", "candidate_execution": false, "model_inference": false, "hidden_or_held_out": false}`. I read reproduce.py (39 lines). It authenticates the dependency manifests, asserts that all 30 contexts are equal to the recorded ones, and asserts that each of the four new answers (jobs muse-22 and muse-24) is equal to its recorded `checked.json`.
+7. Gates, with node authenticated to `d1de76d8...c932c` and placed first on PATH as a private copy:
+   - `python3 -B scripts/local_agent_fast_gate.py --base 0ffdabc2... --timeout 3600` returned FAST GATE: PASS (private paths PASS, licence PASS, review lint exit 0, markdownlint 0 issues in 3 files).
+   - `node .../work/lint-all.mjs` returned PASS with 0 issues (1 scoreboard table, 1 evidence table).
+   - `python3 -B scripts/private_host_paths.py --base 0ffdabc2...` returned PASS.
+   - `python3 -B scripts/license_policy.py` returned PASS.
+8. Independent recomputation from raw records, using my own script rather than the builder's reporting:
+   - Integrity: every log hash in `campaign/jobs/muse-{22,24}/collection/batch.json` matches its file.
+   - Outcomes: dev-023, dev-024, dev-025 and dev-026 are all `ungraded-proposal`, with `graded: false`, `retries: 0`, no base fallback and a `checked.json` containing `changes`. The result is 4/4 strict ungraded proposals.
+   - Request/check time: the sum of `generation_seconds` is 111.345 + 76.333 + 208.382 + 43.699 = 439.760 s.
+   - Reserved-job time: 213.754 + 277.394 = 491.148 s, which is 8.186 minutes.
+   - Tokens: backend `prompt eval` gives 7622 + 5106 + 4112 + 4707 = 21547 input tokens. `eval` gives 4595 + 3300 + 9124 + 1807 = 18826 output tokens. Both equal the upstream response `usage` fields, so 4/4 counters are present.
+   - Budgets: `max_tokens` is 25114, 27630, 28624 and 28029. Each equals `min(32768, 32768 - input - 32)`, within the published 25114–28624.
+   - Requests: every request carries only system and user messages, has no tools and `stream: false`, and sends `chat_template_kwargs.enable_thinking: false`.
+   - Responses: every response has `finish_reason: stop`, non-empty content, empty `reasoning` and non-empty `reasoning_content`. This matches the published response-field counts and the disclosure that these fields do not establish an absence of reasoning.
+   - Controller wall: from launch at 00:12:25.953250 to exit at 00:21:10.241937 is 524.289 s, as published.
+   - Cumulative figures: the checkpoint-22 values (15/22; 3931.181 s; 4444.756 s; 74.079 min; 131473 / 141820 tokens; 20/22 counter coverage) plus the new values give the published 19/26, 4370.941 s, 4935.904 s, 82.265 min, 153020 / 160646 and 24/26. `work/audit.json` agrees, and its cumulative causes total 2 + 2 + 3 + 19 = 26.
+9. Evaluation integrity:
+   - `git diff --name-only 35217c60..HEAD` outside TASKS.md, docs/evidence and docs/reviews shows only README.md. That is the already-reviewed one-word wording edit from b7ab16d0. No prompt, helper, checker, controller or source changed, and verify.py confirms that batch.py, collect.py, controller.py, policy.json and the frozen inputs are byte-equal to the first dependency.
+   - A grep for held-out or hidden-test references in the four wire and recorded request bodies found nothing.
+   - The collection reports `split: development` and `held_out_executed: false`.
+   - dev-023 to dev-026 follow checkpoint 22's dev-019 to dev-022, and verify.py asserts that they equal preflight positions 22–25. No attempt is replayed.
+   - `campaign/candidates/muse/dev-02{3..6}` holds candidate trees retained as data, with the same layout as the checkpoint-22 capsule. Nothing records that a candidate, project test or hidden test was executed.
+10. Confinement and cleanup:
+    - The model-server command uses `bwrap --unshare-all --unshare-user --disable-userns --clearenv --cap-drop ALL`, so it has no network namespace.
+    - The controller runs low priority at nice 19 (`nice -n 9` inside the low build slot, as in checkpoint 22), with cgroup limits `memory.max` of 16 GiB and `cpu.max` 400000/100000 (four CPUs).
+    - `work/cleanup.json` reports PASS: settings revoked, API and model reaped, keys and sockets absent, four tokens retired, no live owned processes and no foreign signal.
+    - The private capsule contains local host paths and token-file paths, which is expected for a private capsule. None of them appears in the committed diff. I grepped the added lines for home paths, the username, email, localhost, key and token patterns, other agent products, vendor names and patents. The only matches are generic `/lane` paths inside the retained reviewer report, and the path check passes.
+11. Not run: the optional portable bwrap verifier (step 4 of the request). It is optional, and step 5 already ran the verifier without builder state. This review used no GPU and did not modify the repository.
+
+## Findings
+
+None at high, medium or low severity.
+
+## Claims checked
+
+- Measure-first: the batch has its scoreboard line. The line states the context and output budgets and the output formula, reports 0 tasks that do not fit separately from model failures, marks task passes as Unavailable and held-out as Not run, and labels timing as reserved-job and request/check time rather than kernel or end-to-end time.
+- Honest labelling: proposals are called ungraded, the partial path is stated, and no model role, qualification or row close is claimed.
+- The disposition of the postcommit verifier that never started is honest: the commit does not claim it ran or passed. My run at the exact commit now supplies that result.
+- No new sub-row. No other agent product, private project or patent is named.
+
+## Per-row result
+
+- T-303/T-306 (non-closing frozen development measurement, Muse checkpoint 26): the measurement is accepted as reported. No row closes, and T-303/T-306 remain open, as the commit states.
+
+Verdict: PASS
