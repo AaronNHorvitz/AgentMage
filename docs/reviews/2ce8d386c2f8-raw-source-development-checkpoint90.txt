@@ -1,0 +1,122 @@
+Commit: 2ce8d386c2f8685b281192eb83098d24b3586beb
+Scope: raw-source-development-checkpoint90
+
+# Independent core review: frozen raw-source development checkpoint 90
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Reviewed the pinned checkout
+`/lane/review-checkout` at the exact commit. Row: T-303/T-306 (non-closing frozen development measurement).
+Base `297b433d12a4b4bb54e37b297942c9cca167d3d2`; frozen product source `eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f`.
+
+## Methods and commands
+
+1. Commit and tree
+   - `git rev-parse HEAD` gives `2ce8d386c2f8685b281192eb83098d24b3586beb`. `git status --porcelain` is empty
+     before and after every run.
+   - `git diff --check 297b433d…` exits 0.
+   - `git diff --stat 297b433d…` touches four files: README.md (one table cell), TASKS.md (+7 lines prepended to
+     the active queue), docs/evidence/coding-scoreboard.md (+47 lines appended), and the new
+     docs/evidence/t303-raw-source-checkpoint90-2026-11-19.md. There are no product source changes.
+   - `git diff --name-only eef17dbd 297b433d` gives exactly 35 paths, all docs/README/TASKS. They are set-equal to
+     the explicit allow-list in `work/launch.py:17`. This commit adds the 36th path (the new evidence file), and the
+     next launcher must allow it.
+2. Capsule authentication
+   - `sha256sum` of manifest.json is `2a6dae08…7397675`, bindings.json is
+     `4322c93211d489bb8931ba815c4f329e524e3068883a47e14f60e0cb5c4deaf5`, and the post-commit JSON is `514fc350…86e8`.
+     All three match the request.
+   - The post-commit `public` hashes equal `sha256sum` of the four committed files.
+   - `bash /tools/build-slot python3 -B …/verify.py` gives `{"status": "PASS", "attempts": 90, "remaining": 90,
+     "postcommit_checked": true, "complete_prior_capsule_authenticated": true}` (17m28s).
+   - Root verify.py and reproduce.py are byte-identical to work/verify.py and work/reproduce.py.
+3. Portable reproduction
+   - `bash /tools/build-slot python3 -B …/reproduce.py` gives `{"status": "PASS", "contexts": 30, "prior_checks": 161,
+     "new_checks": 83, "generation_refusals": 7, "attempt_records": 90, "candidate_execution": false,
+     "model_inference": false}`. The helper is authenticated as `4aea9726…1c53` before execution.
+4. Reporting gates
+   - Authenticated `/lane/reviews/42612ca9787f-a4b-node` (SHA256 `d1de76d8…932c`, v24.15.0, licence file read) and
+     installed a private copy at /tmp/rv-bin/node on PATH.
+   - `python3 -B scripts/local_agent_fast_gate.py --base 297b433d… --timeout 3600` gives FAST GATE: PASS: diff
+     check, untracked lint, private path check, licence policy, and markdownlint with 0 issues in 4 files.
+   - `node …/work/render.mjs` gives PASS, 0 issues, and all four files render non-empty.
+   - `python3 -B scripts/private_host_paths.py --base 297b433d…` gives PASS.
+   - `python3 -B scripts/license_policy.py` gives PASS.
+   - I also grepped the added lines for home paths, user/host names, e-mail, credentials, localhost and product or
+     vendor names. There were no hits; the only names are model profile identifiers.
+5. Independent raw recount (my own script over capsule raw bytes, not the builder's audit)
+   - For campaign/jobs/{gemma4-31b,qwen35-27b,gpt-oss}-14 I read batch-report, batch.json, the upstream
+     request/response bytes, capture metadata, events.ndjson and backend-slice.log, and checked every record log hash.
+   - Every request carries `chat_template_kwargs.enable_thinking=false`, n_ctx is 32768, and peak sampled GPU is
+     20124/18248/13713 MiB (≤ 22,528).
+   - Every max_tokens equals `32768 − preflight − 32`: 23608/23928, 24526/24777, 25238/25496.
+   - Input and output tokens: the API usage and the backend `prompt eval`/`eval` counters agree.
+     - gemma4-31b: 9128+8808 = 17936 and 340+1333 = 1673.
+     - qwen35-27b: 8210+7959 = 16169 and 320+1401 = 1721.
+     - gpt-oss: 7498+7240 = 14738 and 3906+25496 = 29402.
+   - Request seconds: 57.844+49.553 = 107.397; 28.472+39.620 = 68.092; 31.935+147.116 = 179.052.
+   - Reserved minutes: 165.141/60 = 2.752; 102.576/60 = 1.710; 198.481/60 = 3.308.
+   - All of these match the scoreboard and evidence tables exactly.
+   - gpt-oss dev-015 is a strict-edit refusal (`code.proposal.edit` in checked.json).
+   - gpt-oss dev-016:
+     - finish_reason is `length`, completion_tokens is 25496 (equal to the cap), with 499 chars of content and
+       114,756 chars of reasoning_content. The terminal event is `complete`/`length`.
+     - The record has generation_succeeded=false, candidate_is_base_fallback=true, retries 0 and graded false.
+     - There is no answer.txt or checked.json.
+     - This matches the public description. "Does not fit: 0" is correct: the input fit, and the output-cap stop is
+       counted as a model-side refusal, not a fit failure.
+6. Cumulative counts and evidence trail
+   - Recounted from audit.json details by cause:
+     - gemma4-31b 12/16
+     - qwen35-27b 15/16
+     - gpt-oss 2/16, with 10 edit refusals, 3 incomplete and 1 complete:length
+     - muse 7/14, with 3 preserved transport timeouts
+     - e4b 3/14
+     - a4b 6/14
+   - Total 90, which matches README, TASKS, scoreboard and evidence.
+   - 45 ungraded proposals + 38 strict refusals = 83 strict checks, and 7 generation refusals make 90.
+   - The new controller log ends at 16/30 for each of the three profiles; controller-exit is 0.
+   - delta.json gives controller_wall_seconds 533.203758.
+7. Diffs against the preceding capsule's scripts
+   - launch.py changes only BASE and the allow-list.
+   - audit.py is identical.
+   - cleanup.py changes the report count from 42 to 45 and adds a check that the 6 checkpoint-84 receipts are
+     retired.
+   - write-reports.py and finish-session.py change only counts and paths.
+   - verify.py changes only BASE, prior hashes, nesting depth and counts.
+   - In reproduce.py, besides nesting depth and counts, the shared refusal assertion was split by terminal type:
+     - A new `complete` branch is pinned to exactly (`gpt-oss`, `dev-016`). It requires finish `length`, a status-200
+       capture whose hash and size match, non-empty content and reasoning, and completion_tokens = requested = 25496.
+     - The `type=='error' and partial` assertion is re-added in both earlier branches (transport timeout and
+       `chat.response.incomplete`).
+     - No earlier refusal assertion is weakened, and any other `complete` refusal would fail.
+   - extend-reproduction.py records this edit with exact single-occurrence replacements.
+8. Integrity and confinement for this increment
+   - The campaign's batch.py, collect.py, controller.py, policy.json and frozen-inputs.json are byte-equal to the
+     prior capsule's (checked by verify.py).
+   - All prior jobs and candidates are byte-identical, and the 84 prior audit details are unchanged.
+   - The split is development and held_out_executed is false. No candidate, hidden or held-out code ran.
+   - The launcher runs the controller under bwrap with the source snapshot read-only, nice 19, low priority, and a
+     cgroup of 16 GiB / 4 CPUs. The cleanup report has 6 retired tokens, receipts persisted before unlink, no
+     live owned processes, and settings revoked.
+   - No GPU or inference was used by this review.
+
+## Findings
+
+No critical, high, medium or low findings.
+
+Observation, not a finding: the public text says the preceding reporting commit is "under independent core review; no
+verdict is inferred". The checkpoint-84 PASS review (SHA256 `26ce4215…0b876c0b`, verified) has mtime 09:47:40 −06:00.
+That is after the capsule manifest (09:39:18) and before this commit (09:55:00). The wording is stale by eight minutes
+at commit time. The request discloses this as preparation-time wording, the text claims no verdict, and the next
+reporting commit must retain that review unchanged, so it does not affect any claim here.
+
+## Per-row result
+
+- T-303/T-306 non-closing checkpoint 90: PASS for the reporting increment.
+  - Every number traces to raw records.
+  - Budgets, the output formula and timing scopes are stated, and the new refusal is honestly labelled.
+  - Preservation of the ledger table lines, the scoreboard prefix and prior attempts holds.
+  - There is no tuning, held-out use or task-pass claim.
+  - T-303 and T-306 remain open, and no row closes.
+- The earlier source gate (FAIL, 53 inherited failures) was not rerun and is not accepted here. Existing T-309 lows
+  remain backlog.
+
+Verdict: PASS
