@@ -2,6 +2,30 @@
 
 ## Active queue: local agent mission
 
+The [independent one-hundred-two-attempt checkpoint review](docs/reviews/91e912a05823-raw-source-development-checkpoint102.txt)
+returns **Verdict: PASS** for exact `91e912a058230b8e636d8932c3bed7c9689c5f6d`, with no critical, high or medium findings; one low timeout-list finding remains in T-309.
+Its report is retained unchanged; no row closes. This accepts only
+that reporting increment; the new checkpoint requires independent core review.
+Earlier scoreboard lines stay unchanged.
+
+The [independent ninety-six-attempt checkpoint review](docs/reviews/2aac78ff38b9-raw-source-development-checkpoint96.txt)
+returns **Verdict: PASS** for exact `2aac78ff38b982f7bccb58b72f487f38051371cf`, with no critical, high or medium findings; three low reporting/provenance findings join T-309.
+Its report is retained unchanged; no row closes. This accepts only
+that reporting increment; the new checkpoint requires independent core review.
+Earlier scoreboard lines stay unchanged.
+
+T-309 backlog from the checkpoint96 review: keep late-verdict timing explicit,
+list every preserved transport timeout, derive private review labels from the
+commit, retain refusal tracebacks and the exact envelope-writing steps. The
+reporting templates apply those corrections here; frozen inputs stay unchanged.
+
+The [frozen raw-source one-hundred-eight-attempt checkpoint](docs/evidence/t303-raw-source-checkpoint108-2026-11-19.md) adds six development
+attempts. The repeat reaches 108/180 attempted, with 72 remaining before tuning
+or capability work. Cumulative strict ungraded proposals: gemma4-31b 14/18; qwen35-27b 17/18; gpt-oss 3/18; muse 11/18; gemma4-e4b 5/18; gemma4-26b-a4b 10/18.
+Task passes and retries remain unavailable; no candidate, hidden or held-out
+code executes. Frozen inputs and earlier attempts remain unchanged. Independent
+core review is required for this checkpoint; T-303/T-306 remain open.
+
 The [independent ninety-attempt checkpoint review](docs/reviews/2ce8d386c2f8-raw-source-development-checkpoint90.txt)
 returns **Verdict: PASS** for exact `2ce8d386c2f8685b281192eb83098d24b3586beb`, with no critical, high, medium or low findings.
 Its report is retained unchanged; no row closes. This accepts only
@@ -13,7 +37,8 @@ attempts. The repeat reaches 102/180 attempted, with 78 remaining before tuning
 or capability work. Cumulative strict ungraded proposals: gemma4-31b 14/18; qwen35-27b 17/18; gpt-oss 3/18; muse 9/16; gemma4-e4b 5/16; gemma4-26b-a4b 8/16.
 Task passes and retries remain unavailable; no candidate, hidden or held-out
 code executes. Frozen inputs and earlier attempts remain unchanged. Independent
-core review is required for this checkpoint; T-303/T-306 remain open.
+core review was required when recorded; its subsequent PASS is retained above.
+T-303/T-306 remain open.
 
 The [independent eighty-four-attempt checkpoint review](docs/reviews/297b433d12a4-raw-source-development-checkpoint84.txt)
 returns **Verdict: PASS** for exact `297b433d12a4b4bb54e37b297942c9cca167d3d2`, with no critical, high, medium or low findings.
@@ -26,7 +51,8 @@ attempts. The repeat reaches 96/180 attempted, with 84 remaining before tuning
 or capability work. Cumulative strict ungraded proposals: gemma4-31b 12/16; qwen35-27b 15/16; gpt-oss 2/16; muse 9/16; gemma4-e4b 5/16; gemma4-26b-a4b 8/16.
 Task passes and retries remain unavailable; no candidate, hidden or held-out
 code executes. Frozen inputs and earlier attempts remain unchanged. Independent
-core review is required for this checkpoint; T-303/T-306 remain open.
+core review was required when recorded; its subsequent PASS is retained above.
+T-303/T-306 remain open.
 
 The [frozen raw-source ninety-attempt checkpoint](docs/evidence/t303-raw-source-checkpoint90-2026-11-19.md) adds six development
 attempts. The repeat reaches 90/180 attempted, with 90 remaining before tuning

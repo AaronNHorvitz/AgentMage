@@ -1,0 +1,158 @@
+Commit: 91e912a058230b8e636d8932c3bed7c9689c5f6d
+Scope: raw-source-development-checkpoint102
+
+# Independent core review: frozen raw-source development checkpoint 102
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. I reviewed the pinned checkout
+`/lane/review-checkout` at the exact commit. Row: T-303/T-306 (non-closing frozen development measurement).
+Base `2aac78ff38b982f7bccb58b72f487f38051371cf`; frozen product source `eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f`.
+I used no GPU and ran no inference or candidate code. I did not modify the repository.
+
+## Methods and commands
+
+1. Commit and tree
+   - `git rev-parse HEAD` gives `91e912a058230b8e636d8932c3bed7c9689c5f6d`. `git status --porcelain` is empty
+     before and after every run.
+   - `git diff --check 2aac78ff…` exits 0.
+   - `git diff --stat 2aac78ff…` touches exactly five files (+270/−2):
+     - README.md: one table cell, 96→102.
+     - TASKS.md: 13 lines prepended, and one sentence of the checkpoint-90 paragraph amended.
+     - docs/evidence/coding-scoreboard.md: 40 lines appended. Earlier bytes are unchanged (append-only hunk).
+     - The new docs/evidence/t303-raw-source-checkpoint102-2026-11-19.md.
+     - The new docs/reviews/2ce8d386c2f8-raw-source-development-checkpoint90.txt.
+   - `git diff --name-only eef17dbd 91e912a0` contains only README.md, TASKS.md and docs/ paths. No product
+     source, manifest, licence or package changes. The README independence paragraph is untouched.
+2. Retained reviews
+   - `cmp` of docs/reviews/2ce8d386c2f8-…-checkpoint90.txt against /lane/reviews/2ce8d386c2f8-…-checkpoint90.md
+     shows they are identical. The report starts with the exact commit line, says "No critical, high, medium or
+     low findings." (line 103) and ends with `Verdict: PASS`. The TASKS.md note matches this and closes no row.
+   - Checkpoint 96: /lane/reviews/2aac78ff38b9-raw-source-development-checkpoint96.md has SHA256 `6116adbd…c236aac4b`,
+     which matches the request. It is a PASS with three lows (L1–L3).
+     - Its mtime is 11:34 −06:00. The capsule manifest is 11:28 and the commit is 11:43.
+     - It arrived after sealing and before the commit. It is correctly not in this commit, and it is due in the
+       next reporting commit.
+3. Capsule, envelope and supplement authentication (`sha256sum`, plus my own Python)
+   - These all match the request:
+     - manifest `5c872c76…5d535ef`
+     - bindings `2ec3932f…f74840b542`
+     - post-commit `c8d456c3…d4e0e4d08`
+     - before-supplement envelope `cd90761d…dd21c43`
+     - supplement manifest `0d62432f…34091c1` and bindings `57a49721…26f5514`
+   - The current envelope minus `supplemental_finalization` equals the before-supplement envelope key for key.
+     - The before-supplement bytes equal canonical `json.dumps(indent=2, sort_keys=True)+'\n'`.
+     - `method_sha256` `d92173c4…` equals `sha256sum work/post-commit.py`.
+     - Its `public` hashes equal the SHA256 of all five committed files.
+     - `complete_diff_covered` is true, and commit/base/source are exact.
+   - Supplement:
+     - The inventory is exactly its 6 manifest files plus manifest/bindings.
+     - Every file's SHA256 and byte size match, and the bindings bind the manifest.
+     - Its retained checkpoint-96 report is byte-identical to the /lane/reviews original.
+   - I read late-finalize.py, finish-session.py, reason.json, late-review.json and seal-and-check.log.
+     - The original seal-and-check.py ran package, verify and reproduce, all exit 0. It then stopped on the
+       zero-low wording assertion, before `git add`.
+     - late-finalize.py accepts only the exact hashed PASS, with 0 critical/high/medium and exactly 3 lows. It
+       re-checks the verify/reproduce logs, preservation hashes and the path set, then commits the same paths.
+     - It also contains the original-envelope copy and the supplemental write. This addresses checkpoint-96 L3:
+       the envelope-writing step is now retained.
+     - finish-session.py now labels the late review "Checkpoint96", taken from the correct commit.
+   - Root verify.py and reproduce.py are byte-identical to work/verify.py and work/reproduce.py.
+   - `bash /tools/build-slot python3 -B …/verify.py` gives `{"status": "PASS", "attempts": 102, "remaining": 78,
+     "source_commit": "eef17dbd…", "postcommit_checked": true, "task_scores": null,
+     "complete_prior_capsule_authenticated": true}` (35m55s including queue, exit 0).
+4. Portable reproduction
+   - `bash /tools/build-slot python3 -B …/reproduce.py` gives `{"status": "PASS", "contexts": 30, "prior_checks": 161,
+     "new_checks": 94, "generation_refusals": 8, "attempt_records": 102, "helper_sha256": "4aea9726…", "candidate_execution":
+     false, "model_inference": false}` (6m41s, exit 0).
+   - The helper object `4aea9726…` is an ELF binary, and its hash equals the frozen-inputs private binding.
+   - Its retained source, object `8f2481c7…` (1,192 bytes), only reads stdin and calls `prepare_coding_proposal` or
+     `check_coding_proposal`. It is effect-free.
+5. Reporting gates (node copy authenticated `d1de76d8…bd932c`, v24.15.0, licence file read, private copy on PATH)
+   - `python3 -B scripts/local_agent_fast_gate.py --base 2aac78ff… --timeout 3600`: FAST GATE PASS. This covers
+     diff-check, untracked lint, private paths, licence, review lint and markdownlint (0 issues in 4 files).
+   - `node …/work/render.mjs` gives `{"status":"PASS","issues":0}` for all 4 files.
+   - `python3 -B scripts/private_host_paths.py --base 2aac78ff…`: PASS. `python3 -B scripts/license_policy.py`: PASS.
+   - My own grep of the added lines finds no home path, username, hostname, credential, email or agent-product
+     name. The commit trailer is the owner's Signed-off-by and the required Co-Authored-By.
+6. Independent trace from raw records (my own script over campaign/jobs/{gemma4-31b,qwen35-27b,gpt-oss}-16)
+   - Every upstream-response-*.bin matches its capture SHA256 and byte count. Every request carries
+     `enable_thinking: false`, a strict inline `coding_edits_v1` schema and `stream: false`.
+   - `max_tokens` equals `32768 − prompt − 32` in all six cases:
+     - 28430 and 29380
+     - 28834 and 29770
+     - 29092 and 29957
+   - Per-model sums of usage tokens:
+     - gemma4-31b: 7662/1131 (both `stop`)
+     - qwen35-27b: 6868/1129 (both `stop`)
+     - gpt-oss: 6423/34811 (dev-017 `stop` 4854, dev-018 `length` 29957 = cap, empty content)
+   - These sums equal delta.json and the public tables exactly. The response-field and termination cells also
+     match.
+   - Record causes:
+     - gemma 2 ungraded proposals.
+     - qwen 2 ungraded proposals.
+     - gpt-oss 1 ungraded proposal and 1 generation-refused (`chat.response.incomplete`).
+   - Cumulative audit.json has 56 ungraded proposals, 38 strict-edit refusals and 8 generation refusals, which is
+     102 attempts. 56+38 = 94 strict checks, matching reproduction.
+     - Per model: 14/18, 17/18, 3/18, 9/16, 5/16 and 8/16.
+     - These match README, TASKS, the scoreboard and the evidence file.
+     - The controller log ends at 18/30 for the three profiles.
+   - Timeouts in audit: muse dev-008, dev-011 and dev-012, all preserved. There are no new timeouts.
+   - Controller wall time: launch 17:16:55.64Z to exit 17:24:50.59Z, about 474.95 s. This matches 474.955.
+7. Diffs against the preceding capsule's scripts (prior/work)
+   - launch.py changes only BASE and the allow-list. Its parsed allow-list is set-equal to the 38 paths of
+     `git diff --name-only eef17dbd 2aac78ff`, all under README/TASKS/docs.
+     - launch.json `launcher_sha256` equals `sha256sum work/launch.py`.
+     - Slot 3–6 and low-max-wait environment fields are all null. Nice is 19 and priority is low.
+     - Cgroup limits are 16 GiB max and 4 CPUs.
+   - audit.py and wait-and-report.py are byte-identical to the prior capsule. audit.json `method_sha256` equals
+     audit.py.
+   - The campaign batch/collect/controller/policy/frozen-inputs/output-format files are byte-identical. Frozen
+     inputs bind 2,290 repository and 62 private files.
+   - verify.py, reproduce.py, cleanup.py, package.py, pipeline.py, post-commit.py, independent-raw.py and render.mjs
+     change only BASE, paths, prior hashes, nesting depth and counts.
+     - verify.py adds authentication of prior-finalization and the prior original envelope. No assertion is
+       removed or weakened.
+   - seal-and-check.py and retain-review-common.py widen the retention-gate wording to accept either zero-finding
+     sentence form. This does not weaken any evidence check.
+   - write-reports.py changes only numbers and labels.
+   - The wrappers /tools/build-slot and work/wrappers/build-slot are both `4061f0e6…a27a6`, which equals launch.json.
+     The gpu-slot hash `9804180e…` is unchanged.
+   - cleanup.json: PASS, 51 completed pairs, 6 retired tokens (hashes only), receipts persisted before unlink, the 6
+     checkpoint-96 receipts verified retired, no live owned processes, settings revoked, keys/sockets absent and no
+     foreign signal.
+8. Evaluation integrity
+   - Development split only, with no candidate, hidden or held-out execution and no tuning.
+   - verify.py confirms the 96 prior audit details are unchanged.
+   - There is no task-pass, model-qualification or comparison claim and no row closure.
+   - The MEASURE FIRST scoreboard line is present, with context/output budgets and timing scope stated.
+     "Does not fit" is counted separately (0).
+
+## Findings
+
+There are no critical, high or medium findings. Low (backlog, does not block):
+
+- L1 (recurrence of checkpoint-96 L2, already in T-309 backlog): the timeout sentence is incomplete.
+  - Where: docs/evidence/t303-raw-source-checkpoint102-2026-11-19.md:24 and docs/evidence/coding-scoreboard.md:5040.
+    Both say "The earlier Muse dev-008 transport timeout remains preserved".
+  - audit.json records three preserved muse timeouts: dev-008, dev-011 and dev-012. All are counted correctly.
+  - The text was sealed before that review arrived, so this is expected.
+  - Fix as already recorded: generate the sentence from audit.json timeouts in write-reports.py.
+- Note (not a new finding): the evidence file's line 90 sentence, "The preceding reporting commit is under
+  independent core review; no verdict is inferred", was stale at commit time. The checkpoint-96 PASS existed at
+  11:34 and the commit was at 11:43.
+  - The builder took the remedy that checkpoint-96 L1 offered: it disclosed the late verdict outside the sealed
+    text (reason.json, the request and the handoff).
+  - It committed to retaining the PASS next commit, and it claims no verdict publicly.
+  - I accept this. The next reporting commit must retain `6116adbd…c236aac4b` unchanged.
+- The existing T-309 lows remain backlog. This includes per-pair wrapper provenance; the build-slot hash is
+  recorded only at launch.
+
+## Per-row result
+
+- T-303/T-306 non-closing checkpoint 102: PASS for the reporting increment only.
+  - Every number traces to raw records. Budgets, the output formula, context, timing scopes and missing coverage
+    are stated. Prior attempts and timeouts are preserved, and the checkpoint-90 PASS is retained byte-exact.
+  - T-303 and T-306 remain open, and no row closes.
+- The earlier source gate (FAIL: 1,034 passed, 53 inherited failures, 11 ignored) was not rerun and is not accepted
+  here.
+
+Verdict: PASS
