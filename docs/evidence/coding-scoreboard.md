@@ -5090,3 +5090,47 @@ exact strict checker run. Native admission and original execution/grading
 controls remain unavailable; no effects, project tests, feedback, retries,
 candidate, hidden or held-out execution. No task score or model adoption.
 T-303/T-306 remain open.
+
+## Frozen raw-source repeat: one-hundred-fourteen-attempt checkpoint, 2026-11-19
+
+Frozen source: `eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f`.
+Reporting base: `9bc971d2b1bc012e369bd11c2bcc92cacc075cf1`.
+
+| Date | New profile attempts | Context / output tokens | Recorded / total attempts | Strict ungraded proposals | First-attempt / within-budget passes | Observed input / output tokens | Request and strict-check seconds | Reserved-job GPU minutes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-19 | gemma4-31b | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 2/2 | Unavailable / unavailable | 16932 / 705 | 71.709 | 1.914 |
+| 2026-11-19 | qwen35-27b | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 1/2 | Unavailable / unavailable | 15031 / 478 | 51.444 | 1.415 |
+| 2026-11-19 | gpt-oss | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 2/2 | Unavailable / unavailable | 13765 / 3759 | 34.501 | 0.973 |
+
+No measured variable changes. The host build wrapper still offers up to six slots,
+with slots three through six guarded by 30/36/38/40 GiB available RAM; this changes scheduling, with exact wrapper
+bytes and checksum retained at launch; per-pair provenance remains T-309 backlog. Model inputs, GPU wrapper and lane limits are
+unchanged. The repeat is **114/180 attempted, 66 remaining**;
+cumulative strict ungraded proposals: gemma4-31b 16/20; qwen35-27b 18/20; gpt-oss 5/20; muse 11/18; gemma4-e4b 5/18; gemma4-26b-a4b 10/18.
+Finish all 30 tasks on all six profiles before tuning or capability work.
+
+gemma4-31b: causes `{"ungraded-proposal": 2}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+qwen35-27b: causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+gpt-oss: causes `{"ungraded-proposal": 2}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:nonempty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+Earlier transport timeouts remain preserved: muse dev-008, muse dev-011, muse dev-012. No terminal usage is invented and none is rerun. New attempts are reported separately.
+
+No new transport timeout was observed.
+
+An earlier queue-only launch was interrupted before any model job directory
+was created. Resume guards refused retained controller and reservation logs;
+those logs and refusal tracebacks are preserved in the review capsule. The
+unchanged controller resumed without rerunning a measured attempt. The wall
+time below starts at that successful resume and excludes the interrupted queue.
+
+Controller wall time including queues and two released pauses: 324.884 seconds.
+Body time excludes queues and is neither kernel nor full-reservation timing;
+preparation/reporting and end-to-end latency remain unmeasured. Exact settings,
+budgets and cleanup are in the [checkpoint evidence](t303-raw-source-checkpoint114-2026-11-19.md).
+Only Rust retrieval, credential-owning chat transport, local inference and the
+exact strict checker run. Native admission and original execution/grading
+controls remain unavailable; no effects, project tests, feedback, retries,
+candidate, hidden or held-out execution. No task score or model adoption.
+T-303/T-306 remain open.
