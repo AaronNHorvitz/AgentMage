@@ -1,0 +1,128 @@
+Commit: c1bb214085bf9eca42b0a45599224fa2a77352fb
+Scope: raw-source-development-checkpoint6
+
+# Independent review: frozen raw-source six-attempt checkpoint (434de57f) and parent-review retention (c1bb2140)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. Same-model review.
+Row: T-303/T-306 (non-closing frozen development measurement). Base
+d9bbbd25fb0b3be4d21c731a0078a5cd7762a262; frozen product source
+eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f. No row closes from this review.
+
+## Methods
+
+I read the complete five-file reporting diff d9bbbd25..c1bb2140 across both commits. 434de57f changes
+README.md, TASKS.md, docs/evidence/coding-scoreboard.md and the new
+docs/evidence/t303-raw-source-checkpoint6-2026-11-19.md. c1bb2140 adds
+docs/reviews/d9bbbd25fb0b-raw-source-presentation.txt and one TASKS.md paragraph. No product source,
+script, manifest or test file changes.
+
+In the capsule I read verify.py, checkpoint/verify.py, checkpoint/reproduce.py,
+checkpoint/work/audit.py, checkpoint/work/cleanup.py, checkpoint/work/launch.py and its failed
+predecessor launch-v1.py and log, checkpoint/campaign/controller.py, launch.json,
+controller-exit.json, audit.json, cleanup.json, preservation.json and the post-commit record. I then
+recomputed every published number myself from the raw records (batch reports, backend slices,
+upstream request/response bytes, checked.json and record rows), without using audit.json. I used no
+GPU and ran no model or candidate code.
+
+## Commands and results (all in /lane/review-checkout)
+
+1. `git rev-parse HEAD` gives c1bb214085bf9eca42b0a45599224fa2a77352fb. `git status --porcelain` is
+   empty. `git diff --check d9bbbd25…` exits 0.
+2. `bash /tools/build-slot python3 -B …/checkpoint6-parent-review-20261119/verify.py` gives PASS:
+   attempts 6, remaining 174, postcommit_checked true, complete_prior_capsules_authenticated true,
+   unchanged_parent_review true. The sha256 of manifest.json (cd204b2f…89aa), bindings.json
+   (7c8be974…b502b7) and the post-commit record (f460df84…f3c9) all match the request. The bindings
+   record 9511 manifest files (9513 files on disk including manifest and bindings). The post-commit
+   record names commit c1bb2140, complete_diff_covered true, and exactly the five diff paths.
+3. `bash /tools/build-slot python3 -B …/checkpoint/reproduce.py` gives PASS: contexts 30,
+   prior_checks 161, new_checks 6, helper 4aea9726…6e31c53, candidate_execution false,
+   model_inference false. The "helper entry" object 8f2481c7… is the helper's `main.rs` source
+   (the same bytes as the ef1, jo1 and rs1 bindings). Object 4aea9726… is the ELF binary that
+   reproduce.py copies, re-hashes and runs. It reads JSON on stdin and calls only
+   `prepare_coding_proposal`/`check_coding_proposal`, so it has no effects.
+4. Node `/lane/reviews/42612ca9787f-a4b-node` has sha256 d1de76d8…bd932c, which matches. Its licence
+   file is present. I installed a private copy at /tmp/rv6-node/bin/node (v24.15.0) on PATH.
+   - `python3 -B scripts/local_agent_fast_gate.py --base d9bbbd25… --timeout 3600` gives FAST GATE: PASS
+     (reporting-only: diff check, untracked lint, private paths, licence, review lint of the retained
+     .txt, and markdownlint-cli2 with 0 issues in 4 files).
+   - `node …/checkpoint/work/render.mjs` gives PASS, 0 issues, 4 files rendered non-empty.
+   - `python3 -B scripts/private_host_paths.py --base d9bbbd25…` gives PASS.
+   - `python3 -B scripts/license_policy.py` gives PASS.
+   - `cmp docs/reviews/d9bbbd25fb0b-raw-source-presentation.txt …/independent-parent-review.md` shows
+     the files are identical. The committed copy is also byte-identical to the original
+     /lane/reviews/d9bbbd25fb0b-raw-source-presentation.md.
+5. Independent recomputation from the raw job records:
+   - gemma4-31b: prompt 9085+9307=18392, eval 972+2033=3005. Both have stop `truncated = 0` and
+     finish_reason `stop`, and the usage blocks agree.
+   - qwen35-27b: prompt 7891+8166=16057, eval 1154+672=1826, both stopping below the limits.
+   - Output budgets: 32768−9085−32=23651, 32768−9307−32=23429, 24845 and 24570. Each equals
+     `max_tokens` in the wire request.
+   - Request/check seconds sum to 119.055 and 63.291. Reserved-job seconds are 158.702 and 89.050,
+     which is 2.645 + 1.484 = 4.129 minutes.
+   - Controller wall time: launch at 06:47:25.793Z and exit at 07:02:36.203Z give 910.410 s.
+   - All four new attempts have graded false, retries 0, a 200 response with non-empty content,
+     n_ctx 32768, thinking disabled, 300000 ms deadlines and peak sampled GPU ≤ 20816 MiB (guard
+     22528).
+   - The A4B pair is unchanged, including the dev-002 strict-edit refusal, which is counted as a
+     failure (1/2). Does-not-fit is 0.
+   - frozen-inputs.json has 2290 repository and 62 private bindings. The snapshot has 9760 files at
+     eef17dbd. There are 4 new and 2 prior retirement receipts. cleanup.json shows no live owned
+     processes.
+6. These preserved files match the hashes in preservation.json at the commit:
+   - Agent-Scaffolding-Inventory.md
+   - architecture/status-model.json
+   - architecture/private-path-exceptions.json
+   - docs/decisions/0051-business-source-license.md
+
+   verify.py checks the 512 TASKS table lines and the exact prefix of the old scoreboard. The README
+   diff changes one line only, and the independence paragraph is untouched.
+
+## Review notes
+
+- Launcher correction: launch-v1.py compared working-tree bytes with the snapshot and failed on
+  TASKS.md before any reservation; its log is retained. The corrected launch.py checks
+  snapshot = binding = `git show <frozen source>:path` for all 2290 bindings. It also asserts that
+  the frozen-source-to-HEAD diff is exactly the four reporting paths. This is stricter than v1, not
+  weaker. Worker, collector, controller, policy and frozen inputs are byte-identical to the prior
+  capsule (checkpoint/verify.py checks this). `nice -n 9` in argv is a relative increment. The
+  launcher asserts the resulting /proc nice value is 19, and launch.json records 19.
+- Confinement: no candidate code runs. The controller's wide `--bind / /` bwrap is a measurement
+  wrapper with the source snapshot mounted read-only over the repository path; it is not offered as a
+  tool sandbox. The only executable exercised in review is the authenticated effect-free helper.
+- Evaluation integrity: only development tasks dev-001 and dev-002 ran per profile. No hidden,
+  held-out or candidate execution is recorded or claimed. No tuning happened mid-repeat: the three
+  parent-review lows are recorded for T-309 and expressly deferred. No task pass, solved task or role
+  adoption is claimed.
+- MEASURE FIRST: the scoreboard has a dated 2026-11-19 line for this batch. It states "no changed
+  variable", the 32768 context and the output formula, and the evidence file gives the observed
+  ranges. Does-not-fit is counted separately (0), and the timing limitations are stated. Every
+  number traces to raw logs (item 5).
+- Honest claims: the source gate is still reported as FAIL (1034/53/11) and nothing is presented as
+  newly green. The TASKS summary of the three lows matches the retained review. The new and changed
+  text names no other agent product, private project or sibling. The `/lane/...` paths appear only
+  inside the verbatim retained review, as in earlier retained reviews, and the path check passes.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (backlog):
+
+1. `TASKS.md:20`: the 434de57f paragraph still says "The preceding commit is under independent core
+   review; no verdict is inferred." The paragraph c1bb2140 adds above it (`TASKS.md:5-13`) now
+   records that review's PASS, so the two sentences read as contradictory at this commit. Fix: on the
+   next reporting commit, reword line 20 to the past tense (for example "was under review when this
+   checkpoint committed; see the paragraph above"), or drop it. The evidence file
+   (`docs/evidence/t303-raw-source-checkpoint6-2026-11-19.md:75-76`) already uses the past tense
+   ("at session start") and needs no change.
+
+## Per-row result
+
+- T-303/T-306 (non-closing frozen development checkpoint 434de57f plus parent-review retention
+  c1bb2140): PASS for this exact reporting batch. The repeat is 6/180 attempted with 174 remaining.
+  Cumulative strict ungraded proposals are gemma4-31b 2/2, qwen35-27b 2/2 and gemma4-26b-a4b 1/2.
+  These are not task passes. This is reporting-only acceptance, not source or native acceptance.
+  Native admission and grading controls remain unavailable, and the inherited source-gate FAIL
+  stands. No row closes; T-303/T-306 stay open.
+
+Verdict: PASS

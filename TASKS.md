@@ -2,6 +2,17 @@
 
 ## Active queue: local agent mission
 
+The [independent six-attempt checkpoint review](docs/reviews/c1bb214085bf-raw-source-development-checkpoint6.txt)
+returns **Verdict: PASS** for exact `c1bb214085bf9eca42b0a45599224fa2a77352fb`,
+with no critical, high or medium findings. Its report is retained unchanged;
+it accepts that preceding reporting batch only. No row closes. Its one low
+finding is addressed here: the earlier checkpoint's pending-review sentence
+now states when it was pending. Frozen inputs and attempts stay unchanged;
+the repeat remains 6/180 attempted, with 174 remaining before tuning or
+capability work. The later queue-block record is under independent core review;
+no verdict is inferred. This retention increment also requires independent
+core review. Existing T-309 backlog remains.
+
 The [raw-source repeat queue record](docs/evidence/t303-raw-source-build-queue-block-2026-11-19.md) adds **zero attempts**:
 the first reservation remained unavailable, all three slots were observed
 occupied, and only this session's own unstarted waiter was retired. The repeat stays 6/180 attempted, 174 remaining.
@@ -24,8 +35,9 @@ attempts. The repeat reaches 6/180 attempted, with 174 remaining before tuning
 or capability work. Cumulative strict ungraded proposals: gemma4-31b 2/2; qwen35-27b 2/2; gemma4-26b-a4b 1/2.
 Task passes and retries remain unavailable; no candidate, hidden or held-out
 code executes. All measured inputs and earlier attempts remain unchanged.
-The preceding commit is under independent core review; no verdict is inferred.
-This checkpoint also requires independent core review; T-303/T-306 stay open.
+The preceding commit was under independent core review when this checkpoint
+was recorded; its PASS is retained above. The checkpoint reporting batch
+subsequently received the PASS retained above; T-303/T-306 stay open.
 
 The [first frozen raw-source pair](docs/evidence/t303-raw-source-first-pair-2026-11-19.md)
 records 1/2 A4B strict ungraded proposals. The new repeat is
