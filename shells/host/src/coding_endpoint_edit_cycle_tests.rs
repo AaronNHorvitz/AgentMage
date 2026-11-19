@@ -519,15 +519,16 @@ fn coding_cycle_repair_prompt_uses_fresh_source_and_labels_synthetic_diagnostics
                 b["messages"][0]["content"],
                 agentmage_capability_repository_map::coding_proposal::CODING_PROPOSAL_INSTRUCTION
             );
-            let user: Value =
-                serde_json::from_str(b["messages"][1]["content"].as_str().unwrap()).unwrap();
+            let (header, source_context) = b["messages"][1]["content"]
+                .as_str()
+                .unwrap()
+                .split_once('\n')
+                .unwrap();
+            let user: Value = serde_json::from_str(header).unwrap();
             assert_eq!(user["untrusted_validation_feedback"], feedback);
             assert_eq!(
-                user["source_context"],
-                serde_json::from_str::<Value>(
-                    proposal_context(&objective, &[("one.py", "current\n")]).user_message()
-                )
-                .unwrap()
+                source_context,
+                proposal_context(&objective, &[("one.py", "current\n")]).user_message()
             );
             assert!(
                 user["warning"]

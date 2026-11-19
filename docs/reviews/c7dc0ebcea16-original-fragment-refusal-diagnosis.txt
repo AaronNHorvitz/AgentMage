@@ -1,0 +1,109 @@
+Commit: c7dc0ebcea16dfebd19ef21d28805f9dbd2f405f
+Scope: original-fragment-refusal-diagnosis
+
+# Independent review: read-only diagnosis of original-fragment strict-edit refusals
+
+Reviewer: independent session (Claude Opus 5.5, extra-high effort), read-only, pinned checkout
+`/lane/review-checkout`. Row: T-303/T-306, a development diagnosis that does not close a row. Tier: core.
+Base `fda187da1b42d26405c4dc0ce50f8353b30c2f72`; frozen measured source
+`35217c60a56a5d3e065148eb9a6aea898b5e1b16`. I judge only this commit. The preceding in-flight completion
+review (fda187da) is outside this scope and gets no verdict here.
+
+## Methods
+
+1. I confirmed the commit, the clean tree and a whitespace-clean diff. The diff only adds lines to three files:
+   TASKS.md (+13), docs/evidence/coding-scoreboard.md (+23) and
+   docs/evidence/t303-original-fragment-refusal-diagnosis-2026-11-19.md (+117, new). Nothing is deleted.
+   The commit touches no source, prompt, schema, profile or budget.
+2. I authenticated the capsule pins and ran verify.py and reproduce.py through build-slot.
+3. I read diagnose.py, verify.py and reproduce.py in full. I compared the Python classifier with the frozen Rust
+   `check_coding_proposal` (capabilities/repository-map/src/coding_proposal.rs at 35217c60, lines 401–517).
+   The capsule copy is byte-identical to that file (sha256 0ce0675a…).
+4. I wrote my own byte-level classifier, separate from the builder's code. It re-derives the first failing
+   condition for all 50 `code.proposal.edit` refusals, plus the literal `\n`/`\"` visible-excerpt observation,
+   from the capsule's authenticated inputs.
+5. I recomputed every number in the public text from result/diagnosis.json and result/previous-diagnosis.json:
+   causes, the per-profile table, flags, the paired table, the 56→50 and 25→28 deltas, and the earlier outcome
+   of the interrupted pair.
+6. I authenticated the provided node binary, copied it privately onto PATH, and ran the fast gate, render,
+   private-path and licence checks.
+7. I checked that the links resolve, grepped the added lines for private paths, names and other product names,
+   and checked that the task set contains only development tasks.
+
+## Commands and results
+
+| Command | Result |
+| --- | --- |
+| `git rev-parse HEAD` | c7dc0ebcea16dfebd19ef21d28805f9dbd2f405f |
+| `git status --porcelain` | empty |
+| `git diff --check fda187da…` | exit 0 |
+| `git diff --numstat fda187da HEAD` | 13/0, 23/0, 117/0 (three files, additions only) |
+| `sha256sum` manifest, bindings, post-commit, helper | 56d8784a…5baad5, c66d2544…6f030f, 763def92…f34b0, 1992c3c4…bd6de: all match the request and the frozen-inputs pin |
+| `bash /tools/build-slot python3 -B …/verify.py` | `{"status":"PASS","attempts":180,"completed":179,"edit_refusals":{old-absent 28, unchanged-edit 5, overlapping-edits 7, old-not-visible 4, empty-old 1, old-ambiguous 5},"task_scores":null,"candidate_execution":false,"postcommit_checked":true}` |
+| `bash /tools/build-slot python3 -B …/reproduce.py` | `{"status":"PASS","contexts":180,"checks":161,"diagnostic_checks":22,"all_result_bytes_reproduced":true,…}` (28.8 s). The script fails on any difference in a file name or a single byte of the regenerated output. |
+| node `/lane/reviews/42612ca9787f-a4b-node` | sha256 d1de76d8…bd932c matches; v24.15.0 |
+| `python3 -B scripts/local_agent_fast_gate.py --base fda187da… --timeout 3600` | FAST GATE: PASS (diff check, untracked lint, privacy, licence, markdownlint 0 issues in 3 files) |
+| `node …/render.mjs` | PASS, 0 issues, 2 evidence tables |
+| `python3 -B scripts/private_host_paths.py --base fda187da…` | PRIVATE PATH CHECK: PASS |
+| `python3 -B scripts/license_policy.py` | LICENCE POLICY: PASS |
+| Independent re-classification (own script) | old-absent 28, overlapping 7, unchanged 5, ambiguous 5, not-visible 4, empty 1 = 50; 0 mismatches against the builder's rows. Visible-excerpt match after literal `\n`/`\"` substitution: gpt-oss 6, E4B 1 = 7 |
+| Independent paired recomputation | 179 pairs; previous 105, current 107, became 27, ceased 25; interrupted pair (gemma4-e4b dev-007) previously `ungraded-proposal`; strict-edit refusals 56→50; old-absent 25→28 |
+
+Sealed public bytes (54ba841e…, 81e7e4d3…, 2a4561e6…) equal the committed blobs. The post-commit record
+covers the complete three-file diff. The manifest lists 1175 files; the directory holds 1177 including
+manifest.json and bindings.json, matching the request.
+
+## Checks against the brief
+
+- **Checker fidelity.** The Python classifier follows the Rust checker's order exactly:
+  1. unknown path
+  2. empty, unchanged or NUL in `new` (one Rust condition, split for diagnosis)
+  3. absent
+  4. ambiguous: Rust searches again from the next character boundary; Python uses `find(old, start+1)` on
+     code points, which is equivalent and also catches overlapping repeats
+  5. visibility over byte offsets inside one excerpt
+  6. sorted per-file overlap, `prev.end > next.start`
+  7. size, then net unchanged
+
+  All 50 refusals stop at or before the overlap stage, so the size and net-unchanged branches play no part in
+  the published counts. The Rust helper's actual `code.proposal.edit` output was reproduced for all 161 checks.
+- **Evidence supports the claims.** Every number in TASKS.md, the scoreboard and the evidence file traces to
+  result/diagnosis.json, and I recomputed each one from the authenticated inputs. Whitespace-normalized
+  matches (7), absent originals contained in an earlier `new` (1) and escape spellings (16) are correctly
+  described as overlapping observation flags, not causes. The substitution observation is correctly bounded:
+  it is not a decoder, not a uniqueness check and not a repair, and no transformed string reaches a checker
+  or candidate (verified in diagnose.py: `representation_flags` returns labels only).
+- **Honest labelling.** Proposals are called "strict ungraded", task scores are `null` and stated as
+  unavailable, and the paired change of 105→107 is explicitly called mechanical and not evidence of
+  improvement or qualification. No row closes. The doc does not claim the next work is built.
+- **Evaluation integrity.** The task set is dev-001…dev-029 plus dev-rust-001, development only. No hidden-test
+  or held-out content is loaded, and no task loader or archived Python is imported. diagnose.py imports only
+  the standard library and reads data. The only executable is the pinned helper, which receives context and
+  answer JSON on stdin. Raw attempts are copied as data and authenticated against all 25 original manifests.
+  verify.py re-hashes every file of each mounted original seal.
+- **MEASURE FIRST.** The scoreboard gets a dated line for this batch. It states zero attempts, zero GPU minutes
+  and unchanged context and output budgets, and keeps the interruption separate from model failures. Next work
+  targets presentation and escaping while keeping exact checking. No new limit, row or bookkeeping feature is
+  added, and the order of work is unchanged.
+- **Confinement and authority.** The commit changes no runtime and no tool boundary. The diagnosis states that
+  the untrusted-data boundaries and all-or-nothing checking are preserved for future work.
+- **Public-repo hygiene.** The added lines contain no private paths, usernames, hostnames, credentials, other
+  agent products or private project names. The profile labels (A4B, 31B, E4B, gpt-oss, Muse, 27B) are already
+  used in the published scoreboard ("Muse" appears 67 times at the base). README, licence files, inventory and
+  Decision 0051 are untouched. Existing table rows in TASKS.md are byte-preserved, and the scoreboard at the
+  base is a byte prefix of the new one (verify.py, preservation.json).
+
+## Findings
+
+No critical, high, medium or low findings in this commit's scope.
+
+Not run, and not required for this documentation-only batch: source tests. Source is unchanged from the last
+gated state; the builder discloses the last source gate as FAIL (1030 passed, 53 inherited failures,
+11 ignored). No GPU or inference was used by me. Existing T-309 lows persist as backlog.
+
+## Per-row result
+
+- T-303/T-306, read-only refusal diagnosis: the batch is accepted. The rows stay open as the commit states;
+  this verdict closes nothing.
+
+Verdict: PASS

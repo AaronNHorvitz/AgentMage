@@ -289,10 +289,18 @@ fn endpoint_prepared_service_native_edit_returns_original_lineage_and_needs_new_
                 generation["messages"][0]["content"],
                 agentmage_capability_repository_map::coding_proposal::CODING_PROPOSAL_INSTRUCTION
             );
-            let source: Value =
-                serde_json::from_str(generation["messages"][1]["content"].as_str().unwrap())
-                    .unwrap();
-            assert_eq!(source["excerpts"][0]["text"], old);
+            let (metadata, rest) = generation["messages"][1]["content"]
+                .as_str()
+                .unwrap()
+                .split_once('\n')
+                .unwrap();
+            let metadata: Value = serde_json::from_str(metadata).unwrap();
+            assert_eq!(metadata["excerpt_count"], 1);
+            let (header, body) = rest.split_once('\n').unwrap();
+            let header: Value = serde_json::from_str(header).unwrap();
+            assert_eq!(header["untrusted_excerpt"]["path"], "one.py");
+            assert_eq!(header["untrusted_excerpt"]["bytes"], old.len());
+            assert_eq!(body.as_bytes(), [old.as_bytes(), b"\n"].concat());
             respond(
                 &mut socket,
                 &json!({"edits":[{"path":"one.py","old":old,"new":new}]}).to_string(),

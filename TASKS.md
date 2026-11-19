@@ -2,6 +2,16 @@
 
 ## Active queue: local agent mission
 
+The [raw-source presentation batch](docs/evidence/t303-raw-source-presentation-2026-11-19.md)
+removes the source-level JSON escape layer while preserving all 30 development
+excerpt selections and reproducing all 161 available previous checker outputs.
+The fixed instruction and exact checker are unchanged. Freeze this source,
+then repeat all 30 development tasks on all six profiles before further tuning
+or capability work. This source increment runs no inference and establishes
+no task score; T-303/T-306 stay open. Independent core review is required.
+Both preceding exact-commit reviews returned PASS and are retained unchanged;
+the completion review's two low scheduling/cleanup notes join T-309 backlog.
+
 The [read-only refusal diagnosis](docs/evidence/t303-original-fragment-refusal-diagnosis-2026-11-19.md)
 classifies all 50 strict-edit refusals: 28 absent originals, seven overlaps,
 five repeated originals, five unchanged edits, four invisible originals and

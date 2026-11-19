@@ -21,6 +21,35 @@ use sha2::{Digest, Sha256};
 const CLIENT: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const CONTROL: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
+// Recover the delivered excerpts by byte counts, not marker searches, so the
+// API contracts still inspect exactly what the upstream model receives.
+fn raw_source_context(message: &str) -> Value {
+    let (metadata, mut rest) = message.split_once('\n').unwrap();
+    let mut context: Value = serde_json::from_str(metadata).unwrap();
+    assert_eq!(
+        context["source_encoding"],
+        "untrusted-raw-utf8-length-prefixed-v1"
+    );
+    let mut excerpts = Vec::new();
+    for _ in 0..context["excerpt_count"].as_u64().unwrap() {
+        let (header, body) = rest.split_once('\n').unwrap();
+        let header: Value = serde_json::from_str(header).unwrap();
+        let mut excerpt = header["untrusted_excerpt"].clone();
+        let bytes = excerpt["bytes"].as_u64().unwrap() as usize;
+        assert_eq!(
+            excerpt["end"].as_u64().unwrap() - excerpt["start"].as_u64().unwrap(),
+            bytes as u64
+        );
+        let (source, tail) = body.split_at(bytes);
+        rest = tail.strip_prefix('\n').unwrap();
+        excerpt["text"] = json!(source);
+        excerpts.push(excerpt);
+    }
+    assert!(rest.is_empty());
+    context["excerpts"] = json!(excerpts);
+    context
+}
+
 fn edit_schema_choice() -> Value {
     json!({"json_schema":{"name":"coding_edits_v1","schema":{
         "type":"object","properties":{"edits":{"type":"array","minItems":1,"maxItems":32,
@@ -889,8 +918,7 @@ fn coding_proposal_streams_selected_context_and_returns_only_an_unapplied_change
             .unwrap();
         assert_eq!(request["max_tokens"], 512);
         assert!(request.get("tools").is_none());
-        let context: Value =
-            serde_json::from_str(request["messages"][1]["content"].as_str().unwrap()).unwrap();
+        let context = raw_source_context(request["messages"][1]["content"].as_str().unwrap());
         assert_eq!(context["files"][0]["path"], "calc.py");
         assert!(
             context["excerpts"][0]["text"]
@@ -2019,7 +2047,7 @@ fn workspace_file_to_model_to_checked_proposal_is_read_only_and_recorded() {
         let raw = incoming(&mut socket);
         let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
         let body = document(&raw[start..]);
-        let context = document(body["messages"][1]["content"].as_str().unwrap().as_bytes());
+        let context = raw_source_context(body["messages"][1]["content"].as_str().unwrap());
         assert_eq!(context["files"].as_array().unwrap().len(), 1);
         assert_eq!(context["files"][0]["path"], "calc.py");
         assert!(!body.to_string().contains("private unselected"));
@@ -3215,8 +3243,7 @@ fn strict_multifile_proposals_stream_final_batch_bounds_through_the_configured_e
                 let raw = incoming(&mut socket);
                 let start = raw.windows(4).position(|v| v == b"\r\n\r\n").unwrap() + 4;
                 let sent: Value = serde_json::from_slice(&raw[start..]).unwrap();
-                let context: Value =
-                    serde_json::from_str(sent["messages"][1]["content"].as_str().unwrap()).unwrap();
+                let context = raw_source_context(sent["messages"][1]["content"].as_str().unwrap());
                 assert_eq!(context["files"].as_array().unwrap().len(), 2);
                 assert_eq!(
                     context["files"]

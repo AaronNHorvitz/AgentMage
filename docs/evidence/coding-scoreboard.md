@@ -4346,3 +4346,20 @@ The next measured work targets source-copy presentation and its escape layer,
 keeping exact checking and untrusted-data boundaries. No prompt, runtime,
 profile, hidden test or held-out task changes here. See the
 [diagnosis](t303-original-fragment-refusal-diagnosis-2026-11-19.md).
+
+## Raw-source presentation freeze: 2026-11-19
+
+Reporting base: `c7dc0ebcea16dfebd19ef21d28805f9dbd2f405f`.
+Changed variable: source text presentation, from JSON-escaped source strings to
+length-prefixed raw UTF-8 in the user message. Fixed instruction, output schema,
+source selection and strict checking are unchanged. Preflight preserves all 30
+excerpt selections and reproduces all 161 previous available checks.
+
+This source checkpoint adds zero inference attempts and zero GPU minutes.
+The next frozen measurement covers all 30 development tasks on all six existing
+profiles, with 32768 served context and the unchanged output formula
+`min(32768, 32768 - rendered input tokens - 32)`. Actual rendered token budgets,
+does-not-fit counts, task timing and failures await those runs. First-attempt
+and within-budget task passes remain unavailable; no candidate, hidden or
+held-out code executes. No model qualifies and T-303/T-306 remain open.
+See the [source evidence](t303-raw-source-presentation-2026-11-19.md).

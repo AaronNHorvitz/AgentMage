@@ -92,7 +92,48 @@ pub struct CodingExcerpt {
 struct Payload<'a> {
     task: &'a str,
     files: &'a [CodingOutline],
+    source_encoding: &'static str,
+    excerpt_count: usize,
+}
+
+// Retain the existing retrieval allowance so changing presentation does not
+// silently select additional or different source. The actual raw message must
+// fit independently, including every metadata byte and framing newline.
+#[derive(Serialize)]
+struct SelectionPayload<'a> {
+    task: &'a str,
+    files: &'a [CodingOutline],
     excerpts: &'a [CodingExcerpt],
+}
+
+/// Render source directly in the user message, avoiding a second source-level
+/// JSON escape layer. Headers are single JSON lines; each body contains exactly
+/// `bytes` UTF-8 bytes followed by one framing newline (not part of the source).
+/// Body contents cannot terminate a record, change roles or grant authority.
+fn render_source_context(
+    task: &str,
+    files: &[CodingOutline],
+    excerpts: &[CodingExcerpt],
+) -> Result<String, CodingProposalError> {
+    let mut user = serde_json::to_string(&Payload {
+        task,
+        files,
+        source_encoding: "untrusted-raw-utf8-length-prefixed-v1",
+        excerpt_count: excerpts.len(),
+    })
+    .map_err(|_| CodingProposalError::Context)?;
+    user.push('\n');
+    for excerpt in excerpts {
+        let header = serde_json::json!({"untrusted_excerpt": {
+            "path": excerpt.path, "start": excerpt.start, "end": excerpt.end,
+            "bytes": excerpt.text.len(),
+        }});
+        user.push_str(&header.to_string());
+        user.push('\n');
+        user.push_str(&excerpt.text);
+        user.push('\n');
+    }
+    Ok(user)
 }
 
 /// Prepared prompt and coverage. Private construction prevents caller-forged
@@ -111,7 +152,8 @@ impl CodingProposalContext {
         &self.task
     }
 
-    /// Serialized task, outlines and exact selected source data.
+    /// JSON metadata lines and length-prefixed, unescaped source bodies. All
+    /// content is untrusted user data, with original source bytes unchanged.
     #[must_use]
     pub fn user_message(&self) -> &str {
         &self.user
@@ -199,7 +241,7 @@ struct RangeCandidate {
 }
 
 /// Selects deterministic parser-backed definitions and lexical line windows.
-/// The exact serialized system/user bytes, including JSON escapes, must fit the
+/// The exact system/user bytes, including metadata and framing, must fit the
 /// caller's 2–32 KiB ceiling. No source is split mid-character or silently used
 /// outside the retained ranges. Omissions remain visible in coverage.
 pub fn prepare_coding_proposal(
@@ -301,17 +343,22 @@ pub fn prepare_coding_proposal(
             .then(a.start.cmp(&b.start))
             .then(b.end.cmp(&a.end))
     });
-    let serialize = |excerpts: &[CodingExcerpt]| {
-        serde_json::to_string(&Payload {
+    let serialize = |excerpts: &[CodingExcerpt]| render_source_context(task, &outlines, excerpts);
+    let fits = |excerpts: &[CodingExcerpt], user: &str| {
+        let selection = serde_json::to_string(&SelectionPayload {
             task,
             files: &outlines,
             excerpts,
         })
-        .map_err(|_| CodingProposalError::Context)
+        .map_err(|_| CodingProposalError::Context)?;
+        Ok::<_, CodingProposalError>(
+            selection.len().max(user.len()) + CODING_PROPOSAL_INSTRUCTION.len()
+                <= max_message_bytes,
+        )
     };
     let mut excerpts: Vec<CodingExcerpt> = Vec::new();
     let mut user = serialize(&excerpts)?;
-    if user.len() + CODING_PROPOSAL_INSTRUCTION.len() > max_message_bytes {
+    if !fits(&excerpts, &user)? {
         return Err(CodingProposalError::Context);
     }
     // Bound selection work even for very short, repetitive lines. These are
@@ -350,7 +397,7 @@ pub fn prepare_coding_proposal(
         }
         proposed_excerpts.sort_by(|a, b| a.path.cmp(&b.path).then(a.start.cmp(&b.start)));
         let proposed = serialize(&proposed_excerpts)?;
-        if proposed.len() + CODING_PROPOSAL_INSTRUCTION.len() <= max_message_bytes {
+        if fits(&proposed_excerpts, &proposed)? {
             user = proposed;
             excerpts = proposed_excerpts;
         }

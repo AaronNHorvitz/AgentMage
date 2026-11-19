@@ -1,0 +1,119 @@
+Commit: fda187da1b42d26405c4dc0ce50f8353b30c2f72
+Scope: copy-original-fragment-e4b-development-completion
+
+# Independent review: frozen E4B development completion and six-profile repeat (dev-016 to dev-029 plus dev-rust-001)
+
+Reviewer: separate Claude Opus 5.5 session at extra-high effort, read-only, using the pinned checkout /lane/review-checkout.
+Row: T-303/T-306. This is a non-closing frozen development measurement. Base: 2b909c4656866425c42dceb8d4393b1ec89ab82c.
+Frozen prompt/checker source: 35217c60a56a5d3e065148eb9a6aea898b5e1b16. I used no GPU, changed nothing in the repository and executed no candidate, hidden or held-out code.
+
+## Methods and commands (all in /lane/review-checkout, CARGO_TARGET_DIR=/lane/state/review-target)
+
+1. Commit identity and cleanliness.
+   - `git rev-parse HEAD` returned fda187da1b42d26405c4dc0ce50f8353b30c2f72. `git status --porcelain` was empty before and after the review.
+   - `git diff --check 2b909c46…` exited 0.
+   - `git diff --numstat` shows exactly the five requested files:
+     - README.md +1/−1 (the Measured coding row only);
+     - TASKS.md +9/−0;
+     - coding-scoreboard.md +66/−0;
+     - the new completion evidence +103;
+     - the retained review copy +83.
+   - The commit message carries Signed-off-by and Co-Authored-By trailers.
+2. Capsule authentication.
+   - manifest.json is 9b45082f…84ee, bindings.json is 2d2501d3…34a, the post-commit receipt is f7aef780…80eb and work/dependencies.json is d47242e4…9da. All four match the request.
+   - My own hash-and-size walk of the manifest: 9545 files, 0 mismatches. The directory holds 9547 files: the other two are manifest.json and bindings.json.
+   - My own walk of all 24 dependency capsules authenticated their manifest, bindings and, where present, post-commit receipt, and checked every listed file: 113,883 files, 0 mismatches.
+   - The post-commit receipt's public_sha256 values equal the SHA256 of `git show HEAD:<file>` for all five files. The sealed public/ copies are byte-equal to the committed blobs.
+3. Sealed verifier.
+   - `bash /tools/build-slot python3 -B …/verify.py` printed `{"status": "PASS", "attempts": 180, "new_attempts": 15, "remaining_attempts": 0, "all_dependencies_checked": true, "live_state": "unavailable", "postcommit_checked": true, "candidate_execution": false, "task_passes": null}`. Most of its 31 min wall time was spent queued for a low-priority slot.
+   - Optional step 3 (bwrap with a tmpfs over /lane/state) printed the same PASS line.
+   - /lane/state/ef1 is not mounted in this session, so live state is reported as unavailable, not as checked. The builder's starting-authentication.json records the original verifier PASS with live state checked at 165 attempts, before continuation.
+4. Step-2 gates. I authenticated /lane/reviews/42612ca9787f-a4b-node to d1de76d8…c932c and copied it privately onto PATH (v24.15.0). The copy was removed afterwards.
+   - `python3 -B scripts/local_agent_fast_gate.py --base 2b909c46… --timeout 3600` gave FAST GATE: PASS. markdownlint-cli2 found 0 issues in the 4 Markdown files, the review-copy lint exited 0, and the privacy and licence sub-steps passed.
+   - `node …/work/lint-all.mjs` returned status PASS with 0 issues, 1 scoreboard table and 1 evidence table.
+   - `python3 -B scripts/private_host_paths.py --base 2b909c46…` gave PRIVATE PATH CHECK: PASS.
+   - `python3 -B scripts/license_policy.py` gave LICENCE POLICY: PASS.
+5. Independent recomputation from the 8 new raw job directories, using my own script rather than the builder's.
+   - Wire responses:
+     - All 15 upstream-response-*.bin files are HTTP 200. Each matches its capture receipt in bytes and SHA256, and every record's log hashes match their files.
+     - Usage sums to input 108102 and output 103605, which matches. Cumulative: 98117 + 108102 = 206219 and 156927 + 103605 = 260532, which matches.
+     - finish_reason is `length` twice and `stop` 13 times:
+       - dev-018: 3521 input, cap 29215, 29215 output tokens;
+       - dev-024: 5946 input, cap 26790, 26790 output tokens.
+       That matches output-cap 2 / stopped-below-token-limits 13.
+     - All 15 responses have non-empty content and no reasoning or reasoning_content field.
+   - Wire requests:
+     - Every request has prompt_tokens + max_tokens = 32736 = 32768 − 32. The ranges are 3521–9467 for input and 23269–29215 for output, which matches. Does not fit: 0.
+     - Every request sends `stream: false`, `chat_template_kwargs.enable_thinking: false` and the strict `coding_edits_v1` schema.
+   - Timing:
+     - The generation_seconds values sum to 915.625 s, and cumulatively 1608.647 + 915.625 = 2524.272.
+     - reserved_work_seconds sum to 983.720 s, or 16.395 GPU minutes. Cumulatively 1704.523 + 983.720 = 2688.243 s, or 44.804 GPU minutes.
+     - Controller wall time, from launch.json at 04:48:24.881602 to controller-exit.json at 05:18:07.816294 UTC, is 1782.935 s.
+   - Outcomes:
+     - 7 ungraded proposals: dev-016, 017, 019, 020, 021, 027 and dev-rust-001.
+     - 6 refused with `code.proposal.edit`: dev-022, 023, 025, 026, 028 and 029.
+     - 2 refused as generation-refused:complete:length: dev-018 and dev-024.
+     - Every record has retries 0 and graded false. Every refusal has candidate_is_base_fallback true.
+   - Resources:
+     - Every batch report has settings revoked, resource_guard_error null, cpu.max 400000/100000, memory.max 16 GiB and the 22528 MiB guard.
+     - Baseline GPU use was 1590 MiB and the sampled peak was 5820 MiB.
+     - The launcher, policy and profile hashes are identical across all 8 jobs.
+6. All-profile recomputation. I gathered the 91 copy-original-fragment batch reports (source 35217c60) from the 24 dependency capsules plus this one. There are no conflicting duplicates. I tallied each record's cause, refining it from checked.json or the terminal event.
+   - Per profile, strict ungraded proposals are: A4B 17/30, 31B 22/30, 27B 27/30, gpt-oss 8/30, Muse 22/30 and E4B 11/29, plus 1 gpu-headroom interruption (job 06, status failed).
+   - No profile has a duplicate task.
+   - All-profile causes: length 6, chat.response.incomplete 8, chat.transport.timeout 4, gpu-headroom 1, code.proposal.edit 50, code.proposal.format 4, ungraded 107. That totals 180, which matches the scoreboard, the evidence, TASKS.md and the README row.
+   - The claim that `strict-edit-refused:code.proposal.edit` (50) is the largest failure cause is correct.
+7. I cross-checked the strict-edit refusals without running the helper. Every one of the six refused answers contains at least one `old` string that occurs 0 times in the task's base source file (the base-fallback candidate copy), so refusal for a missing occurrence is correct:
+   - dev-022: edits 1 and 2;
+   - dev-023, dev-025, dev-026, dev-028 and dev-029: edit 0.
+
+   No `old == new` case occurs. No failure is dropped or reclassified as a success.
+8. Freezing and scheduling.
+   - These files are byte-identical to the checkpoint15 capsule: campaign/frozen-inputs.json, batch.py, collect.py, controller.py, policy.json, output-format.json and both wrapper copies. /tools/build-slot and /tools/gpu-slot hash to the values in launch.json.
+   - launch.py and prepare-snapshot2.py differ only in the reporting HEAD and in `--first 15 --pairs 8`.
+   - resume-controller.py differs only in:
+     - the argument assertion;
+     - `range(first, min(first + 2, 30))`;
+     - the clamped progress line.
+   - These differences match adaptation.json.
+   - The dev-030 labelling error is disclosed accurately. The unused numeric candidate-path assertion (`dev-{index+1:03d}`) checked a non-existent dev-030 path, while the frozen worker selected dev-rust-001, the 30th task. Job 29 has one task, one wire request and count=2 legacy metadata.
+9. Cleanup.
+   - cleanup-first.py did unlink each auth token before its wrong `len(retired)==15` assertion failed (8 jobs × 2 tokens = 16). The checkpoint15 capsule's 4 tokens for 2 jobs confirm two tokens per job.
+   - The failure log and the original script are preserved and hash-bound in cleanup-correction.json.
+   - The follow-up cleanup.py checks all 91 reports read-only: settings revoked, API reaped, keys, sockets and tokens absent, no live owned processes. It reconstructs no receipt. The api.log files are empty.
+   - No bearer or authorization strings appear outside copied repository source.
+10. Preservation, public-repository and claims checks.
+    - The old scoreboard is a byte-identical prefix of the new one. TASKS.md has 0 removed lines.
+    - The README change is only the Measured coding row. The "AgentMage is an independent, privately developed product" paragraph is unchanged.
+    - The retained docs/reviews/2b909c465686-…-checkpoint15.txt is byte-identical (cmp) to my previous review file /lane/reviews/2b909c465686-…-checkpoint15.md. The commit infers no verdict for this increment.
+    - Grepping the added lines found:
+      - no private home path, username, hostname, credential, sibling-project name or other agent product;
+      - only /lane/… paths inside the retained review copy, as in earlier retained reviews.
+    - All tasks are dev-*, and the manifest records hidden_or_held_out false.
+    - The order of work is unchanged. The next-work statement follows MEASURE FIRST and keeps exact matching. Git, services, flows and team mode stay later.
+    - Nothing claims a task pass, grading, role qualification or row close.
+    - The scoreboard line required by MEASURE FIRST is present. It states the context and output budgets and counts "Does not fit: 0" apart from model failures.
+
+Not run:
+- Optional step 4 (helper reproduction): the authenticated helper under /lane/state/ef1/bin is not mounted in this session. I did not rebuild or substitute it. Step 7 is my helper-free cross-check, and the sealed audit records the helper's re-check of every answer.
+- Source tests: no source changed.
+
+## Findings
+
+None at high or medium severity.
+
+Low (backlog; both already disclosed by the commit, no effect on any measured outcome):
+- L1. work/resume-controller.py:36, in the capsule: the replay guard derives candidate paths as `dev-{index+1:03d}`. For index 29 it checked dev-030 instead of dev-rust-001, so it did not guard the final task.
+  - Mitigations: the fresh-job-directory assertion, and the audit's per-model task-uniqueness assertion.
+  - Fix for future scheduling scripts: derive guarded paths from the frozen task list IDs.
+- L2. work/cleanup-first.py:16–20, in the capsule: token files are unlinked before the count assertion. A wrong count therefore loses the per-token retirement receipts.
+  - Fix: compute and persist the receipt list, assert the count, then unlink.
+
+## Per-row result
+
+- **T-303/T-306** (non-closing frozen development measurement; the six-profile repeat is complete at 180/180 attempted, 179 completed plus 1 preserved interruption; 7/15 new and 11/29 cumulative E4B strict ungraded proposals): accepted as reported.
+  - Every number traces to the sealed raw data, and the inputs stay frozen.
+  - Confinement and cleanup hold, and nothing is replayed.
+  - No row closes; T-303/T-306 remain open as the commit states.
+
+Verdict: PASS
