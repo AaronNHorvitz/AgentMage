@@ -1,0 +1,108 @@
+Commit: b50d49e0428ee6db18d4bd28659d3d0344a5307e
+Scope: raw-source-development-checkpoint36
+
+# Independent review: frozen raw-source development checkpoint 36 (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Same-model review.
+Base: 59613840967aec113011f72b9f42a190d9464c1d. Frozen product source: eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f.
+Capsule: /lane/reviews/raw-source-development-checkpoint36-20261119.
+
+## Methods
+
+I worked only in /lane/review-checkout, with `CARGO_TARGET_DIR=/lane/state/review-target`. I did not
+change the repository. I ran no inference and executed no candidate code, and I did not use the GPU.
+I recomputed every number in the new tables from the raw upstream responses and attempt records,
+without the builder's audit script. I also checked all six strict-check verdicts against the supplied
+excerpts myself.
+
+## Commands and results
+
+- `git rev-parse HEAD`: b50d49e0428ee6db18d4bd28659d3d0344a5307e. `git status --porcelain`: empty
+  (before and after all runs). `git diff --check 5961384…`: exit 0.
+- Diff since the base touches 5 files: README.md (one table cell), TASKS.md (new checkpoint
+  paragraph, plus the checkpoint-30 paragraph's "review required" line now pointing to its PASS),
+  coding-scoreboard.md (a section appended after the unchanged previous bytes; prefix
+  byte-compared), new evidence t303-raw-source-checkpoint36-2026-11-19.md, and new
+  docs/reviews/59613840967a-raw-source-development-checkpoint30.txt. That review copy is
+  byte-identical (`cmp`) to /lane/reviews/59613840967a-raw-source-development-checkpoint30.md. No
+  product source changed. `git diff --name-only eef17dbd..HEAD` lists 19 reporting paths: the
+  17 paths the launcher allowed, plus the two files this commit adds.
+- `bash /tools/build-slot python3 -B …/verify.py`: `{"status":"PASS","attempts":36,"remaining":144,
+  "postcommit_checked":true,"task_scores":null,"complete_prior_capsule_authenticated":true}`.
+  manifest.json SHA256 1af9da8a…dd561 and bindings.json SHA256 06dec1e7…c29e match the request.
+  Postcommit SHA256 c223475b…5cb261 matches. The manifest lists 167,596 files; on disk there are
+  167,598, the extra two being manifest.json and bindings.json. verify.py checks the exact file
+  set, sizes, hashes and the absence of symlinks and `..` components.
+- `bash /tools/build-slot python3 -B …/reproduce.py`: PASS. 30 contexts, 161 prior checks, 35 new
+  checks, 1 generation refusal, 36 attempt records. Helper SHA256 4aea9726…4e31c53.
+  candidate_execution false, model_inference false.
+- Node: /lane/reviews/42612ca9787f-a4b-node SHA256 d1de76d8…c932c verified, licence file present.
+  I ran a private copy as `node` (v24.15.0).
+- `python3 -B scripts/local_agent_fast_gate.py --base 5961384… --timeout 3600`: FAST GATE PASS.
+  This includes diff --check, untracked lint, private path PASS, licence PASS, review lint, and
+  markdownlint with 0 issues in 4 files.
+- `node …/work/render.mjs`: PASS, 0 issues, 4 files rendered.
+- `python3 -B scripts/private_host_paths.py --base 5961384…`: PASS. `python3 -B
+  scripts/license_policy.py`: PASS.
+
+## Independent checks
+
+- **Raw numbers:** for muse, gemma4-e4b and gemma4-26b-a4b (dev-005 and dev-006 each), I summed
+  backend `usage` from upstream-response-0{0,1}.bin. Results: 13189/9572, 16913/5346, 16921/1738,
+  all as published. Rendered input ranges and requested output ranges match the published
+  6083–7106/25630–26653, 8040–8873/23863–24696 and 8044–8877/23859–24692. Every request satisfies
+  `max_tokens == min(32768, 32768 - rendered - 32)`. Summed generation seconds are 232.797, 65.872
+  and 49.715. Reserved GPU minutes equal reserved_job_seconds/60 (4.339, 1.289, 1.562), consistent
+  with the reservation logs. Every finish_reason is `stop`. Response fields match: muse
+  reasoning_content is nonempty in both attempts, and the evidence honestly says the disabled-thinking
+  request does not prove there was no reasoning. Every wire request carries
+  `chat_template_kwargs.enable_thinking=false`, the frozen strict json_schema and `n=1`, and every
+  attempt shows retries 0 and graded false.
+- **Strict checker cross-check:** I applied each answer's edits to the supplied excerpts myself.
+  muse dev-005 and dev-006, and a4b dev-005, have every `old` unique in the excerpts, and the
+  dev-005 full-file results reproduce the recorded candidate_sha256. e4b dev-005 and dev-006, and
+  a4b dev-006, have `old` strings found in no excerpt, consistent with
+  `strict-edit-refused:code.proposal.edit`. All six recorded causes agree.
+- **Cumulative totals** recomputed from work/audit.json details: gemma4-31b 5/6, qwen35-27b 6/6,
+  gpt-oss 1/6 (one preserved generation refusal), muse 4/6, gemma4-e4b 0/6, gemma4-26b-a4b 3/6.
+  Tasks run are dev-001 to dev-006 only. These match README, TASKS, the scoreboard and the evidence.
+  The 30 earlier attempt details are identical to the prior audit (verify.py asserts this).
+- **Unchanged controller:** campaign batch.py, collect.py, controller.py, policy.json,
+  frozen-inputs.json and output-format.json are byte-identical to prior/. Launch argv,
+  wrapper_sha256, wrapper environment and scope limits are identical to the previous launch
+  (cpu.max 400000/100000, memory.max 16 GiB, nice 19, priority low). Only head, launcher hash,
+  pid, start ticks and utc differ. The only launch.py changes are BASE and the explicit
+  17-path allow-set. Controller wall time from launch utc 09:58:41.675 to exit utc 10:08:24.141 is
+  582.466 s, as published. The controller's released pause loop (30×1 s) is unchanged.
+- **GPU:** sampled peaks were 5005, 17670 and 18631 MiB, below the 22,528 MiB guard. No download
+  and no limit increase appear in the logs.
+- **Cleanup:** cleanup.json shows PASS, settings revoked, API and model reaped, keys and sockets
+  absent, no foreign signal, `live_owned_processes: []`, and six retired tokens (client and control
+  for each of the 3 pairs) persisted before unlinking, matching token-retirement-receipts.json. The
+  rs1 `*-04/auth` token paths no longer exist. My sandbox has its own PID namespace, so I could not
+  see host processes; the absence of a live process rests on the persisted cleanup record.
+- **Evaluation integrity:** development tasks only. Held-out, hidden and candidate code are not
+  loaded or executed. The fixed instruction, excerpts and checker are frozen by hash. No tuning
+  happened mid-repeat, and no prompt or code changed in this diff.
+- **Honest labelling:** every new number is labelled "strict ungraded proposals". First-attempt
+  and within-budget passes are "Unavailable". No solved-task, qualification or adoption claim is
+  made, and T-303/T-306 stay open. Queue-inclusive controller time and reserved-job body time are
+  distinguished, and end-to-end latency is stated as unmeasured. "Does not fit: 0" is reported
+  separately from model failures. The scoreboard gains the required line for this batch, and the
+  changed variable is "none".
+- **Public repository:** the added lines contain no home path, username, hostname, credential or
+  e-mail. The only product-like name is the reviewer self-identification in the retained review.
+  No other agent product, private project, patent or paper is named. The README independence
+  paragraph is present and unchanged (only the coding-measurement cell changed). TASKS table rows
+  and the scoreboard prefix are preserved.
+
+## Findings
+
+None at critical, high, medium or new low severity. Existing T-309 low findings remain backlog.
+
+## Per-row result
+
+- T-303/T-306 (non-closing frozen development measurement, attempts 31–36): PASS for this
+  reporting increment. The rows stay open; this verdict closes nothing and accepts no model.
+
+Verdict: PASS
