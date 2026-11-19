@@ -2,6 +2,13 @@
 
 ## Active queue: local agent mission
 
+The [frozen raw-source sixty-six-attempt checkpoint](docs/evidence/t303-raw-source-checkpoint66-2026-11-19.md) adds six development
+attempts. The repeat reaches 66/180 attempted, with 114 remaining before tuning
+or capability work. Cumulative strict ungraded proposals: gemma4-31b 8/12; qwen35-27b 11/12; gpt-oss 2/12; muse 6/10; gemma4-e4b 2/10; gemma4-26b-a4b 5/10.
+Task passes and retries remain unavailable; no candidate, hidden or held-out
+code executes. Frozen inputs and earlier attempts remain unchanged. Independent
+core review is required for this checkpoint; T-303/T-306 remain open.
+
 The [independent fifty-four-attempt checkpoint review](docs/reviews/37f2ab5f648f-raw-source-development-checkpoint54.txt)
 returns **Verdict: PASS** for exact `37f2ab5f648f65bc0038305e78871e9a646b955a`, with no critical, high, medium or low
 findings. Its report is retained unchanged; no row closes. This accepts only
