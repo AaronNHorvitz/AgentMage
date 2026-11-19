@@ -1,0 +1,135 @@
+Commit: 9bc971d2b1bc012e369bd11c2bcc92cacc075cf1
+Scope: raw-source-development-checkpoint108
+
+Reviewer: independent Claude Opus 5.5 session, extra-high effort, read-only. I ran everything in the pinned checkout
+/lane/review-checkout. Builds would have used CARGO_TARGET_DIR=/lane/state/review-target, but none were needed. I did
+not use the GPU and ran no inference or candidate code.
+
+## Scope and method
+
+Row: T-303/T-306, a non-closing frozen development measurement. Base 91e912a058230b8e636d8932c3bed7c9689c5f6d; frozen
+product source eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f.
+
+The diff against the base covers six files, 501 insertions and 3 deletions:
+- README.md: one table cell.
+- TASKS.md: three new paragraphs and two rewritten review-status sentences.
+- docs/evidence/coding-scoreboard.md: an appended section.
+- A new docs/evidence/t303-raw-source-checkpoint108-2026-11-19.md.
+- Two retained reviews:
+  - docs/reviews/2aac78ff38b9-raw-source-development-checkpoint96.txt
+  - docs/reviews/91e912a05823-raw-source-development-checkpoint102.txt
+
+No product source changed. `git diff --name-only eef17dbd..HEAD` lists 43 paths: the launcher's 40 allow-listed
+reporting paths plus the three files this commit adds. All of them are under README.md, TASKS.md, docs/evidence/ or
+docs/reviews/.
+
+I read the complete diff and these capsule files: verify.py, reproduce.py, work/audit.py, write-reports.py,
+cleanup.py, preserve.py, post-commit.py, retain-review-common.py, retain-review.py, render.mjs, launch.json,
+preparation.json, delta.json, cleanup.json, review-status.json, late-review-retained.json and commit-message.txt.
+I also parsed the six new raw job records independently of audit.json.
+
+## Commands and results
+
+1. `git rev-parse HEAD` printed 9bc971d2b1bc012e369bd11c2bcc92cacc075cf1.
+   `git status --porcelain` printed nothing, before and after all runs.
+   `git diff --check 91e912a0…` exited 0.
+2. `bash /tools/build-slot python3 -B …/checkpoint108-20261119/verify.py` (27m26s, mostly queue time) printed PASS:
+   attempts 108, remaining 72, source_commit eef17dbd…, postcommit_checked true, task_scores null,
+   complete_prior_capsule_authenticated true.
+3. `bash /tools/build-slot python3 -B …/reproduce.py` printed PASS: contexts 30, prior_checks 161, new_checks 100,
+   generation_refusals 8, attempt_records 108, helper_sha256 4aea9726…6c53, candidate_execution false,
+   model_inference false.
+4. Hashes match the request:
+   - manifest.json: 2cbe6949…3c63209
+   - bindings.json: 46387a9a…d95705 (files 1265932)
+   - post-commit envelope: 18483fc8…bc8113
+   - The envelope's method_sha256 (f5927691…) equals work/post-commit.py, so the envelope-writing step is retained.
+   - The six public SHA-256 values in the envelope match the committed files.
+5. Retained Node runtime: `sha256sum -c` printed OK and the licence file is present. After `install -m 700` into a
+   temporary directory, `node --version` printed v24.15.0. Nothing was downloaded.
+6. `python3 -B scripts/local_agent_fast_gate.py --base 91e912a0… --timeout 3600` printed FAST GATE: PASS. This covers
+   diff check, untracked lint, private path check, licence policy, review lint and markdownlint (0 issues in 4 files).
+7. `node …/work/render.mjs` printed PASS: 0 issues, all four files render to non-empty output.
+8. `python3 -B scripts/private_host_paths.py --base 91e912a0…` printed PASS.
+   `python3 -B scripts/license_policy.py` printed PASS.
+
+## Independent checks
+
+- **Raw-record trace.** I parsed the six new attempts myself: muse-16, gemma4-e4b-16 and gemma4-26b-a4b-16, each on
+  dev-017 and dev-018. Sources were upstream-response-*.bin usage, backend-slice.log prompt/eval counters,
+  record.json, checked.json and upstream-request-*.json.
+  - Every table cell matches. muse input 3593+2736=6329 and output 3282+5409=8691, 102.282+128.262=230.545 s.
+    e4b 7654/3377, 61.503 s. a4b 7662/1770, 76.611 s.
+  - GPU minutes equal reserved_work_seconds/60: 4.821, 1.240 and 2.412.
+  - Every response finished with `stop`, and slice counters equal the response usage.
+  - max_tokens equals min(32768, 32768 − input − 32) for all six: 29143, 30000, 28434, 29384, 28430, 29380.
+  - The wire request carries `enable_thinking: false`. muse's reasoning_content is non-empty, and the evidence
+    discloses this.
+  - Peak sampled GPU was 16786, 4601 and 19020 MiB, all ≤ 22528. n_ctx is 32768 and the deadlines are 300000 ms.
+  - Both e4b outputs were refused with code.proposal.edit and fell back to the base, which is correctly counted as
+    0/2.
+  - Cumulative counts are correct: muse 9+2=11/18, e4b 5+0=5/18, a4b 8+2=10/18. Unchanged profiles have zero deltas.
+- **Evaluation integrity.**
+  - All new collector summaries have split=development and held_out_executed=false.
+  - graded=false, native_coding_harness=false and retries=0 throughout.
+  - No held-out content is in the diff.
+  - Failures are counted: the 8 generation refusals and the 3 preserved muse timeouts stay in the denominators.
+  - No row closes and nothing is claimed as a task pass.
+- **Frozen inputs.**
+  - batch.py, collect.py, controller.py, policy.json, frozen-inputs.json and output-format.json are byte-identical to
+    the prior capsule.
+  - frozen-inputs.json binds 2290 repository and 62 private hashes.
+  - Launch wrapper hashes (build 4061f0e6…, gpu 9804180e…) equal the retained wrapper bytes and the current
+    /tools/build-slot.
+  - The slot 3–6 defaults in the wrapper are 30/36/38/40 GiB, as stated. The slot environment overrides are all null.
+  - nice is 19, priority low, and scope limits are unchanged from the prior launch.
+- **Preservation.** I checked these against the base myself:
+  - The 512 TASKS.md table lines are identical.
+  - The scoreboard is an exact prefix extension.
+  - The independence paragraph is identical.
+  - These files are unchanged: Agent-Scaffolding-Inventory.md, private-path-exceptions.json, status-model.json,
+    Decision 0051, LICENSE-MIT, LICENSE-APACHE, NOTICE, CONTRIBUTING.md and IP-POLICY.md.
+  - Both retained review files are byte-identical (`cmp`) to /lane/reviews/2aac78ff38b9-…-checkpoint96.md and
+    91e912a05823-…-checkpoint102.md.
+- **Cleanup.**
+  - completed_pairs is 54 (108/2) and there are 6 new token receipts, persisted before unlink.
+  - cleanup.py checks all prior receipt sets: 16×6 + 2 + 4 = 102, as stated.
+  - No live owned processes remain, keys and sockets are absent, and settings are revoked.
+- **Corrections from earlier reviews.**
+  - Checkpoint96 L1, the stale pending-review sentence: retain-review-common.py rewrites the preparation-time
+    sentence once the checkpoint102 PASS is retained. The committed text matches that traced step.
+  - Checkpoint96 L2 and checkpoint102 L1, the incomplete timeout list: the sentence is now generated from audit.json
+    and lists muse dev-008, dev-011 and dev-012.
+  - Checkpoint96 L3, envelope provenance: post-commit.py is retained and its hash is bound in the envelope.
+  - TASKS.md ordering and the two "was required when recorded; its subsequent PASS is retained above" rewrites follow
+    exactly from write-reports.py followed by the late and current retention runs.
+- **Privacy, branding and licence.**
+  - No private home path, username, e-mail, hostname, credential or sibling project appears in added lines or in the
+    retained reviews. They contain only lane-generic /lane paths, as earlier committed reviews do.
+  - Model profile names are used descriptively. No other agent product is named.
+  - The licence state is unchanged.
+
+## Findings
+
+No critical, high, medium or low findings.
+
+Note (not a finding): the evidence file still says "The host build wrapper changed at 2026-11-19 12:47:28 UTC. Its new
+launch SHA256 is 4061f0e6…". This sentence has been carried over word for word since checkpoint72. The timestamp
+matches the wrapper's mtime and the hash is the one used at launch here and at checkpoint102, so it is accurate. The
+word "new" refers to the change before checkpoint72, not to this run. The per-pair wrapper-provenance low stays in the
+T-309 backlog, as already recorded.
+
+## Per-row result
+
+- T-303/T-306 non-closing checkpoint 108: PASS for the reporting increment.
+  - Every new number traces to raw records.
+  - Budgets, the output formula, context, timing scopes and token coverage are stated.
+  - The preserved timeouts are listed in full.
+  - Frozen inputs and prior attempts are unchanged.
+  - Retained reviews are byte-exact.
+  - There is no held-out use, tuning, task-pass or model-adoption claim.
+  - T-303 and T-306 remain open and no row closes.
+- The earlier source gate (FAIL: 1,034 passed, 53 inherited failures) was not rerun and is not accepted here.
+  Existing T-309 lows remain backlog.
+
+Verdict: PASS
