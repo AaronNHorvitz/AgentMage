@@ -2,6 +2,19 @@
 
 ## Active queue: local agent mission
 
+The [independent one-hundred-twenty-attempt checkpoint review](docs/reviews/05683e3e4501-raw-source-development-checkpoint120.txt)
+returns **Verdict: PASS** for exact `05683e3e45016de1131160cc6f2da908a809613f`, with no critical, high, medium or low findings.
+Its report is retained unchanged; no row closes. This accepts only
+that reporting increment; the new checkpoint requires independent core review.
+Earlier scoreboard lines stay unchanged.
+
+The [frozen raw-source one-hundred-thirty-two-attempt checkpoint](docs/evidence/t303-raw-source-checkpoint132-2026-11-19.md) adds six development
+attempts. The repeat reaches 132/180 attempted, with 48 remaining before tuning
+or capability work. Cumulative strict ungraded proposals: gemma4-31b 16/22; qwen35-27b 20/22; gpt-oss 5/22; muse 13/22; gemma4-e4b 6/22; gemma4-26b-a4b 12/22.
+Task passes and retries remain unavailable; no candidate, hidden or held-out
+code executes. Frozen inputs and earlier attempts remain unchanged. Independent
+core review is required for this checkpoint; T-303/T-306 remain open.
+
 The [independent one-hundred-fourteen-attempt checkpoint review](docs/reviews/3975027e6e3f-raw-source-development-checkpoint114.txt)
 returns **Verdict: PASS** for exact `3975027e6e3f14f1a48909758f040dea3a374405`, with no critical, high, medium or low findings.
 Its report is retained unchanged; no row closes. This accepts only
@@ -26,7 +39,8 @@ attempts. The repeat reaches 120/180 attempted, with 60 remaining before tuning
 or capability work. Cumulative strict ungraded proposals: gemma4-31b 16/20; qwen35-27b 18/20; gpt-oss 5/20; muse 13/20; gemma4-e4b 6/20; gemma4-26b-a4b 12/20.
 Task passes and retries remain unavailable; no candidate, hidden or held-out
 code executes. Frozen inputs and earlier attempts remain unchanged. Independent
-core review is required for this checkpoint; T-303/T-306 remain open.
+core review was required when recorded; its subsequent PASS is retained above.
+T-303/T-306 remain open.
 
 The [frozen raw-source one-hundred-fourteen-attempt checkpoint](docs/evidence/t303-raw-source-checkpoint114-2026-11-19.md) adds six development
 attempts. The repeat reaches 114/180 attempted, with 66 remaining before tuning
