@@ -1,0 +1,207 @@
+Commit: 7b1ecdf54063d3323ea54b28d56b4671d7f9aedb
+Scope: line-range-development-checkpoint36
+
+# Independent review: frozen line-range development checkpoint 36 (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate read-only session, pinned checkout
+/lane/review-checkout. No repository file was modified. The reviewer used no GPU.
+
+## Scope and commit
+
+- `git rev-parse HEAD` = 7b1ecdf54063d3323ea54b28d56b4671d7f9aedb, tree ab67fdbc…b2e2, parent
+  78ea34c2e623abd915b81a284bfeb87ba887f420. `git status --porcelain` is empty.
+- `git diff --check 78ea34c2…` exits 0 with no output.
+- The diff from 78ea34c2 touches exactly four files, 317 insertions and 0 deletions:
+  - TASKS.md: +12 lines of prose above the existing queue, no table line.
+  - docs/evidence/coding-scoreboard.md: +45 lines, appended.
+  - New docs/evidence/t303-line-range-checkpoint36-2026-11-20.md.
+  - New docs/reviews/78ea34c2e623-line-range-development-checkpoint24.txt.
+- The archived review is byte-identical to /lane/reviews/78ea34c2e623-line-range-development-checkpoint24.md
+  (`diff` empty). It ends in `Verdict: PASS` with lows L1 and L2 only, as the commit states.
+- No source file changed. Frozen source 53c09dac differs from reporting parent 78ea34c2 only in the
+  six reporting paths bound in work/reporting-base.json. Both the launcher and verify.py check this
+  against git.
+
+## Capsule authentication
+
+The following match the request:
+
+| File | sha256 |
+| --- | --- |
+| manifest.json | 05e0bc76…a0ca0 |
+| bindings.json | b21fad80…b8170 |
+| post-commit envelope | 4c9456b6…ee6eb6 |
+| verification log | f344047c…c636d |
+| work/finish.py | 89c09213…6042a |
+
+- The post-commit envelope binds commit, parent, tree, source, manifest, bindings and finalizer
+  hashes.
+- This time the finalizer path in the request is inside the review mount and readable. The
+  earlier visibility issue (checkpoint24 L1) does not recur for this increment.
+- `bash /tools/build-slot python3 -B /lane/reviews/line-range-development-checkpoint36-20261120/verify.py --require-postcommit`
+  exits 0:
+  `{"status":"PASS","files":83132,"source_files":9823,"repository_inputs":2355,"private_inputs":78,"contexts":30,"prior_checks":165,"range_equivalences":185,"new_checks":33,"generation_refusals":3,"attempts":36,"postcommit_checked":true,"candidate_execution":false,"task_passes":null}`.
+- verify.py is identical to work/verify.py. I read it in full and checked what its PASS covers:
+  - It compares the complete inventory, with no symlinks.
+  - It compares the complete nested protocol and prior-checkpoint inventories against pinned
+    manifest hashes (30f2a593…, 5d2f453c…).
+  - Prior campaign/bin/inputs/protocol bytes are retained.
+  - Every source-tar entry is re-hashed to its git blob OID and mode.
+  - The preflight is reproduced byte for byte.
+  - All 30 payloads equal `git show` bytes, and the contexts are replayed through the hash-pinned
+    helper.
+  - Every wire request matches the frozen strict request exactly.
+  - Every response capture is checked.
+  - Every answer is re-checked through the helper.
+  - Complete candidate projections, including unedited files, are compared as data against
+    `git archive`.
+  - The 20 timeout mutation controls rerun from the capsule and equal the sealed result.
+  - Cleanup, token, key and socket absence is checked.
+  - The 49 path exceptions, the 512 TASKS table lines and the scoreboard prefix are checked.
+  - The post-commit envelope must match HEAD, tree, parent and manifest.
+  - No candidate code executes.
+- The frozen campaign files are byte-identical to the prior checkpoint's copies (`cmp`): controller.py,
+  batch.py, collect.py, policy.json, output-format.json, frozen-inputs.json, bin/helper and
+  bin/agentmage-local-api.
+- work/launch.py:
+  - It hashes to the value recorded unchanged in script-adaptations.json (e1884394…).
+  - It asserts HEAD == reporting_base, a clean tree and that the source→reporting diff equals the
+    bound path set with bound hashes.
+  - It runs the controller under bwrap with a read-only bind of the snapshot and .git, at nice 19,
+    priority low, within ≤16 GiB and ≤4 CPUs.
+  - launch.json records head 78ea34c2, nice 19, priority low, and no candidate or held-out run.
+  - The controller exit is 0.
+
+## Independent recomputation of every published number
+
+I wrote my own script over campaign/jobs/*-{00,02,04}. It reads:
+- collection/batch.json rows,
+- checked.json error codes,
+- events.ndjson terminals,
+- upstream-response usage,
+- per-task backend slices,
+- batch-report reserved_work_seconds.
+
+| Profile | New proposals | Cum. | Rendered in / requested out (new) | Backend in / out (new) | Seconds | GPU min |
+| --- | --- | --- | --- | --- | --- | --- |
+| gemma4-31b | 2/2 | 3/6 | 8061–9093 / 23643–24675 | 17154 / 1318 | 112.848 | 4.192 |
+| qwen35-27b | 1/2 | 5/6 | 6905–7875 / 24861–25831 | 14780 / 773 | 51.447 | 1.625 |
+| gpt-oss | 1/2 | 3/6 | 6179–7231 / 25505–26557 | 13410 / 39115 | 247.945 | 4.646 |
+| muse | 0/2 | 2/6 | 6090–7245 / 25491–26646 | 7245 / 7933 (dev-006 only) | 496.643 | 10.147 |
+| gemma4-e4b | 1/2 | 2/6 | 8057–9089 / 23647–24679 | 17146 / 4001 | 58.780 | 1.208 |
+| gemma4-26b-a4b | 1/2 | 2/6 | 8061–9093 / 23643–24675 | 17154 / 1671 | 89.934 | 2.361 |
+
+- All values equal the scoreboard, evidence and TASKS lines.
+- Requested output equals min(32768, 32768 − rendered − 32) for all 36 attempts.
+- New and cumulative cause maps match exactly, including subcodes.
+- Termination maps match: output-cap only for gpt-oss dev-003 and gemma4-e4b dev-002.
+- Backend coverage is 5/6 for muse and 6/6 elsewhere. Does not fit: 0.
+- The audit counts muse dev-006 by slicing from its single `launch_slot_` line. A naive regex over
+  the whole dev-006 slice also matches dev-005's late counters (see L1). The audit's slicing is
+  correct.
+- Controller wall time is 1618.801498 s (work/timing.json).
+- Peak sampled GPU per new job is 5752–20714 MiB, at most the 22528 MiB guard.
+- Every new job scope shows memory.max 17179869184 and cpu.max 400000 100000. memory.peak sits at
+  the memory.high threshold, and the evidence discloses the throttling.
+- Temperature 0, seed 42 and the 300000 ms deadlines are unchanged.
+
+## Muse dev-005 timeout
+
+- The row is generation-refused / SmokeError with generation_seconds 300.016. It has a single
+  `chat.transport.timeout` partial error event, base-fallback candidate, no answer.txt or
+  checked.json, retries 0 and graded false.
+- The capture has status 200 and exactly 16384 bytes, with a matching digest. response-01 in the
+  same job is 37480 bytes, so this is not a capture cap. `json.loads` of the prefix fails.
+- timeout_evidence.py:
+  - It accepts only (muse, dev-005).
+  - It never parses or uses the prefix as an answer.
+  - It fails closed on any other exception.
+- The 20 mutation controls each reject as claimed, and the verifier reproduces them from the capsule.
+- All complete-response checks remain for every other attempt.
+- The failure is counted in the denominator, not dropped. No inference was rerun.
+
+## Gates (Node 24.15.0, sha256 d1de76d8…932c verified; licence file present; temporary symlink in /tmp on PATH)
+
+- `python3 -B scripts/local_agent_fast_gate.py --base 78ea34c2… --timeout 600` → FAST GATE: PASS:
+  - private paths PASS,
+  - licence PASS,
+  - review lint of the .txt exit 0,
+  - markdownlint-cli2 0 issues on the three Markdown files.
+- `node …/work/render.mjs` → PASS, 0 issues, all four files rendered non-empty.
+- `python3 -B scripts/private_host_paths.py --base 78ea34c2…` → PASS.
+- `python3 -B scripts/license_policy.py` → PASS.
+- Node exit-127 correction:
+  - work/report-gate-final.log (sha256 2b0285e3…5d8, matching the correction receipt) shows
+    `Missing executable: node` / exit 127 / FAST GATE: FAIL.
+  - work/report-gate-corrected.log passes.
+  - final-checks.sh had exported the pinned Node.
+  - No checker was weakened.
+- Manual scan of the added lines found no home path, username, hostname, e-mail, credential,
+  private sibling project, other agent product or trademark branding.
+- I did not rerun the full source gate. Source is byte-identical to the reviewed 53c09dac. The
+  documents report it as FAIL (1043 passed / 53 inherited failures / 11 ignored) with no waiver,
+  which is not a passing claim.
+
+## Integrity, safety and honesty
+
+- **Evaluation integrity:**
+  - Only development tasks dev-005/dev-006 are new.
+  - Payloads hold only the task's source file. Held-out data is not loaded or executed.
+  - The frozen inputs are byte-unchanged, and no tuning happened between pairs.
+  - All 36 attempts are counted (33 checks + 3 refusals).
+  - The result is re-runnable by one command.
+- **MEASURE FIRST:**
+  - A new dated scoreboard line exists, with context and output budgets stated.
+  - It records no changed experimental variable.
+  - "Does not fit" is counted separately (0).
+  - Earlier scoreboard bytes are an exact prefix.
+- **Honest claims:**
+  - Proposals are labelled strict and ungraded, not solved, and task passes are unavailable.
+  - No model qualification, role adoption or row close is claimed.
+- **Confinement:**
+  - Model output is consumed only by the strict checker; candidates are compared as data and
+    never run.
+  - Nothing a model emitted is treated as an instruction or permission.
+- **Owner notes:**
+  - The plan, order of work, PRD, decisions, README and licence files are untouched.
+  - No other product, private project, paper or patent is named.
+
+## Findings
+
+- L1 (low, backlog T-309): the reporting understates what the retained logs show for muse dev-005.
+  - What the logs show:
+    - campaign/jobs/muse-04/collection/dev-006/backend-slice.log lines 2–6 (also in the job-level
+      backend-slice.log) carry dev-005's own terminal counters: `prompt eval time … / 6090
+      tokens`, `eval time … / 11553 tokens`, `stop processing: n_tokens = 17642, truncated = 0`.
+    - These are logged at 6.40.367, about 306.6 s after that task's slot launch at 1.33.802 and
+      about 6.5 s after the 300 s client deadline.
+    - The retained prefix begins `{"choices":[{"finish_reason":"stop",…`.
+    - The backend did not stop when the client timed out. The dev-006 slot launched only at
+      6.40.368, so dev-006's 196.627 s (and the muse 496.643 s total) includes roughly 6.5 s
+      spent waiting for the abandoned generation.
+  - What the documents say:
+    - docs/evidence/t303-line-range-checkpoint36-2026-11-20.md calls the counts "unavailable,
+      not zero or extrapolated from later logs" and says only that the task's own slice lacks
+      terminal counters.
+    - That is literally true, and the timeout is correctly counted as a failure.
+    - It omits that the backend finished the answer just after the deadline, and that the
+      uncancelled request delayed the next task's timing.
+  - Nothing is overclaimed, and no number is wrong under the stated per-slice protocol, so this is
+    low.
+  - Fix: in the next reporting increment, state that the backend's terminal counters for this
+    request appear after the deadline in the next task's slice (6090/11553) and are excluded by
+    protocol, and that dev-006 timing includes the wait. Record backend cancellation on client
+    timeout as a protocol item for after the frozen repeat, not as tuning now.
+- L2 (low, carried, T-309): verify.py still does not derive the published per-profile numbers
+  from the raw jobs and compare them with the committed text. I recomputed them all by hand, as
+  above, and they match.
+
+No critical, high or medium finding.
+
+## Per-row result
+
+- T-303/T-306, non-closing development measurement checkpoint 36 at 7b1ecdf5: PASS for this
+  reporting increment. There is no open high or medium finding. Both rows stay OPEN, as the commit
+  states. No row or model closure is requested or granted.
+
+Verdict: PASS
