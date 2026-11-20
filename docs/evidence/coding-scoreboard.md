@@ -5462,3 +5462,16 @@ exact strict checker run. Native admission and original execution/grading
 controls remain unavailable; no effects, project tests, feedback, retries,
 candidate, hidden or held-out execution. No task score or model adoption.
 T-303/T-306 remain open.
+
+## Completed repeat: inventory verification correction, 2026-11-20
+
+The [inventory correction](t303-raw-source-inventory-fix-2026-11-20.md) fixes a
+maximum-Unicode prefix-boundary gap in the reporting verifier after commit
+`94f1889700d2c0aadc8dec1639b2b7e952ad8b9b`. The original capsule and envelope
+remain unchanged. The corrected verifier checks every original nested inventory,
+hash and length; sixteen controls agree with the original uncached check and
+expose two false accepts and two false refusals in the faulty cached check.
+This supersedes its general equivalence claim. The original data passes the
+corrected full check. No inference or attempt rerun occurs. The repeat remains
+180 attempts, 103 strict ungraded proposals and 36 absent-original refusals;
+task passes/retries stay unavailable. No model adoption or row closure.

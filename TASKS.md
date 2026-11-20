@@ -2,6 +2,16 @@
 
 ## Active queue: local agent mission
 
+The [completed-repeat inventory correction](docs/evidence/t303-raw-source-inventory-fix-2026-11-20.md)
+fixes a Unicode prefix-boundary gap found after reporting commit
+`94f1889700d2c0aadc8dec1639b2b7e952ad8b9b`, before requesting independent review.
+The corrected check authenticates the complete original capsule unchanged;
+sixteen controls match the original uncached implementation. The repeat stays
+180 attempts and 103 strict ungraded proposals; its largest refusal cause stays
+36 absent originals. No model work is rerun, no historical evidence is rewritten,
+and no row closes. Independent core review is required for the complete batch
+and this correction. T-303/T-306 remain open.
+
 The [independent one-hundred-fifty-attempt checkpoint review](docs/reviews/1d697fddaa48-raw-source-development-checkpoint150.txt)
 returns **Verdict: PASS** for exact `1d697fddaa4895c04964654c7fb89badeee953f8`, with no critical, high, medium or low findings.
 Its report is retained unchanged; no row closes. This accepts only
