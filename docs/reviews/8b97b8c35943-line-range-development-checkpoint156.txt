@@ -1,0 +1,158 @@
+Commit: 8b97b8c359437c00be4e68a6ea90476db1ca9b5e
+Scope: line-range-development-checkpoint156
+
+# Independent core review: frozen line-range checkpoint 156 (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate session, read-only. All commands ran in the pinned
+checkout /lane/review-checkout with CARGO_TARGET_DIR=/lane/state/review-target. I modified no repository or
+capsule file and did not use the GPU. Scratch files live only in /tmp (node symlink, logs).
+
+## Scope reviewed
+
+Reporting increment fbfa32c6d38b1077a107019b1b0dc54f720491e7..8b97b8c359437c00be4e68a6ea90476db1ca9b5e:
+twelve new frozen attempts (dev-025/dev-026 on six profiles), bringing the repeat to 156/180, 24 remaining.
+
+`git diff --name-status fbfa32c6..8b97b8c3` lists four files only:
+- M TASKS.md (a paragraph at the top of the active queue; no table row added or changed)
+- M docs/evidence/coding-scoreboard.md (append only)
+- A docs/evidence/t303-line-range-checkpoint156-2026-11-20.md
+- A docs/reviews/fbfa32c6d38b-line-range-development-checkpoint144.txt
+
+No runtime source, test, manifest, licence, README, NOTICE, inventory or decision file changes.
+
+## Commands and results
+
+1. Commit identity and cleanliness
+   - `git rev-parse HEAD` and `git rev-parse 8b97b8c3`: both 8b97b8c359437c00be4e68a6ea90476db1ca9b5e.
+   - `git status --porcelain`: empty.
+   - `git diff --check fbfa32c6d38b1077a107019b1b0dc54f720491e7`: exit 0.
+   - Author/committer and Signed-off-by: the owner identity. Trailer: Co-Authored-By Claude Opus 5.5.
+
+2. Capsule hashes (`sha256sum`): all match the request.
+   - manifest.json 463eb674…af122, bindings.json e5b25251…eda3b, post-commit.json b34daa3e…576ff,
+     work/finish.py 54d83e45…0edb, verification.log 7c6fb637…d791.
+   - The post-commit envelope binds commit 8b97b8c3, parent fbfa32c6, source 53c09dac, tree 98a80373…, and
+     the manifest, bindings and finalizer hashes above.
+   - The builder's verification log reports PASS.
+
+3. `bash /tools/build-slot python3 -B /lane/reviews/line-range-development-checkpoint156-20261120/verify.py --require-postcommit`
+   → exit 0 after 6 min 14 s:
+   `{"status": "PASS", "files": 782520, "source_files": 9823, "repository_inputs": 2355, "private_inputs": 78, "contexts": 30, "prior_checks": 165, "range_equivalences": 185, "new_checks": 140, "generation_refusals": 16, "attempts": 156, "postcommit_checked": true, "candidate_execution": false, "task_passes": null}`.
+   I read the whole verifier (186 lines). It checks:
+   - the complete inventory and the nested protocol and prior-checkpoint inventories;
+   - every source tar entry against its Git blob id and executable mode;
+   - the frozen campaign, binary and private inputs against frozen-inputs.json;
+   - the preflight, reproduced byte for byte;
+   - all 30 contexts, replayed through the authenticated helper;
+   - for each of the 156 attempts: the exact wire request, terminal event and cause, a checker replay, and the
+     complete candidate projection compared as data against `git archive` of the task base;
+   - timeout controls (both suites, rerun);
+   - cleanup, token retirement and absence of keys, sockets and tokens;
+   - preservation: the 512 TASKS table lines, the scoreboard prefix, 49 exempted blobs and the post-commit
+     binding.
+
+   The prior-checkpoint manifest pin 8217d9e8… equals the sha256 of the checkpoint144 capsule's manifest.json.
+   The only code that runs is the authenticated helper and the capsule's own reporting and timeout-control
+   scripts. No candidate, project test, hidden test or held-out task runs.
+
+4. Separate equality checks
+   - `diff -rq <capsule>/prior-checkpoint /lane/reviews/line-range-development-checkpoint144-20261120` → identical.
+   - `diff -rq <capsule>/protocol /lane/reviews/original-line-range-protocol-20261120` → identical.
+   - `cmp docs/reviews/fbfa32c6d38b-line-range-development-checkpoint144.txt /lane/reviews/fbfa32c6d38b-line-range-development-checkpoint144.md`
+     → identical. It begins with the checkpoint144 Commit/Scope lines and ends `Verdict: PASS`.
+
+5. Node 24.15.0 at /lane/reviews/42612ca9787f-a4b-node, sha256 d1de76d8…c932c (matches; licence file present).
+   I linked it as /tmp/rv156-bin/node, outside the capsule, and put that directory first on PATH.
+   - `bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base fbfa32c6… --timeout 600`
+     → FAST GATE: PASS. Its steps (diff check, untracked lint, privacy, licence, review lint, markdownlint)
+     report 0 issues in 3 files.
+   - `node …/work/render.mjs` → `{"status":"PASS","issues":0,…}` for all four changed files.
+   - `python3 -B scripts/private_host_paths.py --base fbfa32c6…` → PRIVATE PATH CHECK: PASS.
+   - `python3 -B scripts/license_policy.py` → LICENCE POLICY: PASS.
+   - I also grepped the diff by hand for private home paths, user names, e-mail addresses and credential
+     patterns. The only hits are /lane review paths quoted in the retained predecessor review, the same
+     convention earlier accepted reviews use. No home path, user name, credential, sibling-project or
+     other-product name appears.
+   - I did not rerun the full SOURCE gate. No runtime source changed, and the documents restate the
+     inherited FAIL (1,043 passed, 53 failures, 11 ignored, 31 targets) with no waiver. That is reported,
+     not claimed as passing.
+
+6. Independent recomputation from raw slices
+   I wrote my own scripts over campaign/jobs/*-24 and all jobs; they do not use the builder's audit.
+   - Backend input and output tokens are the sums of the `prompt eval time … / N tokens` and
+     `eval time … / N tokens` lines in each task's backend slice:
+     gemma4-31b 9694/1582; qwen35-27b 8600/1806; gpt-oss 7965/30858; muse 7858/12177; gemma4-e4b 9686/4160;
+     gemma4-26b-a4b 9694/5027. All match.
+   - Request and strict-check seconds are the sums of generation_seconds:
+     110.236, 71.893, 159.736, 286.466 (unrounded 181.6187+104.8477), 63.430, 89.426. All match.
+   - Reserved-job GPU minutes are reserved_work_seconds/60:
+     4.548, 1.844, 3.066, 5.177, 1.250, 2.333. All match.
+   - Sampled GPU peaks are all at or below 20,302 MiB, under the 22,528 MiB guard.
+   - Rendered input ranges, requested output ranges and the output formula
+     `min(32768, 32768 - rendered - 32)` match every record; the verifier also checks the formula.
+   - New ungraded proposals: 2, 1, 2, 2, 0, 2. Cumulative: 21, 20, 12, 12, 13, 17 out of 26. This equals the
+     checkpoint144 cumulative (19, 19, 10, 10, 13, 15 out of 24) plus the new counts.
+   - Cumulative cause dictionaries (including checker error codes and terminal event codes) and counter
+     coverage (26 for every profile except muse at 20/26, its six timeouts) match the documents exactly.
+     Does not fit: 0, consistent with every rendered input being far below the context.
+   - Controller wall time is controller-exit utc minus launch utc: 21:06:40.224 − 20:45:40.824 = 1259.400 s.
+     The frozen controller pauses 30 s between jobs and exits after the sixth job, which gives five pauses.
+   - launch.json records the process nice as 19, read from /proc stat, with cgroup memory.max 16 GiB and
+     cpu.max 400000/100000 (four CPUs).
+   - The launcher is byte-identical to its predecessor, and its wrapper hashes are recorded.
+
+7. Adaptation, cleanup and preservation receipts
+   - script-adaptations.json:
+     - as_run_generator_sha256 equals sha256(work/adapt.py), and prior_work is the checkpoint144 work
+       directory.
+     - Every adapted script's current hash equals its recorded to_sha256, so nothing changed after adaptation.
+     - Every diff is a literal substitution of counts, paths, parent hashes or names. One exception: adapt
+       removed the checkpoint132 review-hash pin. The as-run write-report.py then pins 8e15d46c…3a87, and I
+       confirmed that equals the sha256 of the actual checkpoint144 review.
+     - frozen_campaign_modified is false.
+   - adapt-execution.json records exit 0. new-observations.json has no cases.
+   - Token retirement:
+     - There are 12 new receipts (client and control tokens for the six `-24` jobs), with 24 distinct hashes
+       across the new and prior receipts. The prior receipts are retained in prior-checkpoint.
+     - cleanup.json records PASS, 78 completed pairs, no live owned processes, no foreign signal and
+       receipts persisted before unlink.
+     - No Authorization or Bearer material appears in the new job files.
+   - finish.py commits only the listed files locally and never pushes.
+
+8. Claims check
+   - TASKS.md: the table lines are unchanged (the verifier checks this); the text says both rows stay open.
+   - The scoreboard is append-only, adds one dated line per profile for this batch, states the context and
+     output budgets, says there is no changed variable (supported by authentication of the frozen campaign),
+     and counts does-not-fit separately.
+   - Task passes and retries are "Unavailable", and strict ungraded proposals are stated not to be solved
+     tasks. A sample confirms why that caveat matters: gpt-oss dev-025's accepted proposal replaces the
+     function's opening line with comments, so passing the strict check says nothing about correctness.
+   - No other agent product, private project, employer or patent is named. No qualification, role adoption
+     or row closure is claimed.
+   - Evaluation integrity: the held-out set is not loaded, hidden tests are untouched, task bases are
+     frozen and authenticated, failures are counted (16 generation refusals, 54 strict refusals across 156),
+     and no tuning happens between batches.
+
+## Not checked
+
+The builder's live namespace /lane/state/lr1 is not mounted in this session. I could not observe the token
+unlinking or process reaping directly; I relied on the retained receipts and the verifier's absence checks
+on the capsule copy. There is no UI scope.
+
+## Findings
+
+No critical, high or medium finding. No new low finding. Accepted lows from earlier reviews stay in the
+T-309 backlog unchanged: metric derivation (request and strict-check seconds equal generation_seconds),
+per-pair wrapper provenance, and backend cancellation on client timeout. Output-cap explanations and strict
+refusal sub-reasons stay in post-repeat analysis backlog.
+
+## Per-row result
+
+- T-303 (non-closing development measurement, checkpoint 156): the increment is accepted as accurate,
+  traceable reporting. The row stays OPEN.
+- T-306 (non-closing development measurement, checkpoint 156): the increment is accepted as accurate,
+  traceable reporting. The row stays OPEN.
+
+No row closure, model qualification, release or owner-test readiness is requested or granted.
+
+Verdict: PASS
