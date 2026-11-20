@@ -1,0 +1,95 @@
+Commit: 1d697fddaa4895c04964654c7fb89badeee953f8
+Scope: raw-source-development-checkpoint150
+
+# Independent core review: frozen raw-source development checkpoint 150
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate session with read-only access. I reviewed the pinned
+checkout /lane/review-checkout with CARGO_TARGET_DIR=/lane/state/review-target. I did not modify the repository, use
+the GPU, run inference or execute candidate, hidden or held-out code. Base e65728adbdd1eb701c7973e2560fa23f3958ddf1;
+frozen product source eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f. This increment is a non-closing T-303/T-306
+development measurement.
+
+## Methods, commands and results
+
+1. `git rev-parse HEAD` printed 1d697fddaa4895c04964654c7fb89badeee953f8, and so did `git rev-parse <sha>`.
+   `git status --porcelain` was empty before and after the review. `git diff --check e65728ad…` exited 0.
+   The diff covers 5 files: README.md (one line), TASKS.md, docs/evidence/coding-scoreboard.md (append only),
+   the new docs/evidence/t303-raw-source-checkpoint150-2026-11-20.md and the retained
+   docs/reviews/4f60ac9d29a4-raw-source-development-checkpoint138.txt. It changes no product source.
+2. `bash /tools/build-slot python3 -B …/checkpoint150-20261120/verify.py` ran for 72m38s and printed
+   `{"status": "PASS", "attempts": 150, "remaining": 30, "source_commit": "eef17dbd…", "postcommit_checked": true,
+   "task_scores": null, "complete_prior_capsule_authenticated": true}` with rc 0.
+3. `bash /tools/build-slot python3 -B …/reproduce.py` ran for 1m43s and printed `{"status": "PASS", "contexts": 30,
+   "prior_checks": 161, "new_checks": 138, "generation_refusals": 12, "attempt_records": 150, "helper_sha256":
+   "4aea9726…31c53", "candidate_execution": false, "model_inference": false}` with rc 0. The helper hash matches the
+   authenticated helper named in the request.
+4. Hash checks (`sha256sum -c`) passed for the external finalizer (2d25a165…7c3), the node runtime (d1de76d8…932c)
+   and the timing correction script (4dcf64b1…cb68). The external finalizer is byte-identical (`cmp`) to
+   work/finish-session.py. The manifest (945fcf2f…cb81b), bindings (e9795b12…507d) and postcommit envelope
+   (5fa7d6c7…7ccf) match the request. The postcommit envelope's commit field is the reviewed commit, and its five
+   public hashes equal `sha256sum` of the committed files. prior-finish-session.py and prior-post-commit.json are
+   byte-identical to the external checkpoint144 finalizer (ef60b7ab…) and envelope (cff8bbcc…).
+5. With the retained node runtime: `node --version` printed v24.15.0. The other step-3 commands all exited 0:
+   - `python3 -B scripts/local_agent_fast_gate.py --base e65728ad… --timeout 3600` printed FAST GATE: PASS. That
+     includes the private path check, the licence policy, review lint and markdownlint (0 issues in 4 files).
+   - `node …/work/render.mjs` printed PASS with 0 issues and non-empty renders.
+   - `scripts/private_host_paths.py --base e65728ad…` printed PASS.
+   - `scripts/license_policy.py` printed PASS.
+
+## Independent checks beyond the scripts
+
+- **Retained review.** The committed checkpoint138 review is byte-identical (`cmp`, SHA256 9be42d9d…eb2b) to
+  /lane/reviews/4f60ac9d29a4-raw-source-development-checkpoint138.md. Its verdict is PASS with no findings.
+  /lane/reviews/e65728adbdd1-raw-source-development-checkpoint144.md has SHA256 ee5ee465…216ab, as the request states.
+  Its file time (07:34:11Z) is later than the reporting commit (07:22:43Z), so its absence from this commit is
+  correct. The timing correction only rewrites private request and handoff metadata. Its receipt binds the hashes
+  before and after the correction, and verify.py still authenticates the sealed capsule and envelope.
+- **Raw numbers.** I recomputed every new scoreboard and evidence cell from raw upstream-response .bin files (the
+  capture SHA256 values match) and from the record, batch-report and launch/exit files:
+  - Tokens: 9660/407, 8584/2281 and 7953/27687.
+  - Request and strict-check seconds: 40.985+13.353=54.337, 72.275 and 133.975+7.248=141.223.
+  - GPU minutes from reserved_work_seconds/60: 2.100, 1.803 and 2.665.
+  - Controller wall time from launch to exit (06:36:36.99 to 06:44:23.33): 466.34 s.
+  - Every budget equals `min(32768, 32768 − input − 32)`, for example 4567→28169 and 3732→29004. Every wire request
+    has `chat_template_kwargs.enable_thinking=false` and the frozen max_tokens.
+
+  collect.py times both the request and the strict check, so the "request and strict-check" label is accurate.
+  Cumulative counts follow from checkpoint 144 (18+2, 22+2, 7+1) and sum to 150 attempts. The causes give
+  138 strict checks plus 12 generation refusals: 6 incomplete, 3 length and 3 transport timeouts. A gpt-oss dev-025
+  strict-edit refusal is counted as a failure, not dropped. "Does not fit" is 0 for every profile.
+- **Frozen inputs.** Compared with the prior capsule, reproduce.py, verify.py and the work scripts differ only in
+  nesting depth, base, counts, dates, filenames and the wording "Previously recorded" / "Preserved". audit.py is
+  unchanged. batch.py, collect.py, controller.py, policy.json and frozen-inputs.json are byte-identical to the
+  prior capsule (verify.py also asserts this). Exactly three new job directories exist (gemma4-31b-24,
+  qwen35-27b-24 and gpt-oss-24), and no earlier job directory is removed or changed.
+- **Launch settings.** The 54-entry launcher allow-list equals exactly `git diff --name-only eef17dbd e65728ad`
+  (54 paths, empty symmetric difference). launch.json records nice 19, low priority, a 16 GiB memory limit, four
+  CPUs, unset slot-four to slot-six thresholds and build-slot SHA256 4061f0e6…a6. cleanup.json records PASS:
+  6 retired tokens, receipts persisted before unlink, no live owned processes, keys and sockets absent, and no
+  foreign signal.
+- **Public files and privacy.**
+  - TASKS.md ledger table lines are unchanged: the diff has no `|` lines. Its only removed line is the routine
+    "review was required when recorded" update.
+  - The old scoreboard is an exact byte prefix of the new one.
+  - The README independence paragraph is present and unchanged, and the README diff is the single measured-coding
+    sentence.
+  - The link to Decision 0213 resolves.
+  - A grep of the added lines for usernames, e-mail, home paths, credentials and other agent products found only
+    /lane and /tools lane paths inside the retained review text, which previous published reviews also contain.
+    It found no private home path or username.
+  - The commit author and Signed-off-by line are the owner's contribution identity, as CONTRIBUTING requires.
+- **Evaluation integrity.** Only development tasks dev-025 and dev-026 ran. No held-out or hidden content is in the
+  diff. Candidates are written but never executed. Nothing tunes the controller in the middle of the repeat.
+  MEASURE FIRST is met: a dated scoreboard line exists for this batch, budgets are stated and every number traces to
+  raw logs.
+
+## Findings
+
+None: no critical, high, medium or low findings.
+
+## Per-row result
+
+T-303/T-306, non-closing development measurement at 150/180 attempts: the reporting increment is accepted.
+No row closes, and T-303/T-306 remain open. Existing T-309 lows remain backlog.
+
+Verdict: PASS
