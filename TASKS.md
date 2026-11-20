@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The [completed line-range refusal diagnosis](docs/evidence/t303-line-range-refusal-diagnosis-2026-11-20.md) reproduces all 162 complete-reply checks and classifies 160 typed edit results.
+The largest individual refusal is repeated original text (21/180), followed by
+invalid line order (16/180). Nineteen repeated selections are one line; ten are
+whitespace only. Next: improve unique-anchor selection while preserving the
+strict checker, then freeze and measure any model-visible change on all six
+profiles. This is read-only analysis; no new run or row closes. Native admission,
+grading, task passes and retries remain unavailable. Independent core review
+is required; the preceding measurement review remains in flight at preparation.
+
 The [frozen line-range one-hundred-eighty-attempt checkpoint](docs/evidence/t303-line-range-checkpoint180-2026-11-20.md)
 adds dev-029/dev-rust-001 on all six profiles: **180/180 attempted, 0 remaining**.
 Cumulative strict ungraded proposals: gemma4-31b 23/30; qwen35-27b 24/30; gpt-oss 13/30; muse 15/30; gemma4-e4b 15/30; gemma4-26b-a4b 19/30.

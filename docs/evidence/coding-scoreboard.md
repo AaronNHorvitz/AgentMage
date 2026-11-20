@@ -6335,3 +6335,35 @@ deadline or bookkeeping feature is selected by this report. Ungraded proposals
 remain a separate outcome: missing native executable admission and original
 grading controls still prevent task-pass measurements, feedback and retries.
 No control is reconstructed and no candidate or hidden test is run.
+
+## 2026-11-20: read-only diagnosis of the completed line-range repeat
+
+This adds no inference run, changed variable or new task score. The same
+180 attempts at frozen `53c09dac184fab2a75ee57f0f540a3ae4ad2d9bb` are subdivided
+from exact recorded replies and strict-check results. The native effect-free
+helper reproduces 162 complete-reply checks; the diagnostic classifier agrees
+on all 160 typed edit-condition acceptance/refusal results.
+
+| Diagnostic condition or retained outcome | Attempts |
+| --- | ---: |
+| Repeated original text | 21 |
+| Invalid line order | 16 |
+| Line range outside the source | 3 |
+| Original not fully visible in one excerpt | 4 |
+| Overlapping edits | 4 |
+| NUL in replacement | 2 |
+| Unknown source path | 1 |
+| Format refusal | 2 |
+| Incomplete response at output cap | 9 |
+| Length termination at output cap | 3 |
+| Transport timeout | 6 |
+| Strict ungraded proposal | 109 |
+
+Largest individual refusal: repeated original text (21 attempts); 19 select
+one line and ten only whitespace. The next experiment should improve unique
+anchor selection while retaining every strict refusal. First-attempt and
+within-budget passes, feedback and retries remain unavailable. No GPU time or
+tokens are added to the campaign. No candidate, hidden or held-out execution,
+model qualification or row closure occurs. See the [diagnosis](t303-line-range-refusal-diagnosis-2026-11-20.md)
+for the method, profile counts, controls and limitations. Independent core review
+is required; existing scoreboard measurements remain unchanged.
