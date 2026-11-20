@@ -2,6 +2,17 @@
 
 ## Active queue: local agent mission
 
+The [frozen line-range one-hundred-eighty-attempt checkpoint](docs/evidence/t303-line-range-checkpoint180-2026-11-20.md)
+adds dev-029/dev-rust-001 on all six profiles: **180/180 attempted, 0 remaining**.
+Cumulative strict ungraded proposals: gemma4-31b 23/30; qwen35-27b 24/30; gpt-oss 13/30; muse 15/30; gemma4-e4b 15/30; gemma4-26b-a4b 19/30.
+All 30 development tasks on all six profiles have now been attempted.
+Review the failure causes before further tuning or capability work.
+Source, schema and model settings stay frozen. Task passes and retries remain
+unavailable. Independent core review is required; T-303/T-306 remain open.
+No row closes.
+The [preceding independent core review](docs/reviews/c5ba0282b0bb-line-range-development-checkpoint168.txt) returns **Verdict: PASS** for exact `c5ba0282b0bb2bc194d1fd27e749213c8e13d096`; its unchanged report is retained. The metric-derivation low remains T-309 backlog. Output-cap explanations and strict refusal sub-reasons remain post-repeat analysis backlog. No row closes.
+Largest measured refusal: `strict-edit-refused:code.proposal.edit` (51/180). Next: read-only diagnosis from recorded development replies and strict-check diagnostics; no candidate execution or reconstructed grading authority.
+
 The [frozen line-range one-hundred-sixty-eight-attempt checkpoint](docs/evidence/t303-line-range-checkpoint168-2026-11-20.md)
 adds dev-027/dev-028 on all six profiles: **168/180 attempted, 12 remaining**.
 Cumulative strict ungraded proposals: gemma4-31b 22/28; qwen35-27b 22/28; gpt-oss 12/28; muse 13/28; gemma4-e4b 14/28; gemma4-26b-a4b 19/28.
