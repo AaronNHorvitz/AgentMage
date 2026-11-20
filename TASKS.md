@@ -2,6 +2,31 @@
 
 ## Active queue: local agent mission
 
+[Decision 0214](docs/decisions/0214-original-line-range-proposals.md) targets
+the largest measured refusal cause by resolving exact preimages from original
+line ranges. Version 2 source headers identify those lines; the shared checker
+still requires unique, visible, nonoverlapping original text. Existing exact-text
+clients remain supported. This is an unmeasured generation hypothesis: freeze
+the protocol and repeat all 30 development tasks on all six profiles before
+further tuning or capability work. T-303/T-306 stay open; no task passes or
+model qualification are claimed. The
+[source verification](docs/evidence/t303-original-line-ranges-2026-11-20.md)
+reproduces 165 prior checks and 185 line-range/exact-text equivalences. Nine
+development contexts select different excerpts; all changes are recorded.
+The source gate retains its 53 inherited failures; no new failure remains.
+Independent core review is required.
+
+The [completed-repeat core review](docs/reviews/26334be8cd5b-raw-source-development-complete-inventory-fix.txt)
+returns **Verdict: PASS** for exact `26334be8cd5b176d8435112db2fcce8e614facaf`.
+The [diagnosis core review](docs/reviews/abab73ff91f6-raw-source-preimage-diagnosis.txt)
+returns **Verdict: PASS** for exact `abab73ff91f63fdfc8c6cfe3d0691122fbbf9030`.
+Both reports are retained unchanged, with no high or medium finding and no row
+closure. Their three lows remain backlog for T-309: a forward pointer from the
+old checkpoint to its inventory correction only if preservation permits; the
+temporary location of the frozen verifier Git view (keep it intact); and the
+diagnostic whitespace definition and changed-needle guard. The latter does not
+change the observed counts and must be stated precisely if reused.
+
 The [completed-repeat preimage diagnosis](docs/evidence/t303-raw-source-preimage-diagnosis-2026-11-20.md)
 investigates the largest measured refusal cause: 36 first-failing absent originals.
 Twelve match a visible excerpt after whitespace erasure, one after diagnostic

@@ -39,8 +39,9 @@ absolute, traversal and `.git` components are refused. Paths are display data,
 never resolved on the server. The existing 256 KiB HTTP body limit also applies,
 including JSON escaping. No hidden tests, references or Git history are loaded.
 
-`max_message_bytes` is 2,048–32,768 and includes the exact serialized system and
-user message content, including JSON escaping. `max_tokens` is 1–4,096. **Bytes
+`max_message_bytes` is 2,048–32,768 and includes system and user content,
+metadata and framing. Selection also retains its original JSON-sized allowance;
+both checks must fit. Transport escaping is separate. `max_tokens` is 1–4,096. **Bytes
 are not rendered model tokens.** This endpoint does not discover or qualify the
 served context size or codec. Backend context failures remain failures; a byte
 ceiling is not exact token admission. Changing either budget is a separate
@@ -69,7 +70,29 @@ original start/end byte offsets and text. Compare their union with each file's
 byte count to identify omitted source. All task, outline and source text stays
 untrusted data. It cannot change the endpoint, tools, budgets or authority.
 
-The model must return only this JSON shape:
+The user message starts with JSON metadata, followed by JSON excerpt headers
+and raw UTF-8 bodies. A header's `bytes` gives the body length; one additional
+framing newline follows the body and is not source. Version
+`untrusted-raw-utf8-length-prefixed-v2` adds original `start_line` and `end_line`
+to each header alongside the byte offsets. Decode bodies by byte lengths, never
+by looking for delimiters inside untrusted source. Body bytes remain unchanged.
+
+The model instruction now prefers this strict line-range shape:
+
+```json
+{"edits":[{"path":"calc.py","start_line":2,"end_line":2,"new":"    return a + b\n"}]}
+```
+
+Line numbers are positive integers, 1-based within the original file, inclusive
+at both ends. LF ends a line; CR before LF belongs to that line. A final line
+without LF is selectable; a final LF creates no extra selectable line. `new`
+replaces all selected lines, including their original line endings. Include
+the intended indentation and line endings in the replacement. Insertions keep
+an existing anchor line plus inserted text; deletions use an empty `new`.
+The runtime derives the exact original text and checks it through the same
+strict checker. A line address does not waive whole-file uniqueness or visibility.
+
+Existing exact-text clients and configured schemas remain supported:
 
 ```json
 {"edits":[{"path":"calc.py","old":"return a - b","new":"return a + b"}]}
@@ -85,10 +108,16 @@ text, net unchanged files and growth beyond the snapshot limits reject the whole
 proposal. A changed complete source digest rejects a stale context. These checks
 validate an edit proposal, not its correctness or safety to execute.
 
-The model instruction explicitly requires copying decoded excerpt text with its
-original whitespace and enough surrounding source to distinguish repeated
-fragments. The checker still refuses ambiguous or altered preimages; it does
-not trim, normalize or repair a model's edit.
+Each edit uses exactly one representation. Mixing `old` with line-number keys,
+missing boundaries, nulls, noninteger numbers and out-of-range lines refuse.
+Both forms may coexist as separate edits in a batch, always against the same
+original. The instruction permits `path/old/new` when a configured output
+schema requires it; that form still requires exact original whitespace.
+To constrain generation to line ranges, explicitly configure a trusted inline
+schema with required `path`, `start_line`, `end_line` and `new`, integer line
+numbers with minimum 1, one to 32 edits and no additional properties. The API
+does not silently replace a person's chosen schema. The checker still refuses
+ambiguous or altered preimages; it does not trim, normalize or repair an edit.
 
 The 128 KiB candidate limit covers the final combined snapshot, including
 unchanged files. Growth in one file can be balanced by shrinkage in another

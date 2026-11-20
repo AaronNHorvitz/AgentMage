@@ -28,7 +28,7 @@ fn raw_source_context(message: &str) -> Value {
     let mut context: Value = serde_json::from_str(metadata).unwrap();
     assert_eq!(
         context["source_encoding"],
-        "untrusted-raw-utf8-length-prefixed-v1"
+        "untrusted-raw-utf8-length-prefixed-v2"
     );
     let mut excerpts = Vec::new();
     for _ in 0..context["excerpt_count"].as_u64().unwrap() {
@@ -885,6 +885,61 @@ fn coding_request() -> Value {
 
 fn coding_answer() -> String {
     json!({"edits":[{"path":"calc.py","old":"return a - b","new":"return a + b"}]}).to_string()
+}
+
+#[test]
+fn line_addressed_proposal_crosses_http_and_streaming_without_an_execution_grant() {
+    let api = Api::new();
+    let (endpoint, task) = upstream(move |mut socket| {
+        let raw = incoming(&mut socket);
+        let start = raw.windows(4).position(|w| w == b"\r\n\r\n").unwrap() + 4;
+        let request: Value = serde_json::from_slice(&raw[start..]).unwrap();
+        assert_eq!(
+            request["response_format"]["json_schema"]["name"],
+            "coding_lines_v1"
+        );
+        let context = raw_source_context(request["messages"][1]["content"].as_str().unwrap());
+        assert_eq!(context["excerpts"][0]["start_line"], 1);
+        assert_eq!(context["excerpts"][0]["end_line"], 2);
+        let answer = json!({"edits":[{"path":"calc.py","start_line":2,"end_line":2,"new":"    return a + b\n"}]}).to_string();
+        reply(
+            &mut socket,
+            "text/event-stream",
+            &format!("{}{}", chunk(&answer), end()),
+        );
+    });
+    let schema = json!({"json_schema":{"name":"coding_lines_v1","schema":{
+        "type":"object","properties":{"edits":{"type":"array","minItems":1,"maxItems":32,
+            "items":{"type":"object","properties":{
+                "path":{"type":"string"},"start_line":{"type":"integer","minimum":1},
+                "end_line":{"type":"integer","minimum":1},"new":{"type":"string"}},
+                "required":["path","start_line","end_line","new"],"additionalProperties":false}}},
+        "required":["edits"],"additionalProperties":false}}});
+    assert_eq!(
+        api.call(
+            "PUT",
+            "/v1/settings",
+            CONTROL,
+            Some(json!({
+                "endpoint":endpoint,"approve_conversations":true,"response_format":schema
+            }))
+        )
+        .0,
+        200
+    );
+    let (status, body) = api.call("POST", "/v1/code/proposals", CLIENT, Some(coding_request()));
+    assert_eq!(status, 200);
+    let output = events(&body);
+    let proposal = output.last().unwrap();
+    assert_eq!(proposal["type"], "proposal");
+    assert_eq!(proposal["applied"], false);
+    assert_eq!(proposal["tested"], false);
+    assert_eq!(
+        proposal["changes"][0]["content"],
+        "def add(a, b):\n    return a + b\n"
+    );
+    assert_endpoint_runtime_observation(&output);
+    task.join().unwrap();
 }
 
 #[test]

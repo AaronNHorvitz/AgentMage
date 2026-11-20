@@ -50,7 +50,7 @@ fn source_bodies_round_trip_quotes_escapes_unicode_line_endings_and_fake_headers
     assert_eq!(metadata["task"], task);
     assert_eq!(
         metadata["source_encoding"],
-        "untrusted-raw-utf8-length-prefixed-v1"
+        "untrusted-raw-utf8-length-prefixed-v2"
     );
     assert_eq!(
         metadata["files"],
@@ -63,6 +63,16 @@ fn source_bodies_round_trip_quotes_escapes_unicode_line_endings_and_fake_headers
         assert_eq!(h["start"], excerpt.start);
         assert_eq!(h["end"], excerpt.end);
         assert_eq!(h["bytes"], excerpt.end - excerpt.start);
+        let source = sources.iter().find(|s| s.path == excerpt.path).unwrap();
+        let first = 1 + source.content[..excerpt.start]
+            .bytes()
+            .filter(|b| *b == b'\n')
+            .count();
+        assert_eq!(h["start_line"], first);
+        assert_eq!(
+            h["end_line"],
+            first + excerpt.text.split_inclusive('\n').count() - 1
+        );
         assert_eq!(*body, excerpt.text);
     }
     assert_eq!(bodies[0].1.as_bytes(), text.as_bytes());

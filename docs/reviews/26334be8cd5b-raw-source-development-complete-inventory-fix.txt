@@ -1,0 +1,139 @@
+Commit: 26334be8cd5b176d8435112db2fcce8e614facaf
+Scope: raw-source-development-complete-inventory-fix
+
+# Independent core review: completed raw-source repeat (attempts 151–180) and inventory verifier correction
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Pinned checkout
+/lane/review-checkout at the exact commit; CARGO_TARGET_DIR=/lane/state/review-target. I did not modify the
+repository, did not use the GPU, ran no model inference and executed no candidate, hidden or held-out code.
+Row: T-303/T-306, non-closing development measurement plus verifier correction. Nothing closes.
+
+## Scope reviewed
+
+The complete seven-file public diff 1d697fddaa4895c04964654c7fb89badeee953f8..26334be8, made of reporting
+commit 94f1889700d2c0aadc8dec1639b2b7e952ad8b9b (six files) and correction commit 26334be8 (three files:
+TASKS.md, coding-scoreboard.md, t303-raw-source-inventory-fix-2026-11-20.md). Neither commit is rewritten
+(`git log 1d697fdd..HEAD` shows exactly these two commits, linear). I also reviewed the private supplement
+/lane/reviews/raw-source-development-inventory-fix-20261120, the original capsule
+/lane/reviews/raw-source-development-checkpoint180-20261120 and the actual finalizer.
+
+## Methods, commands and results
+
+1. Identity and hygiene
+   - `git rev-parse HEAD` → 26334be8cd5b176d8435112db2fcce8e614facaf; `git status --porcelain` → empty
+     (also empty again after all runs).
+   - `git diff --check 1d697fdd…` → exit 0. `git diff --name-status 1d697fdd` → 5 modified/added docs and
+     2 retained review .txt files; no code, product source, model context, strict checker or task files.
+2. Supplement verification (runs the corrected full original-capsule verifier)
+   - `bash /tools/build-slot python3 -B …/inventory-fix-20261120/verify.py` → PASS:
+     `{"status":"PASS","original_reporting_commit":"94f18897…","attempts":180,"remaining":0,"task_scores":null,
+     "original_complete_capsule_authenticated":true,"original_capsule_files":1995948,"supplement_files":37,
+     "unicode_controls":16,"postcommit_checked":true,"candidate_execution":false,"model_inference":false}`
+     (6 m 42 s wall). (I unlinked my own /tmp output file by mistake while the run was going. I copied the
+     complete output through the process's still-open fd with `tail --pid`; the PASS line is the script's
+     final statement and comes after every assertion.)
+   - Supplement manifest d76ff317…0a103, bindings 48d9845b…a7a4f, postcommit envelope b284b7ed…1033d,
+     actual finalizer 0e8fcff1…620e3: all match the request. The finalizer is byte-identical to
+     work/finish-session.py. The original pinned manifest fb58e55c…, bindings 4733b93a… and postcommit
+     bab7dedb… are asserted by verify.py and passed.
+   - The held original finalizer work/original-unexecuted-finalizer.py and C/work/finish-session.py both
+     hash to 8ba26845…4c69, which matches the hold receipt. No `…checkpoint180-20261120-finish-session.py`
+     exists in /lane/reviews, so the original external finalizer was not executed or manufactured. The
+     "expected missing-script exit" observation is the builder's own record and cannot be checked
+     independently. No measurement depends on it.
+3. Unicode controls
+   - `python3 -B …/work/reproduce-controls.py` → PASS: count 16, prior_cached_false_accepts 2,
+     prior_cached_false_refusals 2, corrected_agrees_with_original_all_controls true. It uses temporary
+     copies; the supplement hashes are unchanged afterwards.
+   - Code comparison: `diff work/cached-verifier-before-fix.py work/verify-original-capsule.py` differs only
+     in the capsule path constant and the upper bound. The old `prefix+chr(0x10ffff)` becomes `len(paths)`
+     for the empty root prefix and `prefix[:-1]+'0'` for prefixes ending in `/`, with an assertion that
+     every non-empty prefix ends in `/`. Proof: `'0'` (U+0030) is the immediate successor of `'/'`
+     (U+002F), so in code-point order the half-open range [P/, P0) contains exactly the strings that start
+     with "P/". All hash, length, path-traversal, symlink, regular-file, nested-binding and identity-drift
+     checks are byte-identical to the pre-fix version; nothing is narrowed.
+   - My own independent checks, beyond the builder's controls:
+     a) Property test: 403,707 (path set, directory prefix) pairs drawn from an alphabet with `/ . 0 ! -`,
+        U+10FFFF, U+FFFF, a surrogate-escape code point, DEL and é. `paths[lo:hi]` equalled the
+        `startswith` ground truth in every case (0 mismatches).
+     b) End-to-end with three-level nested capsules (root, prior, `prior/U+10FFFF/inner`). Valid input,
+        a declared U+10FFFF+U+10FFFF name, sibling neighbours `prior.x/` and `prior0`: the corrected and
+        original verifiers both accept. An undeclared U+10FFFF-prefixed file at the inner level, an
+        undeclared file in a U+10FFFF-named directory, and an undeclared root `prior.y`: both refuse.
+        A `./prior/a` manifest entry: both refuse. A FIFO and a symlinked directory: the corrected verifier
+        refuses where the original uncached one accepts, so the corrected check is stricter there.
+4. Original capsule portable reproduction
+   - `bash /tools/build-slot python3 -B …/checkpoint180-20261120/reproduce.py` → PASS: contexts 30,
+     prior_checks 161, new_checks 165, generation_refusals 15, attempt_records 180, helper_sha256
+     4aea9726…c53, candidate_execution false, model_inference false.
+5. Reporting gates
+   - Node binary d1de76d8…932c as stated; its licence file is the Node.js licence.
+   - `python3 -B scripts/local_agent_fast_gate.py --base 94f18897… --timeout 3600` → FAST GATE: PASS.
+   - I also ran the fast gate with `--base 1d697fdd…` so it covers all seven files: README.md and the
+     checkpoint180 evidence are lint-clean, the review-file lint passes, and the result is FAST GATE: PASS.
+   - `node …/work/render.mjs` → PASS, 0 issues, 3 files rendered.
+   - `python3 -B scripts/private_host_paths.py --base 1d697fdd…` → PASS;
+     `python3 -B scripts/license_policy.py` → PASS.
+6. Traceability of every published number (read from the original capsule; nothing rerun)
+   - The per-profile delta of work/audit.json against prior/work/audit.json reproduces every row of the
+     new scoreboard table exactly: new proposals and attempts, observed input/output tokens,
+     request+check seconds and reserved GPU minutes. Example: muse 5/6, 32531/35031, 839.081 s,
+     15.907 min.
+   - Cumulative figures: 23/30, 28/30, 8/30, 20/30, 8/30, 16/30, summing to 103. The audit has 180 unique
+     (model, task) records, 30 per profile. Tasks are only dev-001…dev-029 and dev-rust-001; no held-out
+     identifiers appear.
+   - The diagnosis.json classification counts match the published dictionary exactly, sum to 180, and
+     the largest failure is old-absent with 36. Controller wall time 6601.978849 s is from delta.json.
+   - Context and output budgets are stated (32,768 context; output min(32768, 32768 − rendered − 32)), with
+     rendered-input and requested-output ranges per profile. "Does not fit" is 0 and reported separately.
+     Generation refusals (length, incomplete, transport timeout) are counted, not dropped.
+7. Preservation and claims
+   - The retained docs/reviews/1d697fddaa48-…checkpoint150.txt and e65728adbdd1-…checkpoint144.txt are
+     byte-identical (`cmp`) to /lane/reviews/1d697fddaa48-…-checkpoint150.md and e65728adbdd1-…-checkpoint144.md.
+   - README: only the "Measured coding" table row changes. The paragraph beginning "AgentMage is an
+     independent, privately developed product" is unchanged. The new row states only figures the audit
+     shows and says these are not solved tasks.
+   - TASKS.md: the two earlier entries change from "review is required" to "review was required when
+     recorded; its subsequent PASS is retained above". This is the established wording, already present
+     23 times at 1d697fdd. The verifier checks that ledger table rows are byte-preserved, and the old
+     scoreboard is an exact prefix.
+   - No other agent product, private project, employer, client, paper or patent is named. The privacy
+     scan is clean. No measured variable, order of work or MEASURE FIRST sequence changes. The next work
+     follows the largest measured refusal cause, as MEASURE FIRST requires.
+
+## Evaluation integrity and safety
+
+- No held-out or hidden test content appears in the diff, the audit task list or the supplement. No
+  candidate execution, inference, feedback or retry happened in this increment. The frozen product source
+  eef17dbd… and the frozen inputs are asserted unchanged by the verifier (collector, controller, policy and
+  frozen-inputs bytes are identical to the prior capsule; all 150 earlier audit details are unchanged).
+- No tool-confinement code is touched. The detached Git view is bound by SHA-256 over 9,819 files plus
+  HEAD/config/index, has no remote, and its metadata hashes are re-checked after the run.
+  GIT_OPTIONAL_LOCKS=0 prevents index writes.
+
+## Findings
+
+No critical, high or medium findings.
+
+- Low (backlog): docs/evidence/t303-raw-source-checkpoint180-2026-11-20.md lines 105–112 still describe
+  the cached verification as checking "all nested manifests' exact inventories" and cite the eleven
+  controls, with no forward pointer to the correction document. The correction is linked from TASKS.md
+  and from the next scoreboard section, and the original data passes the corrected check, so no published
+  result is wrong. Fix: in a later reporting commit, add a one-line "superseded by
+  t303-raw-source-inventory-fix-2026-11-20.md" note only if the preservation policy allows it; otherwise
+  leave it as is.
+- Low (backlog, T-309 kind): the frozen Git view that verify.py requires is kept under
+  /lane/state/tmp/agentmage-inventory-fix-frozen-94, a temporary state path outside the sealed review
+  capsule. Cleaning that directory would make the supplement unverifiable, although it would still fail
+  closed. Fix: keep the view next to the supplement in /lane/reviews, or let verify.py recreate it
+  deterministically from Git objects and compare against frozen-view.json.
+
+## Per-row result
+
+- T-303/T-306, completed raw-source repeat (attempts 151–180) plus inventory-verifier correction:
+  PASS for this non-closing reporting increment. All 180 attempts are recorded and traceable to raw
+  records, the corrected verifier is sound and authenticates the complete original capsule, and the
+  scoreboard line is present with its budgets stated. T-303 and T-306 remain open; no row closes, no model
+  role is selected, and task pass rates remain unavailable.
+
+Verdict: PASS

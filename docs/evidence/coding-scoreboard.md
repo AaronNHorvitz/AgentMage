@@ -5475,3 +5475,17 @@ This supersedes its general equivalence claim. The original data passes the
 corrected full check. No inference or attempt rerun occurs. The repeat remains
 180 attempts, 103 strict ungraded proposals and 36 absent-original refusals;
 task passes/retries stay unavailable. No model adoption or row closure.
+
+## Line-range protocol prepared, 2026-11-20 — no inference result
+
+[Decision 0214](../decisions/0214-original-line-range-proposals.md) changes the
+instruction, source headers, strict edit representation and next trusted inline
+schema to identify original lines without recopying preimages. The
+[source verification](t303-original-line-ranges-2026-11-20.md) reproduces all 165
+recorded answer checks and 185 line-range/exact-text equivalences. Nine tasks'
+selected excerpts change; all changes are recorded. No old score is revised.
+This is preparation, not a model measurement or a task-pass claim. The next
+work is the full 30-task development repeat on all six existing profiles before
+further tuning or capability work. Native effects, project tests, feedback,
+retries and original grading controls remain unavailable; no hidden or held-out
+work runs. T-303/T-306 stay open.

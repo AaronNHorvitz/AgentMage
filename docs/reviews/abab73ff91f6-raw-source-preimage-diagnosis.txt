@@ -1,0 +1,126 @@
+Commit: abab73ff91f63fdfc8c6cfe3d0691122fbbf9030
+Scope: raw-source-preimage-diagnosis
+
+# Independent core review: completed-repeat preimage diagnosis (T-303/T-306, non-closing)
+
+Reviewer: separate Claude Opus 5.5 session, read-only, on the frozen checkout /lane/review-checkout.
+Increment reviewed: 26334be8cd5b176d8435112db2fcce8e614facaf..abab73ff91f63fdfc8c6cfe3d0691122fbbf9030
+(two files: TASKS.md +12 lines, docs/evidence/t303-raw-source-preimage-diagnosis-2026-11-20.md, new, 116 lines).
+
+## Methods and exact commands
+
+All commands ran from /lane/review-checkout with CARGO_TARGET_DIR=/lane/state/review-target. No model, GPU,
+candidate code, task loader, hidden test or held-out test was run.
+
+1. Commit identity and hygiene
+   - `git rev-parse HEAD` -> abab73ff91f63fdfc8c6cfe3d0691122fbbf9030
+   - `git status --porcelain` -> empty (before and after all runs)
+   - `git diff --check 26334be8...` -> rc 0
+   - `git diff --stat 26334be8...` -> only TASKS.md and the new evidence file.
+2. Bundle verifier
+   - `bash /tools/build-slot python3 -B /lane/reviews/raw-source-preimage-diagnosis-20261120/verify.py --require-postcommit`
+     -> rc 0, `{"status": "PASS", "complete_bundle_files": 740, "consumed_inputs": 723, "attempts": 180,
+     "reproduced_edit_conditions": 161, "absent_originals": 36, "transform_matches": 14, "unmatched": 22,
+     "controls": 38, "postcommit_checked": true, "task_scores": null}`. Matches the request.
+3. Analysis reproduction
+   - `python3 -B .../analyze.py .../inputs > /tmp/rv-analysis.json` -> rc 0, empty stderr; `cmp` with
+     analysis.json -> byte-identical.
+   - sha256: analysis.json 0e0b0237…a1, analyze.py 3472ba07…16, origins.json 12bd2883…5d, manifest.json
+     65eb26d5…8d, bindings.json d4d1d4c8…cb. All equal the values in the evidence and the request.
+4. Supporting artifacts (sha256sum): post-commit envelope a4dff9ce…70, actual finalizer 44153e2e…92,
+   verification log 03993b79…9f, held finalizer 3dcb0d64…3e, Node binary d1de76d8…2c, previous review
+   f5384a58…77. All match. The finalization hold receipt `/lane/state/preimage-diagnosis-20261120/finalization-hold.json`
+   is **not visible** from this reviewer's sandbox (`/lane/state` holds only review-target and tmp here), so
+   I could not check its bytes (e95fbd45…eb). That receipt only records the finalization pause. It feeds
+   no measurement or public file. I did read the diff between the held and actual finalizers: the only
+   change is that the actual finalizer reads the late PASS verdict and records its hash and the hold.
+   Neither finalizer touches the analysis inputs or outputs.
+5. Timing / no backdating: commit time 2026-11-20 05:48:53 -0600. The previous review file's mtime is 05:49:56,
+   and the post-commit envelope's is 05:50:58. So the evidence is right to say that the previous review
+   was "in flight at reporting preparation".
+6. Independent recomputation (my own script, /tmp/rv_indep.py). It does not exec the retained classifier.
+   It reads the 36 (model, task, edit_index) rows, then the exact answers, contexts and sources as JSON
+   or text:
+   - Every edit before the first failing one has an `old` present in the source. The first failing
+     `old` is nonempty and absent. Byte lengths and sha256 match each row.
+   - Visible-transform flags computed independently: 12 whitespace-erased, 1 newline/quote, 1 backslash-pair
+     collapse and 22 none. The groups are disjoint. Every row agrees with analysis.json.
+   - Extra probes:
+     - Whitespace-erased matching without the `needle != old` guard gives the same 12. No
+       whitespace-free fragment matches a compacted excerpt.
+     - One of the 22 unmatched rows (gemma4-e4b/dev-002) would match only if the excerpts were joined.
+       The evidence states that excerpts are never joined, so this is consistent.
+     - None of the 22 is explained by CRLF normalisation or outer-strip containment.
+   - Line analysis: 19 of the unmatched rows have at least one absent nonblank line and 3 have none,
+     matching the evidence.
+   - Lengths: absent-fragment min/median/max 24 / 453.5 / 13,854 bytes, with 12 at least 1,024 bytes.
+     For the 103 valid proposals, the maximum old length per proposal has min/median/max
+     11 / 297 / 3,365, with 22 at least 1,024 bytes. One absent fragment is contained in an earlier
+     replacement, and two exceed every excerpt. All match.
+   - Per-model table recomputed from analysis rows. It matches the evidence table, totals 36/14/12.
+   - checked.json census: 103 with changes, 58 `code.proposal.edit`, 4 `code.proposal.format`,
+     15 with no check (generation refused). This totals 161 + 19 = 180 and is consistent with the claim
+     that "the original checker still refuses every one of these 36".
+7. Provenance (own script):
+   - All 693 capsule-derived inputs are byte-identical to the files at their `capsule_relative_path`
+     in /lane/reviews/raw-source-development-checkpoint180-20261120.
+   - All 30 source inputs are byte-identical to `git show <base>:<path>` for their pinned commits.
+   - The original capsule manifest sha256 is fb58e55c…e3, equal to the pin and to the previous PASS review.
+8. Evaluation integrity: the preflight holds only the 30 dev tasks (dev-001..dev-029, dev-rust-001).
+   Inputs mention hidden/held-out only as `false` flags and docstrings. prepare.py reads only
+   record/answer/checked/context files and the frozen sources; it does not read candidate trees or
+   hidden or held-out material.
+9. Retained-classifier execution: analyze.py compiles only the four named FunctionDefs, after checking
+   the source's sha256 against diagnosis.json, which itself is checked against the pinned manifest.
+   The functions have no decorators or default-argument side effects. Their free names resolve to
+   SHA, hashlib and each other, so nothing from the archived main is reached. Self-tests return 16 + 6.
+10. Gates, with PATH=/tmp/rvnode:$PATH and a temporary symlink `node` -> /lane/reviews/42612ca9787f-a4b-node (v24.15.0):
+    - `python3 -B scripts/local_agent_fast_gate.py --base 26334be8... --timeout 3600`: FAST GATE PASS.
+      It covered diff --check, untracked lint, the private path check, the licence policy and
+      markdownlint, with 0 issues in 2 files.
+    - `node /lane/reviews/raw-source-preimage-diagnosis-20261120/render.mjs`: PASS, issues 0, both files render.
+    - `python3 -B scripts/private_host_paths.py --base 26334be8...`: PASS.
+    - `python3 -B scripts/license_policy.py`: PASS.
+11. Public-repository content: I read the diff manually. It contains no private path, hostname,
+    credential, sibling project or other agent product. The model profile names (gemma4-*, qwen35-27b,
+    gpt-oss, muse) already appear in earlier committed evidence. Author/sign-off metadata is the
+    owner's identity, as in prior commits.
+12. MEASURE FIRST:
+    - The scoreboard already has a 2026-11-20 line for the completed repeat.
+    - This increment changes nothing about what the model sees, how edits are applied, or how tests
+      and retries run, so it needs no new line.
+    - It investigates the largest measured refusal cause (old-absent, 36 of 180). The next work it
+      names is aimed at that cause.
+    - It adds no sub-row, limit or deadline.
+
+## Findings
+
+No critical, high or medium findings.
+
+- Low (documentation precision; backlog for T-309): docs/evidence/t303-raw-source-preimage-diagnosis-2026-11-20.md:24.
+  The first table row says "Erasing all Unicode whitespace", but the code does two different things
+  (analyze.py `observations`):
+  - It uses Python's `str.split()` notion of whitespace, which also treats U+001C–U+001F as whitespace.
+  - It counts the whitespace-erased variant only when the erased fragment differs from the original
+    (`needle != old`). A whitespace-free fragment that matches a whitespace-erased excerpt would
+    therefore fall into "unmatched".
+
+  Neither case occurs in these data. I found no U+001C–U+001F or zero-width characters in any answer
+  or source, and the unguarded count is also 12. The counts stand. Fix: in the next diagnosis that
+  reuses this classifier, either state the exact definition in the evidence or drop the guard for
+  that variant and add a control.
+
+Not a finding (reviewer limitation): I could not see the finalization hold receipt (step 4). It is
+not needed to support any claim in the reviewed files.
+
+## Per-row result
+
+- T-303/T-306 (non-closing diagnosis):
+  - Every claim in the evidence file and the TASKS.md paragraph traces to the reproduced analysis and
+    my independent recomputation.
+  - Labelling is honest: the transforms are labelled as diagnostics only, there is no task-pass claim,
+    no size cap and no row closure.
+  - Evaluation integrity holds and confinement is unaffected (no product code changed).
+  - The rows stay open, as the commit states.
+
+Verdict: PASS
