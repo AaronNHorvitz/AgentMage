@@ -1,0 +1,167 @@
+Commit: da37bedb05a1f2b337ceece16d6d1ed59fbd1202
+Scope: line-range-development-checkpoint72
+
+# Independent core review: frozen line-range development checkpoint 72 (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate read-only session, pinned checkout
+/lane/review-checkout. No repository file was modified. The reviewer used no GPU and executed
+no candidate code.
+
+## Scope and method
+
+- Reporting increment f2309a33896ddc7d86c48b2f2a55d14cc30ea841..da37bedb05a1f2b337ceece16d6d1ed59fbd1202.
+  - It adds 12 attempts (dev-011/dev-012 on six profiles), bringing the total to 72/180, with 108 remaining.
+  - The frozen source is 53c09dac184fab2a75ee57f0f540a3ae4ad2d9bb.
+- Read:
+  - the preceding verdict (/lane/reviews/f2309a33896d-line-range-development-checkpoint60.md: PASS, one carried low) and the full diff;
+  - every capsule script that differs from the checkpoint-60 capsule (cleanup, finish, pack, preserve,
+    timeout_evidence, verify, write-report), the new adapt.py and script-adaptations.json;
+  - audit.py, launch.json, controller-exit.json, timing.json, cleanup.json and token-retirement-receipts.json;
+  - the six new -10 reservation logs, and the -10 batch reports, collection records, events and backend slices.
+- Re-derived every newly published per-profile number from the raw -10 job files, using my own script
+  (/tmp/rv72/derive.py, outside the repository). Checked the cumulative values against the checkpoint-60
+  audit.json.
+
+## Commands and results (all run in /lane/review-checkout)
+
+- `git rev-parse HEAD` → da37bedb05a1f2b337ceece16d6d1ed59fbd1202.
+  - Its tree e1f7bf48…a162 and parent f2309a33… equal the post-commit envelope.
+- `git status --porcelain` → empty, before and after every run.
+- `git diff --check f2309a33896ddc7d86c48b2f2a55d14cc30ea841` → exit 0.
+- Diff scope:
+  - The increment touches four files: TASKS.md, docs/evidence/coding-scoreboard.md, the new evidence file
+    and docs/reviews/f2309a33896d-line-range-development-checkpoint60.txt.
+  - It deletes no line.
+  - `git diff --name-only 53c09dac… HEAD` lists only TASKS.md, docs/evidence/* and docs/reviews/*, so the
+    frozen source is unchanged.
+- Hashes match the request:
+  - manifest 8043d0ed…2834
+  - bindings 4e779032…7b68df7b
+  - post-commit envelope 6565babc…438ab
+  - finish.py f3d35f4c…cd92a
+  - verification log 9b794d5f…3c
+  - node d1de76d8…932c (v24.15.0, licence file present)
+- `bash /tools/build-slot python3 -B /lane/reviews/line-range-development-checkpoint72-20261120/verify.py --require-postcommit`
+  → exit 0 (about 3 min), PASS, with these counts:
+  - 216,764 files; 9,823 source files; 2,355 repository / 78 private inputs
+  - 30 contexts, 165 prior checks, 185 range equivalences
+  - 63 new strict checks + 9 generation refusals = 72 attempts
+  - `postcommit_checked: true`, `candidate_execution: false`, `task_passes: null`
+  - This output equals the builder's verification log.
+- With a temporary node symlink in /tmp/rv72/bin on PATH:
+  - `bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base f2309a33… --timeout 600`
+    → FAST GATE: PASS. This covers diff check, privacy, licence, review lint and markdownlint (0 issues in 3 files).
+  - `node …/work/render.mjs` → PASS, 0 issues, four non-empty renders.
+  - `python3 -B scripts/private_host_paths.py --base f2309a33…` → PASS.
+  - `python3 -B scripts/license_policy.py` → PASS.
+- `python3 -B …/work/test_absent_timeout.py <capsule> --stdout` → PASS, 21 controls rejected for each of
+  muse dev-007, dev-008 and new dev-012.
+- `python3 -B …/work/test_timeout_evidence.py <capsule> --stdout` → PASS, 20 controls rejected for
+  historical muse dev-005.
+- The full SOURCE gate was not rerun. No runtime source has changed since the commit where it was
+  measured. Its result (FAIL: 1,043 passed, 53 inherited failures, 11 ignored, 31 targets) is disclosed
+  as FAIL, not waived.
+- `cmp docs/reviews/f2309a33896d-line-range-development-checkpoint60.txt /lane/reviews/f2309a33896d-line-range-development-checkpoint60.md`
+  → identical.
+- The checkpoint-60 scoreboard (`git show f2309a33:docs/evidence/coding-scoreboard.md`) is a byte-exact
+  prefix of the new scoreboard.
+- `diff -rq <capsule>/prior-checkpoint /lane/reviews/line-range-development-checkpoint60-20261120` → no
+  difference, so the predecessor capsule is preserved whole.
+- `work/preservation.log` reports 512 ledger lines and 49 historical path blobs unchanged.
+
+### Independently derived metrics (new pair, from raw records, events, slices and batch reports)
+
+| Profile | New proposals | Rendered input / budget | Backend input / output (coverage) | Request s | GPU min |
+| --- | --- | --- | --- | --- | --- |
+| gemma4-31b | 2/2 (cumulative 8/12) | 3102–6258 / 26478–29634 | 9360 / 4277 (2) | 175.875 | 4.092 |
+| qwen35-27b | 2/2 (cumulative 10/12) | 2812–5680 / 27056–29924 | 8492 / 8006 (2) | 215.646 | 4.261 |
+| gpt-oss | 1/2 (cumulative 4/12) | 2720–5278 / 27458–30016 | 7998 / 42933 (2) | 238.056 | 4.374 |
+| muse | 1/2 (cumulative 5/12) | 2664–5222 / 27514–30072 | 5222 / 12023 (1) | 587.974 | 10.421 |
+| gemma4-e4b | 1/2 (cumulative 6/12) | 3098–6254 / 26482–29638 | 9352 / 6184 (2) | 104.995 | 2.001 |
+| gemma4-26b-a4b | 2/2 (cumulative 7/12) | 3102–6258 / 26478–29634 | 9360 / 7493 (2) | 137.018 | 3.593 |
+
+- Every value equals the evidence file and the scoreboard rows.
+- Every budget equals min(32768, 32768 − rendered input − 32).
+- New causes match the raw data:
+  - gpt-oss dev-011 is `generation-refused:error:chat.response.incomplete`; its 27,458 output tokens equal
+    its budget, so it is classed output-cap.
+  - gemma4-e4b dev-012 is `strict-edit-refused:code.proposal.edit`.
+  - muse dev-012 is `generation-refused:error:chat.transport.timeout`.
+- Cumulative causes, terminations, coverage and token/time sums equal the checkpoint-60 audit values plus
+  the new ones for all six profiles. The 60 earlier per-attempt details are identical to the checkpoint-60
+  audit.
+- Each new backend slice holds exactly one slot launch. Each also holds one release, except muse dev-012.
+- Muse dev-012 (new timeout):
+  - Its slot launched about 0.5 s after dev-011's release (dev-011 finished in 287.96 s with stop), so no
+    carry-over came in from dev-011.
+  - It was still generating at about 43 t/s (n_gen 12,918) when the 300 s client deadline passed. No
+    response capture, answer or terminal counters exist.
+  - The server was then stopped (exit −15). The job-level slice is exactly the two task slices joined, so
+    no post-deadline dev-012 counters are being silently excluded.
+  - Its counters are correctly published as unavailable (coverage 1/2), not as zero.
+- The sampled GPU peaks (5,822–21,521 MiB) are within 22,528 MiB. Every -10 job's scope shows
+  cpu.max 400000/100000 and memory.max 16 GiB.
+- The controller wall time, from launch.json 15:44:30.361 to controller-exit.json 16:16:04.396, is
+  1894.035 s, as published.
+
+## Checks against the brief
+
+- **Evaluation integrity:**
+  - Only development tasks dev-011/dev-012 are new.
+  - controller.py, batch.py, collect.py, policy.json, frozen-inputs.json, output-format.json, audit.py,
+    launch.py, inspect-snapshot.py and both timeout test modules are byte-equal to the checkpoint-60 capsule.
+  - The other script changes are counts, paths and text. The only logic change is that timeout_evidence.py
+    adds ('muse','dev-012') to MISSING_RESPONSE.
+  - audit.py still requires every missing capture to be in that set and to pass validate_absent: one
+    launch, n_gen > 0, no terminal counters, generation_seconds ≥ 300 and base fallback.
+  - Held-out data is not loaded or executed. No tuning happened. All 72 attempts are counted
+    (63 checks + 9 refusals), and the result is re-runnable by one command.
+- **MEASURE FIRST:**
+  - A dated scoreboard line exists, with context and output budgets stated.
+  - It records no changed variable.
+  - "Does not fit" is counted separately (0).
+  - Earlier scoreboard bytes are an exact prefix.
+- **Honest claims:**
+  - Proposals are labelled strict and ungraded, and task passes are unavailable.
+  - The new dev-012 timeout is described accurately and counted as a generation refusal.
+  - The memory.high throttling, which reached its threshold in every -10 job, is disclosed as constraining
+    timings.
+- **Confinement:**
+  - Model output is consumed only by the authenticated effect-free strict checker. Candidates are compared
+    as data.
+  - Nothing a model emitted is treated as an instruction or permission.
+  - The reservations are unchanged: queue, low priority, nice 19, cgroup limits and 30-second released pauses.
+  - cleanup.json: PASS; 12 -10 tokens retired with receipts persisted before unlink; no live owned
+    processes; no foreign signal; keys and sockets absent; settings revoked; 36 completed pairs.
+- **Public repository:**
+  - The added lines contain no home path, username, hostname, credential, other agent product, private
+    project, paper or patent. The private /var/home paths seen in capsule batch reports are not committed.
+  - The plan, order of work, PRD, decisions, README and licence files are untouched.
+
+## Findings
+
+- L1 (low, carried, T-309): verify.py still does not derive the published per-profile numbers from the raw
+  jobs and compare them with the committed text. I re-derived them all independently (above), and they
+  match.
+  - Fix after the frozen repeat: have the portable verifier recompute each published row from the job files
+    and assert string equality with the evidence and scoreboard lines.
+- L2 (low, new, T-309): two reporting-provenance weaknesses.
+  - work/adapt.py replaces write-report.py's predecessor-acceptance check `'No critical, high or medium
+    finding.' in review` with `'Verdict: PASS' in review` plus no line starting with `H1 ` or `M1 `.
+    This is a weaker test: a review with `M2`, `- **M1**` or a "Verdict: PASS" substring elsewhere would
+    pass it. The actual predecessor review is a genuine PASS, so nothing was published wrongly.
+  - The timeout_evidence.py edit (adding dev-012) is not made by adapt.py. It is recorded only as from/to
+    hashes in script-adaptations.json.
+  - Fix: check the final `Verdict:` line exactly and reject any high or medium finding heading. Generate
+    every adapted script, including timeout_evidence.py, from adapt.py, or record a reviewed diff.
+
+No critical, high or medium finding. Backend cancellation on client timeout remains the recorded T-309
+item. The new muse dev-012 case (backend still generating at the deadline) is one more instance of it.
+
+## Per-row result
+
+- T-303/T-306, non-closing development measurement checkpoint 72 at da37bedb: PASS for this reporting
+  increment. There is no open high or medium finding. Both rows stay OPEN, as the commit states. No row or
+  model closure is requested or granted.
+
+Verdict: PASS
