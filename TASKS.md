@@ -2,6 +2,20 @@
 
 ## Active queue: local agent mission
 
+The [frozen line-range ninety-six-attempt checkpoint](docs/evidence/t303-line-range-checkpoint96-2026-11-20.md)
+adds dev-015/dev-016 on all six profiles: **96/180 attempted, 84 remaining**.
+Cumulative strict ungraded proposals: gemma4-31b 12/16; qwen35-27b 13/16; gpt-oss 7/16; muse 6/16; gemma4-e4b 9/16; gemma4-26b-a4b 10/16.
+Finish all 30 tasks on all six profiles before tuning or capability work.
+Source, schema and model settings stay frozen. Task passes and retries remain
+unavailable. Independent core review is required; T-303/T-306 remain open.
+No row closes.
+The [preceding independent core review](docs/reviews/d1e2a26c33c4-line-range-development-checkpoint84.txt)
+returns **Verdict: PASS** for exact `d1e2a26c33c428edc73329c6bb6f77c3b74ccf11`; its report is retained unchanged,
+with no high or medium finding. Its two lows remain T-309 backlog:
+independent published-metric derivation and reporting-adaptation provenance.
+Backend cancellation on client timeout remains recorded for T-309 after the
+frozen repeat. No row closes.
+
 The [frozen line-range eighty-four-attempt checkpoint](docs/evidence/t303-line-range-checkpoint84-2026-11-20.md)
 adds dev-013/dev-014 on all six profiles: **84/180 attempted, 96 remaining**.
 Cumulative strict ungraded proposals: gemma4-31b 10/14; qwen35-27b 11/14; gpt-oss 5/14; muse 6/14; gemma4-e4b 8/14; gemma4-26b-a4b 9/14.
