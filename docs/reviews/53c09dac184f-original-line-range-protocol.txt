@@ -1,0 +1,106 @@
+Commit: 53c09dac184fab2a75ee57f0f540a3ae4ad2d9bb
+Scope: original-line-range-protocol
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Pinned checkout
+/lane/review-checkout at the exact commit. I did not modify the repository or the sealed capsule.
+Row under review: T-303/T-306, a source batch that closes nothing and adds no model measurement. Tier: core.
+Increment reviewed: all eleven files from abab73ff91f63fdfc8c6cfe3d0691122fbbf9030.
+
+## Methods and exact commands
+
+1. Commit identity and hygiene (in /lane/review-checkout):
+   - `git rev-parse HEAD` -> 53c09dac184fab2a75ee57f0f540a3ae4ad2d9bb. `git status --porcelain` -> empty.
+   - `git diff --check abab73ff91f63fdfc8c6cfe3d0691122fbbf9030` -> rc 0.
+   - `git diff --stat` -> 11 files, +944/-20, matching the request.
+2. Supporting artifact hashes (sha256sum): manifest.json 30f2a593…7f78, bindings.json 3d370bc4…4a37914,
+   post-commit envelope 8179d312…1e783633, finalizer b0be8781…916d6604f83, verification log
+   d2a5e5a1…b34c5, Node binary d1de76d8…bd932c. All match the request.
+3. `bash /tools/build-slot python3 -B /lane/reviews/original-line-range-protocol-20261120/verify.py --require-postcommit`
+   -> `{"status": "PASS", "complete_bundle_files": 804, "consumed_inputs": 721, "contexts": 30,
+   "old_checks": 165, "changed_excerpts": [dev-002, dev-006, dev-007, dev-008, dev-013, dev-015, dev-016,
+   dev-019, dev-027], "checker_differences": [], "range_exact_equivalences": 185, "postcommit_checked": true,
+   "task_scores": null, "model_inference": false, "candidate_execution": false}`, rc 0.
+4. Full source gate, with the licensed Node v24.15.0 linked from a temporary directory outside the capsule and
+   a private target directory:
+   `PATH=<tmp>/nodebin:$PATH CARGO_TARGET_DIR=/lane/state/review-target-53c09dac bash /tools/build-slot
+   python3 -B scripts/local_agent_fast_gate.py --base abab73ff91f63fdfc8c6cfe3d0691122fbbf9030 --timeout 3600`
+   -> `FAST GATE: FAIL`. My tally of the `test result:` lines: 1,043 passed, 53 failed, 11 ignored,
+   0 filtered, 31 targets, identical to the retained source-gate-final.log. My 53 failure names, sorted,
+   match the retained final log line for line and equal `failure_names` in gate-comparison.json.
+   All 53 are `agentmage-host --lib` linux_coding_runtime tests, inherited under the deferred T-301.1.
+   Earlier evidence (t303-raw-source-checkpoint108) records 1,034 passed and 53 inherited failures over 30 targets.
+   This batch adds 9 tests and 1 target. No failure is allowlisted. fmt --check rc 0; clippy -D warnings rc 0;
+   untracked/privacy/licence/review lint and markdownlint all rc 0.
+   `coding_line_edits`: 8 passed. The new HTTP contract
+   `line_addressed_proposal_crosses_http_and_streaming_without_an_execution_grant` passes.
+   The initial draft's gate (source-gate.log) has exactly one extra failure,
+   `endpoint_model_edit_checks_task_exclusions_and_targets_before_replacing_preview`, as
+   initial-gate-comparison.json records. It passes in my final gate, so the claim that the
+   three-file fixture now passes holds.
+5. `node /lane/reviews/original-line-range-protocol-20261120/render.mjs` -> PASS, 0 issues (5 files);
+   `python3 -B scripts/private_host_paths.py --base abab73ff…` -> PASS; `python3 -B scripts/license_policy.py`
+   -> PASS. Grepping the diff for home paths, the local user name, other agent products, private sibling
+   projects and model vendors finds none in new prose. The /lane paths and a profile alias appear only
+   inside the two retained review reports.
+   Both docs/reviews copies are byte-identical (`cmp`) to /lane/reviews/26334be8cd5b-…md and abab73ff91f6-…md.
+6. My own adversarial runs. I built a scratch binary outside the repository at /tmp, depending on the crate by
+   path, with `--offline --release` through build-slot and its own target directory:
+   - 400 random sources (pairs of files) built from LF, CR, CRLF, tabs, quotes, backslashes, multi-byte UTF-8,
+     with and without a final newline, at random budgets from 2,048 to 32,768 bytes. My independent decoder of
+     the v2 framing checks that each body equals its byte range and that the header start_line/end_line match
+     independently counted line boundaries, so excerpts are line-aligned. For every sub-range of up to 4 lines
+     inside each excerpt it compares the line form with the matching exact-text form:
+     219,934 pairs checked, 178,174 accepted, 0 divergences in result or error class.
+     Every accepted line edit replaced exactly the addressed lines.
+   - Overlapping self-matches ("a\na\na\nz\n", lines 1-2, 2-3, 1, 2, 3) are all refused as Edit, never
+     applied to different lines. The checker's start+1 rescan catches the overlap.
+   - Unknown path, `../a.txt`, a line beyond the named file, a mixed form, a missing bound, an extra key, an
+     extra top-level key, float `1.0`, `1e0`, leading-zero `01` and a non-string `new` are all refused
+     (Edit/Format as appropriate). A valid two-file line-form batch is accepted.
+   - Worst-case preparation cost of the new per-excerpt line counting: a 126 KB file with 64 deep excerpts
+     prepares in 26 ms. This is no performance concern.
+7. Code inspection: coding_proposal.rs. resolve_edit accepts only (old, -, -) or (-, start, end) with
+   0 < start <= end, found by exact path in the bound sources. The typed serde pass (deny_unknown_fields,
+   duplicate refusal) runs first. The generic shape gate then requires exactly 3 keys with a string `old`,
+   or exactly 4 keys with u64 bounds and no `old`. The whole batch resolves before planning.
+   The shared tail is unchanged apart from the resolved-edit binding: nonempty, effective, NUL-free,
+   whole-file unique including overlap, visible in one excerpt, nonoverlapping, file and aggregate size, and
+   no net-unchanged file. The source validator is unchanged. shared-checker-preservation.json agrees.
+   Headers are computed from the bound source; bodies are unchanged and length-framed.
+   Nothing parses v1 outside tests (`git grep`). The local API keeps the system/user split, the
+   message-byte accounting and `applied:false`/`tested:false`. It still uses the person's configured
+   response_format and substitutes no schema. preflight.py and helper/src only run the production-library
+   helpers and `git show` on frozen sources as data. Nothing imports or runs a task, candidate or hidden test.
+8. Evaluation integrity: the new tests and instruction use synthetic fixtures only. No development, hidden
+   or held-out task content appears in the instruction or tests. No inference, GPU, candidate, project-test,
+   feedback or retry activity in the batch (preflight flags; verify.py result). No score is revised: the
+   scoreboard keeps its exact earlier prefix, which verify.py checks, and adds only a labelled preparation note.
+9. Documentation consistency: Decision 0214, the guide, the evidence file, TASKS.md and the scoreboard all
+   describe the same thing: 1-based inclusive lines, LF ends a line, CR before LF belongs to the line, no
+   phantom final line, the same strict checker, the v2 headers, exact-text clients kept, and the schema as an
+   explicit trusted setting. All of them say "no measured improvement yet". They claim no task pass,
+   qualification or row closure.
+   MEASURE FIRST: the scoreboard's latest measurement line is dated 2026-11-20 (the 180-attempt repeat), so
+   the daily line is present. This batch changes what the model sees and how edits are applied, so its
+   measurement line is the next work, as Decision 0214 and TASKS.md state. That line is not late at this
+   commit. It becomes late if further tuning or capability work lands before the full 30 x 6 repeat.
+
+I could not run a real model or the GPU (forbidden to the reviewer), and that is not required for this
+batch. UI screens are not in scope.
+
+## Findings
+
+None at high, medium or low severity.
+
+Notes, none of them a finding: the shorter instruction now says "never authority" instead of
+"never tool or permission instructions". The runtime enforces that boundary by structure, not by prompt
+wording, and the proposal stays unapplied and untested. Whether the line form helps generation is unmeasured,
+and the commit labels it that way.
+
+## Per-row result
+
+- T-303/T-306 (non-closing source batch, original-line-range protocol): PASS for this increment. No open
+  high or medium finding. Both rows stay OPEN, as the commit states. No task, model or row closure is
+  requested or granted.
+
+Verdict: PASS

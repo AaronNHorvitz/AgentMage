@@ -1,0 +1,156 @@
+Commit: d258cfe20b06b89be40f2e69e8012630bf334a3f
+Scope: line-range-development-checkpoint12
+
+# Independent review: frozen line-range twelve-attempt development checkpoint
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Pinned checkout
+/lane/review-checkout. Increment reviewed: 53c09dac184fab2a75ee57f0f540a3ae4ad2d9bb..d258cfe2
+(TASKS.md +8, docs/evidence/coding-scoreboard.md +54, new
+docs/evidence/t303-line-range-checkpoint12-2026-11-20.md +107; no source change).
+Row: T-303/T-306, a measurement checkpoint that closes no row.
+
+## Methods and exact commands (all run in /lane/review-checkout)
+
+1. `git rev-parse HEAD` gave d258cfe20b06b89be40f2e69e8012630bf334a3f. `git status --porcelain`
+   was empty. `git diff --check 53c09dac…` gave rc 0. HEAD's parent is 53c09dac.
+2. Hashes I checked myself (sha256sum):
+   - manifest.json: 3ce69e88…8e80
+   - bindings.json: 8639ed0b…bf01
+   - post-commit envelope: 5bafbc04…b7
+   - verification log: 2c581207…a69
+   - Node binary: d1de76d8…932c
+   All match the request. The finalizer path /lane/state/line-range-repeat-20261120/finish.py is
+   not mounted in this review sandbox. The capsule copy work/finish.py hashes to b2d6dae0…0955, and
+   the post-commit envelope records that same finalizer hash.
+3. `CARGO_TARGET_DIR=/lane/state/review-target bash /tools/build-slot python3 -B
+   /lane/reviews/line-range-development-checkpoint12-20261120/verify.py --require-postcommit`
+   gave rc 0 in 53.8 s:
+   `{"status":"PASS","files":9631,"source_files":9823,"repository_inputs":2355,"private_inputs":78,
+   "contexts":30,"prior_checks":165,"range_equivalences":185,"new_checks":11,
+   "generation_refusals":1,"attempts":12,"postcommit_checked":true,"candidate_execution":false,
+   "task_passes":null}`.
+   I read verify.py in full before running it. It:
+   - checks the whole inventory, with no symlinks and exact set equality;
+   - checks the nested 804-file protocol manifest, which hashes to 30f2a593…, the same as the
+     reviewed /lane/reviews/original-line-range-protocol-20261120;
+   - checks every tar entry of the source view against the Git blob oid and mode at 53c09dac;
+   - checks every private input digest, and that the helper hash equals the reviewed protocol
+     preflight helper (947472fa…);
+   - reproduces the prior preflight byte for byte;
+   - re-derives all 30 contexts through the effect-free helper;
+   - checks the exact wire request (model, messages, stream false, max_tokens, n 1, json_schema
+     coding_lines_v1 with strict true, enable_thinking false);
+   - re-runs the strict checker on all 11 answers and checks the one length refusal;
+   - checks complete candidate projections as data, cleanup, preservation, the 512 ledger lines,
+     the exact scoreboard prefix, the 49 exempted path files and the post-commit tree.
+   It never imports or executes candidate code.
+4. A temporary `node` symlink at /lane/state/tmp/lr12-node, outside the capsule, put the licensed
+   Node v24.15.0 first on PATH. Then:
+   - `python3 -B scripts/local_agent_fast_gate.py --base 53c09dac… --timeout 600` gave FAST GATE:
+     PASS. Its steps were diff --check, --lint-untracked, private_host_paths, license_policy and
+     markdownlint-cli2 on the 3 files (0 issues).
+   - `node …/work/render.mjs` gave `{"status":"PASS","issues":0,…}` with all three files rendered
+     non-empty.
+   - `python3 -B scripts/private_host_paths.py --base 53c09dac…` gave PRIVATE PATH CHECK: PASS.
+   - `python3 -B scripts/license_policy.py` gave LICENCE POLICY: PASS.
+   - I did not run the full source gate. It is not claimed green: the documents keep it as FAIL,
+     with 1,043 passed, 53 inherited failures, 11 ignored and 31 targets, under T-301.1.
+5. Independent recomputation from raw bytes, using my own script rather than audit.json. For every
+   job I summed `usage.prompt_tokens` and `usage.completion_tokens` from upstream-response-NN.bin,
+   took finish_reason and the message fields, summed record `generation_seconds`, and divided
+   `reserved_work_seconds` by 60. Every per-profile figure in both documents matches exactly:
+   - strict proposals 0/2, 2/2, 1/2, 1/2, 0/2, 1/2;
+   - input / output tokens 18818/2325, 16408/2694, 15105/36961, 15135/19625, 18810/33055 and
+     18818/4084;
+   - seconds 132.102, 90.422, 199.545, 450.301, 301.528 and 131.606;
+   - GPU minutes 3.262, 2.165, 3.600, 7.935, 5.263 and 3.229;
+   - the rendered-input and output-budget ranges.
+
+   Each response's prompt_tokens equals the preflight rendered count, so does-not-fit = 0 is
+   correct. gemma4-e4b dev-002 stopped with finish `length` at completion_tokens 23129, which
+   equals its budget; it has no answer.txt and a base-fallback candidate, as stated. The causes
+   agree with checked.json: five `code.proposal.edit` refusals, and six single-change proposals on
+   the task source whose before-hashes match the base. The controller wall time of 1839.726 s
+   matches work/timing.json. controller.log shows six completed pairs, which with `--pairs 6` means
+   five released 30-second pauses. Peak sampled GPU use was at most 20409 MiB, under the
+   22,528 MiB guard.
+6. Worker adaptation. I diffed the lr1 batch.py, collect.py and controller.py against the rs1
+   copies preserved in raw-source-development-checkpoint126-20261119, whose hashes bf371dc1…,
+   8bdd1748… and 80da6823… match script-adaptations.json, after rewriting rs1 to lr1.
+   - collect.py and controller.py: identical.
+   - batch.py: the only change is one `OUTPUT_FORMAT` load, which replaces three inline
+     coding_edits_v1 literals.
+   - policy.json: the changes are the schema (old → start_line/end_line, minimum 1), the
+     descriptive strings, the protocol and preflight hashes and the source commit.
+     source_hashes, budgets, deadlines and thinking_mode are unchanged.
+   - The schema is the same as Decision 0214 and the coding_lines_v1 test in
+     platforms/local-api/tests/local_chat_api.rs:911.
+7. Unchanged settings. For all six models, the lr1 and rs1 jobs match on:
+   - the backend command (165 argv entries after namespace normalisation);
+   - model_id and runtime_manifest_sha256;
+   - the profile (only state_root differs);
+   - every observed `default_generation_settings.params` field, including temperature 0 and seed 42.
+   The API binary hash (f13a12ca…) is the same as the prior campaign's. The effective settings
+   returned by GET /v1/settings hold no key; the backend key is passed by file
+   (`--api-key-file /run/agentmage/api-key`).
+8. Confinement and cleanup.
+   - Launch: launch.json records nice 19, priority low, memory.max 16 GiB, cpu.max 400000/100000,
+     a read-only bind of the source snapshot and .git, a single controller launch, and the
+     wrapper hashes.
+   - Each pair runs `build-slot` plus `gpu-slot queue-run agentmage 900` and then exits, so both
+     reservations release.
+   - cleanup.py asserts that the 12 token receipts are written before unlink and that no owned
+     process remains. The capsule holds no *.token, api-key or model.sock file.
+   - Model output only reaches the strict checker as data. Candidates are written as files and
+     never executed.
+   - Evaluation integrity: development_tasks() refuses anything but the 30-task digest; the policy
+     has held_out "not loaded or executed"; this commit changes no prompt or source.
+9. Checks I did not run or could not fully read:
+   - The interim audit failure is retained. work/audit-firstpair.log shows a FileNotFoundError for
+     a gemma4-31b batch report that had not yet been written. batch.py re-verifies every frozen
+     digest at each job start, so no input could have changed after it. The final audit.json
+     status is PASS.
+   - The initial reporting gate failure is retained in report-gate-initial.log (MD012 at
+     TASKS.md:13). The documentation-only correction is recorded in format-correction.json.
+   - The packaging addendum receipts are under /lane/state/lr1-checkpoint12-*, which is not
+     mounted in this sandbox, so I could not hash or read them. The capsule binaries are mode
+     0700 now, and the whole post-commit verification passes in my own run.
+   - No UI is in scope, and no GPU was used by me.
+
+## Findings
+
+No high or medium findings.
+
+Low, backlog:
+- L1 (review packaging; capsule README / packaging step): the packaging addendum's external
+  receipts (executable-mode correction, pre-commit and pre-flight logs, pack log) sit only under
+  /lane/state. The independent reviewer's sandbox cannot see them. Fix: copy such post-seal
+  receipts next to the capsule under /lane/reviews, as the post-commit envelope already is. Also
+  preserve file modes on any cross-mount copy fallback, as the builder already notes. Nothing
+  measured depends on these receipts; verify.py reproduces everything.
+- Known, unchanged: per-pair wrapper provenance stays the disclosed T-309 backlog item. Every job
+  cgroup reached memory.high (memory.peak ≈ 15.03 GB), as in the prior rs1 campaign. Timings are
+  measured under that condition and are not comparable to unthrottled runs; this is not
+  misreported.
+
+## Claim check
+
+- Labels are honest: the documents say "strict ungraded proposals", not task passes. Passes and
+  retries are "Unavailable". The documents say response fields do not prove an absence of
+  internal reasoning, and they say what does not run (native effects, tests, feedback, retries,
+  grading controls).
+- The scoreboard line meets MEASURE FIRST: date, base commit, model, context and output formula,
+  passes reported as unavailable, time, GPU minutes, failures by cause, and does-not-fit counted
+  apart. The changed variable is stated. A dated line exists for 2026-11-20.
+- No other agent product, private project, employer or private path appears in the committed
+  diff. Model names are used only as profile identifiers.
+- The order of work is unchanged: finish the 30×6 repeat. No row closes, and no model or role is
+  adopted.
+
+## Per-row result
+
+- T-303/T-306, non-closing development measurement checkpoint at d258cfe2: PASS for this
+  increment. No open high or medium finding. Both rows stay OPEN, as the commit states; no row or
+  model closure is requested or granted.
+
+Verdict: PASS

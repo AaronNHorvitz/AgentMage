@@ -2,6 +2,20 @@
 
 ## Active queue: local agent mission
 
+The [frozen line-range twenty-four-attempt checkpoint](docs/evidence/t303-line-range-checkpoint24-2026-11-20.md)
+adds dev-003/dev-004 on all six profiles: **24/180 attempted, 156 remaining**.
+Cumulative strict ungraded proposals: gemma4-31b 1/4; qwen35-27b 4/4; gpt-oss 2/4; muse 2/4; gemma4-e4b 1/4; gemma4-26b-a4b 1/4.
+Source, schema and settings remain frozen; finish all 30 tasks on all six
+profiles before further tuning or capability work. Task passes and retries
+remain unavailable. Independent core review is required; T-303/T-306 stay open.
+The [preceding checkpoint review](docs/reviews/d258cfe20b06-line-range-development-checkpoint12.txt)
+passes exact `d258cfe20b06b89be40f2e69e8012630bf334a3f`, with no high or medium
+finding. Low L1 (historical post-seal receipt visibility) remains T-309 backlog;
+its report is retained unchanged.
+The [source core review](docs/reviews/53c09dac184f-original-line-range-protocol.txt)
+passes exact `53c09dac184fab2a75ee57f0f540a3ae4ad2d9bb` with no findings;
+its report is retained unchanged. No row closes.
+
 The [frozen line-range twelve-attempt checkpoint](docs/evidence/t303-line-range-checkpoint12-2026-11-20.md)
 records two development attempts per profile: gemma4-31b 0/2; qwen35-27b 2/2; gpt-oss 1/2; muse 1/2; gemma4-e4b 0/2; gemma4-26b-a4b 1/2 strict ungraded proposals.
 The repeat is 12/180 attempted, 168 remaining. Complete all 30 tasks on all six

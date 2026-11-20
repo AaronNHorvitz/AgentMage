@@ -5543,3 +5543,45 @@ remain unavailable; no effects, project tests, feedback, retries, candidate,
 hidden or held-out execution. Task passes remain unavailable. Independent core
 review is required; T-303/T-306 remain open. Exact settings and raw-evidence
 verification are in the [checkpoint evidence](t303-line-range-checkpoint12-2026-11-20.md).
+
+## Frozen line-range repeat: twenty-four-attempt checkpoint, 2026-11-20
+
+Frozen source: `53c09dac184fab2a75ee57f0f540a3ae4ad2d9bb`. Reporting parent: `d258cfe20b06b89be40f2e69e8012630bf334a3f`.
+Twelve new attempts (dev-003/dev-004 on all six profiles); **24/180 cumulative,
+156 remaining**. No changed experimental variable since the preceding checkpoint.
+
+| Date | Profile | Context / output tokens | Attempts | Strict ungraded proposals | First-attempt / within-budget task passes | New backend input / output tokens | New request and strict-check seconds | New reserved-job GPU minutes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-20 | gemma4-31b | 32768 / min(32768, 32768 - rendered input - 32) | 2 new / 4 cumulative | 1/2 new; 1/4 cumulative | Unavailable / unavailable | 7518 / 3720 | 168.775 | 4.020 |
+| 2026-11-20 | qwen35-27b | 32768 / min(32768, 32768 - rendered input - 32) | 2 new / 4 cumulative | 2/2 new; 4/4 cumulative | Unavailable / unavailable | 6867 / 4069 | 125.308 | 2.835 |
+| 2026-11-20 | gpt-oss | 32768 / min(32768, 32768 - rendered input - 32) | 2 new / 4 cumulative | 1/2 new; 2/4 cumulative | Unavailable / unavailable | 6581 / 37832 | 200.509 | 3.616 |
+| 2026-11-20 | muse | 32768 / min(32768, 32768 - rendered input - 32) | 2 new / 4 cumulative | 1/2 new; 2/4 cumulative | Unavailable / unavailable | 6478 / 18402 | 441.018 | 7.998 |
+| 2026-11-20 | gemma4-e4b | 32768 / min(32768, 32768 - rendered input - 32) | 2 new / 4 cumulative | 1/2 new; 1/4 cumulative | Unavailable / unavailable | 7510 / 3771 | 101.601 | 2.023 |
+| 2026-11-20 | gemma4-26b-a4b | 32768 / min(32768, 32768 - rendered input - 32) | 2 new / 4 cumulative | 0/2 new; 1/4 cumulative | Unavailable / unavailable | 7518 / 7895 | 130.291 | 3.202 |
+
+gemma4-31b: new causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; cumulative causes `{"strict-edit-refused:code.proposal.edit": 3, "ungraded-proposal": 1}`. Cumulative backend counter coverage 4/4; terminations `{"stopped-below-token-limits": 4}`. Does not fit: 0.
+
+qwen35-27b: new causes `{"ungraded-proposal": 2}`; cumulative causes `{"ungraded-proposal": 4}`. Cumulative backend counter coverage 4/4; terminations `{"stopped-below-token-limits": 4}`. Does not fit: 0.
+
+gpt-oss: new causes `{"generation-refused:error:chat.response.incomplete": 1, "ungraded-proposal": 1}`; cumulative causes `{"generation-refused:error:chat.response.incomplete": 1, "strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 2}`. Cumulative backend counter coverage 4/4; terminations `{"output-cap": 1, "stopped-below-token-limits": 3}`. Does not fit: 0.
+
+muse: new causes `{"strict-edit-refused:code.proposal.format": 1, "ungraded-proposal": 1}`; cumulative causes `{"strict-edit-refused:code.proposal.edit": 1, "strict-edit-refused:code.proposal.format": 1, "ungraded-proposal": 2}`. Cumulative backend counter coverage 4/4; terminations `{"stopped-below-token-limits": 4}`. Does not fit: 0.
+
+gemma4-e4b: new causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; cumulative causes `{"generation-refused:complete:length": 1, "strict-edit-refused:code.proposal.edit": 2, "ungraded-proposal": 1}`. Cumulative backend counter coverage 4/4; terminations `{"output-cap": 1, "stopped-below-token-limits": 3}`. Does not fit: 0.
+
+gemma4-26b-a4b: new causes `{"strict-edit-refused:code.proposal.edit": 2}`; cumulative causes `{"strict-edit-refused:code.proposal.edit": 3, "ungraded-proposal": 1}`. Cumulative backend counter coverage 4/4; terminations `{"stopped-below-token-limits": 4}`. Does not fit: 0.
+
+Source, schema, model/runtime profiles, thinking request, budgets and deadlines
+stay frozen under Decision 0214. Finish all 30 tasks on all six profiles before
+further tuning or capability work. No native effects, project tests, feedback,
+retries, candidate, hidden or held-out code executes; original admission and
+grading controls remain unavailable. Strict proposals are not solved tasks.
+
+Controller wall time including queues and five released pauses: 1637.523
+seconds. Body time excludes queues and is neither kernel time nor complete
+reservation duration. Preparation, reporting and full end-to-end time remain
+unmeasured. Timings are constrained by the lane memory.high threshold and
+are not comparable to unthrottled runs. Both reservations release after every pair. Twelve new retirement
+receipts and all prior evidence remain intact. Complete verification and limits
+are in the [checkpoint evidence](t303-line-range-checkpoint24-2026-11-20.md).
+Independent core review is required; T-303/T-306 remain open.
