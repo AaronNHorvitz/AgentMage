@@ -1,0 +1,148 @@
+Commit: a1e8b1bcdb42036cc75f42e40ddec5c4f5010a73
+Scope: line-range-development-checkpoint48
+
+# Independent core review: frozen line-range development checkpoint 48 (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate read-only session, pinned checkout
+/lane/review-checkout. No repository file was modified. The reviewer used no GPU and executed
+no candidate code.
+
+## Scope and method
+
+- Reporting increment 7b1ecdf54063d3323ea54b28d56b4671d7f9aedb..a1e8b1bcdb42036cc75f42e40ddec5c4f5010a73.
+  - It adds 12 attempts (dev-007/dev-008 on six profiles), bringing the total to 48/180.
+  - The frozen source is 53c09dac184fab2a75ee57f0f540a3ae4ad2d9bb.
+- Read: the preceding verdict (/lane/reviews/7b1ecdf54063-line-range-development-checkpoint36.md, PASS,
+  two lows), the full diff, the capsule verify.py, audit.py, write-report.py, timeout_evidence.py,
+  test_absent_timeout.py, controller.py, launch.json, cleanup.json, the retirement receipts, the six new
+  reservation logs, and the muse-06 raw slices, events and records.
+- Independently re-derived every newly published per-profile number from the raw job files (script
+  /tmp/rv48_derive.py, outside the repository). Also checked that the cumulative causes equal the
+  checkpoint-36 cumulative causes plus the new causes.
+
+## Commands and results (all run in /lane/review-checkout)
+
+- `git rev-parse HEAD` → a1e8b1bcdb42036cc75f42e40ddec5c4f5010a73.
+- `git status --porcelain` → empty, before and after every run.
+- `git diff --check 7b1ecdf54063d3323ea54b28d56b4671d7f9aedb` → exit 0.
+- `git diff --name-only 53c09dac184f… HEAD` lists only TASKS.md, docs/evidence/* and docs/reviews/*. The
+  frozen source is unchanged. This increment touches four files: TASKS.md, the scoreboard, the new
+  evidence file and the retained review.
+- Hashes match the request:
+  - manifest 2d631c9c…cae5
+  - bindings 75135631…9882
+  - post-commit envelope fd8a0bd3…7ef
+  - finish.py ac6219a4…916
+  - verification log 764d0b96…ea29
+  - node d1de76d8…932c (v24.15.0, licence file present)
+- `bash /tools/build-slot python3 -B /lane/reviews/line-range-development-checkpoint48-20261120/verify.py --require-postcommit`
+  → exit 0, PASS, with these counts:
+  - 118,962 files; 9,823 source files; 2,355 repository / 78 private inputs
+  - 30 contexts, 165 prior checks, 185 range equivalences
+  - 42 new strict checks + 6 generation refusals = 48 attempts
+  - `postcommit_checked: true`, `candidate_execution: false`, `task_passes: null`
+- With a temporary node symlink in /tmp on PATH:
+  - `bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base 7b1ecdf5… --timeout 600`
+    → FAST GATE: PASS. This covers privacy, licence, review lint and markdownlint (0 issues in 3 files).
+  - `node …/work/render.mjs` → PASS, 0 issues, four non-empty renders.
+  - `python3 -B scripts/private_host_paths.py --base 7b1ecdf5…` → PASS.
+  - `python3 -B scripts/license_policy.py` → PASS.
+- The full SOURCE gate was not rerun. Its result (FAIL: 1,043 passed, 53 inherited failures, 11 ignored,
+  31 targets) is inherited from the frozen source and disclosed as FAIL, not waived. No runtime source
+  changed since the commit where it was measured.
+- `cmp docs/reviews/7b1ecdf54063-line-range-development-checkpoint36.txt /lane/reviews/7b1ecdf54063-line-range-development-checkpoint36.md`
+  → identical.
+- Re-ran `test_absent_timeout.py <capsule> --stdout` → PASS, 21 controls rejected for each of muse
+  dev-007 and dev-008. The capsule's timeout-controls.json records 20 controls for historical dev-005, and
+  verify.py reproduces both control sets.
+
+### Independently derived metrics (new pair, from raw records, slices and batch reports)
+
+| Profile | New proposals | Rendered input / budget | Backend input / output (coverage) | Request s | GPU min |
+| --- | --- | --- | --- | --- | --- |
+| gemma4-31b | 1/2 (cumulative 4/8) | 9272–9545 / 23191–23464 | 18817 / 4493 (2) | 177.572 | 3.911 |
+| qwen35-27b | 1/2 (cumulative 6/8) | 8057–8331 / 24405–24679 | 16388 / 3379 (2) | 127.793 | 2.857 |
+| gpt-oss | 0/2 (cumulative 3/8) | 7428–7668 / 25068–25308 | 15096 / 45318 (2) | 285.493 | 5.288 |
+| muse | 0/2 (cumulative 2/8) | 7445–7676 / 25060–25291 | none (0) | 600.038 | 10.877 |
+| gemma4-e4b | 1/2 (cumulative 3/8) | 9268–9541 / 23195–23468 | 18809 / 13266 (2) | 164.417 | 3.063 |
+| gemma4-26b-a4b | 1/2 (cumulative 3/8) | 9272–9545 / 23191–23464 | 18817 / 5776 (2) | 108.100 | 2.714 |
+
+- Every value equals the evidence file and the scoreboard rows.
+- New causes match the raw data. Cumulative causes equal the checkpoint-36 values plus the new causes for
+  all six profiles.
+- Coverage is 8/8 for five profiles and 5/8 for muse.
+- The sampled GPU peaks (5,995–21,099 MiB) are within 22,528 MiB.
+
+## Checks against the brief
+
+- **Evaluation integrity:**
+  - Only development tasks dev-007/dev-008 are new.
+  - Payloads hold only the task's source file and match `git show <base>:<source>`.
+  - Held-out data is not loaded or executed.
+  - The campaign, private inputs and protocol are byte-equal to the preceding capsule (verify.py).
+  - No tuning happened. All 48 attempts are counted (42 checks + 6 refusals).
+  - The result is re-runnable by one command.
+- **MEASURE FIRST:**
+  - A dated scoreboard line exists, with context and output budgets stated.
+  - It records no changed variable.
+  - "Does not fit" is counted separately (0).
+  - Earlier scoreboard bytes are an exact prefix.
+  - The 512 ledger rows and 49 exempted path blobs are unchanged.
+- **Honest claims:**
+  - Proposals are labelled strict and ungraded, and task passes are unavailable.
+  - The missing Muse counters are "Unavailable (0/2)", not zero.
+  - Dev-008's slice contains dev-007's `stop processing: n_tokens = 19087` before dev-008's own launch,
+    and it is correctly not borrowed.
+  - The checkpoint-36 lows are addressed in text: the dev-005 late counters (6,090/11,553), the
+    roughly 6.5 s wait for dev-006, and the cancellation item recorded for T-309.
+- **Confinement:**
+  - Model output is consumed only by the authenticated strict checker. Candidates are compared as data,
+    including full projections.
+  - Nothing a model emitted is treated as an instruction or permission.
+  - Reservations go through build-slot and gpu-slot with queue-run 900, nice 10+9=19, the cgroup limits
+    (16 GiB / four CPUs) and 30-second released pauses. These match checkpoint 36 exactly.
+  - Twelve retirement receipts were persisted, there are no live owned processes, and no
+    token/api-key/socket files remain.
+- **Public repository:**
+  - The added lines contain no home path, username, hostname or credential. The /lane paths sit only
+    inside the retained review text, as in earlier accepted reviews.
+  - The only "Claude" is the reviewer attribution line.
+  - No other agent product, private project, paper or patent is named.
+  - The plan, order of work, PRD, decisions, README and licence files are untouched.
+
+## Findings
+
+- L1 (low, backlog T-309): the carry-over wait before Muse dev-008 is disclosed but not quantified, and it
+  may have changed that task's result.
+  - What the logs show:
+    - campaign/jobs/muse-06/collection/dev-008/backend-slice.log lines 4–7: dev-007's generation is
+      cancelled at server time 5.35.099 and released at 5.35.106 (`n_tokens = 19087`).
+    - Dev-008's slot launches at 5.35.107.
+    - Dev-007's slot launched at 0.24.074 and its client timed out after 300.019 s, at about 5.24.09.
+      Dev-008's request therefore waited about 11.0 s before it reached the slot. Its backend had about
+      289 of its 300 s.
+    - At the last line before its deadline (10.24.047), dev-008 was still generating at n_gen 11,283.
+  - Why it matters: unlike dev-006 (which completed despite its wait), dev-008 timed out. Whether it
+    would have finished with the extra roughly 11 s is unknown.
+  - What the documents say: docs/evidence/t303-line-range-checkpoint48-2026-11-20.md says only
+    "dev-008's request time includes that wait".
+  - Nothing false is claimed, and the timeout is correctly counted as a failure under the frozen
+    protocol, so this is low.
+  - Fix, in the next reporting increment:
+    - State the roughly 11 s wait and that dev-008's timeout may be affected by carry-over from the
+      previous request.
+    - Keep counting it under the frozen protocol.
+    - Keep backend cancellation on client timeout as the recorded T-309 item after the repeat.
+- L2 (low, carried, T-309): verify.py still does not derive the published per-profile numbers from the raw
+  jobs and compare them with the committed text. I re-derived them all independently (above), and they
+  match.
+
+No critical, high or medium finding.
+
+## Per-row result
+
+- T-303/T-306, non-closing development measurement checkpoint 48 at a1e8b1bc: PASS for this reporting
+  increment. There is no open high or medium finding. Both rows stay OPEN, as the commit states. No row or
+  model closure is requested or granted.
+
+Verdict: PASS
