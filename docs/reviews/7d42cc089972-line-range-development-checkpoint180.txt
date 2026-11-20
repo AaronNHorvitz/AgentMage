@@ -1,0 +1,168 @@
+Commit: 7d42cc089972cf65cddf238faf3c0c98b9255271
+Scope: line-range-development-checkpoint180
+
+Reviewer: independent Claude Opus 5.5 session at extra-high effort. I had read-only access to the
+pinned checkout /lane/review-checkout and made no change to the repository. I used no GPU and ran
+no inference.
+Row: T-303/T-306, a development measurement that closes no row. I reviewed the reporting increment
+from c5ba0282b0bb2bc194d1fd27e749213c8e13d096.
+
+## Methods, commands and results
+
+1. Commit identity and cleanliness
+   - `git rev-parse HEAD` → 7d42cc089972cf65cddf238faf3c0c98b9255271. `HEAD^` = c5ba0282b0bb….
+   - `git status --porcelain` → empty, before and after all runs.
+   - `git diff --check c5ba0282…` → exit 0.
+   - The commit changes four files only: TASKS.md, docs/evidence/coding-scoreboard.md, the new
+     docs/evidence/t303-line-range-checkpoint180-2026-11-20.md and the retained
+     docs/reviews/c5ba0282b0bb-line-range-development-checkpoint168.txt. All changes are insertions.
+   - There is no runtime or source change, and README, the inventory, Decision 0051, LICENSE* and
+     NOTICE are untouched.
+
+2. Capsule hashes (sha256sum)
+   - These match the request: manifest 5e21a4ea…94be, bindings 250eba58…806a, finish.py ce7f2dea…9710,
+     post-commit envelope fd3b4ee9…416f and verification log 38045746…2869.
+   - The envelope binds commit 7d42cc08…, parent c5ba0282…, source 53c09dac… and tree 9ee7b6be….
+     The verifier checks the tree.
+
+3. Capsule verifier
+   - Command: `bash /tools/build-slot python3 -B /lane/reviews/line-range-development-checkpoint180-20261120/verify.py --require-postcommit`
+   - Result: exit 0 in 6m47s. Output: `{"status": "PASS", "files": 1015833, "source_files": 9823,
+     "repository_inputs": 2355, "private_inputs": 78, "contexts": 30, "prior_checks": 165,
+     "range_equivalences": 185, "new_checks": 162, "generation_refusals": 18, "attempts": 180,
+     "postcommit_checked": true, "candidate_execution": false, "task_passes": null}`.
+   - I read verify.py, and it is identical to work/verify.py. It covers:
+     - the complete nested inventory with no symlinks;
+     - the authenticated protocol and prior inputs;
+     - the frozen campaign scripts;
+     - the per-attempt wire request, budget formula, thinking-disabled setting and response capture;
+     - a replay of the strict checker on each answer;
+     - full candidate projections compared as data, including the new Rust-task projection pinned by
+       a tree digest;
+     - token, key and socket absence;
+     - the 512 TASKS table rows, the 49 exempted files and the scoreboard prefix.
+
+4. Gate, render, privacy and licence on the exact commit
+   - Setup: a temporary node symlink outside the capsule, pointing at
+     /lane/reviews/42612ca9787f-a4b-node. Its SHA256 is d1de76d8…c932c, it is v24.15.0, and its
+     licence file is present. I removed the symlink afterwards.
+   - `bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base c5ba0282… --timeout 600`
+     → `FAST GATE: PASS`. Markdownlint reports 0 issues in the 3 changed Markdown files, and review lint
+     passes.
+   - `node …/work/render.mjs` → `{"status":"PASS","issues":0}`, with 4 files rendered.
+   - `python3 -B scripts/private_host_paths.py --base c5ba0282…` → `PRIVATE PATH CHECK: PASS`.
+   - `python3 -B scripts/license_policy.py` → `LICENCE POLICY: PASS`.
+   - A manual grep of the diff finds no home path, user name, hostname or private project name.
+   - I did not rerun the full source gate. There is no source change, and the commit states the
+     inherited FAIL (1,043 passed, 53 failed, 11 ignored, 31 targets) without waiving it.
+
+5. Independent recomputation from raw job bytes (the six `*-28` jobs and all 90 jobs)
+   - Causes
+     - Per new attempt, I took the cause from record.json, the code from checked.json and the
+       terminal event from events.ndjson.
+     - New strict ungraded proposals: 31b 1/2, qwen 2/2, gpt-oss 1/2, muse 2/2, e4b 1/2 and a4b 0/2.
+       These match the report.
+     - Recomputed cumulative causes over all 180 records: ungraded-proposal 109,
+       strict-edit-refused:code.proposal.edit 51, …format 2, complete:length 3,
+       chat.response.incomplete 9 and chat.transport.timeout 6. The per-profile values match the
+       report exactly, as does the largest refusal (51/180).
+   - Backend counters
+     - I parsed the `prompt eval`/`eval time` lines in each task's own backend-slice.log.
+     - The input/output totals per profile are 12206/1667, 10997/1409, 10179/32664, 10076/14936,
+       12198/1939 and 12206/1826, with 2/2 coverage each. These match.
+     - The gpt-oss dev-rust-001 output equals its budget (29,669), which matches the output-cap /
+       chat.response.incomplete classification. That attempt has no answer.txt, and its candidate is
+       the base.
+   - Budgets
+     - The rendered input and requested output ranges match.
+     - The formula holds, for example 32768 − 8631 − 32 = 24105.
+   - Time
+     - Sums of generation_seconds equal the reported request/check seconds: 112.494, 73.447, 208.972,
+       358.032, 54.610 and 51.837.
+     - reserved_work_seconds/60 in each reservation log equals the reported GPU minutes: 2.989, 1.906,
+       3.936, 7.851, 1.158 and 1.528.
+     - Controller wall time: launch 22:14:40.357 to exit 22:37:22.478, which is 1362.121 s.
+   - Candidates
+     - For all 7 new ungraded proposals, I applied the answer's line ranges myself, as plain 1-based
+       inclusive replacement on the frozen payload. The SHA256 equals candidate_sha256 in all 7 cases.
+     - All 5 strict refusals keep the base candidate.
+
+6. Adaptation receipts (work/script-adaptations.json)
+   - I read every diff. The adapt changes are counters, paths and base SHAs (84→90, -26→-28,
+     checkpoint156→168).
+   - completion_reporting adds the computed cause summary and "largest refusal" text.
+   - final_task_reporting corrects the 30th task ID from a drafted "dev-030" to the frozen preflight
+     ID "dev-rust-001". Its parts:
+     - task positions are read from the authenticated preflight, with an assertion that
+       `positions['dev-rust-001']==29`;
+     - the Rust projection is added to verify.py;
+     - an unused even-task patch is removed from observe.py, because no new timeouts were observed.
+   - The spacing repair removes two blank lines (MD012) from generated text only and keeps the
+     before-repair logs.
+   - The receipts are time-stamped 22:15–22:21. That is during the campaign but before the Rust
+     attempts ran, and nothing touches campaign inputs.
+   - controller.py, batch.py, collect.py, policy.json, frozen-inputs.json and output-format.json are
+     byte-identical to the prior checkpoint capsule. The verifier also authenticates them against the
+     freeze.
+
+7. Evaluation integrity
+   - dev-rust-001 is the 30th development task in the frozen preflight. Earlier committed development
+     evidence already uses it.
+   - No held-out, hidden-test, candidate, project-test, feedback or retry activity appears. Every
+     record has graded=false, native_coding_harness=false and retries=0, and the policy says held-out
+     is "not loaded or executed".
+   - Failures are counted, not dropped: 180 = 162 checks + 18 generation refusals.
+   - MEASURE FIRST: a dated 2026-11-20 scoreboard line is present. It states context and output
+     budgets, and "does not fit" is counted separately (0).
+
+8. Cleanup and preservation
+   - There are 12 retirement receipts, all for -28/auth, and none of those token paths still exist.
+   - cleanup.json reports PASS: 90 pairs, settings revoked, processes reaped and 0 live processes.
+   - The timeout controls (4 absent × 21 controls and 2 prefix × 20 controls) reproduce inside the
+     verifier.
+   - The new-observations log is empty.
+   - The retained docs/reviews/c5ba0282b0bb-…checkpoint168.txt is byte-identical (cmp) to the
+     independent review /lane/reviews/c5ba0282b0bb-line-range-development-checkpoint168.md, which
+     ends with `Verdict: PASS`.
+
+9. Claims
+   - Every number in the evidence file, the scoreboard section and the TASKS note traces to the raw
+     logs above.
+   - Ungraded proposals are labelled "not solved tasks", and task passes are reported as unavailable.
+   - No task pass, qualification, role adoption, release or row closure is claimed. No other product,
+     private project or employer is named.
+   - The stated next step is read-only diagnosis of the largest refusal. It adds no plan-only sub-row
+     and no new cap or deadline.
+
+I opened no UI, and none is in scope.
+
+## Findings
+
+No critical, high or medium finding.
+
+- **Low (backlog, for the planned read-only diagnosis).** Several new proposals join their
+  replacement onto the following source line.
+  - Where: the replacement step of the frozen strict line-range checker (Decision 0214: "LF ends a
+    line … no answer repair"). It shows up in docs/evidence/t303-line-range-checkpoint180-2026-11-20.md
+    in the "strict ungraded proposals" counts.
+  - What happens: in 4 of the 7 new ungraded proposals, the model's `new` text has no final LF but
+    the range does not end the file, so the replacement is joined to the next line. The four are
+    gemma4-31b dev-029, gemma4-e4b dev-rust-001, muse dev-rust-001 and qwen35-27b dev-rust-001.
+  - Reproduction: in campaign/jobs/gemma4-31b-28/collection/dev-029, apply line 114 → `new`. The
+    result contains `def expected_status(case: str) -> list[str]:        checks["exact-rejection-count"] = …`,
+    and its SHA256 equals candidate_sha256 efc8e50c….
+  - Why it is only low: this behaviour is the specified frozen protocol, and the counts are honestly
+    labelled as not solved. However, the "ungraded proposal" count includes source that is
+    syntactically broken.
+  - Fix: in the post-repeat diagnosis, report how many ungraded proposals end in a mid-file replacement
+    without a final LF. Do not change the frozen checker or reclassify results in this repeat.
+- The earlier accepted lows stay T-309 backlog and are unchanged: metric derivation, per-pair wrapper
+  provenance, backend cancellation on timeout, output-cap explanations and strict refusal sub-reasons.
+
+## Per-row result
+
+- **T-303/T-306, non-closing checkpoint180:** the reporting increment is accepted (PASS). The
+  180/180 development repeat is fully and accurately reported. Both rows stay OPEN. No row closure,
+  model qualification, release or owner-test readiness is requested or granted.
+
+Verdict: PASS

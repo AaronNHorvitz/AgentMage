@@ -275,3 +275,46 @@ fn line_edits_retain_batch_size_and_edit_count_ceilings() {
         }
     }
 }
+
+#[test]
+fn insertion_beside_repeated_blank_lines_preserves_unique_context_and_line_endings() {
+    for ending in ["\n", "\r\n"] {
+        let text = ["first = 1", "", "target = 2", "", "last = 3", ""].join(ending);
+        let sources = [source(&text)];
+        let context = prepare_coding_proposal("Insert beside target", &sources, 4096).unwrap();
+        let blank = json!({"edits":[edit(2, 2, &format!("inserted = 4{ending}"))]});
+        assert!(matches!(
+            check_coding_proposal(&context, &sources, &blank.to_string()),
+            Err(Error::Edit)
+        ));
+        // The author selects a unique range before submission. The checker never
+        // widens a repeated answer. Keep the context and its exact line endings.
+        let replacement = format!("{ending}inserted = 4{ending}target = 2{ending}");
+        let anchored = json!({"edits":[edit(2, 3, &replacement)]});
+        let changes = check_coding_proposal(&context, &sources, &anchored.to_string()).unwrap();
+        assert_eq!(
+            changes[0].content,
+            [
+                "first = 1",
+                "",
+                "inserted = 4",
+                "target = 2",
+                "",
+                "last = 3",
+                ""
+            ]
+            .join(ending)
+        );
+        // Prompt guidance is not output repair: a missing final line ending
+        // remains missing, even though the original range ended with one.
+        let joined = json!({"edits":[edit(2, 3, replacement.trim_end_matches(['\r', '\n']))]});
+        let changes = check_coding_proposal(&context, &sources, &joined.to_string()).unwrap();
+        assert_eq!(
+            changes[0].content,
+            format!(
+                "first = 1{ending}{ending}inserted = 4{ending}target = 2{ending}last = 3{ending}"
+            )
+        );
+        assert_eq!(sources[0].content, text);
+    }
+}

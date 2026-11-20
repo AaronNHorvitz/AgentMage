@@ -6367,3 +6367,28 @@ tokens are added to the campaign. No candidate, hidden or held-out execution,
 model qualification or row closure occurs. See the [diagnosis](t303-line-range-refusal-diagnosis-2026-11-20.md)
 for the method, profile counts, controls and limitations. Independent core review
 is required; existing scoreboard measurements remain unchanged.
+
+## 2026-11-20 — unique-anchor wording preparation; inference pending
+
+[Preparation evidence](t303-unique-anchor-instruction-2026-11-20.md), from
+`1906b95ddbdf359eff5fc21ffb05f72c051dbd30`. Changed variable: the fixed instruction
+(1,061 to 1,039 bytes) and its resulting excerpts on 10/30 tasks. All 30 contexts
+are recorded; 162 prior checks reproduce, with zero differences under the new
+contexts. This is **not a scoreboard inference run**: no model, token-fit check
+or GPU reservation ran. First-attempt and within-budget task passes are
+unavailable; prior proposals remain ungraded.
+
+The checkpoint180 line-ending observation finds 64/109 strict ungraded proposals
+with at least one nonempty mid-file line-range replacement lacking final LF,
+130 such edits; 11 exact-text edits are excluded. This is not a count of syntax
+failures or incorrect tasks. No prior answer is repaired or reclassified.
+The earlier output-cap attribution comes from checkpoint180 backend counters,
+not solely from incomplete-response events; those counters are not remeasured.
+
+Freeze this source and repeat all 30 development tasks on all six profiles
+before further tuning, keeping 32K context, output formula, profile settings,
+thinking request and deadlines. Native admission/grading remain unavailable;
+no candidate, hidden or held-out execution, feedback, retry, qualification or
+row closure occurs. Full source gate: **FAIL, 1,044 passed / 53 inherited failed /
+11 ignored / 31 targets**. Both preceding independent core reviews return PASS;
+remaining lows stay T-309 backlog.

@@ -372,15 +372,24 @@ disclosure or effect authority. It is process-local metadata, not a durable run
 or native context. The full coordinator's native contracts remain unchanged;
 endpoint run/turn composition and measured coding workflows remain open.
 
-## Constructing exact original fragments
+## Selecting unique anchors
 
-The fixed generation instruction asks the model to copy `old` from original
-visible source before deriving `new`, then check all edits against that same
-source. Insertions keep an existing nonempty anchor; deletions may use an empty
-replacement. Changes sharing source characters are combined into one edit,
-with no unchanged edits. JSON escaping must decode to the exact original
-fragment, including whitespace and line endings. This guidance grants no
-permission and adds no output repair: the existing strict checker still refuses
-the whole proposal when any fragment is absent, ambiguous, invisible or
-conflicts with another edit. [Decision 0212](../decisions/0212-copy-original-fragments-before-replacement.md)
-records the development-only measurement hypothesis and repeat requirement.
+The fixed instruction prefers original line ranges with
+`1 <= start_line <= end_line`. Blank or brace-only lines often repeat: include
+enough neighboring visible code to select text unique in the complete original
+file. Keep that added context unchanged in `new`. An insertion includes its
+unique anchor unchanged along with the inserted text. Select the range before
+submitting; the runtime never widens an ambiguous answer.
+
+`new` replaces the entire selected range, including indentation and line
+endings. Include the final LF before following source when the lines should
+remain separate. A missing LF remains missing; the checker does not repair it
+or decide whether joined lines are correct. Deletions may use an empty
+replacement. Combine overlapping edits and omit unchanged edits. Every edit
+addresses the original snapshot, including when a batch uses both supported
+forms. An exact-text schema still uses `path/old/new` with exact original bytes.
+
+This guidance grants no permission and changes no acceptance rule.
+[Decision 0215](../decisions/0215-unique-anchor-generation-guidance.md) records
+the unmeasured generation hypothesis and required six-profile development
+repeat. Earlier frozen results and Decisions 0212 through 0214 remain available.

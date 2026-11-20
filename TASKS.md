@@ -2,6 +2,18 @@
 
 ## Active queue: local agent mission
 
+The [unique-anchor instruction preparation](docs/evidence/t303-unique-anchor-instruction-2026-11-20.md)
+changes only fixed generation wording, targeting the largest individual refusal
+(21 repeated originals). All 30 development contexts are recorded; excerpts
+change on 10 tasks and all 162 prior checks retain their results. This is
+unmeasured preparation, not an improvement claim. Next: freeze this source and
+complete 30 tasks on all six profiles before more tuning or capability work.
+The full source gate remains FAIL: 1,044 passed, the same 53 inherited failures,
+11 ignored. Native admission, grading, task passes and retries remain unavailable;
+T-303/T-306 stay open. The two preceding exact-commit independent core reviews
+return PASS and are retained unchanged. The missing-LF diagnostic is now recorded;
+output-cap attribution and earlier lows remain T-309 backlog. No row closes.
+
 The [completed line-range refusal diagnosis](docs/evidence/t303-line-range-refusal-diagnosis-2026-11-20.md) reproduces all 162 complete-reply checks and classifies 160 typed edit results.
 The largest individual refusal is repeated original text (21/180), followed by
 invalid line order (16/180). Nineteen repeated selections are one line; ten are
