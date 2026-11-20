@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The [frozen unique-anchor twelve-attempt checkpoint](docs/evidence/t303-unique-anchor-checkpoint12-2026-11-20.md)
+records dev-001/dev-002 on all six profiles: **12/180 attempted, 168 remaining**.
+Strict ungraded proposals: gemma4-31b 1/2; qwen35-27b 1/2; gpt-oss 1/2; muse 2/2; gemma4-e4b 0/2; gemma4-26b-a4b 2/2. These are not solved tasks.
+Resume dev-003/dev-004 with the same frozen source and all settings; complete
+all 30 tasks per profile before more tuning or capability work. Task passes,
+feedback and retries remain unavailable. T-303/T-306 stay open.
+The [preceding independent core review](docs/reviews/6ee61e63298e-unique-anchor-instruction.txt) returns **Verdict: PASS** for exact `6ee61e63298e0aca1e1e8896278d24ab72262a61`; its unchanged report is retained. No row closes.
+
 The [unique-anchor instruction preparation](docs/evidence/t303-unique-anchor-instruction-2026-11-20.md)
 changes only fixed generation wording, targeting the largest individual refusal
 (21 repeated originals). All 30 development contexts are recorded; excerpts
