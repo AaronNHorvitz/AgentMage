@@ -1,0 +1,177 @@
+Commit: 3975027e6e3f14f1a48909758f040dea3a374405
+Scope: raw-source-development-checkpoint114
+
+Reviewer: independent Claude Opus 5.5 session, extra-high effort, read-only. I ran everything in the pinned checkout
+/lane/review-checkout. No builds were needed, so CARGO_TARGET_DIR=/lane/state/review-target was not used. I did not
+use the GPU and ran no inference or candidate code.
+
+## Scope and method
+
+Row: T-303/T-306, a non-closing frozen development measurement. Base 9bc971d2b1bc012e369bd11c2bcc92cacc075cf1;
+frozen product source eef17dbdc8e2e3aeaa95b5a2684cb2c47cc0767f.
+
+The diff against the base touches four files, with 148 insertions and 1 deletion:
+- README.md: one table cell.
+- TASKS.md: one new paragraph.
+- docs/evidence/coding-scoreboard.md: an appended section.
+- A new file, docs/evidence/t303-raw-source-checkpoint114-2026-11-19.md.
+
+No product source changed. `git diff --name-only eef17dbd..HEAD` lists 44 paths: the launcher's 43 allow-listed
+reporting paths plus the new evidence file. All of them are under README.md, TASKS.md, docs/evidence/ or docs/reviews/.
+
+What I read:
+- The complete diff.
+- Capsule verify.py and reproduce.py.
+- From work/: audit.py, write-reports.py, cleanup.py, preserve.py, launch.py, post-commit.py, seal-and-check.py,
+  package.py, pipeline.py, prepare-reporting.py and render.mjs.
+- Both finish-session.py copies: the capsule's preparation copy and the external executed copy.
+- The JSON and log records: launch.json, controller-exit.json, delta.json, cleanup.json, review-status.json,
+  reservation-correction.json, and everything in work/interrupted-launch/, work/resume-refusal/ and
+  work/unreserved-package/.
+
+I diffed every reporting script against its checkpoint108 capsule counterpart. Apart from the expected
+checkpoint, count and path substitutions, the only changes are these:
+- The interrupted-launch disclosure paragraph in write-reports.py.
+- Removal of the checkpoint102-specific supplemental-finalization handling in verify.py and package.py.
+- seal-and-check.py now refuses to commit if a late checkpoint108 verdict exists but has not been retained.
+
+audit.py is byte-identical to the previous version.
+
+## Commands and results
+
+1. `git rev-parse HEAD` printed 3975027e6e3f14f1a48909758f040dea3a374405. `git status --porcelain` printed
+   nothing, before and after all runs. `git diff --check 9bc971d2…` exited 0.
+2. `bash /tools/build-slot python3 -B …/checkpoint114-20261119/verify.py` took 33m07s and printed PASS:
+   attempts 114, remaining 66, source_commit eef17dbd…, postcommit_checked true, task_scores null,
+   complete_prior_capsule_authenticated true.
+3. `bash /tools/build-slot python3 -B …/reproduce.py` printed PASS:
+   - contexts 30, prior_checks 161, new_checks 106, generation_refusals 8, attempt_records 114
+   - helper_sha256 4aea9726…6c53
+   - candidate_execution false, model_inference false
+4. Hashes match the request:
+   - manifest.json: 65559d2c…88b
+   - bindings.json: 546cef27…a26a
+   - post-commit envelope: a7454ab7…1820
+   - The envelope's method_sha256 (42e1fa5d…) equals work/post-commit.py.
+   - The envelope's four public SHA-256 values equal `git show HEAD:<path>`.
+   - prior-post-commit.json is byte-identical to the external checkpoint108 envelope.
+5. Executed finalizer: `sha256sum -c` printed OK for /lane/reviews/raw-source-development-checkpoint114-20261119-finish-session.py
+   (00c47960…b363420). It differs from the capsule's work/finish-session.py (49a9247b…) only in these ways:
+   - It retains itself as an external read-only copy, opened with exclusive create.
+   - It adds the launch-log and unreserved-packaging disclosures.
+   - It adds the finalizer hash line to the request and the handoff.
+
+   It writes only /lane/state handoff and request files and that external copy. It does not touch the repository or
+   change any measured input.
+6. Retained Node runtime: `sha256sum -c` printed OK and the licence file is present. After `install -m 700` into a
+   temporary directory, `node --version` printed v24.15.0. Nothing was downloaded.
+7. `python3 -B scripts/local_agent_fast_gate.py --base 9bc971d2… --timeout 3600` printed FAST GATE: PASS. This
+   covers untracked lint, the private-path check, the licence policy and markdownlint (0 issues in 4 files).
+8. `node …/work/render.mjs` printed PASS: 0 issues, and all four files render to non-empty output.
+9. `python3 -B scripts/private_host_paths.py --base 9bc971d2…` printed PASS.
+   `python3 -B scripts/license_policy.py` printed PASS.
+
+## Independent checks
+
+- **Raw-record trace.** I parsed the six new attempts myself: gemma4-31b-18, qwen35-27b-18 and gpt-oss-18, each on
+  dev-019 and dev-020. Sources were upstream-response-*.bin usage, backend-slice.log prompt/eval counters,
+  collection/batch.json, checked.json and upstream-request-*.json.
+
+  Every table cell matches:
+
+  | Profile | Input tokens | Output tokens | Request and check seconds |
+  | --- | --- | --- | --- |
+  | gemma4-31b | 8897+8035=16932 | 189+516=705 | 71.709 |
+  | qwen35-27b | 7912+7119=15031 | 169+309=478 | 51.444 |
+  | gpt-oss | 7165+6600=13765 | 1055+2704=3759 | 34.501 |
+
+  - GPU minutes equal reserved_work_seconds/60: 1.914, 1.415 and 0.973.
+  - Slice counters equal the response usage. Every response finished with `stop`, and truncated=0.
+  - max_tokens equals min(32768, 32768 − input − 32) for all six: 23839, 24701, 24824, 25617, 25571, 26136.
+  - Rendered-input and requested-output ranges match the evidence table.
+  - The wire request carries `enable_thinking: false`. gpt-oss reasoning_content is non-empty, and the evidence
+    discloses this.
+  - Peak sampled GPU was 20514, 18244 and 14157 MiB, all ≤ 22528. n_ctx is 32768 and both deadlines are 300000 ms.
+  - qwen35-27b dev-020 was refused with code.proposal.edit and fell back to the base. It is counted 1/2, not dropped.
+  - Cumulative counts are correct against the base README: gemma4-31b 14+2=16/20, qwen35-27b 17+1=18/20 and gpt-oss
+    3+2=5/20. Muse, e4b and a4b are unchanged.
+- **Evaluation integrity.**
+  - All new summaries have split=development and held_out_executed=false.
+  - graded=false, native_coding_harness=false and retries=0 throughout.
+  - No held-out content is in the diff.
+  - Failures are counted: the 8 generation refusals, including the 3 preserved muse timeouts, and the strict-edit
+    refusals stay in the denominators.
+  - No row closes and nothing is claimed as a task pass.
+- **Interrupted launch and resume.**
+  - The interrupted launch.json is identical to the successful one except for utc, pid and start_ticks.
+  - The original controller.log is empty, and the only reservation log is queue-only ("Waiting for a shared…").
+  - The resume refusal shows controller.py failing at line 29 on the exclusive-create reservation log, before any
+    reservation is acquired.
+  - The successful controller.log reports three completed pairs (20/30 each), and controller-exit records exit 0.
+  - Controller wall time 324.884 s equals controller-exit utc minus resume launch utc.
+  - The disclosed loss of the original launch stdout is real: interrupted-launch/launch.log holds the later resume's
+    FileExistsError traceback. Only queue-only stdout could have been lost, and launch.json survives. It is disclosed
+    and has no measured effect, so I do not raise it as a finding.
+- **Unreserved packaging.**
+  - reservation-correction.json records termination of only the two owned packaging and sealing PIDs, with
+    foreign_signal false.
+  - The incomplete capsule contains only a partial `prior/` hardlink tree (735,963 files) and no work or campaign
+    output, so it cannot diverge from the sealed capsule.
+  - Successful verification ran under build-slot. I also ran verify.py under build-slot.
+- **Frozen inputs.**
+  - verify.py checks that batch.py, collect.py, controller.py, policy.json and frozen-inputs.json are byte-identical
+    to the prior capsule, and that every prior job and candidate byte is unchanged.
+  - Launch wrapper hashes equal the retained bytes and the current /tools/build-slot and /tools/gpu-slot (4061f0e6…,
+    9804180e…).
+  - The slot 3–6 defaults are 30/36/38/40 GiB, as stated. All slot environment overrides are null.
+  - The scope limits are 16 GiB and 4 CPUs, with nice 19 and priority low.
+- **Preservation.** I checked these against the base myself:
+  - The 512 TASKS.md table lines are identical.
+  - The scoreboard is an exact prefix extension.
+  - The README independence paragraph is identical.
+  - These files are unchanged: Agent-Scaffolding-Inventory.md, LICENSE-MIT, LICENSE-APACHE, NOTICE, CONTRIBUTING.md,
+    IP-POLICY.md, docs/decisions, scripts, crates, Cargo.toml and Cargo.lock.
+- **Cleanup.**
+  - completed_pairs is 57 and 6 new token receipts were persisted before unlink.
+  - cleanup.py checks all prior receipt sets: 17×6 + 2 + 4 = 108.
+  - No owned processes remain live, keys and sockets are absent, and settings are revoked.
+- **Review status.**
+  - review-status.json records checkpoint108 as in-flight at preparation.
+  - The commit is dated 14:58:40 −0600. The checkpoint108 review file was written at 15:54:59 −0600, after the
+    commit, so "in flight at reporting preparation" is accurate.
+  - That review is a PASS with no findings. Under the request, it is to be retained unchanged in the next commit.
+- **Privacy, branding and licence.**
+  - Added lines contain no private home path, username, e-mail, hostname, credential or sibling project name.
+    Private paths appear only in the uncommitted capsule's launch.json.
+  - Model profile names are used descriptively. No other agent product is named.
+  - The licence state is unchanged.
+- **Measure first.**
+  - The scoreboard line is present and dated.
+  - Context and output budgets, timing scopes and backend token coverage are stated.
+  - "Does not fit" is counted separately (0 for each profile).
+
+## Findings
+
+No critical, high, medium or low findings.
+
+Notes (not findings):
+- The executed finalizer is bound only by the external hash in the request, not by the capsule manifest. The handoff
+  states that the next packaging must retain it. That is sufficient for this review.
+- The evidence sentence "The host build wrapper changed at 2026-11-19 12:47:28 UTC. Its new launch SHA256…" is
+  carried over from earlier checkpoints. The hash is still the launch hash used here. Per-pair wrapper provenance
+  stays a T-309 low in the backlog.
+
+## Per-row result
+
+- T-303/T-306 non-closing checkpoint 114: PASS for the reporting increment.
+  - Every new number traces to raw records.
+  - Budgets, the output formula, context, timing scopes and token coverage are stated.
+  - All preserved timeouts are listed.
+  - The interrupted launch and the unreserved packaging are disclosed accurately, and no attempt was rerun.
+  - Frozen inputs and prior attempts are unchanged.
+  - There is no held-out use, tuning, task-pass or model-adoption claim.
+  - T-303 and T-306 remain open and no row closes.
+- The earlier source gate (FAIL: 1,034 passed, 53 inherited failures) was not rerun and is not accepted here.
+  Existing T-309 lows remain in the backlog.
+
+Verdict: PASS
