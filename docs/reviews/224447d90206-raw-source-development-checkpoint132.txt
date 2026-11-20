@@ -1,0 +1,114 @@
+Commit: 224447d902067907dc367726ac8402e2cc725a95
+Scope: raw-source-development-checkpoint132
+
+Reviewer: Claude Opus 5.5 at extra-high effort. This was a separate session with read-only access, working in the pinned
+checkout /lane/review-checkout. No inference, GPU use or candidate execution took place. The repository was not modified.
+
+## Methods and results
+
+Commit and diff
+- `git rev-parse HEAD` returned 224447d902067907dc367726ac8402e2cc725a95. `git status --porcelain` was empty.
+  `git diff --check f73948e7884faf520f1cfb7d860eca134d2ebb0b` exited 0.
+- The diff touches five files: README.md (one line), TASKS.md (+14/-1), coding-scoreboard.md (append-only, +42, no
+  removed lines), new docs/evidence/t303-raw-source-checkpoint132-2026-11-19.md, and new
+  docs/reviews/05683e3e4501-raw-source-development-checkpoint120.txt.
+- No path outside README.md, TASKS.md and docs/ has changed between the frozen source eef17dbd and HEAD.
+
+Capsule and envelopes
+- `bash /tools/build-slot python3 -B .../checkpoint132-20261119/verify.py` returned PASS: 132 attempts, 48 remaining,
+  postcommit_checked true, complete_prior_capsule_authenticated true. It took 36m29s.
+- `sha256sum` results:
+  - manifest.json a8a7ac92…84b4ec and bindings.json f4842570…7740 match the request. bindings.json records 1,589,632
+    files.
+  - The post-commit envelope d455f372…9cd3 matches. Its commit, base, source commit and public hashes match HEAD.
+- Finalizer:
+  - The external finish-session.py matches e020a5de…42e7 (`sha256sum -c` OK) and is byte-identical (`cmp`) to
+    work/finish-session.py.
+  - The finalizer writes the external copy with mode `xb`, makes it read-only (0400), and asserts that it equals the
+    captured copy.
+- Preceding capsule:
+  - prior-finish-session.py (11dd7138…) is byte-identical to the external checkpoint126 finalizer.
+  - prior-post-commit.json is byte-identical to the original checkpoint126 envelope (200a09ed…).
+- Retained review: docs/reviews/05683e3e4501-raw-source-development-checkpoint120.txt is byte-identical (`cmp`, sha256
+  9c76671e…) to /lane/reviews/05683e3e4501-raw-source-development-checkpoint120.md, which ends in `Verdict: PASS`.
+- Checkpoint126 verdict: /lane/reviews/f73948e7884f-raw-source-development-checkpoint126.md hashes to
+  15e986f4…a726a, as the request states.
+  - The finalizer's inspection branch asserts the exact commit header, the trailing PASS, the
+    no-open-high/medium flag and the hash before writing that note.
+  - The public documents claim no verdict ("in flight at reporting preparation; no verdict is inferred").
+  - Retaining that verdict is deferred to the next commit, as the brief allows.
+
+Reproduction
+- `bash /tools/build-slot python3 -B .../reproduce.py` returned PASS: 30 contexts, 161 prior checks, 122 new checks,
+  10 generation refusals, 132 attempt records. candidate_execution and model_inference were both false.
+- The helper is 4aea9726…; the source object 8f2481c7… hashes to its own name.
+- The reproduce.py and verify.py diffs against prior/ are mechanical: one more `prior/` level, the new base, the prior
+  manifest, bindings and finalizer hashes, and counts moving from 126 to 132 and from 54 to 48.
+
+Reporting gate (retained node: `sha256sum -c` OK; LICENSE shown; `node --version` v24.15.0; installed to a temporary
+directory)
+- `python3 -B scripts/local_agent_fast_gate.py --base f73948e7… --timeout 3600` returned FAST GATE: PASS. That run
+  covered diff-check, untracked lint, private path check, licence policy, review lint and markdownlint (0 issues in 4
+  files).
+- `node …/work/render.mjs` returned PASS with 0 issues across 4 rendered files.
+- `python3 -B scripts/private_host_paths.py --base f73948e7…` returned PASS.
+- `python3 -B scripts/license_policy.py` returned PASS.
+
+My independent tracing of the numbers
+- I read the six new attempts (muse, gemma4-e4b and gemma4-26b-a4b on dev-021 and dev-022) directly from
+  campaign/jobs/*-20/upstream-response-0{0,1}.bin and record.json.
+- Tokens: prompt and completion tokens sum to muse 12824/18297, E4B 15689/5936 and A4B 15697/3469. These equal the
+  table, delta.json and independent-raw.json.
+  - Every response returned HTTP 200 with finish_reason stop, which supports "stopped-below-token-limits".
+  - Each record has retries 0 and graded false.
+- Output budgets: every request has max_tokens = 32768 − rendered input − 32 (for example 32768−6795−32=25941 and
+  32768−8304−32=24432). The rendered input and output ranges in the evidence match.
+- Request parameters: every wire request carries chat_template_kwargs.enable_thinking=false, a strict json_schema
+  coding_edits_v1 response format and no tools. Muse's nonempty reasoning_content is disclosed, with the correct caveat.
+- Causes: checked.json gives code.proposal.format for both muse attempts and code.proposal.edit for both E4B and both
+  A4B attempts. This matches the table and gives 0/2 for each profile. Cumulative counts move from 13/20, 6/20 and 12/20
+  to 13/22, 6/22 and 12/22. The other three profiles stay at 22. The total is 132.
+- Timing:
+  - Reserved-job GPU minutes equal reserved_job_seconds/60 (553.815→9.230, 87.302→1.455, 105.527→1.759).
+  - Request and strict-check seconds equal the summed generation and check times.
+  - Controller wall time, 01:14:42.595 to 01:31:30.667 UTC, is 1008.07 s.
+- Cleanup: six retired tokens and 66 completed pairs. Receipts were persisted before unlinking, with no live owned
+  processes, settings revoked and keys/sockets absent.
+- Only development tasks dev-021 and dev-022 ran. No held-out or hidden content and no tuning are present.
+
+Frozen inputs and launcher
+- verify.py asserts that batch.py, collect.py, controller.py, policy.json and frozen-inputs.json are byte-identical to
+  prior/, and that all prior job and candidate files are unchanged. Both assertions passed.
+- work/launch.py differs from the prior copy only in BASE and the allow-list. Parsed, the 48-entry allow-list equals
+  `git diff --name-only eef17dbd f73948e7` exactly.
+- launch.json differs only in head, launcher hash, pid, ticks and utc.
+- /tools/build-slot currently hashes to 4061f0e6…, equal to the hash retained at launch.
+
+Preservation
+- TASKS.md has 512 table lines at both base and HEAD, and verify.py's row-identity check passed.
+- The scoreboard diff is append-only.
+- The README diff changes only the "Measured coding" row. The independence paragraph is untouched.
+
+Honest labelling and the scoreboard line (MEASURE FIRST)
+- The scoreboard gains a dated line for this batch. It states:
+  - context and output budgets, the "does not fit: 0" count and all three preserved muse timeouts;
+  - that no new timeout occurred and that no attempt was rerun.
+- The documents label the results "strict ungraded proposals". Task passes are given as unavailable, with no solved-task
+  or adoption claim. T-303/T-306 stay open.
+
+Privacy and IP
+- A grep of the added lines for usernames, e-mail, home paths, credentials and other agent products found nothing.
+- The retained review mentions only the lane-generic /lane paths, as earlier committed reviews do.
+- The model profile names are the ones used in earlier accepted increments.
+
+## Findings
+
+None at critical, high, medium or low severity. Existing T-309 lows, including per-pair wrapper provenance, stay in the
+backlog unchanged.
+
+## Per-row result
+
+- T-303/T-306 (non-closing frozen development measurement, checkpoint 132/180): the reporting increment is accepted. The
+  rows stay open and nothing closes.
+
+Verdict: PASS
