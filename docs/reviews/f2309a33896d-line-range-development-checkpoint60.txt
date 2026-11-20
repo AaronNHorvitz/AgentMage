@@ -1,0 +1,153 @@
+Commit: f2309a33896ddc7d86c48b2f2a55d14cc30ea841
+Scope: line-range-development-checkpoint60
+
+# Independent core review: frozen line-range development checkpoint 60 (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate read-only session, pinned checkout
+/lane/review-checkout. No repository file was modified. The reviewer used no GPU and executed
+no candidate code.
+
+## Scope and method
+
+- Reporting increment a1e8b1bcdb42036cc75f42e40ddec5c4f5010a73..f2309a33896ddc7d86c48b2f2a55d14cc30ea841.
+  - It adds 12 attempts (dev-009/dev-010 on six profiles), bringing the total to 60/180, with 120 remaining.
+  - The frozen source is 53c09dac184fab2a75ee57f0f540a3ae4ad2d9bb.
+- Read: the preceding verdict (/lane/reviews/a1e8b1bcdb42-line-range-development-checkpoint48.md, PASS,
+  two lows), the full diff, the capsule verify.py, audit.py, write-report.py, cleanup.py (and its diff from
+  checkpoint 48), launch.json, controller-exit.json, cleanup.json, token-retirement-receipts.json,
+  script-adaptations.json, preparation-copy-recovery.json, the handoff-heading correction receipt, the six
+  new reservation logs, and the -08 job records, events, slices and batch reports.
+- Independently re-derived every newly published per-profile number from the raw job files in the capsule
+  (script /tmp/rv60_derive.py, outside the repository). Checked the cumulative values against the
+  checkpoint-48 audit.json.
+
+## Commands and results (all run in /lane/review-checkout)
+
+- `git rev-parse HEAD` → f2309a33896ddc7d86c48b2f2a55d14cc30ea841.
+- `git status --porcelain` → empty, before and after every run.
+- `git diff --check a1e8b1bcdb42036cc75f42e40ddec5c4f5010a73` → exit 0.
+- Diff scope:
+  - The increment touches four files: TASKS.md, docs/evidence/coding-scoreboard.md, the new evidence file
+    and docs/reviews/a1e8b1bcdb42-line-range-development-checkpoint48.txt.
+  - It deletes no line.
+  - `git diff --name-only 53c09dac… HEAD` lists only TASKS.md, docs/evidence/* and docs/reviews/*, so the
+    frozen source is unchanged.
+- Hashes match the request:
+  - manifest 18549c71…d221
+  - bindings 649a481f…207fbcc
+  - post-commit envelope 28de641e…ed05b2a
+  - finish.py 95b25f0d…801e49
+  - verification log 5af71de9…890be9a
+  - node d1de76d8…932c (v24.15.0, licence file present)
+- `bash /tools/build-slot python3 -B /lane/reviews/line-range-development-checkpoint60-20261120/verify.py --require-postcommit`
+  → exit 0, PASS, with these counts:
+  - 163,509 files; 9,823 source files; 2,355 repository / 78 private inputs
+  - 30 contexts, 165 prior checks, 185 range equivalences
+  - 53 new strict checks + 7 generation refusals = 60 attempts
+  - `postcommit_checked: true`, `candidate_execution: false`, `task_passes: null`
+  - This output equals the last line of the builder's verification log.
+- With a temporary node symlink in /tmp on PATH:
+  - `bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base a1e8b1bc… --timeout 600`
+    → FAST GATE: PASS. This covers privacy, licence, review lint and markdownlint (0 issues in 3 files).
+  - `node …/work/render.mjs` → PASS, 0 issues, four non-empty renders.
+  - `python3 -B scripts/private_host_paths.py --base a1e8b1bc…` → PASS.
+  - `python3 -B scripts/license_policy.py` → PASS.
+- `python3 -B …/work/test_absent_timeout.py <capsule> --stdout` → PASS, 21 controls rejected for each of
+  muse dev-007 and dev-008.
+- `python3 -B …/work/test_timeout_evidence.py <capsule> --stdout` → PASS, 20 controls rejected for
+  historical muse dev-005.
+- The full SOURCE gate was not rerun. No runtime source has changed since the commit where it was
+  measured. Its result (FAIL: 1,043 passed, 53 inherited failures, 11 ignored, 31 targets) is disclosed
+  as FAIL, not waived.
+- `cmp docs/reviews/a1e8b1bcdb42-line-range-development-checkpoint48.txt /lane/reviews/a1e8b1bcdb42-line-range-development-checkpoint48.md`
+  → identical.
+- The checkpoint-48 scoreboard is a byte-exact prefix of the new scoreboard.
+
+### Independently derived metrics (new pair, from raw records, slices and batch reports)
+
+| Profile | New proposals | Rendered input / budget | Backend input / output (coverage) | Request s | GPU min |
+| --- | --- | --- | --- | --- | --- |
+| gemma4-31b | 2/2 (cumulative 6/10) | 3237–4116 / 28620–29499 | 7353 / 349 (2) | 65.173 | 2.043 |
+| qwen35-27b | 2/2 (cumulative 8/10) | 2853–3744 / 28992–29883 | 6597 / 838 (2) | 48.555 | 1.401 |
+| gpt-oss | 0/2 (cumulative 3/10) | 2703–3597 / 29139–30033 | 6300 / 31168 (2) | 183.136 | 3.431 |
+| muse | 2/2 (cumulative 4/10) | 2619–3533 / 29203–30117 | 6152 / 9064 (2) | 229.668 | 4.321 |
+| gemma4-e4b | 2/2 (cumulative 5/10) | 3233–4112 / 28624–29503 | 7345 / 930 (2) | 45.445 | 1.039 |
+| gemma4-26b-a4b | 2/2 (cumulative 5/10) | 3237–4116 / 28620–29499 | 7353 / 558 (2) | 60.574 | 1.996 |
+
+- Every value equals the evidence file and the scoreboard rows.
+- Every budget equals min(32768, 32768 − rendered input − 32).
+- New causes match the raw data. For gpt-oss these are one `strict-edit-refused:code.proposal.edit` and one
+  `generation-refused:error:chat.response.incomplete`, and the latter's output count equals its budget
+  (output-cap).
+- Cumulative causes, terminations and coverage equal the checkpoint-48 values plus the new ones for all six
+  profiles. Coverage is 10/10 for five profiles and 7/10 for muse, whose three historical timeouts remain
+  unavailable and are not counted as zero.
+- The 48 earlier per-attempt details in audit.json are identical to the checkpoint-48 audit.
+- Each of the 12 new backend slices contains exactly one slot launch and one release. There is no
+  carry-over in this pair, so no counter is borrowed.
+- The sampled GPU peaks (5,766–20,654 MiB) are within 22,528 MiB.
+- The controller wall time, from launch.json 15:17:04.958 to controller-exit.json 15:34:07.640, is
+  1022.682 s, as published.
+
+## Checks against the brief
+
+- **Evaluation integrity:**
+  - Only development tasks dev-009/dev-010 are new.
+  - verify.py checks each payload: it holds only the task's source file and is byte-equal to
+    `git show <base>:<source>`. Contexts equal the frozen protocol contexts.
+  - Held-out data is not loaded or executed.
+  - controller.py, batch.py, collect.py, policy.json, frozen-inputs.json, output-format.json, launch.py and
+    the timeout modules are byte-equal to the checkpoint-48 capsule.
+  - cleanup.py changes only its expected counts (30 reports, -08 receipts).
+  - No tuning happened. All 60 attempts are counted (53 checks + 7 refusals).
+  - The result is re-runnable by one command.
+- **MEASURE FIRST:**
+  - A dated scoreboard line exists, with context and output budgets stated.
+  - It records no changed variable.
+  - "Does not fit" is counted separately (0).
+  - Earlier scoreboard bytes are an exact prefix.
+  - preservation.log reports 512 ledger lines and 49 historical path blobs unchanged.
+- **Honest claims:**
+  - Proposals are labelled strict and ungraded, and task passes are unavailable.
+  - Checkpoint-48 L1 is addressed. The evidence file and the scoreboard now state the roughly 11 s wait
+    before dev-008, the roughly 289 s left of its deadline, the possible effect of carry-over, that the
+    outcome with more time is unknown, and that it stays a timeout under the frozen protocol. The text
+    correctly attributes the quantification to the checkpoint-48 review.
+  - The muse server-side reasoning flags versus the wire-level `enable_thinking: false` are unchanged, and
+    the documents already state that requested thinking settings do not demonstrate absence of reasoning.
+- **Confinement:**
+  - Model output is consumed only by the authenticated effect-free strict checker. Candidates are compared
+    as data, including full projections.
+  - Nothing a model emitted is treated as an instruction or permission.
+  - The reservations match checkpoint 48: queue-run 900, nice 19, cgroup cpu.max 400000/100000,
+    memory.max 16 GiB, 30-second released pauses.
+  - cleanup.json: PASS; 12 tokens retired with receipts persisted before unlink; no live owned processes;
+    no foreign signal; keys and sockets absent; settings revoked.
+  - The preparation copy recovery (copy2 across mounts) happened before any model launch, and the measured
+    inputs are unchanged.
+  - The handoff-heading correction touches only a private file outside the repository and capsule.
+- **Public repository:**
+  - The added lines in TASKS.md and docs/evidence contain no home path, username, hostname, credential,
+    other product, private project, paper or patent.
+  - The /lane paths appear only inside the retained review text, as in earlier accepted reviews.
+  - The plan, order of work, PRD, decisions, README and licence files are untouched.
+
+## Findings
+
+- L1 (low, carried, T-309): verify.py still does not derive the published per-profile numbers from the raw
+  jobs and compare them with the committed text. Example: work/verify.py checks attempts and replays checks,
+  but the published deltas come only from write-report.py over audit.json. I re-derived them all
+  independently (above), and they match.
+  - Fix after the frozen repeat: have the portable verifier recompute each published row from the job files
+    and assert string equality with the evidence and scoreboard lines.
+
+No critical, high or medium finding. Checkpoint-48 L1 (dev-008 wait not quantified) is resolved by this
+increment's text. Backend cancellation on client timeout remains the recorded T-309 item.
+
+## Per-row result
+
+- T-303/T-306, non-closing development measurement checkpoint 60 at f2309a33: PASS for this reporting
+  increment. There is no open high or medium finding. Both rows stay OPEN, as the commit states. No row or
+  model closure is requested or granted.
+
+Verdict: PASS
