@@ -2,6 +2,19 @@
 
 ## Active queue: local agent mission
 
+The [independent one-hundred-twenty-six-attempt checkpoint review](docs/reviews/f73948e7884f-raw-source-development-checkpoint126.txt)
+returns **Verdict: PASS** for exact `f73948e7884faf520f1cfb7d860eca134d2ebb0b`, with no critical, high, medium or low findings.
+Its report is retained unchanged; no row closes. This accepts only
+that reporting increment; the new checkpoint requires independent core review.
+Earlier scoreboard lines stay unchanged.
+
+The [frozen raw-source one-hundred-thirty-eight-attempt checkpoint](docs/evidence/t303-raw-source-checkpoint138-2026-11-19.md) adds six development
+attempts. The repeat reaches 138/180 attempted, with 42 remaining before tuning
+or capability work. Cumulative strict ungraded proposals: gemma4-31b 18/24; qwen35-27b 22/24; gpt-oss 7/24; muse 13/22; gemma4-e4b 6/22; gemma4-26b-a4b 12/22.
+Task passes and retries remain unavailable; no candidate, hidden or held-out
+code executes. Frozen inputs and earlier attempts remain unchanged. Independent
+core review is required for this checkpoint; T-303/T-306 remain open.
+
 The [independent one-hundred-twenty-attempt checkpoint review](docs/reviews/05683e3e4501-raw-source-development-checkpoint120.txt)
 returns **Verdict: PASS** for exact `05683e3e45016de1131160cc6f2da908a809613f`, with no critical, high, medium or low findings.
 Its report is retained unchanged; no row closes. This accepts only
@@ -26,7 +39,8 @@ attempts. The repeat reaches 126/180 attempted, with 54 remaining before tuning
 or capability work. Cumulative strict ungraded proposals: gemma4-31b 16/22; qwen35-27b 20/22; gpt-oss 5/22; muse 13/20; gemma4-e4b 6/20; gemma4-26b-a4b 12/20.
 Task passes and retries remain unavailable; no candidate, hidden or held-out
 code executes. Frozen inputs and earlier attempts remain unchanged. Independent
-core review is required for this checkpoint; T-303/T-306 remain open.
+core review was required when recorded; its subsequent PASS is retained above.
+T-303/T-306 remain open.
 
 The [independent one-hundred-eight-attempt checkpoint review](docs/reviews/9bc971d2b1bc-raw-source-development-checkpoint108.txt)
 returns **Verdict: PASS** for exact `9bc971d2b1bc012e369bd11c2bcc92cacc075cf1`, with no critical, high, medium or low findings.

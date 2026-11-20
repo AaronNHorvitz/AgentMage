@@ -1,0 +1,138 @@
+Commit: f73948e7884faf520f1cfb7d860eca134d2ebb0b
+Scope: raw-source-development-checkpoint126
+
+Reviewer: an independent Claude Opus 5.5 session at extra-high effort, read-only. I ran everything in the pinned
+checkout /lane/review-checkout. No Rust build was needed. I did not use the GPU, did not run inference and did not
+execute any candidate. I did not modify the repository, and `git status --porcelain` was empty after all runs.
+
+## Scope and methods
+
+- `git rev-parse HEAD` and `git rev-parse f73948e7…` both print f73948e7884faf520f1cfb7d860eca134d2ebb0b.
+  `git status --porcelain` printed nothing. `git diff --check 05683e3e…` exited 0.
+- The diff from base 05683e3e touches five files: README.md (one table cell), TASKS.md (a new prepended note for
+  checkpoint126, the retained checkpoint114 PASS note, and one wording change in the checkpoint114 note),
+  docs/evidence/coding-scoreboard.md (append only), the new docs/evidence/t303-raw-source-checkpoint126-2026-11-19.md,
+  and the retained docs/reviews/3975027e6e3f-raw-source-development-checkpoint114.txt. No product source, script,
+  manifest or licence file changes.
+- `git diff --name-only eef17dbd..HEAD`, filtered to drop README.md, TASKS.md and docs/{evidence,reviews}/, prints
+  nothing. `git diff --name-only eef17dbd 05683e3e | wc -l` prints 46, which matches the launcher's 46-path
+  reporting allow-list.
+- I read verify.py, reproduce.py and work/{audit,write-reports,cleanup,preserve}.py, the retained helper source
+  (object 8f2481c7…, the Rust main.rs that wraps prepare_coding_proposal and check_coding_proposal: stdin to stdout,
+  no file, network or process effects) and the diff between the executed finalizer and the captured one.
+
+## Commands and results
+
+1. `bash /tools/build-slot python3 -B /lane/reviews/raw-source-development-checkpoint126-20261119/verify.py`
+   finished with exit 0 in 36m03s. Output:
+   `{"status": "PASS", "attempts": 126, "remaining": 54, "source_commit": "eef17dbd…", "postcommit_checked": true,
+   "task_scores": null, "complete_prior_capsule_authenticated": true}`.
+2. `bash /tools/build-slot python3 -B …/reproduce.py` finished with exit 0. Output: `{"status": "PASS", "contexts": 30,
+   "prior_checks": 161, "new_checks": 116, "generation_refusals": 10, "attempt_records": 126, "helper_sha256":
+   "4aea9726…31c53", "candidate_execution": false, "model_inference": false}`. 116 + 10 = 126.
+3. Hashes:
+   - `sha256sum -c` printed OK for the executed finalizer
+     /lane/reviews/raw-source-development-checkpoint126-20261119-finish-session.py (11dd7138…) and for
+     /lane/reviews/42612ca9787f-a4b-node (d1de76d8…). The Node licence file contains the Node.js licence text.
+   - manifest.json is 3368a734…; bindings.json is 2bee588b…; the postcommit envelope is 200a09ed…. All match the
+     request.
+   - The helper executable object 4aea9726… is the frozen-inputs binding for the measurement helper. The request's
+     "helper source" object 8f2481c7… is that helper's main.rs, and frozen-inputs binds it as
+     /lane/state/rs1/helper/src/main.rs.
+4. The postcommit envelope lists commit f73948e7…, base 05683e3e…, `complete_diff_covered: true` and the five public
+   hashes. I recomputed all five at HEAD and every one matches.
+5. `node --version` printed v24.15.0, using the retained runtime installed into a temporary directory.
+   - `python3 -B scripts/local_agent_fast_gate.py --base 05683e3e… --timeout 3600` printed `FAST GATE: PASS`; the
+     review lint passed and markdownlint reported 0 issues in 4 files.
+   - `node …/work/render.mjs` printed `{"status":"PASS","issues":0,…}` and rendered 4 files.
+   - `python3 -B scripts/private_host_paths.py --base 05683e3e…` printed `PRIVATE PATH CHECK: PASS`.
+   - `python3 -B scripts/license_policy.py` printed `LICENCE POLICY: PASS`.
+6. Retained review: `cmp` shows docs/reviews/3975027e6e3f-raw-source-development-checkpoint114.txt is identical to
+   /lane/reviews/3975027e6e3f-raw-source-development-checkpoint114.md (SHA256 d58fc889…). Its verdict is PASS with
+   "No critical, high, medium or low findings". The TASKS.md summary of it is accurate.
+7. Checkpoint120 PASS: /lane/reviews/05683e3e4501-raw-source-development-checkpoint120.md has SHA256
+   9c76671e…f406f91e, which matches the request, and ends `Verdict: PASS`. work/review-status.json records it as
+   in-flight at preparation. preserve.py would have required its retention only if the status were "retained". Not
+   committing it here is consistent with one-review-ahead; it is due next commit.
+
+## Independent trace of the new numbers to raw logs
+
+From each new job's collection/batch.json and backend-slice.log (isolated at the single slot launch, as audit.py does),
+and from batch-report.json:
+
+| Profile | Task | Cause | Prompt/eval tokens | Request s |
+| --- | --- | --- | --- | --- |
+| gemma4-31b | dev-021 | strict-edit-refused | 8304/1613 | 89.067 |
+| gemma4-31b | dev-022 | strict-edit-refused | 7393/1564 | 51.003 |
+| qwen35-27b | dev-021 | ungraded-proposal | 7379/919 | 51.374 |
+| qwen35-27b | dev-022 | ungraded-proposal | 6542/1721 | 46.894 |
+| gpt-oss | dev-021 | generation-refused | 6842/25894 (= budget) | 164.458 |
+| gpt-oss | dev-022 | generation-refused | 6077/26659 (= budget) | 165.009 |
+
+Row sums give the following, matching every scoreboard and evidence cell:
+
+| Profile | Tokens in / out | Request s | Reserved-job GPU min |
+| --- | --- | --- | --- |
+| gemma4-31b | 15697 / 3177 | 140.071 | 202.733/60 = 3.379 |
+| qwen35-27b | 13921 / 2640 | 98.269 | 151.254/60 = 2.521 |
+| gpt-oss | 12919 / 52553 | 329.467 | 353.335/60 = 5.889 |
+
+- gpt-oss generated exactly the requested output budget, so its termination is classified as output-cap.
+- Every requested output budget equals min(32768, 32768 − rendered input − 32).
+- All six new rows have `graded: false` and `retries: 0`.
+- Peak sampled GPU use is at most 20,367 MiB, under the 22,528 MiB guard.
+- The cumulative counts (prior 16/20, 18/20, 5/20 plus the new 0/2, 2/2, 0/2) give 16/22, 20/22 and 5/22. The muse,
+  e4b and a4b counts are unchanged. Attempts total 126, leaving 54.
+- Controller wall time: launch.json utc 23:18:39.196 to controller-exit.json utc 23:35:31.178, which is 1011.982 s.
+- The preserved-timeout line is derived from the audit details. It lists muse dev-008, dev-011 and dev-012, and no new
+  timeout was recorded.
+
+## Executed finalizer disclosure
+
+The diff between work/finish-session.py (a9b08bba…, matching overlap-decision.json) and the executed external copy
+contains only:
+
+- the preparation-copy assertion, which compares against a pinned hash instead of self-equality;
+- the "after reporting preparation" timing label;
+- the traceback disclosure paragraph;
+- two retention wording lines.
+
+This matches the request's statement. prior-finish-session.py equals the checkpoint120 external finalizer
+(13419be4…). verify.py checks both.
+
+## Security and integrity checks
+
+- Evaluation integrity:
+  - No held-out, hidden or candidate code ran.
+  - The controller, collector, batch, policy and frozen inputs are byte-identical to the prior capsule (verify.py).
+  - All 120 prior attempt details are unchanged.
+  - Each new key is seen once, with no reruns.
+  - Failures are counted: 2 strict-edit refusals and 2 generation refusals.
+- Confinement and secrets: cleanup.json shows 6 tokens retired, with receipts persisted before unlinking, no live owned
+  processes, and keys and sockets absent.
+- Privacy and licensing:
+  - The only /lane/ paths in the diff are inside the retained review text, which uses the review lane's own paths
+    exactly as earlier retained reviews do. There is no home path, username, hostname, credential, other product or
+    private project name.
+  - The privacy and licence checks pass.
+- Honest labelling:
+  - Results are stated as "strict ungraded proposals", with task passes unavailable and no solved-task claim.
+  - The fixture and partial-path limitations are stated.
+  - T-303/T-306 stay open.
+- MEASURE FIRST:
+  - A scoreboard line is present for this batch.
+  - Context and output budgets are stated.
+  - The does-not-fit count (0) is reported separately from model failures.
+  - Missing token coverage would be shown in the cells; coverage here is 2/2 for each profile.
+
+## Findings
+
+No critical, high, medium or low findings.
+
+## Per-row result
+
+T-303/T-306 (non-closing frozen development measurement, checkpoint126): the reporting increment is accepted. Every
+number traces to raw logs, all required runs pass and no row closes. T-303/T-306 remain open. Existing T-309 lows
+remain in the backlog.
+
+Verdict: PASS
