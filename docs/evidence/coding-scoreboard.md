@@ -5489,3 +5489,57 @@ work is the full 30-task development repeat on all six existing profiles before
 further tuning or capability work. Native effects, project tests, feedback,
 retries and original grading controls remain unavailable; no hidden or held-out
 work runs. T-303/T-306 stay open.
+
+## Frozen line-range repeat: twelve-attempt checkpoint, 2026-11-20
+
+Frozen source and reporting base: `53c09dac184fab2a75ee57f0f540a3ae4ad2d9bb`.
+
+| Date | Profile | Context / output tokens | Recorded / total attempts | Strict ungraded proposals | First-attempt / within-budget task passes | Backend input / output tokens | Request and strict-check seconds | Reserved-job GPU minutes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-20 | gemma4-31b | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 0/2 | Unavailable / unavailable | 18818 / 2325 | 132.102 | 3.262 |
+| 2026-11-20 | qwen35-27b | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 2/2 | Unavailable / unavailable | 16408 / 2694 | 90.422 | 2.165 |
+| 2026-11-20 | gpt-oss | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 1/2 | Unavailable / unavailable | 15105 / 36961 | 199.545 | 3.600 |
+| 2026-11-20 | muse | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 1/2 | Unavailable / unavailable | 15135 / 19625 | 450.301 | 7.935 |
+| 2026-11-20 | gemma4-e4b | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 0/2 | Unavailable / unavailable | 18810 / 33055 | 301.528 | 5.263 |
+| 2026-11-20 | gemma4-26b-a4b | 32768 / min(32768, 32768 - rendered input - 32) | 2/2 | 1/2 | Unavailable / unavailable | 18818 / 4084 | 131.606 | 3.229 |
+
+Changed variable: [Decision 0214](../decisions/0214-original-line-range-proposals.md)'s
+original-line-range protocol: instruction, version 2 headers, strict parser and
+trusted `coding_lines_v1` schema. Nine excerpt sets change, as recorded in the
+preflight. Raw source bodies and exact-preimage checks remain. Model/runtime
+profiles, served context, output formula, disabled-thinking request and
+deadlines are unchanged. The repeat is **12/180 attempted, 168 remaining**;
+finish all 30 development tasks on all six profiles before further tuning or
+capability work. No task score or model adoption follows.
+
+gemma4-31b: causes `{"strict-edit-refused:code.proposal.edit": 2}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+qwen35-27b: causes `{"ungraded-proposal": 2}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+gpt-oss: causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:nonempty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+muse: causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:nonempty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+gemma4-e4b: causes `{"generation-refused:complete:length": 1, "strict-edit-refused:code.proposal.edit": 1}`; backend terminations `{"output-cap": 1, "stopped-below-token-limits": 1}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+gemma4-26b-a4b: causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Backend counters cover 2/2 attempts; does not fit: 0.
+
+The gemma4-e4b dev-002 response reached its 23,129-token output budget with
+partial content. It was refused before the strict checker, without repair or
+rerun; the candidate remains the unchanged base. The complete response and
+usage are retained.
+
+Controller wall time including queues and five released pauses: 1839.726
+seconds. Reserved-job body time excludes queues and is neither kernel time nor
+full reservation duration. Preparation, reporting and complete end-to-end
+latency are unmeasured. Every pair uses both wrappers with a 900-second
+deadline, low priority, nice 19, 16 GiB RAM and four CPUs; reservations release
+between pairs. Launch wrapper bytes are retained; per-pair wrapper provenance
+remains T-309 backlog. Twelve token retirement receipts are kept.
+
+Only Rust retrieval, credential-owning chat transport, local inference and the
+strict checker run. Native executable admission and original grading controls
+remain unavailable; no effects, project tests, feedback, retries, candidate,
+hidden or held-out execution. Task passes remain unavailable. Independent core
+review is required; T-303/T-306 remain open. Exact settings and raw-evidence
+verification are in the [checkpoint evidence](t303-line-range-checkpoint12-2026-11-20.md).

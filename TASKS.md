@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The [frozen line-range twelve-attempt checkpoint](docs/evidence/t303-line-range-checkpoint12-2026-11-20.md)
+records two development attempts per profile: gemma4-31b 0/2; qwen35-27b 2/2; gpt-oss 1/2; muse 1/2; gemma4-e4b 0/2; gemma4-26b-a4b 1/2 strict ungraded proposals.
+The repeat is 12/180 attempted, 168 remaining. Complete all 30 tasks on all six
+profiles before further tuning or capability work. Source, schema and model
+settings stay frozen. Task passes/retries remain unavailable; no candidate,
+hidden or held-out code executes. Independent core review is required;
+T-303/T-306 remain open and no row closes.
+
 [Decision 0214](docs/decisions/0214-original-line-range-proposals.md) targets
 the largest measured refusal cause by resolving exact preimages from original
 line ranges. Version 2 source headers identify those lines; the shared checker
