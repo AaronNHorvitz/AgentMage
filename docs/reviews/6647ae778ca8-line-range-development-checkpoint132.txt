@@ -1,0 +1,233 @@
+Commit: 6647ae778ca88341f9d7b74fd1a6e4361e06c9ef
+Scope: line-range-development-checkpoint132
+
+# Independent core review: frozen line-range development checkpoint 132 (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate read-only session, pinned checkout
+/lane/review-checkout. No repository or capsule file was modified. The reviewer used no GPU and
+executed no candidate code. Scratch work lived in /tmp/rv132 (outside the repository and the capsule).
+
+## Scope and method
+
+- Reporting increment a2cf28786e83a073766bc1d8153eddbd4334a30c..6647ae778ca88341f9d7b74fd1a6e4361e06c9ef.
+  - It adds 12 attempts (dev-021/dev-022 on six profiles), bringing the total to 132/180, with 48 remaining.
+  - The frozen source is 53c09dac184fab2a75ee57f0f540a3ae4ad2d9bb.
+- Read:
+  - the full diff and the new evidence file;
+  - every capsule work file that differs from the checkpoint-120 capsule: adapt.py and adapt-execution.json,
+    the new editorial.py and editorial-execution.json, script-adaptations.json (all sections),
+    bind-review.py, review-binding.json/.log, observe.py, new-observations.json, new-script-inventory.json,
+    launch.json, controller-exit.json, controller.log, timing.json, cleanup.json,
+    token-retirement-receipts.json, preservation.json, audit.json, verify.py and finish.py;
+  - the six -20 reservation logs and batch reports;
+  - per-task record.json, events.ndjson, checked.json, answer.txt, context.json and backend-slice.log for
+    all twelve new attempts;
+  - the strict checker's line-range resolution (capabilities/repository-map/src/coding_proposal.rs:453-640)
+    and Decision 0214, to classify the dev-022 refusals.
+- Re-derived every newly published and cumulative per-profile number from the raw job files (jobs -00 to -20).
+  I used my own script (/tmp/rv132/derive.py), which applies my own token regexes to each task's backend
+  slice and takes counters only after that task's own slot launch.
+- Reproduced the reporting-adaptation chain in a temporary directory from the stored scripts and diffs.
+
+## Commands and results (all run in /lane/review-checkout)
+
+- `git rev-parse HEAD` → 6647ae778ca88341f9d7b74fd1a6e4361e06c9ef.
+  - Its tree 2cd0ac917d907f68448ec74635051f1b86fbd83d and parent a2cf2878… equal the post-commit envelope.
+- `git status --porcelain` → empty, before and after every run.
+- `git diff --check a2cf28786e83a073766bc1d8153eddbd4334a30c` → exit 0.
+- Diff scope:
+  - Four files, additions only: TASKS.md (+9), docs/evidence/coding-scoreboard.md (+63), the new
+    docs/evidence/t303-line-range-checkpoint132-2026-11-20.md (+130) and
+    docs/reviews/a2cf28786e83-line-range-development-checkpoint120.txt (+212).
+  - `git diff --name-only 53c09dac… HEAD` lists only TASKS.md, docs/evidence/* and docs/reviews/*, so the
+    frozen source is unchanged.
+- Hashes match the request:
+  - manifest 17b92f5c…21ab
+  - bindings 12133fc3…93d0
+  - post-commit envelope bb20baaf…7ab4
+  - finish.py 2dec6084…dfc3
+  - verification log 1efeb883…7c1c
+  - node d1de76d8…932c (v24.15.0, licence file present)
+- `bash /tools/build-slot python3 -B /lane/reviews/line-range-development-checkpoint132-20261120/verify.py --require-postcommit`
+  → exit 0, PASS, in 3 min 12 s, with these counts:
+  - 579,948 files; 9,823 source files; 2,355 repository / 78 private inputs
+  - 30 contexts, 165 prior checks, 185 range equivalences
+  - 118 strict checks + 14 generation refusals = 132 attempts
+  - `postcommit_checked: true`, `candidate_execution: false`, `task_passes: null`
+  - The JSON result line is byte-identical to the builder's verification log. The only difference is the
+    reservation-wait line, which went to stderr in my run.
+  - The capsule's top-level verify.py equals work/verify.py (`cmp`).
+- With a temporary node symlink in /tmp/rv132/bin on PATH:
+  - `bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base a2cf2878… --timeout 600`
+    → FAST GATE: PASS. This covers privacy, licence, review lint and markdownlint (0 issues in 3 files).
+  - `node …/work/render.mjs` → PASS, 0 issues, four non-empty renders.
+  - `python3 -B scripts/private_host_paths.py --base a2cf2878…` → PASS.
+  - `python3 -B scripts/license_policy.py` → PASS.
+- `python3 -B …/work/test_timeout_evidence.py <capsule> --stdout` → PASS. Two observed prefix timeouts are
+  accepted (muse dev-005, muse dev-017), with 20 controls rejected for each.
+- `python3 -B …/work/test_absent_timeout.py <capsule> --stdout` → PASS. Four observed no-capture timeouts
+  are accepted (dev-007, dev-008, dev-012, dev-014), with 21 controls rejected for each.
+  - timeout_evidence.py and both test scripts are byte-equal to checkpoint 120 (from_sha256 = to_sha256).
+  - observe.py found no new timeout (`cases: []`, `script_diffs: {}`), so it changed no script.
+- The full SOURCE gate was not rerun. No runtime source has changed since the commit where it was measured.
+  Its result (FAIL: 1,043 passed, 53 inherited failures, 11 ignored, 31 targets) is disclosed as FAIL, not
+  waived.
+- The retained review matches the original:
+  - `cmp docs/reviews/a2cf28786e83-line-range-development-checkpoint120.txt /lane/reviews/a2cf28786e83-line-range-development-checkpoint120.md`
+    → identical.
+  - Its SHA-256 7794f55e…0a5d equals predecessor-review-state.json, review-binding.json and the hash pinned
+    in write-report.py.
+- The checkpoint-120 scoreboard (`git show a2cf2878:docs/evidence/coding-scoreboard.md`) is a byte-exact
+  prefix of the new scoreboard.
+- `diff -rq <capsule>/prior-checkpoint /lane/reviews/line-range-development-checkpoint120-20261120` → no
+  difference, so the predecessor capsule is preserved whole.
+  - `<capsule>/protocol` equals /lane/reviews/original-line-range-protocol-20261120.
+  - verify.py pins the prior manifest at c2a751ef…ba7b, the hash the checkpoint-120 request and review used.
+- Preservation:
+  - `work/preservation.json` reports PASS: 512 ledger lines, 49 historical path blobs and an exact
+    old-scoreboard prefix.
+  - All twelve public-file hashes it records equal the checkout.
+  - `git diff --quiet a2cf2878 -- README.md Agent-Scaffolding-Inventory.md architecture supply-chain docs/decisions LICENSE* NOTICE* CONTRIBUTING.md`
+    → no change.
+
+### Independently derived metrics (new pair, from raw records, slices and batch reports)
+
+| Profile | New proposals (cumulative) | Rendered input / budget | Backend input / output (coverage) | Request s | GPU min |
+| --- | --- | --- | --- | --- | --- |
+| gemma4-31b | 1/2 (17/22) | 7410–8321 / 24415–25326 | 15731 / 2096 (2) | 139.248 | 3.515 |
+| qwen35-27b | 1/2 (17/22) | 6550–7387 / 25349–26186 | 13937 / 1937 (2) | 93.172 | 2.248 |
+| gpt-oss | 0/2 (9/22) | 6083–6848 / 25888–26653 | 12931 / 52541 (2) | 378.112 | 6.779 |
+| muse | 1/2 (8/22) | 6036–6802 / 25934–26700 | 12838 / 17425 (2) | 468.610 | 8.421 |
+| gemma4-e4b | 2/2 (12/22) | 7406–8317 / 24419–25330 | 15723 / 346 (2) | 70.824 | 1.458 |
+| gemma4-26b-a4b | 1/2 (14/22) | 7410–8321 / 24415–25326 | 15731 / 3666 (2) | 109.491 | 2.658 |
+
+- Every value equals the evidence file and the scoreboard rows.
+  - Request seconds are the sum of the two records' generation_seconds.
+  - GPU minutes are reserved_work_seconds / 60.
+- All 132 attempts satisfy rendered input + requested output + 32 = 32,768, with retries 0, graded false and
+  native harness false.
+- The cumulative values I derived from all eleven jobs per profile equal audit.json, and each equals the
+  checkpoint-120 values plus the new pair:
+  - input/output tokens: 154368/24980, 136472/28785, 125917/402028, 92246/129679, 154280/79827,
+    154368/38156;
+  - coverage 22, 22, 22, 16, 22, 22;
+  - causes and terminations as published (gpt-oss: 7 output-cap; muse: 6 timeouts without counters and
+    16 stopped; gemma4-e4b: 1 output-cap).
+- The 120 earlier per-attempt entries in audit.json are identical to the checkpoint-120 audit, matched by
+  (model, task). Only the 12 dev-021/dev-022 entries are new. audit.py is byte-equal to checkpoint 120.
+- Each new slice contains exactly one slot launch, one prompt-eval line, one eval line and `truncated = 0`.
+  Nothing carries over between tasks, and no counter is borrowed.
+- The new gpt-oss dev-021 and dev-022 are generation refusals (`chat.response.incomplete`).
+  - Their own slices show output exactly equal to their budgets (25,888 and 26,653), so the output-cap
+    classification is correct.
+  - Neither has an answer.txt or checked.json, and nothing partial is parsed or graded.
+- The four new strict-edit refusals are all dev-022: gemma4-31b, qwen35-27b, muse and gemma4-26b-a4b.
+  - Each has checked.json `code.proposal.edit` and a base-fallback candidate.
+  - I resolved each answer's line ranges against the 21,341-byte original, which was fully visible as one
+    excerpt. In each answer, at least one range resolves to text that occurs more than once in the file:
+    - gemma4-31b line 78 is a blank line;
+    - qwen35-27b and muse line 76 is `    )\n`, which occurs 13 times;
+    - gemma4-26b-a4b lines 463–468 occur 3 times.
+  - Decision 0214 refuses such edits explicitly: "An address does not make a repeated preimage
+    acceptable." The refusals are therefore correct under the frozen, reviewed protocol, and they are
+    labelled as strict refusals, not as solved or failed tasks.
+- Neither new Muse attempt timed out (243.5 s and 225.1 s against the 300-second deadline). Both have their
+  own terminal counters.
+- Resources:
+  - The sampled GPU peaks (5,313–20,893 MiB) are within 22,528 MiB, with no resource-guard error.
+  - Every -20 scope shows cpu.max 400000/100000, memory.max 16 GiB and memory.high 14 GiB. memory.peak
+    reached memory.high, which the evidence discloses.
+  - Settings are revoked in every batch report.
+- Controller wall time, from launch.json 19:14:57.221124 to controller-exit.json 19:42:50.649286, is
+  1673.428 s, as published.
+  - controller.py (byte-equal to checkpoint 120) has five 30×1 s released pauses between six 900-second
+    queue-run jobs.
+- launch.json binds:
+  - head a2cf2878… and source 53c09dac…;
+  - low priority and nice 19;
+  - wrapper, launcher, freeze and scope hashes equal to checkpoint 120. Both wrapper hashes equal the live
+    /tools files.
+- Campaign files are byte-equal to checkpoint 120 apart from additions:
+  - Only the six -20 jobs and reservation logs and the dev-021/dev-022 candidates are new.
+  - Every earlier job, candidate, profile, policy and frozen input is unchanged.
+- **Adaptation provenance:**
+  - adapt-execution.json records exit 0, and as-run hash 9c611bb5… equals the stored adapt.py.
+  - Re-running a copy of adapt.py in /tmp (against the checkpoint-120 work directory) reproduces 14 files
+    byte-for-byte: cleanup.py, preserve.py, final-checks.sh, render.mjs, pack.py, verify.py, the four
+    copied validator/audit scripts, observe.py, bind-review.py, postflight.sh, finish.py, and payloads/.
+    It also produces write-report.py 74f26335….
+  - Running a copy of the stored editorial.py gives c31fa65e…. Applying the stored review_binding diff then
+    gives a84c9fdc…, which equals the stored write-report.py.
+  - editorial-execution.json records as-run hash 116ce260… (equal to editorial.py), exit 0 and stdout.
+    script-adaptations.json's review_backlog_note now names the script hash and the receipt.
+  - bind-review.py's hash is inventoried in new-script-inventory.json, and its output is retained in
+    review-binding.log.
+  - The binding re-adds the predecessor-review pin (7794f55e…), which adapt.py had removed with the old
+    pin, so the check is not weakened.
+  - These reporting edits ran while the controller was live (launch 19:14:57, adapt 19:16:04, editorial
+    19:20:32, binding 19:42:56, exit 19:42:50). They touched only capsule work files, and the campaign inputs
+    are byte-equal, so they cannot have changed what the model saw.
+
+## Checks against the brief
+
+- **Evaluation integrity:**
+  - Only development tasks dev-021/dev-022 are new. All six -20 batch.json files have
+    `split: development` and `held_out_executed: false`, and audit.py asserts both.
+  - Held-out data is neither loaded nor executed (audit.json `hidden_or_held_out: false`), and no tuning
+    happened.
+  - All 132 attempts are counted (118 checks + 14 refusals), and the result is re-runnable by one command.
+  - Committed files contain no task content.
+- **MEASURE FIRST:**
+  - A dated 2026-11-20 scoreboard line exists, with context and output budgets stated.
+  - It records no changed variable.
+  - "Does not fit" is counted separately (0).
+  - Earlier scoreboard bytes are an exact prefix.
+- **Honest claims:**
+  - Proposals are labelled strict and ungraded, and task passes are unavailable.
+  - Missing counters are unavailable, not zero.
+  - Historical late counters stay disclosed and excluded.
+  - Timings are labelled as reflecting memory.high.
+- **Confinement:**
+  - Model output, including proposals that rewrite repository scripts such as
+    scripts/coding_harness_acceptance.py, is consumed only by the authenticated effect-free strict
+    checker. Candidates are compared as data. Nothing a model emitted is treated as an instruction or
+    permission.
+  - cleanup.json reports PASS:
+    - 66 completed pairs and 12 -20 tokens retired, with receipts persisted before unlink. None duplicates a
+      receipt in any earlier line-range capsule.
+    - There are no live owned processes and no foreign signal.
+    - Keys and sockets are absent, and settings are revoked.
+- **Public repository:**
+  - The added lines contain no private home path, username, hostname, credential, other agent product,
+    private project, paper or patent.
+  - Private home paths in capsule files (launch argv, batch-report bind paths) are not committed.
+  - The Signed-off-by line is the owner's, as CONTRIBUTING.md requires.
+  - The plan, order of work, PRD, decisions, README and licence files are untouched.
+
+## Findings
+
+- L1 (low, carried, T-309): verify.py still does not re-derive the published per-profile numbers from the raw
+  jobs and compare them with the committed text. Its diff from checkpoint 120 consists only of the count and
+  pin substitutions (lines 45, 92, 168-169). I re-derived every number independently (above), and they match.
+  - Fix after the frozen repeat: have the verifier recompute each published row and assert string equality
+    with the evidence and scoreboard lines.
+- The checkpoint-120 edit-receipt low (L2) is resolved for this increment. The only in-place edit (the
+  editorial correction) now runs through a stored script, which has an as-run hash, exit status and stdout
+  receipt.
+- The checkpoint-120 editorial low (L3) is resolved: the repeated, ungrammatical sentence is gone from the
+  new evidence. The retained old evidence file is unchanged, as it should be.
+- Backlog (no severity): the scoreboard publishes only `code.proposal.edit` for strict refusals. All four new
+  refusals are caused by the reviewed repeated-preimage rule of Decision 0214, not by an out-of-range or
+  invisible edit. Publishing refusal sub-reasons would help the post-repeat analysis. No "done when" needs it
+  now.
+
+No critical, high or medium finding. Backend cancellation on client timeout remains the recorded T-309 item.
+No new timeout occurred in this pair.
+
+## Per-row result
+
+- T-303/T-306, non-closing development measurement checkpoint 132 at 6647ae77: PASS for this reporting
+  increment. There is no open high or medium finding. Both rows stay OPEN, as the commit states. No row or
+  model closure is requested or granted.
+
+Verdict: PASS
