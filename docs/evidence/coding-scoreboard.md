@@ -6009,3 +6009,66 @@ constraints. Both reservations release after each pair. Twelve new retirement
 receipts and all earlier bytes are preserved. See the
 [checkpoint evidence](t303-line-range-checkpoint120-2026-11-20.md).
 Independent core review is required; T-303/T-306 stay open.
+
+## Frozen line-range repeat: one-hundred-thirty-two-attempt checkpoint, 2026-11-20
+
+Frozen source: `53c09dac184fab2a75ee57f0f540a3ae4ad2d9bb`. Reporting parent: `a2cf28786e83a073766bc1d8153eddbd4334a30c`.
+Twelve new attempts (dev-021/dev-022 on all six profiles); **132/180 cumulative,
+48 remaining**. No changed experimental variable since the preceding checkpoint.
+
+| Date | Profile | Context / output tokens | Attempts | Strict ungraded proposals | First-attempt / within-budget task passes | New backend input / output tokens | New request and strict-check seconds | New reserved-job GPU minutes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-20 | gemma4-31b | 32768 / min(32768, 32768 - rendered input - 32) | 2 new / 22 cumulative | 1/2 new; 17/22 cumulative | Unavailable / unavailable | 15731 / 2096 (2/2 terminal counters) | 139.248 | 3.515 |
+| 2026-11-20 | qwen35-27b | 32768 / min(32768, 32768 - rendered input - 32) | 2 new / 22 cumulative | 1/2 new; 17/22 cumulative | Unavailable / unavailable | 13937 / 1937 (2/2 terminal counters) | 93.172 | 2.248 |
+| 2026-11-20 | gpt-oss | 32768 / min(32768, 32768 - rendered input - 32) | 2 new / 22 cumulative | 0/2 new; 9/22 cumulative | Unavailable / unavailable | 12931 / 52541 (2/2 terminal counters) | 378.112 | 6.779 |
+| 2026-11-20 | muse | 32768 / min(32768, 32768 - rendered input - 32) | 2 new / 22 cumulative | 1/2 new; 8/22 cumulative | Unavailable / unavailable | 12838 / 17425 (2/2 terminal counters) | 468.610 | 8.421 |
+| 2026-11-20 | gemma4-e4b | 32768 / min(32768, 32768 - rendered input - 32) | 2 new / 22 cumulative | 2/2 new; 12/22 cumulative | Unavailable / unavailable | 15723 / 346 (2/2 terminal counters) | 70.824 | 1.458 |
+| 2026-11-20 | gemma4-26b-a4b | 32768 / min(32768, 32768 - rendered input - 32) | 2 new / 22 cumulative | 1/2 new; 14/22 cumulative | Unavailable / unavailable | 15731 / 3666 (2/2 terminal counters) | 109.491 | 2.658 |
+
+gemma4-31b: new causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; cumulative causes `{"strict-edit-refused:code.proposal.edit": 5, "ungraded-proposal": 17}`. Cumulative backend counter coverage 22/22; terminations `{"stopped-below-token-limits": 22}`. Does not fit: 0.
+
+qwen35-27b: new causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; cumulative causes `{"strict-edit-refused:code.proposal.edit": 5, "ungraded-proposal": 17}`. Cumulative backend counter coverage 22/22; terminations `{"stopped-below-token-limits": 22}`. Does not fit: 0.
+
+gpt-oss: new causes `{"generation-refused:error:chat.response.incomplete": 2}`; cumulative causes `{"generation-refused:error:chat.response.incomplete": 7, "strict-edit-refused:code.proposal.edit": 6, "ungraded-proposal": 9}`. Cumulative backend counter coverage 22/22; terminations `{"output-cap": 7, "stopped-below-token-limits": 15}`. Does not fit: 0.
+
+muse: new causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; cumulative causes `{"generation-refused:error:chat.transport.timeout": 6, "strict-edit-refused:code.proposal.edit": 7, "strict-edit-refused:code.proposal.format": 1, "ungraded-proposal": 8}`. Cumulative backend counter coverage 16/22; terminations `{"stopped-below-token-limits": 16, "transport-timeout-no-terminal-counters": 6}`. Does not fit: 0.
+
+gemma4-e4b: new causes `{"ungraded-proposal": 2}`; cumulative causes `{"generation-refused:complete:length": 1, "strict-edit-refused:code.proposal.edit": 9, "ungraded-proposal": 12}`. Cumulative backend counter coverage 22/22; terminations `{"output-cap": 1, "stopped-below-token-limits": 21}`. Does not fit: 0.
+
+gemma4-26b-a4b: new causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; cumulative causes `{"strict-edit-refused:code.proposal.edit": 8, "ungraded-proposal": 14}`. Cumulative backend counter coverage 22/22; terminations `{"stopped-below-token-limits": 22}`. Does not fit: 0.
+
+Finish all 30 tasks on all six profiles before tuning or capability work.
+No native effects, project tests, feedback, retries, candidate, hidden or
+held-out code executes; native admission and grading controls remain absent.
+Strict ungraded proposals are not solved tasks. Historical Muse dev-012 reaches the
+300-second timeout without a captured HTTP response or terminal counters;
+its unchanged base fallback and twenty-one negative controls are retained.
+Historical Muse dev-014 also times out at 300 seconds without a captured response,
+answer or terminal counters; its base fallback and twenty-one negative
+controls are retained. It is a generation refusal, with counters unavailable.
+Historical Muse dev-017 reaches the unchanged 300-second client deadline with an
+incomplete 16,384-byte relay prefix and no answer or terminal counters in its
+own task slice. The same reporting-only checks and twenty mutation controls
+validate this timeout; no partial answer is repaired or graded. Its backend
+finishes later: 3,600 input / 11,048 output counters appear before dev-018's
+slot launch in the dev-018 slice, and stay excluded by the frozen protocol.
+Dev-018 request time includes roughly eight seconds waiting for that abandoned
+generation. No time or missing counters are borrowed from the later task.
+
+Missing per-task terminal counters are unavailable, not zero or extrapolated. Historical Muse dev-005
+finished after the client deadline; its 6,090/11,553 terminal counters appear in
+dev-006's slice and stay excluded by the frozen protocol. Dev-006 timing includes
+roughly 6.5 seconds waiting for the abandoned generation. Dev-008 waited
+roughly 11 seconds before its own slot launched, leaving about 289 seconds
+for generation; its timeout may have been affected by carry-over. Whether
+the extra time would have completed it is unknown. It remains a timeout under
+the frozen protocol. Backend cancellation on timeout is T-309 backlog after
+this repeat. Context, output formula, models,
+runtime, profiles, thinking request, schema and deadlines remain frozen.
+Controller wall time including queues and five released pauses: 1673.428
+seconds. Reserved-job body time excludes queues; preparation, reporting and
+end-to-end latency remain unmeasured. Timings reflect lane memory.high
+constraints. Both reservations release after each pair. Twelve new retirement
+receipts and all earlier bytes are preserved. See the
+[checkpoint evidence](t303-line-range-checkpoint132-2026-11-20.md).
+Independent core review is required; T-303/T-306 stay open.
