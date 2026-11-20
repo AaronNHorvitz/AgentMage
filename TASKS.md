@@ -2,6 +2,18 @@
 
 ## Active queue: local agent mission
 
+The [completed-repeat preimage diagnosis](docs/evidence/t303-raw-source-preimage-diagnosis-2026-11-20.md)
+investigates the largest measured refusal cause: 36 first-failing absent originals.
+Twelve match a visible excerpt after whitespace erasure, one after diagnostic
+newline/quote substitution and one after collapsing backslash pairs; 22 match
+none of the specified diagnostic transformations. These observations do not
+repair or validate an edit. All 161 typed edit-condition classifications
+reproduce; 22 retained and 16 new diagnostic controls pass. The next experiment
+targets original-source identification while retaining exact preimage checks;
+no size cap, prompt change, inference or candidate execution occurs here.
+Independent core review is required. T-303/T-306 remain open and the scoreboard
+is unchanged; no task-pass claim or row closure follows.
+
 The [completed-repeat inventory correction](docs/evidence/t303-raw-source-inventory-fix-2026-11-20.md)
 fixes a Unicode prefix-boundary gap found after reporting commit
 `94f1889700d2c0aadc8dec1639b2b7e952ad8b9b`, before requesting independent review.
