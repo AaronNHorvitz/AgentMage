@@ -1,0 +1,148 @@
+Commit: 78ea34c2e623abd915b81a284bfeb87ba887f420
+Scope: line-range-development-checkpoint24
+
+# Independent review: frozen line-range development checkpoint 24 (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate read-only session, pinned checkout
+/lane/review-checkout. No repository file was modified. No GPU was used by the reviewer.
+
+## Scope and commit
+
+- `git rev-parse HEAD` = 78ea34c2e623abd915b81a284bfeb87ba887f420; `git status --porcelain` empty.
+- `git diff --check d258cfe20b06b89be40f2e69e8012630bf334a3f`: exit 0, no output.
+- Diff from d258cfe2 touches exactly five files (428 insertions, 0 deletions): TASKS.md (+14, prose
+  above the existing queue; no table line), docs/evidence/coding-scoreboard.md (+42, appended),
+  new docs/evidence/t303-line-range-checkpoint24-2026-11-20.md, and two archived review reports
+  docs/reviews/53c09dac184f-original-line-range-protocol.txt and
+  docs/reviews/d258cfe20b06-line-range-development-checkpoint12.txt.
+- The archived reports are byte-identical to /lane/reviews/53c09dac184f-original-line-range-protocol.md
+  (sha256 af11d22e…1f30) and /lane/reviews/d258cfe20b06-line-range-development-checkpoint12.md
+  (sha256 2e9192a1…bc09). Both end in `Verdict: PASS`; the checkpoint12 review's only finding is
+  low L1, as stated.
+- No source file changed: frozen source 53c09dac and reporting parent d258cfe2 differ only in the
+  three reporting files bound in work/reporting-base.json (the verifier checks this against git).
+
+## Capsule authentication
+
+- manifest.json sha256 5d2f453c…cdcb25, bindings.json 39a47510…a9fb08, post-commit envelope
+  2a5998ee…afba5f7, verification log 40d9559f…285a, work/finish.py 416eb8e5…118aab: all match
+  the request.
+- The stated "actual finalizer" /lane/state/line-range-checkpoint24-correction-20261120/finish.py
+  is not visible from the reviewer mount (No such file). Only the capsule copy could be hashed (see L1).
+- `bash /tools/build-slot python3 -B …/verify.py --require-postcommit` → exit 0, 60 s:
+  `{"status":"PASS","files":56007,"source_files":9823,"repository_inputs":2355,"private_inputs":78,
+  "contexts":30,"prior_checks":165,"range_equivalences":185,"new_checks":22,"generation_refusals":2,
+  "attempts":24,"postcommit_checked":true,"candidate_execution":false,"task_passes":null}`.
+- I read verify.py (identical to work/verify.py) and checked what its PASS means:
+  - It compares the complete inventory with no symlinks or omissions.
+  - It compares the nested protocol, initial-checkpoint and prior-checkpoint inventories, with
+    manifest hashes pinned (prior 3ce69e88…, protocol 30f2a593…, initial 0af3fd18…).
+  - Every prior campaign/bin/inputs/protocol entry is byte-retained.
+  - Every source-tar entry is re-hashed to its git blob OID and mode against `ls-tree` of 53c09dac.
+  - The prior preflight is reproduced byte-for-byte.
+  - All 30 payloads equal `git show` source bytes, and the 30 contexts are replayed through the
+    authenticated helper.
+  - Each wire request is checked exactly against the frozen policy (strict json_schema,
+    enable_thinking false, n=1, per-task max_tokens formula).
+  - Each response capture is checked byte-for-byte, and each answer is replayed through the strict
+    checker.
+  - Full candidate projections are compared against `git archive` views, and refused candidates
+    equal their base bytes.
+  - Cleanup covers 12 retired tokens, no live owned processes, and no token, key or socket files.
+  - Preservation covers the 49 private-path exceptions, the 512 TASKS table lines and the
+    scoreboard prefix.
+  - The post-commit envelope must match HEAD, tree, parent and manifest. Candidate code is never
+    executed.
+- Payload correction: `diff -r work/payloads prior-checkpoint/work/payloads` shows them identical
+  (30 files). initial-checkpoint/ has no work/payloads, and its retained precommit log shows the
+  stated FileNotFoundError. The correction receipt records no checker, attempt or rerun change.
+
+## Independent recomputation of every published number (from raw responses/batch reports)
+
+I tabulated all 24 attempts from campaign/jobs/*/collection/batch.json, upstream-response-*.bin
+usage, events.ndjson terminals, checked.json error codes and batch-report reserved_work_seconds.
+
+| Profile | New proposals | Cum. | Rendered in / requested out | Backend in / out | Seconds | GPU min |
+| --- | --- | --- | --- | --- | --- | --- |
+| gemma4-31b | 1/2 | 1/4 | 3061–4457 / 28279–29675 | 7518 / 3720 | 168.776 | 4.020 |
+| qwen35-27b | 2/2 | 4/4 | 2804–4063 / 28673–29932 | 6867 / 4069 | 125.308 | 2.835 |
+| gpt-oss | 1/2 | 2/4 | 2710–3871 / 28865–30026 | 6581 / 37832 | 200.508 | 3.616 |
+| muse | 1/2 | 2/4 | 2654–3824 / 28912–30082 | 6478 / 18402 | 441.019 | 7.998 |
+| gemma4-e4b | 1/2 | 1/4 | 3057–4453 / 28283–29679 | 7510 / 3771 | 101.601 | 2.023 |
+| gemma4-26b-a4b | 0/2 | 1/4 | 3061–4457 / 28279–29675 | 7518 / 7895 | 130.291 | 3.202 |
+
+All values match the scoreboard and evidence. The seconds differ only in the third decimal, because
+I summed values already rounded to 3 dp. Requested output equals 32768 − rendered − 32 in every case.
+
+The new and cumulative cause maps all match, including the subcodes:
+- muse dev-004 is code.proposal.format.
+- gpt-oss dev-003 is error chat.response.incomplete with finish length at 28865 tokens.
+- gemma4-e4b dev-002 (prior) is complete:length.
+
+The termination maps match too (output-cap only for those two length cases), and "does not fit" is 0.
+
+Controller wall time 1637.523134 s comes from work/timing.json, and controller-exit.json has exit 0.
+Peak sampled GPU use was at most 20409 MiB per job, under the 22528 MiB guard. Every job scope has
+memory.max 16 GiB and cpu.max 400000/100000. memory.peak sits at the memory.high threshold, and the
+throttling is disclosed.
+
+## Gates (Node 24.15.0, sha256 d1de76d8…932c verified, temporary symlink in /tmp on PATH)
+
+- `python3 -B scripts/local_agent_fast_gate.py --base d258cfe2… --timeout 600` → FAST GATE: PASS
+  (private paths PASS, licence PASS, review lint of both .txt reports exit 0, markdownlint 0 issues
+  on the three Markdown files).
+- `node …/work/render.mjs` → PASS, 0 issues, all five files rendered non-empty.
+- `python3 -B scripts/private_host_paths.py --base d258cfe2…` → PASS.
+- `python3 -B scripts/license_policy.py` → PASS.
+- Manual scan of the diff found no home path, username, hostname, e-mail, credential, private
+  sibling project, other agent product or trademark branding. Model profile names are pre-existing
+  measurement labels.
+- I did not rerun the full source gate. Source is byte-identical to the reviewed 53c09dac, and the
+  documents report that gate as FAIL (1043 passed / 53 inherited failures) with no waiver. That
+  matches its prior status and is not claimed as passing.
+
+## Integrity, safety and honesty checks
+
+- Evaluation integrity:
+  - Only development tasks dev-003/dev-004 are new.
+  - Held-out data is recorded as not loaded. Payloads carry only the task source file, and no
+    hidden or held-out execution occurs.
+  - The frozen controller, batch, collect, policy, output-format, helper and API bytes are
+    authenticated against the freeze and are unchanged from the prior checkpoint.
+  - No tuning happened between batches, failures are all counted (22 checks + 2 refusals = 24),
+    and the result is re-runnable by one command.
+- MEASURE FIRST:
+  - A new scoreboard line exists, with context/output budgets stated and "no changed experimental
+    variable" recorded.
+  - Non-fitting tasks are counted separately (0).
+  - Earlier scoreboard bytes are an exact prefix.
+- The claims are honest: strict proposals are labelled ungraded and not solved, task passes are
+  unavailable, no row closes, and no qualification or role adoption is claimed.
+- Confinement: no candidate code runs. The verifier executes only the hash-pinned helper.
+  launch.py ran the controller under a read-only bwrap bind of the source snapshot and .git, at
+  nice 19 with low priority, and asserts the scope limits.
+- Owner notes: this commit does not touch the plan, order of work, PRD or decisions. It names no
+  other product, private project, paper or patent. README and licence files are untouched.
+
+## Findings
+
+- L1 (low, backlog T-309): request item "Actual finalizer
+  /lane/state/line-range-checkpoint24-correction-20261120/finish.py" is not readable from the
+  reviewer mount, so only the identical-hash capsule copy (work/finish.py, 416eb8e5…) was verified.
+  This is the same visibility class as checkpoint12 L1. Fix: place the executed finalizer, or a
+  receipt binding its path and hash, beside the capsule in /lane/reviews before requesting review.
+- L2 (low, backlog T-309): verify.py does not cross-check the published per-profile numbers
+  (tokens, seconds, GPU minutes, cause maps) in the scoreboard and evidence against the raw logs.
+  It verifies only the raw data and the document bytes. I recomputed them all by hand and they
+  match. Fix: have verify.py derive the scoreboard rows from the raw jobs and compare them with the
+  committed text.
+
+No critical, high or medium finding.
+
+## Per-row result
+
+- T-303/T-306, non-closing development measurement checkpoint at 78ea34c2: PASS for this
+  increment. There is no open high or medium finding. Both rows stay OPEN, as the commit states. No
+  row or model closure is requested or granted.
+
+Verdict: PASS
