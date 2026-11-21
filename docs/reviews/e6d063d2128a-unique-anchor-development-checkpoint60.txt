@@ -1,0 +1,142 @@
+Commit: e6d063d2128aa0a2ebb3b3a34c0f6918766b58d8
+Scope: unique-anchor-development-checkpoint60
+
+# Independent core review: frozen unique-anchor development checkpoint 60 (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate read-only session, pinned checkout
+/lane/review-checkout. I ran no model, used no GPU and executed no candidate.
+
+## Methods and commands
+
+1. Commit identity and diff
+   - `git rev-parse HEAD`: e6d063d2128aa0a2ebb3b3a34c0f6918766b58d8.
+   - `git rev-parse HEAD^{tree}`: 2d96c5d1d9eed6119b1096eb28ea48d6adaa5b6d, matching the
+     post-commit envelope.
+   - `git status --porcelain`: empty before and after all runs.
+   - `git diff --check f74d83a84abb6e41a9dab7d1a8265e9f4bb17bc9`: exit 0.
+   - The diff from f74d83a8 changes four documentation files only:
+     - TASKS.md (+8, 0 deleted lines; prepend only)
+     - docs/evidence/coding-scoreboard.md (+43)
+     - the new docs/evidence/t303-unique-anchor-checkpoint60-2026-11-21.md
+     - docs/reviews/f74d83a84abb-unique-anchor-development-checkpoint48.txt
+   - `git diff --name-only 6ee61e63..HEAD`, filtered to paths outside docs/ and TASKS.md, is empty.
+     There is no production source change since the frozen source.
+2. Bundle hashes
+   - manifest.json: c33b7f6c…12133, as requested.
+   - bindings.json: ac971bbb…49f7, as requested.
+   - Post-commit envelope: e9f4864b…7997, as requested. It names this commit, parent f74d83a8 and the
+     tree above.
+3. `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B …/checkpoint60-20261121/verify.py --require-postcommit`
+   - Result: rc=0, `{"status": "PASS", "complete_files": 44846, "source_files": 9858,
+     "repository_inputs": 2390, "private_inputs": 94, "contexts": 30, "attempts": 60,
+     "task_passes": null, "candidate_execution": false, "postcommit_checked": true}`.
+   - The shared pre-commit and post-commit logs in /lane/reviews show the same counts.
+4. Independent recomputation (/lane/state/tmp/rv60.py, my own script, separate from the builder's
+   verifier) over all 30 job directories
+   - Checked every per-task log hash in each batch.json.
+   - Asserted that requested output = min(32768, 32768 − rendered input − 32), retries = 0 and
+     graded = false on all 60 attempts.
+   - Took causes from events.ndjson and checked.json. Summed backend prompt and eval counters from
+     each task's own backend-slice task ID. Summed generation_seconds and reserved_work_seconds/60.
+   - Every cell in both tables matches the published values:
+     - proposals 8/7/4/4/3/7
+     - input/output tokens and coverage, for example gpt-oss 56598/173759 (10/10) and
+       muse 24272/40556 (5/10)
+     - seconds, for example muse 2483.034
+     - GPU minutes, for example muse 44.818
+     - rendered-input and output-budget ranges, for example gemma4-31b 3072–9639 / 23097–29664
+   - Aggregate causes, total 60:
+     - 33 ungraded proposals
+     - 17 strict-edit refusals (from checked.json: 16 code.proposal.edit, 1 code.proposal.format)
+     - 4 chat.response.incomplete
+     - 5 chat.transport.timeout
+     - 1 complete:length
+   - Output-cap terminations: gpt-oss 4, a4b 1, no new ones. Backend coverage is 55/60.
+5. The twelve new attempts (the *-08 jobs), checked one by one
+   - Nine are ungraded proposals.
+   - gemma4-e4b dev-009 and dev-010 are refused with code.proposal.edit.
+   - muse dev-010 is a chat.transport.timeout at 300.015 s, with no terminal counter.
+   - Every eval count is far below its budget: the largest is gpt-oss dev-010 at 16500 of 29132.
+     This confirms "no new output-cap termination".
+   - muse dev-009's backend released at 2.42.894. Task 5589 (dev-010) launched at 2.43.420, so
+     dev-009 finished before dev-010 began, as disclosed.
+   - dev-010's slice shows generation still in progress (n_gen 13279 at 7.40.788) and no
+     eval/prompt-eval summary line, so no token count is inferred. The backend running past the
+     client timeout is the disclosed T-309 cancellation backlog.
+6. Script immutability, compared byte for byte with the checkpoint-48 bundle
+   - Byte-identical: launch.py, inspect-snapshot.py, audit.py, and campaign batch.py, collect.py,
+     controller.py, policy.json, frozen-inputs.json and output-format.json.
+   - The candidate trees of the preceding 48 attempts are unchanged.
+   - timeout_evidence.py differs in one line only: MISSING_RESPONSE gains ('muse','dev-010'). No
+     condition changed.
+   - These differ only in checkpoint parameters:
+     - verify.py (both copies), checks.sh, cleanup.py, pack.py, preserve.py and render.mjs
+     - the changed parameters are base SHA, counts 48→60, 132→120 and 8→10, pairs 24→30, the
+       -06→-08 auth path, and the predecessor manifest hash (now 2c59ec8c…, the reviewed
+       checkpoint-48 manifest)
+   - write-report.py makes the same parameter changes. It also takes the new-attempt prose from
+     work/observations.md, where checkpoint 48 had it inline.
+   - New adapt-reporting.py is a plain string-substitution generator.
+   - No assertion was removed or weakened.
+7. Reporting gates on the exact commit
+   - Used the retained Node v24.15.0 (SHA256 d1de76d8…c932c matches), linked from
+     /lane/state/tmp/rv60bin outside the bundle.
+   - `python3 -B scripts/local_agent_fast_gate.py --base f74d83a84abb… --timeout 600`: FAST GATE: PASS.
+   - `node …/checkpoint60-20261121/work/render.mjs`: PASS, 0 issues, three files.
+   - `python3 -B scripts/private_host_paths.py --base f74d83a84abb…`: PRIVATE PATH CHECK: PASS.
+   - `python3 -B scripts/license_policy.py`: LICENCE POLICY: PASS.
+   - The inherited full source gate FAIL (1044/53/11/0/31) was not rerun. No source changed, and
+     the failure is disclosed and not waived.
+8. Preservation
+   - The scoreboard at f74d83a8 is an exact byte prefix of the new scoreboard (cmp -n).
+   - TASKS.md has no deleted line.
+   - The committed docs/reviews/f74d83a84abb-…checkpoint48.txt is byte-identical (cmp) to
+     /lane/reviews/f74d83a84abb-unique-anchor-development-checkpoint48.md.
+   - Prior L1 is fixed: the pre-commit log is at
+     /lane/reviews/unique-anchor-development-checkpoint60-20261121-precommit-verify.log.
+9. Wall time, cleanup and privacy
+   - Wall time: 6755.821 (summed, checkpoint 48) + 1083.384 = 7839.206 s, as published.
+   - cleanup.json: PASS, 30 pairs, 12 retired tokens, receipts persisted before unlink, settings
+     revoked, API and models reaped, no live owned process, keys and sockets absent, no foreign
+     signal.
+   - `pgrep` shows no inference, transport or helper process, only this review sandbox.
+   - Privacy: added lines contain no home path, username, hostname, credential, other agent
+     product or sibling project.
+   - Held-out content: no prompt input changed (policy.json and frozen-inputs.json are
+     byte-identical), so no held-out content can reach the model through this commit.
+
+## Findings
+
+No critical, high or medium finding.
+
+- L1 (low, bundle hygiene, backlog):
+  - The sealed bundle includes `work/__pycache__/timeout_evidence.cpython-315.pyc`. It is listed in
+    the manifest, and its co_filename is the builder's /lane/state work path. Earlier bundles have
+    no such file.
+  - Python loads this cache whenever the source mtime and size match, even under -B. I checked it:
+    the marshalled code equals the current timeout_evidence.py compiled under that filename, so it
+    changes no result.
+  - Fix: run helpers with -B or PYTHONDONTWRITEBYTECODE=1 before sealing, or exclude __pycache__
+    in pack.py.
+- L2 (low, evidence method, backlog):
+  - The new-attempt prose now comes from the hand-written work/observations.md rather than being
+    computed from the raw data.
+  - I confirmed every statement in it from the raw records (steps 4 and 5).
+  - Fix: generate these counts and the "no new output cap" claim in write-report.py, or assert them
+    in verify.py.
+- Accepted lows carried from earlier reviews stay T-309 backlog as disclosed: per-pair wrapper
+  provenance, the earlier million-file inventory not fully reverified, and backend cancellation on
+  client timeout (seen again in muse dev-010).
+
+## Per-row result
+
+- T-303/T-306, non-closing frozen development measurement, checkpoint 60 at e6d063d2: PASS for
+  this reporting increment.
+  - 60/180 attempted, 120 remaining. 33 strict ungraded proposals. Task passes are unavailable,
+    not zero.
+  - Every published number matches my recomputation from the raw records.
+  - The scoreboard line required by MEASURE FIRST is present. Context and output budgets are
+    stated, and 0 tasks are counted as not fitting, separately from model failures.
+  - Both rows stay OPEN. No closure, model qualification or role adoption is requested or granted.
+
+Verdict: PASS
