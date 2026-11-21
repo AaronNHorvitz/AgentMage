@@ -1,0 +1,149 @@
+Commit: 01307e6f81033536feb2dc6cdd88407cb10cbb94
+Scope: unique-anchor-development-checkpoint84
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate read-only session, pinned checkout
+/lane/review-checkout. I ran no model, used no GPU and executed no candidate. I did not modify the
+repository. Scratch files were written only under /tmp.
+
+## Methods and commands
+
+1. Commit identity and diff hygiene (in /lane/review-checkout)
+   - `git rev-parse HEAD`: 01307e6f81033536feb2dc6cdd88407cb10cbb94, the requested commit.
+   - `git status --porcelain`: empty, both before and after all runs.
+   - `git diff --check 220e90a7eb480768a4aa84f339a4224defd2da74`: exit 0.
+   - `git diff --numstat` against the parent: only additions to four files: TASKS.md +8,
+     docs/evidence/coding-scoreboard.md +43,
+     docs/evidence/t303-unique-anchor-checkpoint84-2026-11-21.md +137 (new),
+     docs/reviews/220e90a7eb48-unique-anchor-development-checkpoint72.txt +136 (new). The commit
+     changes no production source. The previous scoreboard bytes are an exact prefix. In TASKS.md
+     the only change is one 8-line insertion after line 4, and every other line is unchanged.
+   - `cmp docs/reviews/220e90a7eb48-unique-anchor-development-checkpoint72.txt
+     /lane/reviews/220e90a7eb48-unique-anchor-development-checkpoint72.md`: identical. The retained
+     preceding review is unchanged and ends `Verdict: PASS`.
+
+2. Builder's bundle verifier
+   - `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B
+     /lane/reviews/unique-anchor-development-checkpoint84-20261121/verify.py --require-postcommit`
+     → `{"status": "PASS", "complete_files": 62229, "source_files": 9858, "repository_inputs":
+     2390, "private_inputs": 94, "contexts": 30, "attempts": 84, "task_passes": null,
+     "candidate_execution": false, "postcommit_checked": true}`.
+   - `sha256sum` of manifest.json, bindings.json and the post-commit envelope match the request
+     exactly: a4cedc83…d1df7, 67496606…bc1 and 19bf2161…8dd3.
+
+3. My own derivation from raw data, separate from the builder's verifier (/tmp/agg84.py)
+   - I read all 84 `campaign/jobs/*/collection/dev-*/record.json`, `events.ndjson`,
+     `checked.json` and per-task `backend-slice.log` files directly. I took the terminal
+     `prompt eval time … / N tokens` and `eval time … / M tokens` lines as backend counters, and no
+     slice had more than one terminal counter.
+   - Every cumulative table cell matches for every profile: proposals 10/10/5/7/5/10 of 14;
+     observed input/output tokens and coverage (95489/27291 14/14; 83927/25163 14/14; 77682/278043
+     14/14; 39859/72501 8/14; 95433/70930 14/14; 95489/72479 14/14); request and check seconds
+     (1139.202, 786.221, 1579.104, 3527.295, 863.975, 1073.223); and per-profile cause
+     distributions.
+   - The aggregate causes are 47 proposals, 20 `code.proposal.edit` refusals, 1
+     `code.proposal.format` refusal, 4 `complete:length`, 6 `chat.response.incomplete` and 6
+     `chat.transport.timeout`, for a total of 84. That matches the evidence. The request's "10
+     output-cap incompletes" equals 4 length plus 6 incomplete, consistent with the per-profile
+     terminations.
+   - Reserved GPU minutes, from the sum of `reserved_work_seconds` in the 42 batch reports divided
+     by 60: 25.407, 17.160, 28.960, 63.379, 16.206, 23.847. These match.
+   - Controller wall: launch.json utc 03:07:48.849725 to controller-exit.json 03:37:24.152529
+     = 1775.302804 s. Summed: the preceding 9908.149724 plus 1775.302804 = 11683.452528 s. Both
+     match.
+
+4. The twelve new attempts, checked individually
+   - Seven ungraded proposals: a4b, 31b, gpt-oss, muse and qwen on dev-013, plus e4b and qwen on
+     dev-014.
+   - Two `code.proposal.edit` refusals: 31b dev-014 and e4b dev-013. `checked.json` holds
+     `{"error":"code.proposal.edit"}` for both. I inspected the answers. In 31b dev-014 the last
+     edit has start_line 466 and end_line 465. In e4b dev-013 the edit has start_line 10333 and
+     end_line 10. Both refusals are genuine malformed ranges, not checker artefacts.
+   - Output caps: in gpt-oss dev-014 the backend eval count is 27345, equal to its max_tokens of
+     27345. In a4b dev-014 the count is 26036, equal to max_tokens 26036. Both events end with
+     `finish: length`.
+   - Muse dev-014: a `chat.transport.timeout` event at 300.0107 s. The backend slice ends in
+     ongoing `n_gen` progress lines (last 13318), with no terminal counter, and no number is
+     inferred. Muse dev-013 completes in 206.416 s.
+   - Output budget: for all twelve, rendered input + max_tokens + 32 = 32768.
+
+5. Frozen-input checks
+   - All twelve `context.json` files are byte-identical to `preparation/contexts/dev-01{3,4}.json`,
+     and the `request.json` messages equal the context messages.
+   - Every new upstream wire request (`upstream-request-0{0,1}.json`) equals the same profile's
+     checkpoint72 request, excluding only messages and max_tokens. That covers schema `strict:
+     true`, `enable_thinking: false`, `n: 1`, `stream: false` and the model id.
+   - Comparison against the checkpoint72 bundle: work/launch.py, inspect-snapshot.py, audit.py and
+     campaign/batch.py, collect.py, controller.py, policy.json, output-format.json and
+     frozen-inputs.json are byte-identical, and campaign/profiles has no differences.
+   - work/timeout_evidence.py differs only by adding `('muse', 'dev-014')` to `MISSING_RESPONSE`.
+     No condition changed.
+   - The changed reporting helpers (verify.py, checks.sh, preserve.py, cleanup.py, pack.py,
+     render.mjs, write-report.py, adapt-reporting.py) differ only in base sha, counts
+     (72→84, 108→96, 12→14, 36→42 pairs, -10→-12 auth paths), predecessor paths and a docstring.
+     No assertion was removed or weakened.
+   - All 54,254 `campaign/` entries in the checkpoint72 manifest are present and byte-identical in
+     the checkpoint84 bundle (I recomputed SHA-256 on disk). Preparation entries are unchanged.
+
+6. Evaluation integrity
+   - The task set across all 84 records is dev-001 through dev-014 only.
+   - launch.json records `hidden_or_held_out: false` and `candidate_execution: false`. Every
+     record has `graded: false` and `retries: 0`, and no candidate or test runs.
+   - No tuning occurred: inference bytes are frozen as above.
+
+7. Cleanup and secrets
+   - work/cleanup.json: status PASS, completed_pairs 42, live_owned_processes [],
+     settings_revoked, keys_and_sockets_absent, receipts_persisted_before_unlink. It lists 12
+     retirement receipts (path plus sha256 only, no token value).
+   - I scanned the new job files and work/ for Bearer, Authorization, `sk-` and api_key patterns
+     with my own Python regex. The only matches are synthetic test strings inside the repository
+     source tarball, and none are in the new job records.
+   - The `/home/agentmage/...` strings in contexts are guest-VM paths from public repository
+     source, not a host path.
+
+8. Repository reporting gates (PATH with a temporary symlink /tmp/rv84bin/node pointing to the
+   retained Node v24.15.0, SHA-256 d1de76d8…c932c, licence file present;
+   CARGO_TARGET_DIR=/lane/state/review-target)
+   - `python3 -B scripts/local_agent_fast_gate.py --base 220e90a7… --timeout 600`: FAST GATE PASS.
+     It includes the private path check, the licence policy, review lint of the retained review
+     and markdownlint at 0 issues in 3 files.
+   - `node …/work/render.mjs`: `{"status":"PASS","issues":0}` for the three changed Markdown files.
+   - `python3 -B scripts/private_host_paths.py --base 220e90a7…`: PASS.
+   - `python3 -B scripts/license_policy.py`: PASS.
+   - The linked Decision 0215 and the checkpoint72 evidence exist.
+   - The added text names no other agent product, private project, employer or client.
+   - I did not rerun the full source gate. The commit has no source changes, the inherited FAIL
+     (1044 passed, 53 failures) is reported unchanged and not waived, and this non-closing row
+     does not need it.
+
+## Honest-claim check
+
+- "Strict ungraded proposals" are repeatedly labelled as not task passes. First-attempt and
+  within-budget passes are reported as "Unavailable", not zero.
+- Backend coverage is explicit (muse 8/14), and no missing counter is inferred.
+- No model qualification, role adoption, row closure, release or push is claimed.
+- MEASURE FIRST: the batch adds a scoreboard line on its date. Context and output budgets and
+  their formula are stated. "Does not fit" is counted separately, at 0 for every profile, which is
+  consistent with every rendered input being under 32768. Nothing changed what the model sees, how
+  edits are applied, or how tests and retries run.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (backlog, unchanged from the prior review): hand-written prose for new attempts, per-pair
+wrapper provenance, the earlier million-file inventory not fully reverified, and backend
+cancellation on client timeout (muse dev-014's slice shows the backend still generating after the
+client's 300 s timeout). All remain T-309 backlog as disclosed.
+
+Observation, not a finding: the checkpoint72 bundle carried work/predecessor-verify.log, and this
+bundle does not carry an equivalent log for checkpoint72. No published claim depends on it. The
+predecessor bytes are checked through inputs/preceding-checkpoint-manifest.json, and I verified
+them independently (item 5).
+
+## Per-row result
+
+- T-303/T-306 (non-closing frozen development measurement, attempts 73–84): the reported evidence
+  is accurate, traceable to raw logs and honestly labelled. Both rows stay OPEN, and no closure is
+  requested or granted.
+
+Verdict: PASS
