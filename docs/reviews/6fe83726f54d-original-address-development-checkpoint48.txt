@@ -1,0 +1,141 @@
+Commit: 6fe83726f54d5b8560489743f32721de4497c4d7
+Scope: original-address-development-checkpoint48
+
+# Independent core review: frozen original-address development checkpoint 48
+
+Reviewer: Claude Opus 5.5, separate session, read-only. I worked in the pinned checkout `/lane/review-checkout`
+with `CARGO_TARGET_DIR=/lane/state/review-target`. Heavy commands ran through `/tools/build-slot` at low priority.
+I did not use the GPU and did not modify the repository. The only file I wrote is this review. I also created a
+temporary node symlink under my own `/lane/state/tmp`, outside the sealed bundle.
+
+Row: T-303/T-306, non-closing development measurement. Frozen source `7821274ab5caa56573d8b68aa7a2121c71fc4b2b`.
+Reporting parent `30afcea0ca3f74dbcd4b17cd3c9c9c6100c1a520`.
+
+## Methods
+
+I read the commit diff, the new evidence file, the TASKS.md and scoreboard additions, and the retained prior review.
+I inspected the sealed bundle `/lane/reviews/original-address-development-checkpoint48-20261121`:
+
+- the campaign scripts, policy, raw per-task records, events and backend slices;
+- the upstream requests and replies, cleanup receipts, published metrics and review state.
+
+I compared the bundle's scripts with the checkpoint-36 bundle. I then recomputed every published table cell myself,
+using a different raw source from the builder's audit: the HTTP response `timings`, not backend-log parsing.
+
+## Commands and results (all in `/lane/review-checkout`)
+
+1. `git rev-parse HEAD` printed `6fe83726f54d5b8560489743f32721de4497c4d7`.
+   - `git status --porcelain` was empty before and after my runs.
+   - `git diff --check 30afcea0…` exited 0.
+   - The tree is `69b5a5c1287798b7be79e5f5f27b0e4ec300e7c7`, matching the post-commit JSON.
+2. Files changed against the parent: TASKS.md, `docs/evidence/coding-scoreboard.md`, the new
+   `docs/evidence/t303-original-address-checkpoint48-2026-11-21.md` and
+   `docs/reviews/30afcea0ca3f-original-address-development-checkpoint36.txt`.
+   - Since frozen source `7821274a`, only TASKS.md, `docs/evidence/` and `docs/reviews/` changed. There are no
+     production source changes.
+   - The TASKS.md and scoreboard diffs are additions only. The scoreboard prefix is exact, also asserted by the
+     verifier.
+3. Digests match the request:
+   - manifest `f9e99fa2…297ad`;
+   - bindings `454df4ff…596bc`;
+   - `work/audit.json` `582f212f…f5f82`, cited in the evidence file;
+   - post-commit JSON `802527ad…1f99c`.
+
+   The bundle's `public/` copies of all four changed files are byte-identical to the commit.
+4. `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B …/verify.py --require-postcommit` printed PASS:
+   - complete_files 36143, source_files 9893;
+   - repository_inputs 2425, private_inputs 111;
+   - contexts 30, attempts 48, task_passes null;
+   - candidate_execution false, postcommit_checked true.
+
+   The builder's post-commit verification log shows the same result.
+5. Retained prior review: `docs/reviews/30afcea0ca3f-…-checkpoint36.txt` and
+   `/lane/reviews/30afcea0ca3f-original-address-development-checkpoint36.md` both have SHA-256
+   `ed023ace…d7b0`.
+   - Its header names commit `30afcea0…` and ends `Verdict: PASS`.
+   - `work/review-state.json` records `available: true` with the same digest. The TASKS.md and evidence wording
+     ("returns Verdict: PASS", "retained unchanged") is accurate.
+6. Independent recomputation over all 48 records (jobs `-00/-02/-04/-06` per profile):
+   - Each profile has exactly dev-001…dev-008. All attempts have `retries == 0`.
+   - Every `requested_output_tokens` equals `min(32768, 32768 - rendered input - 32)`.
+   - Cause counts reproduce: gemma4-31b 5/8, qwen35-27b 5/8, gpt-oss 1/8, muse 4/8, gemma4-e4b 2/8,
+     gemma4-26b-a4b 5/8. The aggregate is 22 proposals, 20 edit refusals, 1 format refusal, 2 incomplete,
+     1 length and 2 transport timeouts.
+   - Input/output tokens summed from the response `timings` reproduce every cell: 62573/13079, 54669/11191,
+     50392/144747, 35085/52963 (6/8), 62541/16790 and 62573/12542.
+   - Request seconds reproduce: 696.568, 423.328, 909.192, 1927.369, 486.149, 505.919.
+   - GPU minutes reproduce: 17.302, 10.024, 16.902, 36.719, 9.538, 12.891. The input and output ranges match too.
+   - Controller wall: 4629.065 (prior sum) + 2375.246 = 7004.311 s, matching the published sum.
+   - For all 48 records, `candidate_is_base_fallback` is true exactly when the cause is not `ungraded-proposal`.
+     Also `graded`, `native_coding_harness` and `api_usage` are false or null everywhere. There is no candidate
+     execution and no grading claim.
+7. Muse timeouts:
+   - `muse-06` has upstream requests but no upstream-response files.
+   - Both records end in `chat.transport.timeout` after 300.018 s and 300.022 s.
+   - Neither slice contains terminal prompt/eval counters, so coverage 6/8 is correct and nothing is estimated.
+8. Script immutability against the checkpoint-36 bundle:
+   - Byte-identical: `campaign/{batch,collect,controller}.py`, `policy.json`, `frozen-inputs.json`,
+     `output-format.json`, `work/launch.py`, `inspect-snapshot.py` and `audit.py`.
+   - `cleanup.py`, `preserve.py`, `checks.sh`, `pack.py`, `verify.py` (both copies identical) and `render.mjs`
+     differ only in parameters: base SHA, counts 36→48 and 144→132, 6→8, pairs 18→24, `-04`→`-06`, paths, and
+     the prior manifest hash.
+   - That prior manifest hash, `632e258a…`, equals the SHA-256 of the checkpoint-36 bundle manifest, and the
+     bundled copy is byte-identical to it.
+   - `timeout_evidence.py` changes one line: `MISSING_RESPONSE` gains `('muse','dev-007')` and
+     `('muse','dev-008')`.
+   - No assertion was removed or weakened.
+9. Reporting gates used Node v24.15.0 (`/lane/reviews/42612ca9787f-a4b-node`, SHA-256 `d1de76d8…c932c` matches),
+   via a symlink outside the bundle:
+   - `local_agent_fast_gate.py --base 30afcea0… --timeout 600`: FAST GATE PASS. Private path check, licence
+     policy, review lint and markdownlint (0 issues in 3 files) all passed.
+   - `node …/work/render.mjs`: PASS, 0 issues, 3 files rendered.
+   - `private_host_paths.py --base 30afcea0…`: PASS.
+   - `license_policy.py`: PASS.
+10. Disclosed preceding source gate: `preparation/gate-comparison.json` records 53 failures, all inherited, with
+    no new or absent failure names. The log ends `FAST GATE: FAIL`. It is disclosed as FAIL and not waived.
+11. Secrets and cleanup:
+    - `work/cleanup.json`: status PASS, 24 completed pairs, settings revoked, API and models reaped, no live
+      owned processes, no foreign signal.
+    - Twelve `-06` token retirement receipts hold digests only.
+    - No socket files are in the bundle, and no bearer credential appears in job logs or work files.
+    - The `*key*` filename hits are repository source files inside the candidate projections.
+12. Privacy and naming: the commit diff's only `/lane/...` strings are in the byte-identical retained review.
+    There is no home path, username, email, private sibling project, other agent product or trademark branding.
+13. Evaluation integrity: only dev-001…dev-008 appear. The policy records held-out as "not loaded or executed".
+    No hidden tests or held-out content are in the diff, and no tuning happened between checkpoints: the
+    campaign scripts and policy are byte-identical. Failures are counted, not dropped (all 48 present).
+
+## Findings
+
+- **L1 (low, T-309 backlog; disclosure regression).** dev-008's 300-second muse window was shortened by about
+  11 s of uncancelled dev-007 backend generation, and this campaign's evidence does not say so.
+  - In `campaign/jobs/muse-06/backend-slice.log`, dev-007 launched at backend time 0.37.265. Its client deadline
+    of 300.018 s therefore fell near 5.37.3.
+  - The backend kept generating task 0 (n_gen 11038 → 11415) until `stop: cancel task` at 5.48.303.
+  - dev-008's task 11120 launched only at 5.48.308. Its last progress line is at 10.36.405, so it had about 289 s
+    of backend processing before its own timeout.
+  - `docs/evidence/t303-original-address-checkpoint48-2026-11-21.md:47-50` and the scoreboard paragraph say only
+    that both "reached the unchanged 300-second transport deadline". That is literally true but omits the wait.
+    It also omits the "backend cancellation remains T-309 backlog" note that the unique-anchor evidence files
+    carry, for example `t303-unique-anchor-checkpoint48-2026-11-21.md:66-78`.
+  - The counts are unaffected: both attempts remain counted failures with counters unavailable.
+  - Fix: in the next checkpoint's evidence, state the ~11 s wait and the ~289 s remaining. Keep backend
+    cancellation on client timeout as the disclosed T-309 item.
+- Accepted lows carried from earlier reviews stay T-309 backlog as disclosed: per-pair wrapper provenance, the
+  earlier inventory not fully reverified, and the review-request wording.
+
+No critical, high or medium findings.
+
+## Per-row result
+
+- T-303/T-306, non-closing frozen development measurement, checkpoint 48 at `6fe83726`: PASS for this reporting
+  increment.
+  - 48/180 attempted, 132 remaining. 22 strict ungraded proposals, which are not solved tasks.
+  - Task passes, feedback and retries are unavailable, not zero.
+  - Every published number matches my recomputation from raw records using an independent counter source.
+  - The MEASURE FIRST scoreboard line is present and states context and output budgets. "Does not fit" is counted
+    apart (0 for every profile).
+  - No production source change, no tuning, no held-out execution, no candidate execution.
+  - The rows remain OPEN as stated, and nothing closes.
+
+Verdict: PASS
