@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The [frozen original-address twelve-attempt checkpoint](docs/evidence/t303-original-address-checkpoint12-2026-11-21.md)
+records dev-001/dev-002 on all six profiles: **12/180 attempted, 168 remaining**.
+Strict ungraded proposals: gemma4-31b 2/2; qwen35-27b 1/2; gpt-oss 1/2; muse 2/2; gemma4-e4b 1/2; gemma4-26b-a4b 1/2. These are not solved tasks.
+Resume dev-003/dev-004 with the same frozen source and all settings; complete
+all 30 tasks per profile before more tuning or capability work. Task passes,
+feedback and retries remain unavailable. T-303/T-306 stay open.
+The [preceding independent core review](docs/reviews/7821274ab5ca-original-address-instruction.txt) returns **Verdict: PASS** for exact `7821274ab5caa56573d8b68aa7a2121c71fc4b2b`; its unchanged report is retained. No row closes.
+
 The [original-address instruction preparation](docs/evidence/t303-original-address-instruction-2026-11-21.md)
 targets the largest individual refusal: invalid line order (17/180). It explains
 nonempty original insertion anchors without changing the strict checker. All 30

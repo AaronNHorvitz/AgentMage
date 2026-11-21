@@ -7135,3 +7135,43 @@ Next: all 30 development tasks on all six profiles with this frozen source,
 before further tuning or capability work. No held-out input is used here.
 Native executable admission and original grading remain unavailable; task
 passes, feedback and retries remain unavailable and are not reconstructed.
+
+## Frozen original-address repeat: twelve-attempt checkpoint, 2026-11-21
+
+Frozen source: `7821274ab5caa56573d8b68aa7a2121c71fc4b2b`. Changed variable: fixed generation wording and the
+resulting budget-dependent excerpts under Decision 0216. All 30 contexts
+frozen before inference. Two tasks per profile: **12/180 attempted, 168 remaining**.
+
+| Date | Profile | Context / output tokens | Attempts | Strict ungraded proposals | First-attempt / within-budget task passes | Observed backend input / output tokens (coverage) | Request and strict-check seconds | Reserved-job GPU minutes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-21 | gemma4-31b | 32768 / min(32768, 32768 - rendered input - 32) | 2/30 | 2/2 | Unavailable / unavailable | 18887 / 2016 (2/2) | 126.258 | 3.169 |
+| 2026-11-21 | qwen35-27b | 32768 / min(32768, 32768 - rendered input - 32) | 2/30 | 1/2 | Unavailable / unavailable | 16469 / 1841 (2/2) | 80.620 | 2.135 |
+| 2026-11-21 | gpt-oss | 32768 / min(32768, 32768 - rendered input - 32) | 2/30 | 1/2 | Unavailable / unavailable | 15154 / 32561 (2/2) | 198.739 | 3.752 |
+| 2026-11-21 | muse | 32768 / min(32768, 32768 - rendered input - 32) | 2/30 | 2/2 | Unavailable / unavailable | 15185 / 17704 (2/2) | 449.233 | 9.183 |
+| 2026-11-21 | gemma4-e4b | 32768 / min(32768, 32768 - rendered input - 32) | 2/30 | 1/2 | Unavailable / unavailable | 18879 / 2700 (2/2) | 103.484 | 2.042 |
+| 2026-11-21 | gemma4-26b-a4b | 32768 / min(32768, 32768 - rendered input - 32) | 2/30 | 1/2 | Unavailable / unavailable | 18887 / 2565 (2/2) | 80.268 | 2.256 |
+
+gemma4-31b: causes `{"ungraded-proposal": 2}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Does not fit: 0.
+
+qwen35-27b: causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Does not fit: 0.
+
+gpt-oss: causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:nonempty": 2}`. Does not fit: 0.
+
+muse: causes `{"ungraded-proposal": 2}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:nonempty": 2}`. Does not fit: 0.
+
+gemma4-e4b: causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Does not fit: 0.
+
+gemma4-26b-a4b: causes `{"strict-edit-refused:code.proposal.edit": 1, "ungraded-proposal": 1}`; backend terminations `{"stopped-below-token-limits": 2}`; response fields `{"content:nonempty": 2, "reasoning:absent-or-empty": 2, "reasoning_content:absent-or-empty": 2}`. Does not fit: 0.
+
+Strict ungraded proposals are not solved tasks. Original native executable
+admission and grading controls remain unavailable; no candidate, project test,
+hidden or held-out execution, feedback or retries. Only Rust retrieval,
+credential-owning chat HTTP transport, inference and strict checking run.
+No model is admitted or selected for a role. Backend counters have explicit
+coverage; missing observations remain unavailable. API usage is not requested.
+Thinking remains requested disabled, without a claim about internal reasoning.
+Controller wall including queues/pauses: 1612.399 seconds. Reserved-job body
+time excludes queues. Complete all 30 tasks on six profiles before further
+tuning or capability work. No parent row closes.
+
+[Raw-evidence description](t303-original-address-checkpoint12-2026-11-21.md).
