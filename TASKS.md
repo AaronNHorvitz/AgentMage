@@ -2,6 +2,20 @@
 
 ## Active queue: local agent mission
 
+The [completed original-address refusal diagnosis](docs/evidence/t303-original-address-refusal-diagnosis-2026-11-21.md)
+reproduces 167 native checks across all 180 development attempts.
+Repeated original text is the largest individual refusal condition (31),
+followed by invalid line order (20); these select unique visible original-range
+selection as the next experiment under MEASURE FIRST. All 102 accepted proposals
+remain ungraded; task passes, feedback and retries remain unavailable.
+No inference, source, prompt or acceptance-rule change occurs. Independent core
+review is required. The preceding checkpoint review's exact-commit
+[PASS](docs/reviews/4422aa7ba4c2-original-address-development-checkpoint180.txt)
+is retained unchanged. Its low finding is addressed by reporting the 69/102
+accepted proposals with joined-line boundaries beside refusal counts; this
+larger ungraded pattern must also inform the next edit-contract experiment.
+T-303/T-306 stay open. No row closes.
+
 The [frozen original-address one-hundred-eighty-attempt checkpoint](docs/evidence/t303-original-address-checkpoint180-2026-11-21.md)
 adds dev-029/dev-rust-001 on all six profiles: **180/180 attempted, 0 remaining**.
 Cumulative strict ungraded proposals: gemma4-31b 26/30; qwen35-27b 22/30; gpt-oss 8/30; muse 17/30; gemma4-e4b 11/30; gemma4-26b-a4b 18/30. These are not solved tasks.

@@ -7995,3 +7995,45 @@ have been attempted; next classify the complete failure breakdown. No parent row
 Among observed inference and strict-check failures, the largest recorded cause is `strict-edit-refused:code.proposal.edit` (62 attempts). This selects the next read-only refusal diagnosis under MEASURE FIRST. Native-execution and grading blockers still prevent task outcomes and are not resolved by this repeat.
 
 [Raw-evidence description](t303-original-address-checkpoint180-2026-11-21.md).
+
+## 2026-11-21: completed original-address refusal diagnosis
+
+Reporting base: `4422aa7ba4c2797bbf13c82f8d4618c8412d167b`; frozen measured
+source: `7821274ab5caa56573d8b68aa7a2121c71fc4b2b`. Read-only analysis of
+existing 180 development attempts, with no additional inference or GPU use.
+All six profiles, 32K context and per-task output budgets remain those of the
+[completed checkpoint](t303-original-address-checkpoint180-2026-11-21.md);
+its time, GPU minutes, token coverage and four transport timeouts are unchanged.
+This is an analysis entry, not another scoreboard run or a task-pass score.
+
+| Diagnostic condition or retained outcome | Attempts |
+| --- | ---: |
+| Repeated original text | 31 |
+| Invalid line order | 20 |
+| Incomplete response terminal | 7 |
+| Original not fully visible in one excerpt | 5 |
+| Transport timeout | 4 |
+| Overlapping edits | 3 |
+| Format refusal | 3 |
+| Length termination | 2 |
+| Line range outside the source | 2 |
+| Unknown source path | 1 |
+| Strict ungraded proposal | 102 |
+
+Repeated original text (31) selects unique visible original-range selection
+as the next experiment under MEASURE FIRST. These are first-failing conditions,
+not all defects or estimates of solved tasks. All 102 accepted proposals remain
+ungraded, including the checkpoint's 69 with joined-line boundaries. First-attempt
+and within-budget task passes, feedback, retries and native admission remain
+unavailable; hidden and held-out inputs remain untouched. No row closes.
+The [diagnosis](t303-original-address-refusal-diagnosis-2026-11-21.md) reproduces
+167 native checks and 38 synthetic controls from authenticated inputs.
+The preceding checkpoint review was in flight at preparation; its exact-commit
+[PASS](../reviews/4422aa7ba4c2-original-address-development-checkpoint180.txt)
+is now retained unchanged. Its low finding asks for joined-line observations
+beside refusal causes: the 69/102 accepted proposals above form an overlapping
+textual subset, not additional refused attempts or task grades. The diagnosis
+now reports the inherited per-profile counts alongside refusals. That larger
+ungraded pattern must also inform the next edit-contract experiment; refusal
+counts alone cannot rank all edit defects. Independent core review is required
+for this increment. T-303/T-306 remain open.
