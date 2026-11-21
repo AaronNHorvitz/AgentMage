@@ -1,0 +1,128 @@
+Commit: 3b58ea39f2ac9b600a05a1ef0a30ddfd7c99061a
+Scope: unique-anchor-development-checkpoint108
+
+# Independent core review: frozen unique-anchor development checkpoint 108 (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, separate session with read-only access to the repository, working in the pinned checkout
+/lane/review-checkout. No GPU use, no model inference and no candidate execution by the reviewer.
+
+## Methods
+
+1. I confirmed the commit and its tree, and listed the files the commit changes and the files changed since the
+   frozen source.
+2. I ran the sealed-bundle verifier with the post-commit envelope. Its hashes are given below.
+3. I recounted every published cell from the 108 raw attempt records, the backend logs and the batch reports, using
+   my own script rather than the builder's audit or verifier.
+4. I compared the bundle with the checkpoint96 bundle: the earlier 48 job directories, the campaign scripts, the
+   launch, audit and inspection scripts, and the changed reporting helpers.
+5. I ran the reporting gates as requested: fast gate, Markdown render, private-path check and licence policy.
+6. I checked privacy, secrets, leftover processes and evaluation integrity.
+
+## Commands and results (all in /lane/review-checkout, CARGO_TARGET_DIR=/lane/state/review-target)
+
+- `git rev-parse HEAD`: 3b58ea39f2ac9b600a05a1ef0a30ddfd7c99061a. `git status --porcelain`: empty, before and
+  after my runs.
+- `git diff --check 1f167fe8c89b77b1ee8ac98121fedbdcb54f03a2`: exit 0.
+- `git diff --stat 1f167fe8…`: 4 files, 306 insertions and 0 deletions:
+  - TASKS.md
+  - docs/evidence/coding-scoreboard.md
+  - the new docs/evidence/t303-unique-anchor-checkpoint108-2026-11-21.md
+  - the new docs/reviews/1f167fe8c89b-unique-anchor-development-checkpoint96.txt
+- Since the frozen source: `git diff --name-only 6ee61e63…HEAD`, with docs/ and TASKS.md excluded, lists nothing. No
+  source, script or manifest changed.
+- The retained review copy is byte-identical (`cmp`) to /lane/reviews/1f167fe8c89b-unique-anchor-development-checkpoint96.md.
+- Bundle hashes:
+  - manifest.json sha256 518552c0…cdd025b (matches the request)
+  - bindings.json sha256 d4fa6f51…fa229 (matches)
+  - post-commit envelope sha256 582980cd…ecb7a (matches)
+- `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B …/verify.py --require-postcommit` returned
+  `{"status": "PASS", "complete_files": 71269, "source_files": 9858, "repository_inputs": 2390, "private_inputs": 94,
+  "contexts": 30, "attempts": 108, "task_passes": null, "candidate_execution": false, "postcommit_checked": true}`
+  (wall time 3m43s).
+- Node: the retained binary /lane/reviews/42612ca9787f-a4b-node has sha256 d1de76d8…c932c, reports v24.15.0 and has
+  its licence file present. I linked it through a temporary symlink in /tmp, outside the bundle.
+  - `python3 -B scripts/local_agent_fast_gate.py --base 1f167fe8… --timeout 600`: FAST GATE: PASS. This covers the
+    private-path check, the licence policy, the review-format lint of the retained review and markdownlint
+    (0 issues in 3 files).
+  - `node …/work/render.mjs`: `{"status":"PASS","issues":0}` for the 3 public files.
+  - `python3 -B scripts/private_host_paths.py --base 1f167fe8…`: PASS.
+  - `python3 -B scripts/license_policy.py`: PASS.
+- Full source gate: not rerun. Its inherited FAIL is stated as such, which is acceptable for a reporting-only
+  increment with no source change.
+
+## Independent derivation of published numbers
+
+My own script over `campaign/jobs/*/collection/dev-*/record.json` read the `checked.json` error codes, the
+`prompt eval` and `eval` counts in the backend logs, and the `reserved_work_seconds` in the batch reports. Results:
+
+- Every profile has 18 distinct tasks, 108 attempts in total. Every attempt has `retries == 0` and `graded == false`.
+- Proposals, edit refusals and format refusals per profile: gemma4-31b 14/4/0, qwen35-27b 14/4/0, gpt-oss 7/4/0,
+  muse 9/2/1, gemma4-e4b 7/10/0, gemma4-26b-a4b 13/3/0. Generation refusals are 0, 0, 7, 6, 1 and 2.
+- The aggregate is 64 proposals, 27 edit refusals, 1 format refusal and 16 generation refusals. The 16 split into
+  4 length, 6 incomplete and 6 timeouts, matching the published cause maps.
+- Backend input/output tokens and coverage match every table cell exactly:
+  - 121712/29956 (18/18)
+  - 107487/27746 (18/18)
+  - 99241/322228 (18/18)
+  - 61151/102981 (12/18)
+  - 121640/76438 (18/18)
+  - 121712/74792 (18/18)
+- Summed request seconds match exactly: 1314.553, 912.163, 1841.155, 4259.650, 999.748 and 1207.281.
+- The rendered-input and requested-output ranges match all six rows.
+- `requested_output_tokens == min(32768, 32768 - rendered_input - 32)` holds for all 108 attempts.
+- Reserved-job GPU minutes from the batch reports match: 30.830, 20.473, 33.965, 76.658, 19.007 and 27.984.
+- New attempts dev-017/dev-018: nine proposals and three edit refusals (gpt-oss, muse and gemma4-e4b on dev-017).
+  Muse took 186.128 s and 173.297 s. All twelve have terminal backend counters, as claimed.
+- Controller times: the checkpoint96 sum was 12937.386 s; adding 1136.910 s (this controller) gives 14074.296 s, as
+  published.
+
+## Preservation and frozen-script checks
+
+- `diff -rq` against the checkpoint96 bundle: all 48 earlier job directories are identical. batch.py, collect.py,
+  controller.py, launch.py, audit.py, inspect-snapshot.py and timeout_evidence.py are identical.
+- The changed helpers are checks.sh, cleanup.py, pack.py, preserve.py, render.mjs, verify.py and write-report.py. I
+  read every changed line. They change only the checkpoint number, base sha, counts (96→108, 16→18, 48→54 pairs),
+  file paths and the prior-bundle references. No assertion is removed or loosened.
+- The scoreboard and TASKS.md changes are pure insertions, so the prior bytes remain an exact prefix and the earlier
+  evidence is unchanged.
+
+## Integrity, safety and privacy
+
+- Evaluation integrity:
+  - Only dev-* tasks appear.
+  - No held-out content, hidden test or grading change is in the diff.
+  - No candidate or project test runs: `candidate_execution: false`, and the records say `graded: false`.
+  - Failures are all counted (108/108), and the "does not fit" count is reported separately (0 per profile).
+  - The wording does not claim proposals are passes; passes are stated as unavailable.
+- Confinement: the increment touches no tool, sandbox or permission code. Model output is kept as inert data only
+  (answers and candidate projections).
+- Cleanup: cleanup.json reports PASS for 54 pairs, with settings revoked, the API and model processes reaped, keys and
+  sockets absent and no foreign signal. There are no sockets or FIFOs in the bundle, and no live model-server process
+  is visible from my sandbox. A grep of the new job directories for bearer tokens or `sk-` style secrets found nothing.
+- Public-repository check: the diff contains no private home path, user name, hostname, credential, e-mail address
+  or private project name. It names no other agent product; model names appear only as profile identifiers. The
+  `/lane/...` strings are sandbox paths of the kind already accepted in earlier retained reviews.
+- MEASURE FIRST: the batch adds its scoreboard line with the context and output budgets stated, and every number
+  traces to raw logs as shown above.
+
+## Findings
+
+No critical, high or medium findings.
+
+The accepted lows remain T-309 backlog, and the increment carries them forward accurately:
+- hand-written new-attempt prose
+- per-pair wrapper provenance
+- the earlier million-file inventory, which is not fully re-verified
+- backend cancellation on client timeout
+
+Limitations of this review:
+- I did not re-implement the strict edit checker. For the proposal and refusal classifications I rely on the bundle
+  verifier's reproduction plus my own recount of the stored checked.json results.
+- No UI surface is in scope, so no browser screens were opened.
+
+## Per-row result
+
+- T-303/T-306, non-closing frozen development measurement, checkpoint 108: PASS for this reporting increment. It
+  closes no row, and it should not be read as qualifying or adopting any model.
+
+Verdict: PASS

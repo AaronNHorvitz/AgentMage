@@ -6776,3 +6776,52 @@ Reserved-job body time excludes queues. Complete all 30 tasks on all six
 profiles before further tuning or capability work. No parent row closes.
 
 [Raw-evidence description](t303-unique-anchor-checkpoint108-2026-11-21.md).
+
+## Frozen unique-anchor repeat: one-hundred-twenty-attempt checkpoint, 2026-11-21
+
+Frozen source: `6ee61e63298e0aca1e1e8896278d24ab72262a61`. Reporting parent: `3b58ea39f2ac9b600a05a1ef0a30ddfd7c99061a`.
+Changed variable remains Decision 0215's fixed instruction and resulting
+budget-dependent excerpts, frozen before inference. No new changed variable.
+Adds dev-019/dev-020 on all six profiles: **120/180 attempted, 60 remaining**.
+Table values are cumulative over twenty tasks per profile.
+
+| Date | Profile | Context / output tokens | Attempts | Strict ungraded proposals | First-attempt / within-budget task passes | Observed backend input / output tokens (coverage) | Request and strict-check seconds | Reserved-job GPU minutes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-21 | gemma4-31b | 32768 / min(32768, 32768 - rendered input - 32) | 20/30 | 16/20 | Unavailable / unavailable | 138991 / 30509 (20/20) | 1433.616 | 34.182 |
+| 2026-11-21 | qwen35-27b | 32768 / min(32768, 32768 - rendered input - 32) | 20/30 | 16/20 | Unavailable / unavailable | 122805 / 28116 (20/20) | 1000.713 | 23.278 |
+| 2026-11-21 | gpt-oss | 32768 / min(32768, 32768 - rendered input - 32) | 20/30 | 7/20 | Unavailable / unavailable | 106604 / 323093 (19/20) | 2054.130 | 38.338 |
+| 2026-11-21 | muse | 32768 / min(32768, 32768 - rendered input - 32) | 20/30 | 11/20 | Unavailable / unavailable | 75047 / 117204 (14/20) | 4687.952 | 84.880 |
+| 2026-11-21 | gemma4-e4b | 32768 / min(32768, 32768 - rendered input - 32) | 20/30 | 8/20 | Unavailable / unavailable | 138911 / 78866 (20/20) | 1102.769 | 21.100 |
+| 2026-11-21 | gemma4-26b-a4b | 32768 / min(32768, 32768 - rendered input - 32) | 20/30 | 15/20 | Unavailable / unavailable | 138991 / 75171 (20/20) | 1335.688 | 31.314 |
+
+gemma4-31b: causes `{"strict-edit-refused:code.proposal.edit": 4, "ungraded-proposal": 16}`; backend terminations `{"stopped-below-token-limits": 20}`; response fields `{"content:nonempty": 20, "reasoning:absent-or-empty": 20, "reasoning_content:absent-or-empty": 20}`. Does not fit: 0.
+
+qwen35-27b: causes `{"strict-edit-refused:code.proposal.edit": 4, "ungraded-proposal": 16}`; backend terminations `{"stopped-below-token-limits": 20}`; response fields `{"content:nonempty": 20, "reasoning:absent-or-empty": 20, "reasoning_content:absent-or-empty": 20}`. Does not fit: 0.
+
+gpt-oss: causes `{"generation-refused:complete:length": 1, "generation-refused:error:chat.response.incomplete": 6, "resource-guard-interrupted:chat.transport.http": 1, "strict-edit-refused:code.proposal.edit": 5, "ungraded-proposal": 7}`; backend terminations `{"output-cap": 7, "resource-guard-interrupted-no-terminal-counters": 1, "stopped-below-token-limits": 12}`; response fields `{"content:absent-or-empty": 6, "content:nonempty": 13, "reasoning:absent-or-empty": 19, "reasoning_content:nonempty": 19}`. Does not fit: 0.
+
+muse: causes `{"generation-refused:error:chat.transport.timeout": 6, "strict-edit-refused:code.proposal.edit": 2, "strict-edit-refused:code.proposal.format": 1, "ungraded-proposal": 11}`; backend terminations `{"stopped-below-token-limits": 14, "transport-timeout-no-terminal-counters": 6}`; response fields `{"content:nonempty": 14, "reasoning:absent-or-empty": 14, "reasoning_content:nonempty": 14}`. Does not fit: 0.
+
+gemma4-e4b: causes `{"generation-refused:complete:length": 1, "strict-edit-refused:code.proposal.edit": 11, "ungraded-proposal": 8}`; backend terminations `{"output-cap": 1, "stopped-below-token-limits": 19}`; response fields `{"content:nonempty": 20, "reasoning:absent-or-empty": 20, "reasoning_content:absent-or-empty": 20}`. Does not fit: 0.
+
+gemma4-26b-a4b: causes `{"generation-refused:complete:length": 2, "strict-edit-refused:code.proposal.edit": 3, "ungraded-proposal": 15}`; backend terminations `{"output-cap": 2, "stopped-below-token-limits": 18}`; response fields `{"content:nonempty": 20, "reasoning:absent-or-empty": 20, "reasoning_content:absent-or-empty": 20}`. Does not fit: 0.
+
+**Resource gate: FAIL.** gpt-oss dev-020 was interrupted when sampled total
+GPU use reached 22,682 MiB against the unchanged 22,528 MiB ceiling. Its pair
+remains failed; no attempt was replayed or limit raised. The original
+success-only audit still fails. The remaining three profiles ran separately;
+all 120 attempts, including the interruption, are counted above.
+
+Strict ungraded proposals are not solved tasks. Original native executable
+admission and grading controls remain unavailable; no candidate, project test,
+hidden or held-out execution, feedback or retries. Only Rust retrieval,
+credential-owning chat HTTP transport, inference and strict checking run.
+No model is admitted or selected for a role. Backend counters have explicit
+coverage; missing observations stay unavailable. API usage is not requested.
+Thinking remains requested disabled, without a claim about internal reasoning.
+These two controllers' summed wall including queues/pauses: 1600.140 seconds; summed
+controller wall: 15674.436 seconds, excluding session/recovery gaps.
+Reserved-job body time excludes queues. Complete all 30 tasks on all six
+profiles before further tuning or capability work. No parent row closes.
+
+[Raw-evidence description](t303-unique-anchor-checkpoint120-2026-11-21.md).
