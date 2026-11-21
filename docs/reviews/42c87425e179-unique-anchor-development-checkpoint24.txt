@@ -1,0 +1,94 @@
+Commit: 42c87425e17916b0fb2e325a0ddc16c9a88ef337
+Scope: unique-anchor-development-checkpoint24
+
+Independent reviewer: Claude Opus 5.5 (extra-high effort), separate read-only session, pinned checkout
+/lane/review-checkout. Row: T-303/T-306, non-closing frozen development measurement (24/180). Reporting
+base 5d17e7142b2530b745ca53d57ddd38262433b520; frozen source 6ee61e63298e0aca1e1e8896278d24ab72262a61.
+
+## Methods and commands (all in /lane/review-checkout)
+
+1. `git rev-parse HEAD` → 42c87425e17916b0fb2e325a0ddc16c9a88ef337; `HEAD^{tree}` → 142455b9b47b…87c0;
+   `git status --porcelain` → empty (before and after all runs); `git diff --check 5d17e714…` → rc 0.
+   Diff: 4 files, +274/−0: TASKS.md (+8 prose lines, no table rows), docs/evidence/coding-scoreboard.md
+   (+43 appended), new docs/evidence/t303-unique-anchor-checkpoint24-2026-11-21.md, new
+   docs/reviews/5d17e7142b25-unique-anchor-development-checkpoint12.txt. No source, script, crate or
+   manifest change.
+2. Bundle hashes: manifest.json 8ebe76cc…5770 and bindings.json d81849e7…58fb match the request;
+   post-commit envelope 62cd7bdd…82bc matches and records commit/parent/tree equal to the checkout.
+3. `bash /tools/build-slot python3 -B …/verify.py --require-postcommit` → PASS (18690 complete files,
+   9858 source files, 2390/94 bindings, 30 contexts, 24 attempts, task_passes null, candidate_execution
+   false, postcommit_checked true), 33 s. I read the whole verifier before relying on it: it
+   authenticates every bundle file, re-hashes source blobs against Git, re-runs the effect-free helper on
+   all 30 payloads, re-runs audit.py, checks that the previous 12 attempts and candidates are byte-equal
+   to the checkpoint-12 manifest, the scoreboard prefix, the 512 ledger rows, README/inventory/status
+   model, supply-chain/Decision 0051, the cleanup receipts and the derivation of the published cells.
+4. Retained Node /lane/reviews/42612ca9787f-a4b-node SHA256 d1de76d8…932c, v24.15.0, symlinked from
+   a temporary directory outside the bundle (removed afterwards):
+   - `python3 -B scripts/local_agent_fast_gate.py --base 5d17e714… --timeout 600` → FAST GATE: PASS
+     (privacy PASS, licence PASS, review lint PASS, markdownlint 0 issues in 3 files).
+   - `node …/work/render.mjs` → PASS, 0 issues, 1 diagnostic table. I read it first: lint and render
+     only, with no writes or subprocesses.
+   - `python3 -B scripts/private_host_paths.py --base 5d17e714…` → PASS.
+   - `python3 -B scripts/license_policy.py` → PASS.
+   The inherited full-source gate FAIL (1044 passed / 53 inherited failures) was not rerun. No source
+   changed, and the documents state the FAIL without waiving it.
+
+## Independent cross-checks (my own scripts over raw attempt files, not the builder's audit)
+
+- **Causes, from 24 `record.json`/`checked.json` files:** gemma4-31b 2 proposals / 2 edit refusals;
+  qwen35-27b 3/1; gpt-oss 1 proposal / 2 edit refusals / 1 generation refusal (no checked.json);
+  muse 3 proposals / 1 format refusal; gemma4-e4b 1/3; gemma4-26b-a4b 3/1. Total: 13 proposals,
+  9 edit refusals, 1 format refusal and 1 incomplete. This equals every published cell and the
+  aggregate. Each profile has exactly dev-001…dev-004, retries 0 and graded 0.
+- **Cumulative check:** the checkpoint-12 counts (1,1,1,2,0,2 = 7) plus the new dev-003/004 counts
+  (1,2,0,1,1,1 = 6) give 13, consistent with the preceding PASS.
+- **Backend tokens:** summing the `prompt eval`/`eval` counters in 24 backend-slice logs gives
+  26397/6693, 23322/5464, 21723/74649, 21647/34979, 26381/15114 and 26397/7578. All six cells match,
+  with 4/4 coverage. The rendered-input and requested-output ranges match the evidence table, and
+  every attempt satisfies input + output + 32 = 32768, as the stated budget formula requires.
+- **gpt-oss dev-004 "output-cap" claim:** the backend log shows eval 30019 tokens, equal to the requested
+  30019; the event is `chat.response.incomplete`. This is correctly labelled as an incomplete response
+  at the output cap, not a model "does not fit" (fit count 0 is correct).
+- **Timings:** request/check seconds (sum of generation_seconds) and GPU minutes (sum of
+  reserved_work_seconds/60) match all six cells. Controller wall is
+  2026-11-21T00:01:45.758Z → 00:32:13.645Z, which is 1827.887 s, as stated. The UTC date justifies the
+  2026-11-21 labels.
+- **Frozen variables:** batch.py, collect.py, controller.py, policy.json, output-format.json,
+  frozen-inputs.json, bin/helper, bin/agentmage-local-api, audit.py, all wrappers and all profile files
+  are byte-identical to the checkpoint-12 bundle. cleanup.py and checks.sh differ only in the expected
+  report count (6→12), the job suffix (-00→-02), the work directory and the base commit. No experiment
+  variable changed.
+- **Secrets and cleanup:** cleanup.json reports PASS, 12 pairs, no live processes, settings revoked, and
+  receipts persisted before unlink; there are 12 retirement receipts, all `-02/auth/`. `find
+  /lane/state/ua1` finds no sockets, `*.token`, `*.key` or `auth/` entries. The bundle contains no
+  bearer or API key patterns. The wire requests carry only model/messages/stream/max_tokens/n/
+  response_format/chat_template_kwargs; "authorization" occurs only inside task source text.
+- **Evaluation integrity:** the contexts are only from development tasks (dev-*); no held-out reference
+  appears in the new contexts; no candidate, project test, hidden or held-out code executed (launch
+  records candidate_execution=false, hidden_or_held_out=false); no feedback or retries. The commit
+  touches only docs, and nothing in it could tune on held-out content.
+- **Retained review copy:** docs/reviews/5d17e7142b25-…checkpoint12.txt is `cmp`-identical to
+  /lane/reviews/5d17e7142b25-unique-anchor-development-checkpoint12.md (my preceding PASS, unaltered).
+- **Privacy and naming:** the added lines contain no home path, username, e-mail address, hostname or
+  sibling-project name. The `/lane/` paths appear only inside the retained review copy, following
+  accepted precedent. Model profile names follow the existing scoreboard convention; there is no
+  product comparison or branding. The commit author/sign-off is the owner's normal repository identity.
+- **MEASURE FIRST:** the scoreboard has a dated line for this batch, appended about 3 minutes after the
+  controller exit. Context and output budgets are stated, "does not fit" is counted apart from model
+  failures, and every number traces to the raw logs above. The claims are honestly labelled: "strict
+  ungraded proposals" are explicitly not task passes, and pass columns are "Unavailable".
+
+## Findings
+
+None at high or medium.
+
+Low or backlog (no new items): per-pair wrapper provenance and earlier accepted lows remain disclosed
+T-309 backlog. The earlier million-file inventory is disclosed as not reverified in full; that is
+acceptable for a non-closing reporting increment.
+
+## Per-row result
+
+- T-303/T-306 (non-closing development measurement checkpoint 24/180): reporting increment PASS. The
+  rows stay open with 156 attempts remaining. Nothing closes.
+
+Verdict: PASS
