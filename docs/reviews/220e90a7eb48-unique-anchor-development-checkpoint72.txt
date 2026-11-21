@@ -1,0 +1,136 @@
+Commit: 220e90a7eb480768a4aa84f339a4224defd2da74
+Scope: unique-anchor-development-checkpoint72
+
+# Independent core review: frozen unique-anchor development checkpoint 72 (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5, extra-high effort, separate read-only session, pinned checkout
+/lane/review-checkout. I ran no model, used no GPU and executed no candidate. The repository was
+not modified: `git status --porcelain` was empty before and after all runs.
+
+## Methods and commands
+
+1. Commit identity and diff
+   - `git rev-parse HEAD`: 220e90a7eb480768a4aa84f339a4224defd2da74.
+   - `git rev-parse HEAD^{tree}`: 30b4776d8eb1dc22c03896614bcebfd5afdd9d67, matching the
+     post-commit envelope (which names this commit and parent e6d063d2).
+   - `git diff --check e6d063d2128aa0a2ebb3b3a34c0f6918766b58d8`: exit 0.
+   - `git diff --numstat e6d063d2 HEAD`: four documentation files, additions only:
+     - TASKS.md (+8 −0; prepend only)
+     - docs/evidence/coding-scoreboard.md (+43 −0)
+     - the new docs/evidence/t303-unique-anchor-checkpoint72-2026-11-21.md (+130)
+     - docs/reviews/e6d063d2128a-unique-anchor-development-checkpoint60.txt (+142)
+   - `git diff --name-only 6ee61e63..HEAD`, filtered to paths outside docs/ and TASKS.md, is empty.
+     There is no production source change since the frozen source.
+   - The commit message carries a Signed-off-by line.
+2. Bundle hashes (sha256sum)
+   - manifest.json: 76489c7f…7c84, as requested.
+   - bindings.json: 40724efd…9995, as requested.
+   - Post-commit envelope: c5adbb64…fce, as requested.
+3. `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B …/checkpoint72-20261121/verify.py --require-postcommit`
+   - Result: rc=0 in 59 s, `{"status": "PASS", "complete_files": 53550, "source_files": 9858,
+     "repository_inputs": 2390, "private_inputs": 94, "contexts": 30, "attempts": 72,
+     "task_passes": null, "candidate_execution": false, "postcommit_checked": true}`.
+   - The shared pre-commit log (postcommit_checked false) and post-commit log show the same counts.
+4. Independent recomputation over all 36 job directories
+   - Used my own script (/lane/state/tmp/rv72.py), separate from the builder's verifier.
+   - Checked every per-task log hash in each batch.json.
+   - Asserted, on all 72 attempts:
+     - requested output = min(32768, 32768 − rendered input − 32)
+     - retries = 0 and graded = false
+   - Took causes from events.ndjson and checked.json.
+   - Summed backend prompt and eval counters, using only each task's own backend-slice task ID.
+   - Summed generation_seconds and reserved_work_seconds/60.
+   - Every cell in both published tables and in the scoreboard rows matches:
+     - proposals 9/8/4/6/4/9
+     - backend input/output tokens and coverage, for example gpt-oss 64610/231219 (12/12) and
+       muse 32170/63949 (7/12)
+     - seconds, for example muse 3020.869
+     - GPU minutes, for example muse 54.324
+     - rendered-input and output-budget ranges, for example qwen35-27b 2811–8444 / 24292–29925
+   - Aggregate causes, total 72:
+     - 40 ungraded proposals
+     - 19 strict-edit refusals (from checked.json: 18 code.proposal.edit, 1 code.proposal.format)
+     - 6 chat.response.incomplete
+     - 5 chat.transport.timeout
+     - 2 complete:length
+   - Output-cap terminations: gpt-oss 6, gemma4-e4b 1, gemma4-26b-a4b 1, total 8. Backend coverage
+     is 67/72. These match the request and both published documents.
+5. The twelve new attempts (the *-10 jobs), checked one by one
+   - Seven are ungraded proposals: 31b dev-011, qwen dev-011, muse dev-011/012, e4b dev-011,
+     a4b dev-011/012.
+   - Two are code.proposal.edit refusals: gemma4-31b dev-012 and qwen35-27b dev-012.
+   - gpt-oss dev-011/dev-012 end with a chat.response.incomplete error event. Their eval counts of
+     27451 and 30009 tokens equal their requested budgets of 27451 and 30009.
+   - gemma4-e4b dev-012 ends with finish "length". Its eval count of 29627 equals its budget of 29627.
+   - Muse dev-011 and dev-012 take 278.183 s and 259.652 s, both under the 300 s deadline. Both
+     have eval and prompt-eval counters, so there is no new timeout.
+   - All twelve slices carry terminal counters. No counter is taken from an earlier task ID.
+   - Each refused or incomplete attempt has candidate_is_base_fallback = true. Each proposal has it
+     false. api_usage is null throughout.
+   - There are no symlinks in the candidate or job trees.
+   - This confirms every statement in the hand-written work/observations.md prose.
+6. Script immutability, compared byte for byte with the checkpoint-60 bundle
+   - Byte-identical: launch.py, inspect-snapshot.py, audit.py, timeout_evidence.py, campaign
+     batch.py, collect.py, controller.py, policy.json, frozen-inputs.json, output-format.json and
+     all profiles.
+   - The two verify.py copies in the bundle are identical to each other.
+   - These differ from checkpoint 60 only in checkpoint parameters:
+     - verify.py, checks.sh, cleanup.py, pack.py, preserve.py, render.mjs, write-report.py and
+       adapt-reporting.py
+     - the changed parameters are the base SHA, counts 60→72, 120→108 and 10→12, pairs 30→36,
+       the -08→-10 auth path, evidence and predecessor paths, and the predecessor manifest hash
+       (c33b7f6c…, the reviewed checkpoint-60 manifest, equal to inputs/preceding-checkpoint-manifest.json)
+   - write-report.py also drops one log-location sentence.
+   - No assertion was removed or weakened.
+7. Preservation
+   - All 30 prior job directories and all prior candidate trees match the checkpoint-60 bundle
+     exactly (`diff -rq`). The only additions are the -10 jobs and the dev-011/dev-012 candidates.
+   - The scoreboard at e6d063d2 is an exact byte prefix of the new scoreboard (`cmp -n`).
+   - The committed docs/reviews/e6d063d2128a-…checkpoint60.txt is byte-identical (cmp) to
+     /lane/reviews/e6d063d2128a-unique-anchor-development-checkpoint60.md.
+   - Prior L1 is fixed: there is no `__pycache__` or `.pyc` file anywhere in the sealed bundle.
+8. Reporting gates on the exact commit
+   - Used the retained Node v24.15.0 (SHA256 d1de76d8…c932c matches; licence file present),
+     linked from /lane/state/tmp/rv72bin outside the bundle.
+   - `python3 -B scripts/local_agent_fast_gate.py --base e6d063d2… --timeout 600`: FAST GATE: PASS.
+   - `node …/checkpoint72-20261121/work/render.mjs`: PASS, 0 issues, three files.
+   - `python3 -B scripts/private_host_paths.py --base e6d063d2…`: PRIVATE PATH CHECK: PASS.
+   - `python3 -B scripts/license_policy.py`: LICENCE POLICY: PASS.
+   - The inherited full source gate FAIL (1044/53/11/0/31) was not rerun. No source changed, and
+     the failure is disclosed and not waived.
+9. Wall time, cleanup and privacy
+   - Wall time: 7839.205528 (summed, checkpoint 60) + 2068.944196 = 9908.150 s, as published.
+   - cleanup.json: PASS, with 36 pairs and 12 retired tokens. Receipts were persisted before
+     unlink, settings were revoked and API and models reaped. There is no live owned process, keys
+     and sockets are absent, and no foreign process was signalled.
+   - `pgrep` shows no inference, transport or helper process, only this review sandbox.
+   - Privacy: a manual scan of the added lines finds no home path, username, hostname, e-mail,
+     credential, other agent product or sibling project.
+   - Held-out content: policy.json and frozen-inputs.json are byte-identical, so no prompt input
+     changed and no held-out content can reach the model through this commit.
+   - No task pass, model qualification or role adoption is claimed. Task passes are stated as
+     unavailable, not zero.
+
+## Findings
+
+No critical, high or medium finding.
+
+- Accepted lows stay T-309 backlog, as disclosed:
+  - L2 from the preceding review: new-attempt prose is still hand-written in work/observations.md.
+    I confirmed every statement in it against the raw records (step 5).
+  - Per-pair wrapper provenance.
+  - The earlier million-file inventory is not fully reverified.
+  - Backend cancellation on client timeout. It did not recur in this batch.
+
+## Per-row result
+
+- T-303/T-306, non-closing frozen development measurement, checkpoint 72 at 220e90a7: PASS for
+  this reporting increment.
+  - 72/180 attempted, 108 remaining. 40 strict ungraded proposals. Task passes are unavailable,
+    not zero.
+  - Every published number matches my recomputation from the raw records.
+  - The scoreboard line required by MEASURE FIRST is present. Context and output budgets are
+    stated, and 0 tasks are counted as not fitting, separately from model failures.
+  - Both rows stay OPEN. No closure, model qualification or role adoption is requested or granted.
+
+Verdict: PASS
