@@ -2,6 +2,19 @@
 
 ## Active queue: local agent mission
 
+The [frozen original-address one-hundred-eighty-attempt checkpoint](docs/evidence/t303-original-address-checkpoint180-2026-11-21.md)
+adds dev-029/dev-rust-001 on all six profiles: **180/180 attempted, 0 remaining**.
+Cumulative strict ungraded proposals: gemma4-31b 26/30; qwen35-27b 22/30; gpt-oss 8/30; muse 17/30; gemma4-e4b 11/30; gemma4-26b-a4b 18/30. These are not solved tasks.
+All 30 tasks per profile have been attempted. The complete measured failure
+breakdown selects the next work under MEASURE FIRST. Task passes,
+feedback and retries remain unavailable; T-303/T-306 stay open. No row closes.
+The [preceding independent core review](docs/reviews/fe0cfc315690-original-address-development-checkpoint168.txt) returns **Verdict: PASS** for exact `fe0cfc3156903c17a609b9ebed45ff82463af3dc`; its report is retained unchanged. No row closes.
+The joined-line column supplies the portable disclosure requested by the
+checkpoint-156 low finding. It does not grade candidates. Other existing lows
+remain T-309 backlog. No row closes.
+
+Among observed inference and strict-check failures, the largest recorded cause is `strict-edit-refused:code.proposal.edit` (62 attempts). This selects the next read-only refusal diagnosis under MEASURE FIRST. Native-execution and grading blockers still prevent task outcomes and are not resolved by this repeat.
+
 The [frozen original-address one-hundred-sixty-eight-attempt checkpoint](docs/evidence/t303-original-address-checkpoint168-2026-11-21.md)
 adds dev-027/dev-028 on all six profiles: **168/180 attempted, 12 remaining**.
 Cumulative strict ungraded proposals: gemma4-31b 24/28; qwen35-27b 20/28; gpt-oss 8/28; muse 16/28; gemma4-e4b 9/28; gemma4-26b-a4b 16/28. These are not solved tasks.

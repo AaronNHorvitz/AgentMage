@@ -7924,3 +7924,74 @@ Reserved-job body time excludes queues. Complete all 30 tasks on all six
 profiles before further tuning or capability work. No parent row closes.
 
 [Raw-evidence description](t303-original-address-checkpoint168-2026-11-21.md).
+
+## Frozen original-address repeat: one-hundred-eighty-attempt checkpoint, 2026-11-21
+
+Frozen source: `7821274ab5caa56573d8b68aa7a2121c71fc4b2b`. Reporting parent: `fe0cfc3156903c17a609b9ebed45ff82463af3dc`.
+Changed variable remains Decision 0216's fixed instruction and resulting
+budget-dependent excerpts, frozen before inference. No new changed variable.
+Adds dev-029/dev-rust-001 on all six profiles: **180/180 attempted, 0 remaining**.
+Table values are cumulative over thirty tasks per profile.
+
+| Date | Profile | Context / output tokens | Attempts | Strict ungraded proposals | With joined-line boundary | First-attempt / within-budget task passes | Observed backend input / output tokens (coverage) | Request and strict-check seconds | Reserved-job GPU minutes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-21 | gemma4-31b | 32768 / min(32768, 32768 - rendered input - 32) | 30/30 | 26/30 | 23 | Unavailable / unavailable | 209780 / 30360 (30/30) | 1858.156 | 48.745 |
+| 2026-11-21 | qwen35-27b | 32768 / min(32768, 32768 - rendered input - 32) | 30/30 | 22/30 | 17 | Unavailable / unavailable | 185090 / 33669 (30/30) | 1320.180 | 32.319 |
+| 2026-11-21 | gpt-oss | 32768 / min(32768, 32768 - rendered input - 32) | 30/30 | 8/30 | 4 | Unavailable / unavailable | 170942 / 481896 (30/30) | 2905.461 | 54.495 |
+| 2026-11-21 | muse | 32768 / min(32768, 32768 - rendered input - 32) | 30/30 | 17/30 | 10 | Unavailable / unavailable | 146775 / 213473 (26/30) | 6543.012 | 121.912 |
+| 2026-11-21 | gemma4-e4b | 32768 / min(32768, 32768 - rendered input - 32) | 30/30 | 11/30 | 4 | Unavailable / unavailable | 209660 / 53729 (30/30) | 1480.299 | 29.280 |
+| 2026-11-21 | gemma4-26b-a4b | 32768 / min(32768, 32768 - rendered input - 32) | 30/30 | 18/30 | 11 | Unavailable / unavailable | 209780 / 43175 (30/30) | 1527.518 | 40.816 |
+
+gemma4-31b: causes `{"strict-edit-refused:code.proposal.edit": 4, "ungraded-proposal": 26}`; backend terminations `{"stopped-below-token-limits": 30}`; response fields `{"content:nonempty": 30, "reasoning:absent-or-empty": 30, "reasoning_content:absent-or-empty": 30}`. Does not fit: 0.
+
+qwen35-27b: causes `{"strict-edit-refused:code.proposal.edit": 8, "ungraded-proposal": 22}`; backend terminations `{"stopped-below-token-limits": 30}`; response fields `{"content:nonempty": 30, "reasoning:absent-or-empty": 30, "reasoning_content:absent-or-empty": 30}`. Does not fit: 0.
+
+gpt-oss: causes `{"generation-refused:complete:length": 2, "generation-refused:error:chat.response.incomplete": 7, "strict-edit-refused:code.proposal.edit": 13, "ungraded-proposal": 8}`; backend terminations `{"output-cap": 9, "stopped-below-token-limits": 21}`; response fields `{"content:absent-or-empty": 7, "content:nonempty": 23, "reasoning:absent-or-empty": 30, "reasoning_content:nonempty": 30}`. Does not fit: 0.
+
+muse: causes `{"generation-refused:error:chat.transport.timeout": 4, "strict-edit-refused:code.proposal.edit": 6, "strict-edit-refused:code.proposal.format": 3, "ungraded-proposal": 17}`; backend terminations `{"stopped-below-token-limits": 26, "transport-timeout-no-terminal-counters": 4}`; response fields `{"content:nonempty": 26, "reasoning:absent-or-empty": 26, "reasoning_content:nonempty": 26}`. Does not fit: 0.
+
+gemma4-e4b: causes `{"strict-edit-refused:code.proposal.edit": 19, "ungraded-proposal": 11}`; backend terminations `{"stopped-below-token-limits": 30}`; response fields `{"content:nonempty": 30, "reasoning:absent-or-empty": 30, "reasoning_content:absent-or-empty": 30}`. Does not fit: 0.
+
+gemma4-26b-a4b: causes `{"strict-edit-refused:code.proposal.edit": 12, "ungraded-proposal": 18}`; backend terminations `{"stopped-below-token-limits": 30}`; response fields `{"content:nonempty": 30, "reasoning:absent-or-empty": 30, "reasoning_content:absent-or-empty": 30}`. Does not fit: 0.
+
+This increment: `{"generation-refused:error:chat.response.incomplete": 1, "strict-edit-refused:code.proposal.edit": 1, "strict-edit-refused:code.proposal.format": 1, "ungraded-proposal": 9}`. No new transport timeout occurred; all four earlier timeouts remain counted.
+
+Muse dev-007 and dev-008 reached the unchanged 300-second transport deadline.
+No upstream response or terminal token counters were captured for either;
+both remain failed base-fallback attempts, with zero retries. Missing counters
+are unavailable and are not estimated.
+An earlier independent review observed about 11 seconds of uncancelled
+dev-007 backend generation inside dev-008's transport window, leaving about
+289 seconds for its backend processing. Both remain counted failures. Backend
+cancellation on client timeout remains T-309 backlog; no timing or inference
+variable changes during this repeat.
+
+Muse dev-011 and dev-012 also reached the same 300-second transport deadline
+in an earlier increment, without a captured upstream response or terminal token
+counters. Both remain failed base-fallback attempts with zero retries. About
+11 seconds of uncancelled dev-011 backend generation overlapped dev-012's
+request window, leaving about 289 seconds for its backend processing.
+No missing token counters are estimated; cancellation remains T-309 backlog.
+
+Strict ungraded proposals are not solved tasks. Original native executable
+admission and grading controls remain unavailable; no candidate, project test,
+hidden or held-out execution, feedback or retries. Only Rust retrieval,
+credential-owning chat HTTP transport, inference and strict checking run.
+No model is admitted or selected for a role. Backend counters have explicit
+coverage; missing observations stay unavailable. API usage is not requested.
+Thinking remains requested disabled, without a claim about internal reasoning.
+This controller wall including queues/pauses: 1328.703 seconds; summed
+controller wall: 23074.031 seconds, excluding the session gap.
+The joined-line column counts accepted proposals with a removed LF,
+nonempty replacement lacking a final LF, and a nonblank following original
+source line. It is a textual observation, not a correctness grade. Complete
+accepted candidate bytes reproduce; adjacent edits and the preserved exact-text
+client form are disclosed separately in the portable diagnostic. No parser,
+checker or answer bytes change. Diagnostic SHA-256: `59c3c009fde633825a79855e82e9fb0d7282bea6ef347b1907bead160ef41f64`.
+
+Reserved-job body time excludes queues. All 30 tasks on all six profiles
+have been attempted; next classify the complete failure breakdown. No parent row closes.
+
+Among observed inference and strict-check failures, the largest recorded cause is `strict-edit-refused:code.proposal.edit` (62 attempts). This selects the next read-only refusal diagnosis under MEASURE FIRST. Native-execution and grading blockers still prevent task outcomes and are not resolved by this repeat.
+
+[Raw-evidence description](t303-original-address-checkpoint180-2026-11-21.md).
