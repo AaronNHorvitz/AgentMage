@@ -1,0 +1,174 @@
+Commit: e2df12f861ce37bf1f161c38fd09ae5d566217b7
+Scope: unique-anchor-development-checkpoint132
+
+# Independent core review: frozen unique-anchor checkpoint 132
+
+Reviewer: Claude Opus 5.5, separate session, read-only. Pinned checkout /lane/review-checkout.
+Row: T-303/T-306, a non-closing frozen development measurement.
+Reporting parent: c64dfd604b8111b8757291bb5692f1dbd47d66d8. Frozen source:
+6ee61e63298e0aca1e1e8896278d24ab72262a61.
+
+## Methods
+
+- I confirmed the commit, a clean worktree and the scope of the diff from the parent.
+- I read the full diff of the four changed files:
+  - TASKS.md: a new top block only.
+  - docs/evidence/coding-scoreboard.md: a pure append.
+  - The new evidence page.
+  - The retained preceding review.
+- I read these bundle files:
+  - continue-controller.py and continue-controller.diff;
+  - launch.diff, launch.json and controller-exit.json;
+  - resource_abort_evidence.py;
+  - controller.log;
+  - cleanup.json and cleanup-continuation.diff;
+  - success-only-audit-exit.json;
+  - every file under work/denied-run, plus denied-preflight-preservation.json;
+  - the denial and diff checks in verify.py.
+- I read /tools/gpu-slot to see where the denial happened.
+- I ran the sealed verifier and the reporting gates myself.
+- I recomputed every cumulative per-profile number from the raw job directories with my own new
+  script. It does not use the builder's audit, metrics or report code.
+- I byte-compared the earlier 60 job directories against the checkpoint-120 bundle.
+
+## Commands and results
+
+1. `git rev-parse HEAD` printed e2df12f861ce37bf1f161c38fd09ae5d566217b7.
+   - `git status --porcelain` was empty before and after all runs.
+   - `git diff --check c64dfd60…` exited 0.
+   - Files changed: TASKS.md, docs/evidence/coding-scoreboard.md,
+     docs/evidence/t303-unique-anchor-checkpoint132-2026-11-21.md and
+     docs/reviews/c64dfd604b81-unique-anchor-development-checkpoint120-resource-abort.txt.
+   - There are no source, script, README, licence, NOTICE, supply-chain or decision changes.
+2. Hashes match the request:
+   - manifest.json: 1fc1fc1a…5eea1
+   - bindings.json: ae9e00dd…c926
+   - post-commit envelope: 96cd6fa1…3bf2
+3. `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B …/verify.py --require-postcommit` printed
+   `{"status": "PASS", "complete_files": 88629, "source_files": 9858, "repository_inputs": 2390,
+   "private_inputs": 94, "contexts": 30, "attempts": 132, "task_passes": null,
+   "candidate_execution": false, "postcommit_checked": true}` and exited 0.
+4. I ran Node v24.15.0 (sha256 d1de76d8…932c, licence file present) through a symlink at
+   /tmp/rv132node/node, outside the bundle:
+   - `local_agent_fast_gate.py --base c64dfd60… --timeout 600`: FAST GATE PASS. markdownlint found 0
+     issues in 3 files.
+   - `render.mjs`: PASS, 0 issues.
+   - `private_host_paths.py --base c64dfd60…`: PASS.
+   - `license_policy.py`: PASS.
+   - A grep of the full diff for home paths or the user name found nothing.
+5. The retained review in docs/reviews/c64dfd604b81-….txt is byte-identical (`cmp`) to
+   /lane/reviews/c64dfd604b81-unique-anchor-development-checkpoint120-resource-abort.md and ends
+   `Verdict: PASS`.
+6. Earlier attempts are untouched. All 60 job directories in the checkpoint-120 bundle are
+   identical to those in this bundle (`diff -rq`, 60/60). The following are byte-identical between
+   the two bundles:
+   - the frozen campaign controller.py;
+   - batch.py;
+   - collect.py;
+   - frozen-inputs.json.
+
+   gpt-oss-18/batch-report.json (9e5ff12e…3af5) and its dev-020 record.json (1969c302…cfba) still
+   equal the pinned constants.
+7. My independent recomputation over pairs 00–20 (132 records) matches every table value, every
+   per-profile cause breakdown, the aggregate causes and the new-pair causes exactly:
+
+   | Profile | Proposals | Rendered input / requested output | Backend input / output (coverage) | Request/check s | GPU min |
+   | --- | --- | --- | --- | --- | --- |
+   | gemma4-31b | 18/22 | 3072–9639 / 23097–29664 | 154744 / 32866 (22) | 1539.316 | 36.836 |
+   | qwen35-27b | 18/22 | 2811–8502 / 24234–29925 | 136756 / 30087 (22) | 1070.784 | 24.917 |
+   | gpt-oss | 7/22 | 2710–7753 / 24983–30026 | 119549 / 365599 (21) | 2281.142 | 42.455 |
+   | muse | 13/22 | 2625–7787 / 24949–30111 | 87897 / 140679 (16) | 5247.154 | 94.618 |
+   | gemma4-e4b | 10/22 | 3068–9635 / 23101–29668 | 154656 / 79766 (22) | 1163.306 | 22.476 |
+   | gemma4-26b-a4b | 17/22 | 3072–9639 / 23097–29664 | 154744 / 79313 (22) | 1435.756 | 33.926 |
+
+   - The new pair-20 causes are 10 proposals, 1 `code.proposal.edit` refusal and 1
+     `chat.response.incomplete`. Both non-proposals are gpt-oss: dev-022 and dev-021, where the
+     output cap was reached at 25881 tokens.
+   - Muse took 259.329 and 299.873 s.
+   - Cumulative coverage is 125/132.
+   - All 132 records have retries 0 and graded false.
+8. Wall time:
+   - The controller ran from 05:39:42.364621 to 06:04:38.756839, which is 1496.392 s.
+   - Adding the previously published 15674.436 s gives 17170.828 s.
+   - Both values match the published figures.
+9. The six new jobs are all `completed`:
+   - resource_guard_error is null.
+   - Sampled peaks are 5258 to 20789 MiB, all at or below the 22528 ceiling.
+   - Baselines are 1521 to 2104 MiB.
+   - settings_revoked is true and api-exit is `{"exit": -15, "reaped": true}`.
+   - Each job ran only tasks dev-021 and dev-022.
+   - The policy, profile, launcher, runtime-manifest, preparation, API and source hashes equal pair 00.
+   - Diffed against pair 18, the settings, profile, command and scope fields differ only in the
+     per-job endpoint port, the state path and the measured memory.peak.
+10. Cleanup:
+    - cleanup.json is PASS: 66 observed, 65 completed and 1 failed pair, keys and sockets absent,
+      receipts persisted before unlink, `resource_gate_status: FAIL`.
+    - success-only-audit-exit.json records exit 1, FAIL.
+    - Scanning /proc found no live model, API or campaign process other than this review's own
+      sandbox and verifier.
+
+## Continuation controller and denial assessment
+
+- **Controller diff.** The only change from the frozen controller replaces
+  `assert json.loads(report.read_text())['status']=='completed'` with a branch.
+  - A non-completed report must pass `resource_abort_evidence.validate_job`.
+  - That function asserts the directory name `gpt-oss-18`, the pinned report sha256, the guard
+    error, peak 22682 > 22528, server exit −15 and the api-exit bytes.
+  - Any other failed job therefore raises and stops the controller.
+  - A partial job directory still trips `assert not directory.exists()`.
+  - Newly run jobs still require `status=='completed'`.
+  - resource_abort_evidence.py is byte-identical (261d91aa…94a6) to the reviewed checkpoint-120
+    copy.
+  - verify.py:169 reproduces the controller from the frozen original by exact string replacement.
+  - This addresses the previous review's continuation low without relabelling or replaying the
+    failed pair.
+- **Launcher diff.** It only switches the controller path from the frozen controller.py to
+  continue-controller.py. Priority, nice, bwrap mounts, `--pairs 6`, the wrapper hashes and the
+  scope limits are unchanged.
+- **Denied run.**
+  - /tools/gpu-slot line 36 refuses with "GPU baseline exceeds 4 GiB" after taking the lock. That
+    check comes before the `timeout … "$@"` line that would start batch.py, so no model, task or job
+    directory could start.
+  - The retained reservation log shows exactly that message. The controller log shows the
+    resulting assertion at gemma4-31b 20, so the controller had already passed the gpt-oss-18
+    validation.
+  - The exit receipt is 1.
+  - All six retained files match their receipt hashes.
+  - The retained launch.py and continue-controller.py are byte-identical to those that then ran,
+    and the argv in the two launch.json files is identical.
+  - The real job's model-state timestamp, 23:39:56 local (05:39:56 UTC), falls after the real launch
+    at 05:39:42 UTC. This is consistent with no directory having been left by the denial.
+  - The denial's wall time is excluded from the totals, as disclosed.
+- **Labelling.**
+  - The interruption stays in the denominator under its own cause and termination.
+  - "Does not fit" is 0.
+  - The scoreboard, the evidence page and TASKS.md all state that the resource gate remains FAIL.
+  - Nothing claims a task pass, qualification, model selection or row closure.
+- **MEASURE FIRST.**
+  - There is a scoreboard line for this batch.
+  - The context budget (32768) and the output-budget formula are stated.
+  - Every number traces to raw logs, as verified above.
+  - No held-out, hidden or candidate execution took place (verifier `candidate_execution: false`;
+    only dev tasks are present).
+- **Confinement.** No production source changed, so no confinement boundary is touched.
+
+## Findings
+
+There are no critical, high or medium findings.
+
+- Low (backlog, existing behaviour): the sampled GPU headroom guard remains as disclosed. It is
+  T-309 backlog.
+- Low (backlog, inherited T-309): these are not reopened:
+  - per-pair wrapper provenance;
+  - the earlier million-file inventory is not fully reverified;
+  - backend cancellation;
+  - hand-written prose.
+
+## Per-row result
+
+T-303/T-306 (a non-closing frozen development measurement, checkpoint 132): the accounting and
+reporting increment PASSES review. The resource gate stays FAIL, as the commit states, and this PASS
+does not change that. The full source gate is still the inherited FAIL (1044 passed, 53 inherited
+failures); it was not rerun, as stated. No row closes.
+
+Verdict: PASS
