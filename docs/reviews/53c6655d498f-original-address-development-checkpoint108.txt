@@ -1,0 +1,111 @@
+Commit: 53c6655d498f30d3d9bb1afef692c07bb6aec92c
+Scope: original-address-development-checkpoint108
+
+Reviewer: Claude Opus 5.5, separate session, read-only. I worked in the pinned checkout `/lane/review-checkout`
+with `CARGO_TARGET_DIR=/lane/state/review-target`. Heavy commands ran through `/tools/build-slot` at low priority.
+Outside this file, I wrote only a temporary node symlink and a scratch log under `/lane/state/tmp/r108`, outside
+the sealed bundle. I did not use the GPU, did not modify the repository and did not approve anything in it.
+
+## Methods
+
+The commit is a non-closing T-303/T-306 development measurement: twelve new first generations (dev-017/dev-018
+on six profiles) from frozen source `7821274ab5caa56573d8b68aa7a2121c71fc4b2b`. I re-ran the requested commands.
+I also checked the published numbers against the raw per-attempt records and upstream responses myself,
+without relying on the builder's `audit.py`. I compared the corrected v2 bundle with the original sealed
+bundle, and inspected launch limits, cleanup, credential retirement and the backend listen addresses.
+
+## Commands and results
+
+1. `git rev-parse HEAD` gives `53c6655d498f30d3d9bb1afef692c07bb6aec92c`. `git status --porcelain` is empty.
+   `git diff --check c4a99034a24ec63e85096a1227047861f4de0017` exits 0. The diff touches four files only:
+   `TASKS.md` (the queue paragraph), `docs/evidence/coding-scoreboard.md` (append only),
+   `docs/evidence/t303-original-address-checkpoint108-2026-11-21.md` (new) and
+   `docs/reviews/c4a99034a24e-original-address-development-checkpoint96.txt` (new).
+   `git diff --name-only 7821274a HEAD` shows no file outside `TASKS.md`, `docs/evidence/` and `docs/reviews/`,
+   so there are no production source changes.
+2. Digests match the request: manifest `3a70e9e9…5858fd`, bindings `f53baca4…028bd`, audit `b5662364…cc5d2`,
+   postcommit `2965457e…8d2835`.
+3. `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B …-v2/verify.py --require-postcommit` printed
+   `{"status": "PASS", "complete_files": 71287, "source_files": 9893, "repository_inputs": 2425,
+   "private_inputs": 111, "contexts": 30, "attempts": 108, "task_passes": null, "candidate_execution": false,
+   "postcommit_checked": true}` after 1m54s.
+4. The Node binary `/lane/reviews/42612ca9787f-a4b-node` has SHA-256 `d1de76d8…c74bd932c` and reports `v24.15.0`.
+   I put it on PATH through a symlink in `/lane/state/tmp/r108/bin`.
+   `scripts/local_agent_fast_gate.py --base c4a99034… --timeout 600` gave `FAST GATE: PASS`: private paths PASS,
+   licence PASS, review lint exit 0, markdownlint 0 issues in 3 files.
+   `node …-v2/work/render.mjs` gave `{"status":"PASS","issues":0,…}` for the three rendered files.
+   `scripts/private_host_paths.py --base c4a99034…` gave `PRIVATE PATH CHECK: PASS`.
+   `scripts/license_policy.py` gave `LICENCE POLICY: PASS`.
+5. Prior review copy: `cmp /lane/reviews/c4a99034a24e-original-address-development-checkpoint96.md
+   docs/reviews/c4a99034a24e-original-address-development-checkpoint96.txt` shows the files are identical, and it
+   ends `Verdict: PASS`. TASKS.md reports that verdict accurately and closes no row.
+
+## Independent recomputation from raw evidence
+
+- **Causes.** For all 108 `campaign/jobs/*/collection/dev-*/record.json`, I checked every logged file's SHA-256
+  and confirmed `retries == 0`, `graded == false` and `native_coding_harness == false`. I confirmed
+  `requested_output_tokens == min(32768, 32768 - preflight - 32)`, that each (model, task) appears once, and
+  that the base-fallback flag matches the cause. I derived the cause subtype from `checked.json` or from the
+  final event in `events.ndjson`.
+  - The increment is `{"strict-edit-refused:code.proposal.edit": 6, "ungraded-proposal": 6}`.
+  - Per-profile cumulative causes and strict counts are 14, 12, 4, 10, 5 and 9 out of 18. Both match the
+    published text exactly.
+  - All twelve new attempts finished with `stop`. The longest was muse dev-018 at 259.9 s, under the 300 s
+    deadline, so "no new transport timeout" holds.
+- **Counters.** I summed `timings.prompt_n` and `predicted_n` over every `upstream-response-*.bin`, checking
+  them against `usage` and checking that captured bytes equal retained bytes. The results reproduce every
+  input/output and coverage cell. Muse is 75671 / 123531 at 14/18. `muse-06` and `muse-10` (the earlier timeout
+  pairs) have two requests and no responses, which matches the "no upstream response captured" statement.
+  Summed `generation_seconds` reproduces every request and strict-check seconds cell.
+- **Controller wall.** 14:44:02.872 − 14:21:16.516 = 1366.356 s, as published.
+- **Measure first.** The scoreboard has a line for this batch. It states the context and output budgets and
+  reports "Does not fit: 0" separately from model failures. Missing counters are shown as coverage and are not
+  estimated. The prior scoreboard prefix is byte-identical, which the verifier asserts.
+
+## Reporting correction (v2 bundle)
+
+The original bundle's verifier required the increment summary sentence to appear once in the whole scoreboard.
+This batch's counts equal the preceding batch's counts, and I confirmed the identical sentence at scoreboard
+lines 7517 and 7579, so that assertion could not pass. The v2 verifier differs only by checking uniqueness
+within the new append and asserting the full prior prefix. I checked every file in the original bundle against
+v2:
+- all `campaign/` raw bytes are identical;
+- the differences are the bundle path in `pack.py` and `finalize.py`, a disclosed paragraph in the evidence
+  document and `write-report.py`, and the resulting digests in `reporting-adaptations.json` and
+  `preservation.json`;
+- the failed log and `reporting-verifier-correction.json` were added.
+
+The correction is narrow and disclosed, and changes no observation or threshold.
+
+## Safety and confinement of the run
+
+- `launch.json` records nice 19, read from `/proc`. The `nice -n 9` in argv is an increment on top of an
+  inherited 10. Limits are `memory.max` 16 GiB and `cpu.max` 400000/100000, with
+  `candidate_execution: false` and `hidden_or_held_out: false`. The repository is mounted read-only from the
+  frozen snapshot.
+- `cleanup.json` reports PASS: 54 completed pairs, no live owned processes, no foreign signal, settings
+  revoked, and keys and sockets absent.
+- The 12 token retirement receipts cover the client and control tokens for the six new jobs. The bundle
+  contains no `auth/*.token` file.
+- All six new model servers log `listening on unix:///run/agentmage/model.sock` only. Requests set
+  `include_usage: false` and the computed `max_tokens`. No candidate, project test, hidden or held-out task ran.
+- The bundle's `launch.json` contains a private home path, but it is not committed. I found no username, home
+  path, hostname, credential or email in any added line of the four committed files. The copied review contains
+  only generic lane and tool paths, and the path check passes.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (backlog, carried over and already disclosed): on client timeout the backend is not cancelled, so muse
+dev-007 overlapped into dev-008 and dev-011 into dev-012. This stays on the T-309 backlog and is stated
+accurately in both documents.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing development measurement): this batch's evidence supports its claims. The twelve
+  attempts and all cumulative tables trace to raw logs. Strict ungraded proposals are labelled as not solved
+  tasks, and task passes, feedback, retries and model admission are reported as unavailable. Both rows stay
+  OPEN as stated, and nothing closes.
+
+Verdict: PASS
