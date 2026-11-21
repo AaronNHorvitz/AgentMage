@@ -1,0 +1,105 @@
+Commit: 25c8de30fe69706348e9b9e7fca614283fabbd4c
+Scope: original-address-development-checkpoint156
+
+# Independent core review: original-address development checkpoint 156 (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. Reviewed the frozen checkout
+/lane/review-checkout only. No GPU use. Repository not modified.
+
+## Methods and commands (all in /lane/review-checkout)
+
+1. `git rev-parse HEAD` → `25c8de30fe69706348e9b9e7fca614283fabbd4c` (matches request). `git status --porcelain` → clean.
+   `git diff --check f917b466c81a490a677ddd9c2c8a8852cfc1eb52` → exit 0.
+   `git diff --stat` against the parent: 4 files, 380 insertions, **0 deletions**: TASKS.md (+9 at the top of the active
+   queue), docs/evidence/coding-scoreboard.md (+62 appended; prefix byte-exact), new
+   docs/evidence/t303-original-address-checkpoint156-2026-11-21.md, new
+   docs/reviews/f917b466c81a-original-address-development-checkpoint144.txt.
+   `git diff --name-only 7821274ab5ca…HEAD` outside `docs/` and `TASKS.md` → empty; the frozen source is an ancestor.
+   So the "no production source changes" claim holds. README, inventory, Decision 0051, the ledger and supply-chain outputs
+   are not touched.
+2. Bundle digests (sha256sum): manifest `9a1c7aad…fb28c`, bindings `00db615c…39516`, audit `361a23ad…cc7e`,
+   post-commit `9e528d21…78ee`. All match the request.
+3. `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B …/verify.py --require-postcommit` → exit 0,
+   `{"status":"PASS","complete_files":105922,"source_files":9893,"repository_inputs":2425,"private_inputs":111,
+   "contexts":30,"attempts":156,"task_passes":null,"candidate_execution":false,"postcommit_checked":true}`.
+4. Node 24.15.0 symlinked from /lane/reviews/42612ca9787f-a4b-node (sha256 `d1de76d8…c932c`, matches) into /tmp, outside the bundle:
+   - `local_agent_fast_gate.py --base f917b466… --timeout 600` → `FAST GATE: PASS` (markdownlint 0 issues in 3 files).
+   - `node …/work/render.mjs` → `{"status":"PASS","issues":0}` for the 3 changed Markdown files.
+   - `private_host_paths.py --base f917b466…` → `PRIVATE PATH CHECK: PASS`.
+   - `license_policy.py` → `LICENCE POLICY: PASS`.
+5. Prior review copy: `cmp /lane/reviews/f917b466c81a-original-address-development-checkpoint144.md
+   docs/reviews/f917b466c81a-…checkpoint144.txt` → identical; sha256 `b31a887b…def8` equals work/review-state.json; it ends
+   `Verdict: PASS`, as TASKS.md and the evidence state.
+
+## Independent reproduction (own scripts, not the builder's verifier)
+
+- **Table recount from raw logs** (/tmp/rv_recount.py over all 78 job `collection/batch.json`): every per-attempt log
+  hash matches; record.json equals the batch entry; no duplicate (profile, task); retries 0 on all 156;
+  `requested_output_tokens == min(32768, 32768 − rendered − 32)` and `request.json.max_tokens` equals it for all 156;
+  base fallback exactly when cause ≠ ungraded-proposal; nothing graded. Backend input/output counts parsed from
+  each `backend-slice.log` (`prompt eval time … / N tokens`, `eval time … / N tokens`) give exactly the published
+  values: gemma4-31b 178827/26139 (26), qwen35-27b 157841/30585 (26), gpt-oss 145804/393988 (26),
+  muse 121690/180237 (22), gemma4-e4b 178723/50055 (26), gemma4-26b-a4b 178827/40792 (26). Backend prompt
+  counts equal the preflight rendered counts wherever present. The only attempts without counters are the four
+  disclosed muse timeouts (dev-007, dev-008, dev-011, dev-012). Proposal counts 22/19/8/16/8/15 of 26 match.
+- **Increment**: the 12 new dev-025/dev-026 attempts give 7 ungraded-proposal and 5 `code.proposal.edit`, matching the request;
+  per profile +2/+1/+1/+2/+0/+1 from the 144 checkpoint. All 12 finish `stop`; no new timeout.
+- **Strict-check replay** (/tmp/rv_replay.py): I applied my own reading of the contract (inclusive original-line ranges
+  that keep their LF, nonempty, whole-file-unique selected text visible in one excerpt, no overlap, `new` replacing the range verbatim)
+  to the frozen payloads. It reproduces all 12 verdicts. Refusal reasons: a4b dev-025 and e4b dev-025 have reversed or absurd
+  ranges (71–7; 1333333333333333–7); e4b dev-026, gpt-oss dev-025 and qwen dev-026 select non-unique text (12, 11 and 4
+  occurrences). For all 7 accepted attempts, the after-content bytes equal checked.json and its `after_sha256`.
+- **Timing**: summed `generation_seconds` per profile equals the "Request and strict-check seconds" column. Summed
+  `reserved_work_seconds`/60 from the 78 reservation logs (13 per profile, all `completed`) equals the GPU-minutes
+  column. Controller span from launch.json to controller-exit.json UTC is 1610.944 s, and 18590.641 + 1610.944 matches the
+  cumulative 20201.584 (rounding).
+- **Preservation**: `diff -rq` of all 144 earlier attempt directories against
+  /lane/reviews/original-address-development-checkpoint144-20261121 → 144 compared, 0 differ. Candidate trees differ only by additions.
+- **Cleanup and secrets**: cleanup.json shows 78 pairs, no live owned processes, keys and sockets absent, receipts persisted before
+  unlink, no foreign signal. token-retirement-receipts.json has 12 new entries (client/control × 6). The `*-24`
+  upstream request captures contain no authorization or bearer header. `ps` shows no leftover model or API process.
+  The /lane/state/oa1 tree is not visible from this sandbox, so I relied on the receipts for its deletion.
+- **Held-out and evaluation integrity**: payloads are dev tasks only (29 `dev-*`, 1 `dev-rust-*`). No held-out
+  content appears in the diff. The only "held-out" text in it is a statement that none ran. No source, prompt, parser or checker
+  changed (see step 1), so no tuning happened during the repeat. Failures and timeouts stay counted.
+- **Privacy and naming**: the added lines contain no home path, username, hostname, email, key pattern, private project or
+  agent-product name. My grep for common agent-product names found nothing. The profile names are model identifiers already accepted by earlier reviews.
+- **Measure first**: a scoreboard line exists for this batch, gives the context and output budgets, counts
+  does-not-fit (0) apart from model failures, and every cell traces to raw logs (above).
+
+UI, confinement escape attempts and full-gate reruns are outside this measurement-only scope: no runtime,
+tool or permission code changed. The inherited full source gate FAIL (1045 passed, 53 failures) is disclosed as not rerun and not
+waived. I did not rerun it, and this review relies on it for nothing.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Low (backlog) — "strict ungraded proposal" counts mostly include candidates with joined lines.**
+  The frozen checker replaces each selected range, including its trailing LF, with `new` verbatim. When `new` lacks
+  a trailing LF, its last line runs into the next source line. Example, by the checker's own output:
+  campaign/jobs/gemma4-31b-24/collection/dev-026/checked.json contains
+  `code, output = result.returncode, result.stdout + result.stderr            result = subprocess.run(`.
+  Across all 88 accepted proposals, 60 contain at least one edit that joins onto a **nonblank** following source line.
+  By profile: gemma4-31b 19/22, qwen35-27b 15/19, gemma4-26b-a4b 10/15, muse 9/16, gpt-oss 4/8, gemma4-e4b 3/8.
+  In this increment: a4b dev-026, 31b dev-025 and dev-026, muse dev-026, qwen dev-025.
+  The published numbers are exactly what they claim (checker-accepted, ungraded, "not solved tasks"), the instruction tells
+  the model to "keep LF before following source", and changing the checker mid-repeat would break the freeze.
+  So this blocks nothing now. Concrete fix (backlog, after the 30-task repeat and before T-312 or any profile comparison
+  uses these counts): publish, next to the proposal count, how many accepted proposals join a replacement line onto
+  following source, computed by the portable verifier from the retained bytes. Alternatively, decide in a new record whether the
+  contract should refuse such edits. I found no earlier review or evidence file that discloses this.
+- Informational, not in this increment: muse dev-010 (earlier increment) was accepted in the exact-text `path/old/new` form,
+  although the requested schema is line-range only. This follows the decision text that exact-text clients remain
+  supported, and earlier reviews accepted it. It is noted only so the T-312 analysis counts it knowingly.
+- The existing T-309 lows (backend cancellation on client timeout, per-pair wrapper provenance, policy wording, helper build
+  source) remain disclosed backlog, unchanged.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing development measurement, checkpoint 156/180): every claim in TASKS.md, the scoreboard append
+  and the evidence file is reproduced from raw logs. Failures are counted, task passes, feedback, retries and model admission
+  are reported unavailable, the frozen campaign is unchanged and the prior verdict is copied byte-exact. Both rows stay OPEN as stated, and
+  no row closes. This PASS accepts the measurement increment only.
+
+Verdict: PASS
