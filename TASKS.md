@@ -2,6 +2,19 @@
 
 ## Active queue: local agent mission
 
+The [visible unique-line preparation](docs/evidence/t303-visible-unique-line-hints-2026-11-21.md)
+adds compact source-header hints for individually unique visible original lines,
+plus an explicit replacement-newline example. It targets the completed repeat's
+31 repeated-original refusals and considers its 69/102 accepted proposals with
+joined-line boundaries. The strict checker and every authority boundary remain
+unchanged. This is unmeasured preparation, not a task score. Freeze all 30
+development contexts and repeat every task on all six profiles before further
+tuning or capability work. Native admission, task grading, feedback and retries
+remain unavailable. The preceding diagnosis's exact-commit independent
+[PASS](docs/reviews/18c1f7889709-original-address-refusal-diagnosis.txt) is retained
+unchanged. T-303/T-306 remain open; this increment needs independent core review.
+No row closes.
+
 The [completed original-address refusal diagnosis](docs/evidence/t303-original-address-refusal-diagnosis-2026-11-21.md)
 reproduces 167 native checks across all 180 development attempts.
 Repeated original text is the largest individual refusal condition (31),

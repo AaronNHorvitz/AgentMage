@@ -50,7 +50,7 @@ fn source_bodies_round_trip_quotes_escapes_unicode_line_endings_and_fake_headers
     assert_eq!(metadata["task"], task);
     assert_eq!(
         metadata["source_encoding"],
-        "untrusted-raw-utf8-length-prefixed-v2"
+        "untrusted-raw-utf8-length-prefixed-v3"
     );
     assert_eq!(
         metadata["files"],
@@ -154,5 +154,134 @@ fn framing_and_metadata_count_at_the_exact_byte_boundary() {
     assert!(matches!(
         prepare_coding_proposal("Change one", &sources, bytes - 1),
         Err(CodingProposalError::Context)
+    ));
+}
+
+// Independent byte-window oracle counts overlapping occurrences, including a
+// line appearing as the suffix of a different line. Hints are not line counts.
+fn assert_hints(text: &str, task: &str, budget: usize) {
+    let sources = [CodingSource {
+        path: "sample.txt".into(),
+        content: text.into(),
+    }];
+    let context = prepare_coding_proposal(task, &sources, budget).unwrap();
+    let (_, bodies) = decode(context.user_message());
+    let lines: Vec<_> = text.split_inclusive('\n').collect();
+    for (header, body) in bodies {
+        let h = &header["untrusted_excerpt"];
+        let first = h["start_line"].as_u64().unwrap() as usize;
+        let last = h["end_line"].as_u64().unwrap() as usize;
+        assert_eq!(body, lines[first - 1..last].concat());
+        let expected: Vec<_> = (first..=last)
+            .filter(|&n| {
+                let line = lines[n - 1];
+                !line.trim().is_empty()
+                    && text
+                        .as_bytes()
+                        .windows(line.len())
+                        .filter(|bytes| *bytes == line.as_bytes())
+                        .count()
+                        == 1
+            })
+            .collect();
+        let mut actual = Vec::new();
+        let mut previous_end = None;
+        for interval in h["unique_lines"].as_array().unwrap() {
+            let pair = interval.as_array().unwrap();
+            assert_eq!(pair.len(), 2);
+            let start = pair[0].as_u64().unwrap() as usize;
+            let end = pair[1].as_u64().unwrap() as usize;
+            assert!(first <= start && start <= end && end <= last);
+            if let Some(previous) = previous_end {
+                assert!(previous + 1 < start, "intervals must be compressed");
+            }
+            actual.extend(start..=end);
+            previous_end = Some(end);
+        }
+        assert_eq!(actual, expected);
+        for n in actual {
+            let answer = json!({"edits":[{
+                "path":"sample.txt", "start_line":n, "end_line":n, "new":"changed\n"
+            }]});
+            // Hints establish only a valid original selection. Replacement
+            // validation and every other edit check still run normally.
+            check_coding_proposal(&context, &sources, &answer.to_string()).unwrap();
+        }
+    }
+    assert!(context.message_bytes() <= budget);
+    assert_eq!(
+        context.user_message(),
+        prepare_coding_proposal(task, &sources, budget)
+            .unwrap()
+            .user_message()
+    );
+}
+
+#[test]
+fn hints_use_complete_source_uniqueness_and_exact_line_endings() {
+    for text in [
+        "same\nunique\nsame\n",
+        "one\nsomeone\nend\n",
+        "aaa",           // The whole line is unique, despite overlapping substrings.
+        "aa\naaa\naa",   // The final unterminated line has overlapping matches.
+        "é\nxé\n😀\n😀", // Matches inside another line and before a final LF.
+        "\r\nunique\r\n}\r\n}\r\nlast",
+        "\n\n\n", // No informative single-line anchor; valid ranges still exist.
+        "alpha\nbeta\ngamma\n", // Adjacent unique lines form one interval.
+        "{\nalpha\n}\n\n{\nbeta\n}\n",
+    ] {
+        assert_hints(text, "Change sample", 4096);
+    }
+}
+
+#[test]
+fn hints_never_advertise_omitted_lines_or_uniqueness_only_in_an_excerpt() {
+    let text = (1..=500)
+        .map(|n| {
+            if n == 250 || n == 490 {
+                "target_anchor\n".to_owned()
+            } else {
+                format!("line_{n:04}\n")
+            }
+        })
+        .collect::<String>();
+    assert_hints(&text, "target_anchor", 2048);
+}
+
+#[test]
+fn hinted_anchor_preserves_insertion_context_and_explicit_newline_bytes() {
+    let sources = [CodingSource {
+        path: "sample.txt".into(),
+        content: "anchor\n\nnext\n\n".into(),
+    }];
+    let context = prepare_coding_proposal("Insert sample", &sources, 2048).unwrap();
+    let (_, bodies) = decode(context.user_message());
+    assert_eq!(
+        bodies[0].0["untrusted_excerpt"]["unique_lines"],
+        json!([[1, 1], [3, 3]])
+    );
+    let answer = |first, last, new| {
+        json!({"edits":[{
+            "path":"sample.txt", "start_line":first, "end_line":last, "new":new
+        }]})
+        .to_string()
+    };
+    assert!(matches!(
+        check_coding_proposal(&context, &sources, &answer(2, 2, "inserted\n")),
+        Err(CodingProposalError::Edit)
+    ));
+    for (new, expected) in [
+        ("anchor\n\ninserted\n", "anchor\n\ninserted\nnext\n\n"),
+        ("anchor\n\ninserted", "anchor\n\ninsertednext\n\n"),
+    ] {
+        let changes = check_coding_proposal(&context, &sources, &answer(1, 2, new)).unwrap();
+        assert_eq!(changes[0].content, expected);
+    }
+    // No hint is required: a range consisting of both unique lines is valid.
+    check_coding_proposal(&context, &sources, &answer(1, 3, "replaced\n")).unwrap();
+    // Hints confer neither snapshot authority nor immunity from other checks.
+    assert!(matches!(
+        check_coding_proposal(&context, &sources, &answer(1, 1, "nul\0")),
+        Err(CodingProposalError::Edit)
     ));
 }

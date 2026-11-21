@@ -28,7 +28,7 @@ fn raw_source_context(message: &str) -> Value {
     let mut context: Value = serde_json::from_str(metadata).unwrap();
     assert_eq!(
         context["source_encoding"],
-        "untrusted-raw-utf8-length-prefixed-v2"
+        "untrusted-raw-utf8-length-prefixed-v3"
     );
     let mut excerpts = Vec::new();
     for _ in 0..context["excerpt_count"].as_u64().unwrap() {

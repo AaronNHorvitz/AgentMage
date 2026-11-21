@@ -8037,3 +8037,26 @@ now reports the inherited per-profile counts alongside refusals. That larger
 ungraded pattern must also inform the next edit-contract experiment; refusal
 counts alone cannot rank all edit defects. Independent core review is required
 for this increment. T-303/T-306 remain open.
+
+## 2026-11-21: visible unique-line preparation, awaiting measurement
+
+Reporting base: `18c1f7889709a4dcabc0fa789e6b07a66fb9ea98`.
+The [preparation evidence](t303-visible-unique-line-hints-2026-11-21.md)
+and [Decision 0217](../decisions/0217-visible-unique-line-hints.md) record the
+changed variable: version 3 source headers identify individually unique visible
+original lines, and the instruction illustrates replacement LF explicitly.
+This follows 31 repeated-original refusals and considers the overlapping 69/102
+accepted proposals with joined-line boundaries in the completed repeat.
+Those observations are neither task scores nor an estimate of improvement.
+
+This is an unmeasured preparation entry, not a scoreboard run. No inference,
+GPU time, new token counts or task passes are claimed. Freeze all 30 development
+contexts and repeat all tasks on all six profiles in resumable GPU jobs before
+further tuning or capability work. Keep 32K context, the per-task output formula,
+profiles, thinking request and deadlines. Record actual token fit and changed
+source coverage. The strict checker remains unchanged; no answer is repaired.
+Native executable admission and original grading remain unavailable; task
+passes, feedback and retries remain unavailable. Hidden and held-out inputs
+remain untouched. T-303/T-306 stay open. The preceding diagnosis's independent
+[exact-commit PASS](../reviews/18c1f7889709-original-address-refusal-diagnosis.txt)
+is retained unchanged. This increment requires its own core review; no row closes.

@@ -73,7 +73,7 @@ untrusted data. It cannot change the endpoint, tools, budgets or authority.
 The user message starts with JSON metadata, followed by JSON excerpt headers
 and raw UTF-8 bodies. A header's `bytes` gives the body length; one additional
 framing newline follows the body and is not source. Version
-`untrusted-raw-utf8-length-prefixed-v2` adds original `start_line` and `end_line`
+`untrusted-raw-utf8-length-prefixed-v3` retains original `start_line` and `end_line`
 to each header alongside the byte offsets. Decode bodies by byte lengths, never
 by looking for delimiters inside untrusted source. Body bytes remain unchanged.
 
@@ -399,5 +399,22 @@ source. A final line without LF is still an existing anchor; explicitly include
 a separator when appending another line. The runtime does not add one.
 
 [Decision 0216](../decisions/0216-original-address-insertion-guidance.md) records
-this unmeasured generation hypothesis and the required six-profile development
-repeat. Earlier frozen results and Decisions 0212 through 0215 remain available.
+the earlier insertion guidance. Earlier frozen results remain available.
+
+Version 3 source headers add `unique_lines`, an array of inclusive original
+line intervals such as `[[3, 5], [9, 9]]`. Here lines 3, 4, 5 and 9 each have
+non-whitespace text that occurs exactly once in the complete original file,
+including occurrences inside other lines and overlapping occurrences. Every
+listed line is visible in that excerpt. CRLF and an unterminated final line
+are checked with their exact bytes. No source body is annotated or rewritten.
+
+These are anchor hints. Include an anchor with retained context when selecting
+repeated blank or brace lines. Other unique visible ranges remain valid;
+an empty list does not rule out a unique multi-line range. The strict checker
+still validates every submitted edit. Header bytes count toward the existing
+message limit, so source coverage can change. The instruction also illustrates
+that replacing `"old\n"` with `"new\n"` keeps the next line separate, while
+`"new"` joins it. The runtime preserves submitted replacement bytes exactly.
+
+[Decision 0217](../decisions/0217-visible-unique-line-hints.md) records this
+unmeasured source-metadata experiment and the required six-profile repeat.

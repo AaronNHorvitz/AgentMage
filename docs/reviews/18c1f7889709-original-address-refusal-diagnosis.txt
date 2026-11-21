@@ -1,0 +1,174 @@
+Commit: 18c1f7889709a4dcabc0fa789e6b07a66fb9ea98
+Scope: original-address-refusal-diagnosis
+
+# Independent core review: original-address refusal diagnosis (T-303/T-306, non-closing)
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. I reviewed only the frozen checkout
+/lane/review-checkout at the exact commit. I did not use the GPU, start a model or API process, or modify the
+repository. Scratch files were written only under /tmp/rvrd.
+
+## Methods and commands (all run in /lane/review-checkout)
+
+1. **Commit and diff.**
+   - `git rev-parse HEAD` → `18c1f7889709a4dcabc0fa789e6b07a66fb9ea98`.
+   - `git status --porcelain` → empty, before and after all runs.
+   - `git diff --check 4422aa7ba4c2797bbf13c82f8d4618c8412d167b` → exit 0.
+   - The diff over the base touches 4 files, with 386 insertions and 0 deleted lines:
+     - TASKS.md: +14, directly under `## Active queue: local agent mission`.
+     - docs/evidence/coding-scoreboard.md: +42, appended. The base bytes are an exact prefix; the verifier asserts this.
+     - new docs/evidence/t303-original-address-refusal-diagnosis-2026-11-21.md.
+     - new docs/reviews/4422aa7ba4c2-original-address-development-checkpoint180.txt.
+   - `git diff --name-only 7821274ab5ca… HEAD`, filtered to paths outside `docs/` and `TASKS.md` → empty. So there was
+     no source, prompt, schema, checker or script change since the frozen measured source.
+   - `git diff --quiet` over README.md, NOTICE, both licence files, Agent-Scaffolding-Inventory.md, docs/decisions,
+     supply-chain, architecture, capabilities, crates and scripts → 0 (unchanged).
+   - All three relative links in the new evidence resolve.
+2. **Digests.** `sha256sum` matches the request for:
+   - manifest.json `1f8c1b4a…fbada`
+   - bindings.json `3bd8de50…8e8`
+   - analysis.json `715ae41e…e6dd`
+   - post-commit envelope `fe59fc44…6de6`
+
+   The post-commit envelope names this commit, parent 4422aa7b… and tree ddefda5b…. The hashes printed in the evidence
+   also match their files:
+   - origin manifest `6c9c3298…40d9`
+   - analyzer `47748bd4…084cb`
+   - origins.json `11ada1f9…043c`
+   - inherited joined-lines.json `59c3c009…1f64`
+3. **Builder's verifier.**
+   `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B /lane/reviews/original-address-refusal-diagnosis-20261121/verify.py --require-postcommit`
+   → exit 0:
+   `{"status":"PASS","bundle_files":1128,"consumed_origin_files":1090,"checks_reproduced":167,"controls":38,"attempts":180,"largest_failure":"old-ambiguous","candidate_execution":false,"full_predecessor_verified":false,"postcommit_checked":true}`.
+
+   I read verify.py. Among other things, it checks:
+   - every sealed file against the manifest, with no symlinks;
+   - that the changed public paths equal scope.json, with byte-identical copies;
+   - that the 512 TASKS.md table lines are unchanged;
+   - that the scoreboard prefix is exact;
+   - that README, the inventory, the status model, supply-chain and Decision 0051 are unchanged;
+   - the 49 preserved-path blobs;
+   - that `line_parts`, `classify`, `ambiguous_observation`, `helper` and `controls` are AST-identical to the
+     preceding reviewed analyzer (binding `1073937b…8c46`), with the exact adaptation diff;
+   - that `analyze.py --verify` gives byte-identical analysis JSON;
+   - that the public tables in the evidence and scoreboard are each generated once from the analysis counts;
+   - that the initial and final rows and classifications are identical (consumed 1089 → 1090 only, the added inherited
+     joined-lines.json);
+   - the post-commit binding.
+
+   The analyzer checks:
+   - each consumed input against the 119284-entry origin manifest;
+   - the checker source against `git show 7821274…:capabilities/repository-map/src/coding_proposal.rs`;
+   - the helper SHA-256 against frozen-inputs.json;
+   - each of the 30 payloads against its base Git blob;
+   - all 30 contexts against the helper;
+   - each of the 167 checked.json files against a rerun of the helper;
+   - 90 batch reports: completed, no resource-guard error, peak at most 22528 MiB.
+4. **Reporting gates.** I symlinked Node 24.15.0 into /tmp/rvrd/bin, outside the bundle, from
+   /lane/reviews/42612ca9787f-a4b-node. Its SHA-256 `d1de76d8…c932c` matches, and the licence file is present.
+   - `bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base 4422aa7b… --timeout 600` →
+     `FAST GATE: PASS`. markdownlint found 0 issues in 3 files, and the review-copy lint passed.
+   - `node …/render.mjs` → `{"status":"PASS","issues":0}` for the 3 Markdown files.
+   - `python3 -B scripts/private_host_paths.py --base 4422aa7b…` → `PRIVATE PATH CHECK: PASS`.
+   - `python3 -B scripts/license_policy.py` → `LICENCE POLICY: PASS`.
+   - The bundle retains initial-fast-gate-failed.log (an MD012 double blank line) and diagnostic-extension-failed.log
+     (an analyzer KeyError before the joined-line wiring). Both precede the final run and are fixed in the committed
+     state. This is not a finding.
+5. **Retained prior review.** `cmp /lane/reviews/4422aa7ba4c2-original-address-development-checkpoint180.md
+   docs/reviews/4422aa7ba4c2-original-address-development-checkpoint180.txt` → identical.
+   - Its SHA-256 `b81edcff…78d8` equals review-state.json (`available: true`, verdict PASS, `open_high_medium: false`).
+   - Its low finding (report joined-line observations beside refusal causes) is the one this increment answers.
+
+## Independent reproduction (my own script /tmp/rvrd/recount.py, not the builder's classifier)
+
+I read the Rust checker (checker-source.rs lines 454–488 for line-range resolution and 511–656 for the check). I then
+wrote my own classifier from it. It reads all 90 job `collection/batch.json` files and the raw answer, checked, context
+and event files, and applies these steps:
+
+1. Strict shape.
+2. Whole-batch resolution, in Rust order: `0 < first ≤ last`, then path, then bounds, with LF split_inclusive lines.
+3. Per edit: path, then empty/unchanged/NUL, then whole-file occurrences (overlapping), then visibility in one excerpt
+   by UTF-8 byte span.
+4. Overlap.
+5. Net change.
+
+Results:
+
+- **180 unique attempts**, all `dev-*`, `retries == 0` and `graded == false`.
+- **Agreement with native acceptance on all 167 checked replies, 0 mismatches.** Every refusal class carries the
+  native error: `code.proposal.format` for the 3 format refusals and `code.proposal.edit` for the 62 edit refusals. For
+  all 102 accepted replies, my applied content equals checked.json `changes[0].content`.
+- **Counts reproduced exactly:**
+  - Edit conditions: repeated original 31, invalid line order 20, not visible 5, overlapping 3, out of bounds 2,
+    unknown path 1 (sum 62).
+  - Format refusals: 3.
+  - Generation refusals: incomplete 7, length 2, transport timeout 4 (13).
+  - Accepted: 102. Total: 180.
+- **Per-profile table reproduced exactly.** Columns are repeated / invalid order / accepted / joined:
+
+  | Profile | Repeated | Invalid order | Accepted | Joined |
+  | --- | ---: | ---: | ---: | ---: |
+  | gemma4-26b-a4b | 2 | 7 | 18 | 11 |
+  | gemma4-31b | 3 | 0 | 26 | 23 |
+  | gemma4-e4b | 6 | 11 | 11 | 4 |
+  | gpt-oss | 9 | 1 | 8 | 4 |
+  | muse | 5 | 0 | 17 | 10 |
+  | qwen35-27b | 6 | 1 | 22 | 17 |
+
+  The joined-line total is 69/102. I recomputed that column myself, although the report says the diagnosis does not
+  recompute it.
+- **Repeated-original observations reproduced:**
+  - 31 first failures: 1 exact-text and 30 line-range.
+  - Of the 30 line ranges, 29 are single-line, 16 are whitespace-only, and 27 have the addressed range fully inside one
+    excerpt.
+- **Invalid-order observations reproduced:** 20 attempts. All 20 are reversed, 0 start at zero, 2 are adjacent
+  reversed, and 9 start beyond the source line count.
+- **Classifier fidelity (by reading).** The Python `classify` mirrors the Rust order exactly:
+  - order/zero is checked before path, and path before bounds, inside `resolve_edit`;
+  - all edits are resolved before any preimage check;
+  - the per-edit checks follow, then overlap on the sorted spans, then size, then net change.
+
+  Its `start + 1` character-index search equals Rust's `start + len_utf8(first char)`.
+- **Resources.** There are 90 batch reports with a maximum sampled peak of 20850 MiB, within the 22528 MiB ceiling.
+- **Held-out and evaluation integrity.**
+  - preflight.json lists only 30 `dev-*` tasks and records `"held_out_or_hidden_used": false`.
+  - The diff mentions held-out only to say none was used.
+  - No prompt, checker or task changed, so there was no tuning.
+  - All failures stay counted, including generation refusals and timeouts.
+- **Privacy and naming.** I grepped the added lines for the local username, home-path forms, email, credential patterns
+  and common agent-product names. The only hits are inside the byte-exact copied prior review, which describes its own
+  grep and mentions "authorization/bearer" as search terms. Bundle-only paths (for example under /lane/state) are not
+  committed.
+- **Claims versus evidence.** The texts call the counts first-failing conditions rather than all defects, and say they
+  are not grades or solved tasks. Task passes, feedback, retries and native admission are reported as unavailable. The
+  complete predecessor inventory is stated as not reverified. The inherited full-gate FAIL (1045/53/11, 31 targets) is
+  disclosed and neither rerun nor waived. The joined-line count is labelled an overlapping textual subset, not added to
+  refusals.
+- **Measure first.** The scoreboard has an entry for this analysis increment. It says context and output budgets are
+  those of the checkpoint and labels itself an analysis, not a run. The next work it selects (unique visible
+  original-range selection, informed by the 69/102 joined-line pattern) follows from the largest individual condition.
+  It does not change the order of work and adds no limit or bookkeeping row.
+
+Out of scope for this reporting-only increment: confinement escape attempts and UI screens. No runtime, tool,
+permission or UI code changed. I did not rerun the full source gate, and nothing here depends on it.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **Checkpoint-180 low (joined-line observations beside refusal causes): addressed.** The 69/102 column sits beside the
+  refusal counts per profile in the evidence, the scoreboard text and TASKS.md. I reproduced it independently.
+- **Low, carried forward unchanged as disclosed backlog.** The existing T-309 lows: backend cancellation on timeout,
+  per-pair wrapper provenance, campaign-policy and request wording, and the frozen helper build source.
+
+## Per-row result
+
+T-303 / T-306 (non-closing completed-repeat diagnosis):
+- Every number in the TASKS.md entry, the scoreboard append and the diagnosis evidence reproduces from the authenticated
+  raw logs, both through the builder's sealed verifier and through my own classifier.
+- Native acceptance agrees on all 167 checked replies, and all 180 attempts remain counted.
+- No source, prompt, checker or task changed.
+- The prior review is retained byte-exact.
+
+Both rows stay OPEN as stated, and no row closes. This PASS accepts the diagnosis increment only.
+
+Verdict: PASS
