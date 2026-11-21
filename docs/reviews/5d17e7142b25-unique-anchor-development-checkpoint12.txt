@@ -1,0 +1,118 @@
+Commit: 5d17e7142b2530b745ca53d57ddd38262433b520
+Scope: unique-anchor-development-checkpoint12
+
+Reviewer: independent Claude Opus 5.5 session at extra-high effort, read-only access, pinned checkout
+/lane/review-checkout. Row: T-303/T-306, a non-closing frozen development measurement (12/180).
+Base and frozen source: 6ee61e63298e0aca1e1e8896278d24ab72262a61. No repository file was modified.
+
+## Methods and commands (all in /lane/review-checkout, CARGO_TARGET_DIR=/lane/state/review-target)
+
+1. `git rev-parse HEAD`: 5d17e7142b2530b745ca53d57ddd38262433b520. `git status --porcelain`: empty.
+   `git diff --check 6ee61e63…`: exit 0. The diff touches 4 paths: TASKS.md (+8 lines at the top of the
+   active queue), docs/evidence/coding-scoreboard.md (+40 lines appended),
+   docs/evidence/t303-unique-anchor-checkpoint12-2026-11-20.md (new) and
+   docs/reviews/6ee61e63298e-unique-anchor-instruction.txt (new). No source, test, manifest, licence or
+   supply-chain file changes.
+2. Bundle hashes: manifest.json 6d4d30a3…a6, bindings.json a35534ef…e4, post-commit envelope 81b8eeb8…1f.
+   All match the request. The envelope names this commit, parent 6ee61e63 and tree 0a1bc74c.
+3. `bash /tools/build-slot python3 -B …/unique-anchor-development-checkpoint12-20261120/verify.py --require-postcommit`
+   gives PASS: complete_files 9941, source_files 9858, repository_inputs 2390, private_inputs 94,
+   contexts 30, attempts 12, task_passes null, candidate_execution false, postcommit_checked true. It took 31 s.
+4. Retained Node: /lane/reviews/42612ca9787f-a4b-node has SHA256 d1de76d8…2c and reports v24.15.0. Its
+   licence file is present. The node symlink was placed in a temporary directory outside the bundle,
+   then removed.
+   - `python3 -B scripts/local_agent_fast_gate.py --base 6ee61e63… --timeout 600` gives FAST GATE: PASS. This
+     includes diff check, untracked lint, privacy, licence, review lint of the retained copy and
+     markdownlint (0 issues in 3 files).
+   - `node …/work/render.mjs` gives status PASS with 0 issues over the 3 rendered files.
+   - `python3 -B scripts/private_host_paths.py --base 6ee61e63…` gives PRIVATE PATH CHECK: PASS.
+   - `python3 -B scripts/license_policy.py` gives LICENCE POLICY: PASS.
+5. I recomputed the results myself from the raw upstream reply bytes, without using the bundle's
+   audit.py, for all 12 attempts:
+   - **Captures:** each reply's SHA-256 and length match its capture record. answer.txt equals the reply's
+     `message.content` byte for byte. Every finish_reason is `stop`.
+   - **Input/output token sums:** the backend `usage` and `timings` counters sum to the published values
+     for every profile:
+
+     | Profile | Input tokens | Output tokens |
+     | --- | --- | --- |
+     | gemma4-31b | 18857 | 2164 |
+     | qwen35-27b | 16441 | 1801 |
+     | gpt-oss | 15128 | 21081 |
+     | muse | 15157 | 14086 |
+     | gemma4-e4b | 18849 | 10993 |
+     | gemma4-26b-a4b | 18857 | 1738 |
+
+   - **Output budgets:** each request's max_tokens equals 32768 − rendered input − 32 (for example
+     32768−9218−32=23518). The published ranges match.
+   - **Proposal counts:** record.json causes and checked.json errors give 1/2, 1/2, 1/2, 2/2, 0/2 and 2/2
+     strict ungraded proposals, 5 `code.proposal.edit` refusals and 7 proposals in aggregate. Does-not-fit
+     is 0 and is counted apart from model failures.
+   - **Request seconds:** the sum of generation_seconds matches each profile (for example
+     88.920+57.475=146.395). In collect.py the timer spans the HTTP request and the strict-checker
+     call, so the label "request and strict-check seconds" is accurate.
+   - **GPU minutes:** reserved_work_seconds/60 from the reservation logs matches (for example
+     196.83/60=3.281).
+   - **Controller wall time:** launch at 23:32:36.667Z to controller exit at 23:55:06.018Z is
+     1349.351 s, as published.
+6. Frozen inputs:
+   - **Instruction and contexts:** all 12 upstream requests carry messages identical to the frozen
+     work/contexts entries. They use one system message, and it is the CODING_PROPOSAL_INSTRUCTION of
+     6ee61e63 (1039 bytes, Decision 0215).
+   - **Request fields:** model, stream false, max_tokens, n 1 and `enable_thinking: false` have the same
+     shape as the predecessor line-range campaign.
+   - **Profiles:** all 5 profile files are byte-identical to the predecessor bundle's. Inside
+     batch-report.json, the profile differs only in `state_root` (lr1 → ua1). Temperature 0, seed 42,
+     model SHA-256s and runtime_manifest_sha256 are equal.
+   - **Transport binary:** agentmage-local-api has SHA256 f13a12ca…ec, identical to the predecessor
+     bundle.
+   - **Adaptations:** script adaptations (batch/collect/controller) change only the namespace paths. The
+     timeout-evidence reset empties inherited observation sets. Changes to audit.py are reporting-side
+     only: capsule paths, plus stronger wire assertions (finish_reason/answer equality). None of them
+     changes model input, runtime, deadline or result.
+7. Safety of the loop:
+   - **Writes:** collect.py writes a candidate projection as data only, from the task's own file names,
+     after requiring exactly one change whose path equals the task source.
+   - **Execution:** no candidate, project test, hidden or held-out code runs. The verifier executes only
+     the bundled effect-free helper, on the frozen payloads.
+   - **Cleanup:** cleanup.json reports PASS, with 6 pairs, no live owned processes, settings revoked and
+     12 token receipts persisted before unlinking. No token file is in the bundle.
+   - **Launch limits:** nice 19, low priority, memory.max ≤16 GiB and cpu.max ≤4 CPUs. The verifier
+     checks these.
+8. Integrity and honesty:
+   - **Development split only:** only dev-001/dev-002 ran, with no held-out loading
+     (`held_out_executed: false`).
+   - **No tuning:** this commit changes no source after seeing results.
+   - **Counts:** task passes are stated as unavailable, failures are counted rather than dropped, and the
+     scoreboard is an exact byte prefix extension.
+   - **Preservation:** the 512 TASKS.md table rows, README, Agent-Scaffolding-Inventory, status model,
+     Decision 0051, supply-chain and the 49 preserved path blobs are unchanged (checked by the verifier).
+   - **Retained review copy:** the copy of the preceding review is byte-identical to
+     /lane/reviews/6ee61e63298e-unique-anchor-instruction.md (cmp).
+   - **Scan of added lines:** I searched for home paths, the local user name, e-mail, credentials and
+     agent-product names. The only hits are reviewer-identity and /lane/ lines inside the retained review
+     copy, which follow established precedent (300 earlier retained reviews contain /lane/review-checkout).
+     The commit trailer Signed-off-by follows CONTRIBUTING. Model names appear only as identified
+     local-model profiles, not as branding.
+9. MEASURE FIRST: the batch after the instruction change (6ee61e63) has its dated scoreboard line
+   (2026-11-20). The line states context and per-task output budgets, traces to raw logs (step 5) and
+   counts does-not-fit separately.
+
+Not run: the full source gate. No source changed, so the preceding recorded result stands as stated:
+FAIL, 1,044 passed / 53 inherited / 11 ignored / 31 targets, disclosed and not waived. GPU use: none by
+the reviewer; GPU evidence was read from the reservation logs. No UI is in scope.
+
+## Findings
+
+None at high or medium.
+
+Low: none new. Already accepted lows stay T-309 backlog: per-pair wrapper provenance, and the earlier
+million-file inventory, which is not reverified in full.
+
+## Per-row result
+
+T-303/T-306, non-closing frozen development measurement 12/180: the reporting increment is accurate,
+traceable to raw replies and consistent with the frozen source and settings. No row closes; the rows stay
+open with 168 attempts remaining.
+
+Verdict: PASS
