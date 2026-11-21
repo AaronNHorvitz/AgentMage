@@ -1,0 +1,114 @@
+Commit: c4a99034a24ec63e85096a1227047861f4de0017
+Scope: original-address-development-checkpoint96
+
+# Independent core review: original-address development checkpoint 96
+
+Reviewer: Claude Opus 5.5, separate session, read-only. I worked in the pinned checkout `/lane/review-checkout`
+with `CARGO_TARGET_DIR=/lane/state/review-target`. Heavy commands ran through `/tools/build-slot` at low priority.
+Outside this file, I wrote only a temporary node symlink and scratch logs under my own `/lane/state/tmp/r96`, outside
+the sealed bundle. I removed the symlink afterwards. `git status --porcelain` was empty before and after. I used no GPU.
+
+Row: T-303/T-306, a development measurement that does not close the row. Frozen source
+`7821274ab5caa56573d8b68aa7a2121c71fc4b2b`; reporting parent `9bbb28abfe082a46494a9da10858992e65d5cf2a`.
+
+## What changed
+
+`git diff --name-status 9bbb28ab..c4a99034` shows four files and 303 insertions. Nothing is deleted and no
+production source changes:
+
+- M `TASKS.md`: 9 lines added, 0 removed.
+- M `docs/evidence/coding-scoreboard.md`: 62 lines appended. The previous file is an exact byte prefix (`cmp -n`).
+- A `docs/evidence/t303-original-address-checkpoint96-2026-11-21.md`
+- A `docs/reviews/9bbb28abfe08-original-address-development-checkpoint84.txt`
+
+The commit carries the Signed-off-by line and the co-author trailer.
+
+## Commands and results
+
+1. `git rev-parse HEAD` → `c4a99034a24ec63e85096a1227047861f4de0017`. `git status --porcelain` → empty.
+   `git diff --check 9bbb28abfe082a46494a9da10858992e65d5cf2a` → exit 0.
+2. Bundle digests: I ran `sha256sum` on manifest.json, bindings.json, work/audit.json and the post-commit JSON. They
+   equal the requested `101805f0…2b8c`, `07035ffc…c0f`, `e3f7b908…c435c` and `e7d67884…9870`. The post-commit
+   JSON binds commit `c4a99034…`, parent `9bbb28ab…` and tree `c2715c19…`.
+3. `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B /lane/reviews/original-address-development-checkpoint96-20261121/verify.py --require-postcommit`
+   → exit 0 after 101 s, with this output: `{"status": "PASS", "complete_files": 62609, "source_files": 9893,
+   "repository_inputs": 2425, "private_inputs": 111, "contexts": 30, "attempts": 96, "task_passes": null,
+   "candidate_execution": false, "postcommit_checked": true}`.
+4. Node: `/lane/reviews/42612ca9787f-a4b-node` has SHA-256 `d1de76d8…c74bd932c`, as stated, and reports `v24.15.0`.
+   With a temporary node symlink on PATH:
+   - `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base 9bbb28abfe082a46494a9da10858992e65d5cf2a --timeout 600`
+     → `FAST GATE: PASS`. It covers the private path check (PASS), the licence policy (PASS), review lint of the
+     retained review (exit 0) and markdownlint (0 issues in 3 files).
+   - `node …/work/render.mjs` → `{"status":"PASS","issues":0}` for TASKS.md, the scoreboard and the new evidence file.
+   - `python3 -B scripts/private_host_paths.py --base 9bbb28ab…` → `PRIVATE PATH CHECK: PASS`.
+   - `python3 -B scripts/license_policy.py` → `LICENCE POLICY: PASS`.
+5. Retained review: `cmp` shows that `docs/reviews/9bbb28abfe08-…-checkpoint84.txt` is byte-identical to the original
+   `/lane/reviews/9bbb28abfe08-original-address-development-checkpoint84.md`. Its SHA-256 (`a4301646…a2`) matches
+   `work/review-state.json` (`available: true`). The report ends with `Verdict: PASS`, and TASKS.md and the evidence
+   file quote that verdict correctly.
+
+## My own checks on the raw evidence
+
+I wrote my own script. It reads `campaign/jobs/<profile>-14/collection/dev-01{5,6}/record.json`, re-hashes every log
+the record lists, parses `upstream-response-0{0,1}.bin` and adds the results to the published checkpoint-84 table.
+
+- **Twelve new attempts, all logs hash-consistent, all `retries: 0`.**
+  - Six are `ungraded-proposal`: gemma4-31b dev-015 and dev-016, qwen35-27b dev-015 and dev-016, muse dev-015,
+    gemma4-e4b dev-015.
+  - Six are `strict-edit-refused` with `checked.json` = `{"error": "code.proposal.edit"}`: gpt-oss dev-015 and
+    dev-016, muse dev-016, gemma4-e4b dev-016, gemma4-26b-a4b dev-015 and dev-016. Each of these is a base fallback.
+  - The six-plus-six split matches the stated increment. Spot checks of the refusals agree with the checker: gpt-oss
+    dev-016 addresses lines 12473 and 24069 in a file the other answers address near line 1000, and gemma4-26b-a4b
+    dev-016 contains a reversed range (369–367).
+- **No new timeouts.** Every new reply is HTTP 200 with `finish_reason: "stop"`. All twelve have backend counters, so
+  coverage rises by 2 per profile: muse goes from 10/14 to 12/16 and the others to 16/16. The four earlier muse
+  timeouts stay counted as failures, and their missing counters are not estimated.
+- **Output budget.** For all twelve, rendered input + requested output + 32 = 32768, which matches the stated formula.
+  The backend `usage.prompt_tokens` equals the preflight rendered input in every case. The new inputs fall inside the
+  published ranges; qwen35-27b dev-015 (8516) is the new upper bound and appears in the table.
+- **Cumulative table.** I added the new `prompt_n + cache_n`, `predicted_n` and `generation_seconds` to the
+  checkpoint-84 row, plus `reserved_work_seconds / 60` from each `batch-report.json`. The results match every
+  ninety-six-attempt cell for observed input and output tokens, coverage and GPU minutes. Proposal counts match too
+  (10→12, 9→11, 3→3, 8→9, 3→4, 9→9). Seconds match to within 0.001, the expected error from adding a rounded
+  prior value (gpt-oss 1625.934 against 1625.935, muse 3858.226 against 3858.225, gemma4-e4b 867.646 against
+  867.647); the verifier checks against unrounded sums. Aggregate causes add up to 96: 2 + 3 + 4 + 38 + 1 + 48.
+- **Wall time.** From `launch.json` (start 13:51:03.811) to `controller-exit.json` (end 14:11:12.763) is 1208.952 s.
+  The checkpoint-84 sum of 11784.154 s plus 1208.952 s gives the published 12993.106 s.
+- **Held-out isolation.** Every `<profile>-14/collection/batch.json` has `split: development`, lists only `dev-015`
+  and `dev-016`, and has `held_out_executed: false`. `launch.json` records `hidden_or_held_out: false` and
+  `candidate_execution: false`. The commit adds no task or prompt content and changes no source, so there is nothing
+  that could be used for tuning.
+- **Resource limits and cleanup.**
+  - `launch.json` records cpu.max 4 CPUs, memory.max 16 GiB, memory.high 14 GiB and nice 19. The argv `nice -n 9`
+    is computed as `19 - os.nice(0)`, and the niceness read back from /proc is 19. Checkpoints 72 and 84 recorded the
+    same values.
+  - `cleanup.json` reports status PASS with these fields: settings revoked, API and model reaped, zero live owned
+    processes, no foreign signal, and keys and sockets absent. It also records `retired_tokens: 12` and receipts
+    persisted before unlink. `token-retirement-receipts.json` holds 12 entries, and the controller exited 0.
+- **Measure-first.** The scoreboard has a dated line for this batch. That line:
+  - states the context and output budgets;
+  - reports "does not fit: 0" separately from model failures;
+  - gives counter coverage explicitly;
+  - says strict proposals are not solved tasks;
+  - admits or selects no model.
+- **Public-tree hygiene.** The added lines contain no private home path, local username, credential, sibling project,
+  other product or trademark branding. The only `/lane/…` strings are inside the byte-identical retained review, as
+  in earlier accepted checkpoints. The private-path check passes. The bundle's `launch.json` does contain a private
+  host path, but the bundle is not committed.
+
+## Findings
+
+None at critical, high or medium.
+
+Low findings remain backlog, and none is new: the T-309 items disclosed in the evidence. These are backend
+cancellation on client timeout (still relevant to the two earlier muse timeout pairs), per-pair wrapper provenance,
+building helpers directly from the frozen commit, and review-request wording. This commit does not make any of them
+worse.
+
+## Per-row result
+
+- T-303/T-306 development checkpoint 96 (non-closing): **PASS**. The raw evidence supports every number and label.
+  Evaluation integrity holds: development tasks only, no held-out data, no tuning, and failures are counted. No row
+  closes, and both rows correctly stay OPEN.
+
+Verdict: PASS
