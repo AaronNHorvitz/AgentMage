@@ -1,0 +1,186 @@
+Commit: 30afcea0ca3f74dbcd4b17cd3c9c9c6100c1a520
+Scope: original-address-development-checkpoint36
+
+Reviewer: Claude Opus 5.5, separate session, read-only. I worked in the pinned checkout `/lane/review-checkout`
+with `CARGO_TARGET_DIR=/lane/state/review-target` and ran heavy commands through `/tools/build-slot` at low
+priority. I did not use the GPU and did not modify the repository. My own scripts were in `/tmp/rv36`.
+
+## What I reviewed
+
+- Commit `30afcea0…` (tree `de4ec783…`). Its parent is `adc0aabb2860923adae4bed82e9ff7a566d657ba`. The frozen
+  source is `7821274ab5caa56573d8b68aa7a2121c71fc4b2b`.
+- The diff from the parent touches four files. All are reporting files and all changes are additions:
+  - `TASKS.md`: one paragraph at the top of the active queue;
+  - `docs/evidence/coding-scoreboard.md`: one section appended at the end;
+  - the new `docs/evidence/t303-original-address-checkpoint36-2026-11-21.md`;
+  - the new `docs/reviews/adc0aabb2860-original-address-development-checkpoint24.txt`.
+
+  No change touches production source, `capabilities/`, `kernel/`, `Cargo.lock`, supply-chain output, README, the
+  inventory or Decision 0051. No held-out or hidden-test file changes.
+- The sealed bundle `/lane/reviews/original-address-development-checkpoint36-20261121`, including:
+  - `verify.py`, `work/audit.py`, `work/finalize.py` and `work/reporting-adaptations.json`;
+  - the launch, controller, exit and cleanup logs, the reservation logs and the token-retirement receipts;
+  - all 18 job directories, with particular attention to the new `*-04` jobs: upstream requests, raw replies and
+    capture records, events, records, contexts, answers and check results;
+  - the complete candidate projections.
+
+## Commands and results (all in `/lane/review-checkout`)
+
+1. **Commit and bundle hashes.**
+   - `git rev-parse HEAD` printed `30afcea0ca3f74dbcd4b17cd3c9c9c6100c1a520`.
+   - `git status --porcelain` printed nothing, before and after my runs.
+   - `git diff --check adc0aabb…` exited 0.
+   - `sha256sum` matches every hash in the request:
+     - `manifest.json` = `632e258a…`
+     - `bindings.json` = `5d76f3b1…`
+     - `work/audit.json` = `6694e66b…`, which is also the Audit SHA-256 quoted in the evidence
+     - the post-commit envelope = `4e09fd51…`
+   - The envelope's commit, parent and tree `de4ec783…` match the checkout.
+2. **Sealed verifier.** `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B …/verify.py --require-postcommit`
+   exited 0 and printed:
+
+   ```text
+   {"status": "PASS", "complete_files": 27436, "source_files": 9893,
+    "repository_inputs": 2425, "private_inputs": 111, "contexts": 30,
+    "attempts": 36, "task_passes": null, "candidate_execution": false,
+    "postcommit_checked": true}
+   ```
+
+   `diff` of this `verify.py` against the checkpoint-24 one shows only checkpoint parameter changes, plus two
+   corrections:
+   - the summed controller wall time now adds the prior *summed* value, which is correct for three controllers;
+   - the not-available review branch now accepts either retained start file.
+
+   I found no weakened assertion.
+3. **Gate, render, privacy and licence checks.** Node `/lane/reviews/42612ca9787f-a4b-node` has SHA-256
+   `d1de76d8…` and reports v24.15.0. I put a temporary symlink to it on PATH in `/tmp/rv36/bin`, outside the bundle,
+   then ran:
+   - `local_agent_fast_gate.py --base adc0aabb… --timeout 600`: **FAST GATE: PASS**. The private-path check, the
+     licence policy, the review lint of the retained review and markdownlint (0 issues in 3 files) all passed.
+   - `node …/work/render.mjs`: PASS, 0 issues across the 3 rendered files.
+   - `scripts/private_host_paths.py --base adc0aabb…`: PASS.
+   - `scripts/license_policy.py`: PASS.
+4. **Retained review.** `cmp` of `docs/reviews/adc0aabb2860-original-address-development-checkpoint24.txt` against
+   `/lane/reviews/adc0aabb2860-original-address-development-checkpoint24.md` found them identical.
+   - The file ends `Verdict: PASS`.
+   - Its SHA-256 `f551d3a7…` equals `work/review-state.json`.
+   - `work/start-REVIEW-IN-FLIGHT.md` exists and holds the checkpoint-24 request. The retained-file name in this
+     request is therefore correct, which addresses the preceding L1 for this run.
+5. **Frozen campaign unchanged.** These files are byte-identical between the checkpoint-24 and checkpoint-36
+   bundles:
+   - `campaign/{batch.py,collect.py,controller.py,policy.json,frozen-inputs.json,output-format.json}`
+   - `bin/helper`
+   - `work/audit.py`
+   - every file in `campaign/profiles/`
+
+   Every `*-04` batch report names source commit `7821274a…`, policy `ac9cf31c…` and transport `f13a12ca…`. No
+   tuning occurred between batches.
+6. **Independent recount from the raw replies** (`/tmp/rv36/an.py`). For all 36 attempts in the 18 jobs, the
+   script reads `upstream-request-0{0,1}.json`, `upstream-response-0{0,1}.bin` (hash and length checked against the
+   capture record), `record.json`, `context.json` and `batch-report.json`. Every published cell in the evidence
+   table and the scoreboard matches:
+   - Backend input and output tokens (`timings.prompt_n`/`predicted_n`, equal to `usage` in every reply):
+     - gemma4-31b: 43670/7681
+     - qwen35-27b: 38206/6454
+     - gpt-oss: 35232/94435
+     - muse: 35085/52963
+     - gemma4-e4b: 43646/12111
+     - gemma4-26b-a4b: 43670/6895
+   - Rendered-input and output-budget ranges match the evidence table. Every `max_tokens` equals
+     `32768 − rendered input − 32` and equals `requested_output_tokens`.
+   - Every request carries `enable_thinking: false`, and its `messages` equal the frozen context.
+   - Every `answer.txt` equals the reply content.
+   - Terminations and response fields match per model. The single `output-cap` is gpt-oss dev-005: the reply has
+     `finish_reason: length`, empty `content` and all 26,537 budgeted tokens in `reasoning_content`. It is correctly
+     counted as a model failure (`generation-refused:error:chat.response.incomplete`), not as "does not fit". Its
+     input fitted (6,199 tokens), so "Does not fit: 0" holds.
+   - Summed `generation_seconds` equals the published request-and-strict-check seconds per profile. Summed
+     `reserved_work_seconds`/60 equals the published GPU minutes per profile.
+   - From the `launch.json` UTC to the `controller-exit.json` UTC is 1521.935645 s, published as 1521.936. Adding
+     the preceding summed 3107.129334 s gives 4629.065 s, as published.
+7. **Causes** (`/tmp/rv36/cand.py`, and a per-model pass over `checked.json` errors and final events). The
+   per-model causes equal the published dictionaries exactly. The aggregate is
+   `{ungraded-proposal: 19, code.proposal.edit: 15, code.proposal.format: 1, chat.response.incomplete: 1}`, as
+   published. The cumulative strict ungraded proposals are 4, 4, 1, 4, 2 and 4 out of 6. Every record has
+   0 retries and `graded: false`. The jobs ran the expected tasks: `-00` ran dev-001/002, `-02` ran dev-003/004 and
+   `-04` ran dev-005/006, with `first` 4 and `count` 2 in every `-04` report.
+8. **Candidate projections** (`/tmp/rv36/proj.py`). For the 12 new attempts I compared every one of the 714 files
+   in each candidate tree against `git show <task base>:<path>`. The task bases come from
+   `work/historical-payload-origins.json`: dev-005 `55bef249…` and dev-006 `a8464626…`.
+   - The 6 refused or failed attempts are byte-identical to the base in every file, and their `candidate_sha256`
+     equals the base source.
+   - The 6 accepted attempts differ only in the task's source file. That file equals the checked `content`, with
+     `before_sha256` equal to the base and `after_sha256` equal to `candidate_sha256`.
+
+   `verify.py` also confirms that the 24 earlier attempts' job and candidate bytes equal the checkpoint-24
+   manifest `d8985620…`.
+9. **Run safety and cleanup.**
+   - Launch limits: `memory.max` 16 GiB, `cpu.max` 400000/100000 (four CPUs), nice 19, priority low.
+   - The controller runs in `bwrap` with the frozen source snapshot mounted read-only over the repository path.
+   - The model server runs in `bwrap --unshare-all --clearenv --cap-drop ALL`, listens only on a Unix socket, uses
+     `--offline` and keeps the weights read-only.
+   - All six `-04` jobs are `completed`, with `settings_revoked: true` and `resource_guard_error: null`. Their
+     sampled GPU peaks are 5,134 to 20,167 MiB, all below the 22,528 MiB guard. Every server exit code is −15, the
+     requested shutdown.
+   - `work/cleanup.json`:
+     - status PASS, 18 completed pairs, no live owned processes;
+     - keys and sockets absent;
+     - receipts persisted before unlinking;
+     - no foreign signal.
+   - There are 12 retirement receipts, all for `-04` jobs.
+   - The bundle contains no `*.token`, `api-key` or `*.sock` file.
+   - No `llama-server` or `agentmage-local-api` process is running. `pgrep` matched only command lines that contain
+     those strings as paths.
+10. **Evaluation integrity.**
+    - Only development tasks dev-005/dev-006 ran in this batch.
+    - The launch records `candidate_execution: false` and `hidden_or_held_out: false`, and the audit agrees.
+    - The commit touches no held-out or hidden file. Its added text mentions "held-out" only to say it was not
+      executed.
+    - Task bases are frozen: `verify.py` checks each payload against `git show <base>:<source>`, and my projection
+      check reproduces this independently.
+    - Refusals and the one output-cap failure are counted, not dropped. Task passes stay `null` and "unavailable".
+11. **Preservation.** The diff and `verify.py` show that:
+    - the TASKS.md hunk only inserts a paragraph above the earlier checkpoint text, so no table row changes;
+    - the earlier scoreboard bytes are an exact prefix (the hunk starts after line 7220);
+    - the checkpoint-24 evidence is unchanged;
+    - README, the inventory, Decision 0051, `supply-chain` and the status model have no diff.
+
+## Checks against the brief
+
+- **Honest labelling.** Accepted edits are labelled "not solved tasks", and task passes, feedback, retries and model
+  admission stay unavailable. The thinking request is described as a request only, which matters because gpt-oss
+  and muse return nonempty `reasoning_content`. Counter coverage is explicit (6/6). The timing scopes are stated.
+  The unchanged failing full source gate (1,045 passed, 53 inherited failures, 11 ignored) is disclosed and not
+  waived. The incomplete reverification of the preceding measurement inventory is disclosed.
+- **Measure first.** The scoreboard has a dated line for this batch. It states "No new changed variable" (Decision
+  0216 continues), gives the context and output budgets, and reports tasks that do not fit (0) apart from model
+  failures and the output-cap termination. Every number traces to the raw logs (items 6–8).
+- **Delivery.** There is no new sub-row, no reordering and no plan-only change. The next step continues the same
+  frozen campaign at dev-007/dev-008 before any tuning. No row closes, and none is claimed to.
+- **Public-repository hygiene.** The added text has no private home path, username, hostname, credential, sibling
+  project or other agent product. The only `/lane/...` strings and the reviewer model name are in the byte-identical
+  retained review, as in the preceding accepted checkpoints. Profile names are model identities, not branding.
+  Private home paths appear only in the unpublished sealed bundle.
+- **Owner notes (engine runtime, memory linking).** This reporting commit does not touch the plan.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (backlog, T-309):
+
+- L1 (carried forward, narrowed). The retained-file sentence in the request is still fixed template text in
+  `work/finalize.py:39-41`; it is not derived from which start file exists. It is true for this run, because
+  `work/start-REVIEW-IN-FLIGHT.md` exists and holds the checkpoint-24 request. Fix: derive the sentence from the
+  start file that was actually retained.
+- The earlier T-309 lows are unchanged by this frozen repeat, as TASKS.md and the evidence disclose:
+  - the stale descriptive labels in `campaign/policy.json`, such as "First pair A4B checks real schema encoding" and
+    "Four copied previous preflight receipts", which are repeated in every batch report's `collector_policy`;
+  - the helper build depending on the builder's live tree.
+
+## Per-row result
+
+- T-303/T-306, non-closing development measurement (checkpoint 36/180): the evidence supports every published claim.
+  The rows remain OPEN as stated, and nothing closes.
+
+Verdict: PASS
