@@ -390,6 +390,14 @@ addresses the original snapshot, including when a batch uses both supported
 forms. An exact-text schema still uses `path/old/new` with exact original bytes.
 
 This guidance grants no permission and changes no acceptance rule.
-[Decision 0215](../decisions/0215-unique-anchor-generation-guidance.md) records
-the unmeasured generation hypothesis and required six-profile development
-repeat. Earlier frozen results and Decisions 0212 through 0214 remain available.
+Select a nonempty original range for an insertion, too. To insert after original
+line 7, select `7..7` and put that line followed by the insertion in `new`.
+To insert before it, put the insertion followed by that line in `new`. Extend
+the selection with retained context if that line is repeated. Never submit
+`8..7`, number newly generated lines or address a line beyond the original
+source. A final line without LF is still an existing anchor; explicitly include
+a separator when appending another line. The runtime does not add one.
+
+[Decision 0216](../decisions/0216-original-address-insertion-guidance.md) records
+this unmeasured generation hypothesis and the required six-profile development
+repeat. Earlier frozen results and Decisions 0212 through 0215 remain available.

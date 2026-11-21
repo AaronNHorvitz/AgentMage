@@ -1,0 +1,140 @@
+Commit: 0b97c678aaa9f95e1e9c1db72e6db96668d35a7d
+Scope: unique-anchor-refusal-diagnosis
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate read-only session. All commands ran in
+/lane/review-checkout (the pinned checkout). No inference, GPU or model process was used. Nothing in
+the repository was modified.
+
+## Methods
+
+- Confirmed the commit and the clean tree. Read IP-POLICY.md, the top of TASKS.md, the full diff from
+  6254a671eee35a0c4521e7e53d38fef828cf6202, the new evidence document, the scoreboard appendix and the
+  retained review copy.
+- Changed files: TASKS.md (12-line paragraph prepended to the active queue), docs/evidence/coding-scoreboard.md
+  (appended section only), new docs/evidence/t303-unique-anchor-refusal-diagnosis-2026-11-21.md and new
+  docs/reviews/6254a671eee3-unique-anchor-development-checkpoint180.txt. There is no product source,
+  prompt, schema, profile, task, budget or inference change.
+- Read the bundle's analyze.py in full, verify.py in full, analyzer-adaptation.diff, the diff from
+  initial-analyze.py to analyze.py, and the edit checker in checker-source.rs (resolve_edit and
+  check_coding_proposal). I compared the classifier's check order against the Rust checker line by line.
+- Recomputed every published sub-count independently from the per-attempt rows in analysis.json.
+- Checked the hard-coded resource-guard relabel against the authenticated batch report.
+
+## Commands and results
+
+1. `git rev-parse HEAD` gives 0b97c678aaa9f95e1e9c1db72e6db96668d35a7d. `git status --porcelain` is empty.
+   `git diff --check 6254a671…` returns exit 0.
+2. `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B /lane/reviews/unique-anchor-refusal-diagnosis-20261121/verify.py --require-postcommit`
+   returns rc=0 with `{"status": "PASS", "bundle_files": 1016, "consumed_origin_files": 982,
+   "checks_reproduced": 158, "controls": 38, "attempts": 180, "candidate_execution": false,
+   "full_predecessor_verified": false, "resource_gate_status": "FAIL", "postcommit_checked": true}`.
+   - The verifier re-runs `analyze.py --verify`, which requires byte-identical analysis.json.
+   - That run re-invokes the frozen helper on all 158 complete replies and all 30 contexts.
+   - The helper hash is bound to the campaign's frozen-inputs.json.
+   - Every source payload is compared with its base Git blob.
+   - The checker source is compared with `git show 6ee61e63…:capabilities/repository-map/src/coding_proposal.rs`.
+3. All SHA-256 values match the request:
+   - manifest 89e3b5a1…
+   - bindings 10f4573e…
+   - postcommit envelope 2831b04e…
+   - finalizer 240c2c17…
+   - Node d1de76d8…
+   - analysis 0945c1fb…
+   - analyzer 1073937b…
+   - origins 40bcd154…
+   - originating manifest 22529e3c…
+
+   The postcommit envelope's commit, parent and tree match HEAD.
+4. With a temporary `node` symlink in /tmp (outside the bundle) on PATH:
+   `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B scripts/local_agent_fast_gate.py --base 6254a671… --timeout 600`
+   returns `FAST GATE: PASS` (rc=0). That includes diff check, review lint, private path check, licence
+   policy and markdownlint with 0 issues in 3 files.
+5. `node …/render.mjs` returns `{"status":"PASS","issues":0,…}` for the 3 documents.
+   `python3 -B scripts/private_host_paths.py --base 6254a671…` gives PASS.
+   `python3 -B scripts/license_policy.py` gives PASS.
+6. The retained review copy is byte-identical to /lane/reviews/6254a671eee3-unique-anchor-development-checkpoint180.md
+   (`cmp`), and its SHA-256 a90dc38a… matches review-receipt.json. It ends `Verdict: PASS`.
+7. The pre- and postcommit verification logs beside the bundle both show PASS.
+
+I did not run the source suite, the SBOM step or the long acceptance gate; the request needs none of
+them. The full source gate stays the inherited FAIL (1,044 passed, 53 failed, 11 ignored, 31 targets).
+It is stated as retained, not rerun, and is not waived.
+
+## Independent checks of the claims
+
+- **Classifier against the native checker.** The classifier's order matches the Rust checker:
+  1. Whole-batch resolution first: order (`first > 0 && first <= last`), then path, then bounds.
+  2. Then, per edit: empty, unchanged, NUL, absent, ambiguous (the search restarts from the next
+     character, as in Rust), visibility (UTF-8 byte offsets), overlap, size, net change.
+
+  `line_parts` matches `split_inclusive('\n')`: Python's `str.split('\n')` splits on LF only, and there
+  is no phantom final line. The verifier asserts acceptance agreement with the native helper on all
+  157 typed replies. The finer labels are correctly described as diagnostic, not native codes.
+- **Counts.**
+  - The main table sums to 180.
+  - The edit conditions sum to 43, matching the predecessor's `strict-edit-refused:code.proposal.edit` count:
+    17 invalid order, 15 repeated original, 6 not visible, 3 overlap, 1 out of bounds, 1 unchanged.
+  - Generation interruptions and refusals total 22: 10 incomplete, 6 timeout, 5 length, 1 resource guard.
+  - 158 = 180 − 22, and 157 = 158 − 1 format refusal.
+- **Invalid order, recomputed from the rows.**
+  - All 17 are reversed, with no zero start.
+  - Seven have start = end + 1. Nine have start > line count, all from gemma4-e4b (for example
+    1333/13 and 14038/982).
+  - The two groups do not overlap. The one remaining range is gemma4-26b-a4b dev-003, 157/155, gap 2.
+  - The claim that order is checked before bounds matches Rust.
+- **Repeated originals.** All 15 are line-range representations: 13 single-line, 6 whitespace-only,
+  14 with the addressed range visible.
+- **Per-profile table.** It matches the rows for all six profiles, and each profile row sums to 30.
+- **Resource interruption.** The relabel of gpt-oss/dev-020 is hard-coded, but it is guarded:
+  - the observed cause must equal `generation-refused:error:chat.transport.http`;
+  - the result must equal the authenticated audit's cause;
+  - dev-020 is in job gpt-oss-18, whose batch report has status `failed`, a non-null resource guard
+    error and a 22,682 MiB peak;
+  - the audit gives `resource_gate_status` FAIL.
+
+  The gate stays FAIL in both documents.
+- **Analyzer changes.** Initial-to-final changes three things:
+  1. answer bytes are decoded with no newline translation;
+  2. arithmetic observations over invalid-order rows are added;
+  3. the retained inherited-gate constant is removed.
+
+  The verifier asserts that every row, every classification and every other initial key is unchanged.
+  The adaptation diff against the preceding analyzer is regenerated and matches exactly.
+- **Evaluation integrity.**
+  - No task loader, candidate tree, project test, hidden test or held-out input is read.
+  - Proposed code stays text, and the analyzer emits no replacement source.
+  - Rows assert `graded == false`, `native_coding_harness == false` and `retries == 0`.
+  - No held-out content appears in the diff.
+  - The next-work direction comes from development refusals only, and is labelled "not a measured improvement".
+- **Honest claims.**
+  - "Strict ungraded proposals" are explicitly not solved tasks.
+  - No output-cap inference is drawn from terminal labels.
+  - Native admission and grading are stated as unavailable and not reconstructed.
+  - No row closes, and nothing is claimed as built.
+  - The order of work is unchanged and follows MEASURE FIRST: the next step is a frozen, tested change
+    plus a full six-profile repeat before more tuning. No other agent product, private project,
+    employer or patent is named.
+- **Preservation.** The verifier checks the following:
+  - all 512 TASKS.md table lines are unchanged;
+  - the scoreboard prefix is exact;
+  - README.md, Agent-Scaffolding-Inventory.md and architecture/status-model.json are byte-identical;
+  - supply-chain and Decision 0051 are unchanged;
+  - all 49 exempted historical blobs keep their hashes.
+- **Privacy.** The only `/lane/...` strings added are inside the retained review copy. They are shared
+  lab paths, already present in 399 committed review files, and not a home directory or user name. No
+  credentials, personal data or private host names were found. The private path check passes.
+
+## Findings
+
+None at high or medium. I found no new low.
+
+The existing reporting-templating low and the other existing lows stay as T-309 backlog.
+
+## Per-row result
+
+- **T-303/T-306 (non-closing completed-repeat diagnosis): PASS for this increment.**
+  - Every published number traces to the authenticated raw rows and is reproduced byte-identically.
+  - The limits are stated honestly.
+  - Neither parent row closes, and none is claimed to.
+
+Verdict: PASS

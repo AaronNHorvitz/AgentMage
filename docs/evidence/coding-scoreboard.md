@@ -7115,3 +7115,23 @@ Its reporting-templating low remains T-309 backlog; independent core review
 is required for this diagnosis.
 
 [Diagnosis and raw-evidence description](t303-unique-anchor-refusal-diagnosis-2026-11-21.md).
+
+## 2026-11-21 original-address instruction preparation (no inference)
+
+[Preparation evidence](t303-original-address-instruction-2026-11-21.md), from
+`0b97c678aaa9f95e1e9c1db72e6db96668d35a7d`. Changed variable: fixed instruction
+and its budget-dependent excerpts, targeting 17 invalid-line-order refusals.
+Production parser, checker, framing, schema, retrieval algorithm and all limits
+remain unchanged. All 30 development contexts are frozen; excerpts change on
+6 tasks. All 158 prior complete-reply checks reproduce with zero changes
+under the new contexts. The 114 strict proposals remain ungraded; there is no
+new model run, task score, token-fit measurement or quality claim.
+
+Full affected-crate gate: FAIL, 1,045 passed, the same 53 inherited failures,
+11 ignored, 31 targets. Formatting and Clippy pass. The preceding diagnosis's
+exact-commit independent core PASS is retained unchanged. No row closes.
+Next: all 30 development tasks on all six profiles with this frozen source,
+32K context and unchanged per-task output budgets, profiles and deadlines,
+before further tuning or capability work. No held-out input is used here.
+Native executable admission and original grading remain unavailable; task
+passes, feedback and retries remain unavailable and are not reconstructed.

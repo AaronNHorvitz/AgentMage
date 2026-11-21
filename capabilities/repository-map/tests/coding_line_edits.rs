@@ -318,3 +318,63 @@ fn insertion_beside_repeated_blank_lines_preserves_unique_context_and_line_endin
         assert_eq!(sources[0].content, text);
     }
 }
+
+#[test]
+fn insertions_at_first_middle_and_final_lines_select_nonempty_original_anchors() {
+    let original = ["one", "two", "three", "four", "five", "six", "seven"];
+    for ending in ["\n", "\r\n"] {
+        for final_ending in [false, true] {
+            let suffix = if final_ending { ending } else { "" };
+            let text = format!("{}{suffix}", original.join(ending));
+            let sources = [source(&text)];
+            let context = prepare_coding_proposal("Insert a line", &sources, 4096).unwrap();
+            for n in [1, 4, 7] {
+                for before in [true, false] {
+                    let mut expected_lines = original.to_vec();
+                    expected_lines.insert(if before { n - 1 } else { n }, "inserted");
+                    let expected = format!("{}{suffix}", expected_lines.join(ending));
+                    let anchor = original[n - 1];
+                    let replacement_ending = if n == original.len() { suffix } else { ending };
+                    let replacement = if before {
+                        format!("inserted{ending}{anchor}{replacement_ending}")
+                    } else {
+                        format!("{anchor}{ending}inserted{replacement_ending}")
+                    };
+                    let anchored = edit(n, n, &replacement);
+                    let changes = check_coding_proposal(
+                        &context,
+                        &sources,
+                        &json!({"edits":[anchored.clone()]}).to_string(),
+                    )
+                    .unwrap();
+                    assert_eq!(changes[0].content.as_bytes(), expected.as_bytes());
+                    // A reversed insertion range is never an empty selection.
+                    // One invalid edit refuses the batch, regardless of order.
+                    for reverse in [false, true] {
+                        let mut edits = vec![anchored.clone(), edit(n + 1, n, "inserted")];
+                        if reverse {
+                            edits.reverse();
+                        }
+                        assert!(matches!(
+                            check_coding_proposal(
+                                &context,
+                                &sources,
+                                &json!({"edits":edits}).to_string()
+                            ),
+                            Err(Error::Edit)
+                        ));
+                    }
+                }
+            }
+            assert!(matches!(
+                check_coding_proposal(
+                    &context,
+                    &sources,
+                    &json!({"edits":[edit(8, 8, "inserted")]}).to_string()
+                ),
+                Err(Error::Edit)
+            ));
+            assert_eq!(sources[0].content.as_bytes(), text.as_bytes());
+        }
+    }
+}

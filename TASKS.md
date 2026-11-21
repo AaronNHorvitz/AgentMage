@@ -2,6 +2,17 @@
 
 ## Active queue: local agent mission
 
+The [original-address instruction preparation](docs/evidence/t303-original-address-instruction-2026-11-21.md)
+targets the largest individual refusal: invalid line order (17/180). It explains
+nonempty original insertion anchors without changing the strict checker. All 30
+development contexts are frozen and all 158 prior checks retain their results.
+This is unmeasured preparation. Next: freeze this source and complete 30 tasks
+on all six profiles before more tuning or capability work. The full source gate
+remains FAIL: 1,045 passed, the same 53 inherited failures, 11 ignored. Native
+admission, grading, task passes, feedback and retries remain unavailable.
+T-303/T-306 stay open. The preceding exact-commit independent core PASS is
+retained unchanged; existing lows remain T-309 backlog. No row closes.
+
 The [completed unique-anchor refusal diagnosis](docs/evidence/t303-unique-anchor-refusal-diagnosis-2026-11-21.md)
 reproduces 158 complete-reply checks and classifies 157 typed edit results.
 The largest individual refusal is invalid line order (17/180), followed by
