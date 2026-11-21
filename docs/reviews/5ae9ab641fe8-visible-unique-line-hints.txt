@@ -1,0 +1,150 @@
+Commit: 5ae9ab641fe8d77618309510e58c8a46a8f98ea6
+Scope: visible-unique-line-hints
+
+# Independent core review: visible unique-line hints (T-303/T-306, non-closing)
+
+Reviewer: independent session, read-only, pinned checkout /lane/review-checkout at the exact commit, base
+18c1f7889709a4dcabc0fa789e6b07a66fb9ea98. I did not use the GPU, start a model or run inference, or modify
+the repository. Builds used CARGO_TARGET_DIR=/lane/state/review-target.
+
+## Methods and commands (all run in /lane/review-checkout)
+
+1. Identity and hygiene
+   - `git rev-parse HEAD` → 5ae9ab641fe8d77618309510e58c8a46a8f98ea6; `git status --porcelain` → empty.
+   - `git diff --check 18c1f788…` → exit 0. Nine files changed (+586/−16).
+2. Sealed bundle
+   - `sha256sum`: manifest.json 5ce4cdbf…6d010a83, bindings.json 9e75f9c6…47359d1e745a1, preflight.json
+     1ea2a48e…ad21244, visibility-differences.json 2b7523b6…ea906f, post-commit envelope
+     02be9e178b3d9f1541815073d4dfc9c688593082c0372b7426fe7f7bfbce3ef0. All match the request.
+   - `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B /lane/reviews/unique-line-hints-20261121/verify.py --require-postcommit`
+     → `status PASS`, bundle_files 1170, consumed_origin_files 1090, contexts 30, checks_reproduced 167, exactly three
+     context differences (dev-008 on gemma4-26b-a4b, gemma4-31b, qwen35-27b, ungraded-proposal → code.proposal.edit),
+     11 changed-excerpt tasks (dev-001/002/006/007/008/013/015/016/019/027/028), candidate_execution false,
+     model_inference false, task_passes null, full_source_gate FAIL, postcommit_checked true.
+   - `cmp new-proposal-source.rs capabilities/repository-map/src/coding_proposal.rs` → identical;
+     `git diff 18c1f788… HEAD -- capabilities/repository-map platforms/local-api/tests/local_chat_api.rs | cmp - source-change.patch`
+     → identical.
+   - Independent check of contexts/dev-008.json: message_bytes 32564; 17 excerpts; no excerpt covers bytes 46354..48128
+     (the last ends at 46353). Message sizes across the 30 contexts range from 11246 to 32768 bytes. This matches the
+     disclosed coverage regression.
+3. Full source gate (Node 24.15 symlinked at /tmp/rvbin/node, SHA-256 d1de76d8…c932c matched)
+   - `python3 -B scripts/local_agent_fast_gate.py --base 18c1f788… --timeout 600` → FAST GATE: FAIL (expected).
+     Totals over 31 targets: 1047 passed, 54 failed, 11 ignored, zero filtered. Formatting, Clippy, private path check
+     and licence policy steps pass inside the gate.
+   - 53 failures are in `agentmage-host --lib` (linux_coding_runtime, linux_read, linux_repository_map). They are the
+     same 53 names listed in the builder's gate-comparison.json (all_failures_inherited true, no added or absent names).
+   - The 54th failure in my run was
+     `agentmage-local-api --test coding_cli::mcp_executable_reads_and_stages_through_real_api_without_control_credentials_or_writes`:
+     `Os { code: 32, kind: BrokenPipe }` at platforms/local-api/tests/coding_cli.rs:69 while writing the MCP child's stdin.
+     The builder's final log shows this test passing. Five isolated reruns
+     (`bash /tools/build-slot … cargo test --locked --offline -p agentmage-local-api --test coding_cli`) passed 14/14
+     each time. The test and the MCP path are not touched by this diff. It is an intermittent pre-existing flake (L-1
+     below), not a regression; 1047 + 1 = the builder's 1048.
+4. Targeted tests: `cargo test --locked --offline -p agentmage-capability-repository-map --test coding_line_edits --test coding_source_presentation`
+   → 10 passed and 7 passed (17/17).
+5. `node /lane/reviews/unique-line-hints-20261121/render.mjs` → PASS, 0 issues, 5 files rendered.
+   `python3 -B scripts/private_host_paths.py --base 18c1f788…` → PASS. `python3 -B scripts/license_policy.py` → PASS.
+6. Preservation
+   - README.md, NOTICE, LICENSE-*, Agent-Scaffolding-Inventory.md, Decision 0051, every Cargo.toml and Cargo.lock:
+     unchanged.
+   - Changed TASKS table lines (`^[-+]|`): 0. The only TASKS change is one paragraph; no row or sub-row is added.
+   - Base coding-scoreboard.md is an exact byte prefix of the new file.
+   - Decisions 0214/0216 are unchanged.
+   - docs/reviews/18c1f7889709-original-address-refusal-diagnosis.txt is byte-identical to
+     /lane/reviews/18c1f7889709-original-address-refusal-diagnosis.md (cmp).
+7. Instruction size: the raw string extracted from both revisions is 1030 bytes before and 1029 bytes after, matching
+   the claim.
+8. Worst-case cost of the new scan: I copied `unique_anchor_lines` into a standalone file in /tmp, compiled it with
+   rustc -O, and ran it on 128 KiB inputs.
+   - Distinct short lines (27087 lines): 1238 ms.
+   - Shared-prefix lines: 68 ms.
+   - Growing runs of `a`: 21 ms.
+
+## Code review
+
+- **Hint soundness against the checker** (capabilities/repository-map/src/coding_proposal.rs:170-187 vs 610-632).
+  - The hint takes each `split_inclusive('\n')` line with its exact bytes (CR and LF retained; the final unterminated
+    line without LF). It finds the first occurrence, then searches again from the next character boundary. This is
+    exactly the checker's overlapping-aware whole-file uniqueness test on the text `resolve_edit` derives for a
+    single-line range.
+  - A string containing a unique line is itself unique. So any range inside one excerpt that includes an advertised
+    line passes uniqueness, and the compressed intervals cannot mislead.
+  - Whitespace-only lines are never advertised. This is advisory only and grants nothing.
+- **Visibility of advertised lines.**
+  - Every excerpt candidate is line-aligned: parser ranges are widened to full lines at :337-346, the whole-file
+    candidate and the line windows use line bounds, and merging aligned ranges preserves alignment. So every line
+    from start_line to end_line lies wholly inside the excerpt.
+  - Hints are clipped to that range with `partition_point` over sorted anchors (:141-152).
+  - The new test checks every advertised anchor through the unchanged checker.
+- **Index consistency.**
+  - `anchors` is computed from the same canonically sorted `sources` vector that `render_source_context` indexes
+    with `position` (:313-316, :131-135). Indices therefore agree.
+  - `expect` calls cannot fire: the line is a substring of the source, and it is non-empty after the whitespace check.
+- **Budget.**
+  - The header is serialized into `user`, and `fits` charges `max(selection, user) + instruction`, so the new bytes
+    are charged.
+  - The selection allowance (`SelectionPayload`) and the ranking are unchanged. Coverage can still shrink, and does so
+    (dev-008), which is disclosed.
+- **Unchanged checker and authority.**
+  - The checker/resolver region is unchanged in the patch, and the sealed checker-preservation check passes.
+  - No answer, range or newline repair was added. Permissions, limits and output schema are unchanged.
+- **Untrusted input.**
+  - `unique_lines` is computed by the runtime and serialized with serde_json inside the header line. Source bodies
+    remain length-prefixed and cannot forge or alter it.
+  - The instruction still labels task and source text as untrusted data, never authority. No text from a file is
+    treated as an instruction or a permission.
+- **Tests.**
+  - The Rust oracle counts overlapping byte windows, independently of `find`/`contains`. The whitespace predicate is
+    shared with the implementation, which is acceptable.
+  - preflight.py rechecks hints on all 30 real contexts with a separate Python oracle; the assertion passes.
+  - The v2→v3 assertion changes are strict equality updates, not weakenings.
+
+## Evaluation integrity, claims and MEASURE FIRST
+
+- **No held-out or hidden input.** The diff and instruction contain no task content. The bundle scripts touch only
+  development contexts and record held_out_or_hidden_used false. There is no candidate or project code execution
+  (the only subprocesses are git and the bundle's own helpers). No retry, feedback or task pass is claimed.
+- **Claims.**
+  - The 31 repeated-original refusals and the 69/102 joined-boundary proposals are presented as historical
+    observations, not grades.
+  - The dev-008 regression is disclosed with its exact lines, bytes and profiles.
+  - Token fit is stated as unmeasured, and 32K context and the per-task output formula are kept.
+- **Scoreboard.** A dated preparation entry is present, and the base scoreboard is preserved as a prefix. The next
+  required work is a frozen 30×6 measurement, which is the pattern already accepted for earlier preparation batches.
+  No line is missing for this batch.
+- **Naming.** No other agent product, private project, paper or patent is named. Model profile identifiers are
+  unchanged from earlier evidence. Decision 0217, the guide, the evidence file, the scoreboard and TASKS state the same
+  changed variable and the same open status.
+
+## Findings
+
+No critical, high or medium findings.
+
+- **L-1 (low, backlog T-309): intermittent flake in the MCP stdin test.**
+  - Location: platforms/local-api/tests/coding_cli.rs:65-69.
+  - Problem: the test writes all MCP messages with `write_all(...).unwrap()` before `wait_with_output`. If the child
+    exits or closes stdin early, the write gets EPIPE and the test panics before the child's actual output is asserted.
+  - Reproduction: observed once in the full gate, then 5/5 passes in isolation.
+  - Fix: write stdin on a separate thread, or tolerate `BrokenPipe` and then assert on the child's exit status and
+    replies.
+  - Not caused by this diff.
+- **L-2 (low, backlog T-309): `unique_anchor_lines` costs O(lines × bytes) on every prepare.**
+  - Location: capabilities/repository-map/src/coding_proposal.rs:170-187.
+  - Measurement: about 1.2 s in an optimized build for a crafted 128 KiB file of about 27K distinct short lines, and
+    proportionally more in debug builds.
+  - Impact: bounded by MAX_SOURCE, with no correctness or confinement effect.
+  - Fix, if wanted: count line occurrences with a single suffix-automaton or Aho–Corasick pass. Otherwise record the
+    bound.
+- Existing T-309 lows remain backlog.
+
+## Per-row result
+
+- **T-303/T-306 (non-closing unique-line preparation): PASS for this increment.**
+  - The changed variable is implemented as described and is advisory only. The checker and every authority boundary
+    are unchanged.
+  - The evidence reproduces: sealed bundle, 30 frozen contexts, 167 prior checks, and exactly three disclosed
+    visibility differences.
+  - The gate's failing identities match the inherited 53, plus one non-reproducing flake outside this diff.
+- Both rows remain OPEN, and no row closes. This PASS does not grade any task or admit or select any model.
+
+Verdict: PASS

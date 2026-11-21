@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The [frozen unique-line twelve-attempt checkpoint](docs/evidence/t303-unique-line-checkpoint12-2026-11-21.md)
+records dev-001/dev-002 on all six profiles: **12/180 attempted, 168 remaining**.
+Strict ungraded proposals: gemma4-31b 2/2; qwen35-27b 1/2; gpt-oss 1/2; muse 0/2; gemma4-e4b 1/2; gemma4-26b-a4b 1/2. These are not solved tasks.
+Resume dev-003/dev-004 with the same frozen source and settings; complete all
+30 tasks per profile before further tuning or capability work. Task passes,
+feedback and retries remain unavailable. T-303/T-306 stay open.
+The [preceding independent core review](docs/reviews/5ae9ab641fe8-visible-unique-line-hints.txt) returns **Verdict: PASS** for exact `5ae9ab641fe8d77618309510e58c8a46a8f98ea6`; its unchanged report is retained. The two low findings (MCP stdin test flake and bounded unique-line scan cost) join T-309 backlog. No high or medium finding is open. No row closes.
+
 The [visible unique-line preparation](docs/evidence/t303-visible-unique-line-hints-2026-11-21.md)
 adds compact source-header hints for individually unique visible original lines,
 plus an explicit replacement-newline example. It targets the completed repeat's
