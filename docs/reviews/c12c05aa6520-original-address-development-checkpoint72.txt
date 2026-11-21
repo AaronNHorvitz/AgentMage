@@ -1,0 +1,166 @@
+Commit: c12c05aa6520c45f36a60e053892f05d719b3bc0
+Scope: original-address-development-checkpoint72
+
+# Independent core review: frozen original-address development checkpoint 72
+
+Reviewer: Claude Opus 5.5, separate session, read-only. I worked in the pinned checkout `/lane/review-checkout`
+with `CARGO_TARGET_DIR=/lane/state/review-target`. Heavy commands ran through `/tools/build-slot` at low priority.
+I did not use the GPU and did not modify the repository. The only file I wrote is this review. I also wrote scratch
+logs, a recomputation script and a temporary node symlink under `/lane/state/tmp/r72`, outside the sealed bundle.
+
+Row: T-303/T-306, non-closing development measurement. Frozen source `7821274ab5caa56573d8b68aa7a2121c71fc4b2b`.
+Reporting parent `88a4b05a9fda63eb2999ab6e7bc10d48b3d92d62`.
+
+## Methods
+
+I read the commit diff, the new evidence file, and the additions to TASKS.md and the scoreboard. I inspected the
+sealed bundle `/lane/reviews/original-address-development-checkpoint72-20261121`:
+
+- the campaign scripts, policy and reporting adaptations;
+- the six new `-10` jobs: batch reports, per-attempt records, events, checked outputs, upstream requests and
+  replies, and both the job-level and per-attempt backend logs;
+- cleanup, token retirement receipts, controller launch and exit records, and the review state.
+
+I compared every script with the checkpoint-60 bundle. I recomputed every published cell with my own script
+(`/lane/state/tmp/r72/recompute.py`). It reads the raw records and takes token counts from the HTTP reply
+`timings`, cross-checked against `usage`. It does not use the builder's audit code.
+
+## Commands and results (all in `/lane/review-checkout`)
+
+1. Commit and tree state:
+   - `git rev-parse HEAD` printed `c12c05aa6520c45f36a60e053892f05d719b3bc0`.
+   - `git status --porcelain` was empty before and after my runs.
+   - `git diff --check 88a4b05a…` exited 0.
+2. Files changed against the parent:
+   - TASKS.md (+9/−0), `docs/evidence/coding-scoreboard.md` (+60/−0) and the new
+     `docs/evidence/t303-original-address-checkpoint72-2026-11-21.md` (+127).
+   - `git diff --name-only 7821274a HEAD` shows only TASKS.md, `docs/evidence/` and `docs/reviews/` files. There are
+     no production source changes.
+   - The scoreboard prefix is exact; the change only adds lines.
+3. Digests match the request:
+   - manifest `1d0f726d…88b9db`;
+   - bindings `db78416a…852ec88`;
+   - `work/audit.json` `229de11f…16e937`, which is also cited in the evidence file;
+   - post-commit JSON `923f45fc…2238`.
+
+   The bundle's `public/` copies of the three changed files are byte-identical to the commit.
+4. `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B …/verify.py --require-postcommit` printed PASS:
+   - complete_files 53561, source_files 9893;
+   - repository_inputs 2425, private_inputs 111;
+   - contexts 30, attempts 72, task_passes null;
+   - candidate_execution false, postcommit_checked true.
+
+   The builder's post-commit verification log shows the same result.
+5. Status of the preceding review:
+   - `work/review-state.json` records `available: false` for `88a4b05a`.
+   - The review file `/lane/reviews/88a4b05a9fda-…-checkpoint60.md` (Verdict: PASS) has mtime 07:11:11 −0600. That
+     is after this commit (07:01:42) and after the post-commit JSON (07:01:56).
+   - So "no verdict available at reporting" was true, and no acceptance was inferred.
+   - The next increment should retain that PASS.
+6. My recomputation over all 72 records (jobs `-00` to `-10` for each profile):
+   - Each profile has exactly dev-001 to dev-012, in order.
+   - Every record has `retries == 0`, `graded` and `native_coding_harness` false, and `api_usage` null.
+   - Every `requested_output_tokens` equals `min(32768, 32768 - rendered input - 32)`.
+   - `candidate_is_base_fallback` is true exactly when the cause is not `ungraded-proposal`.
+   - Strict ungraded proposals reproduce: gemma4-31b 9/12, qwen35-27b 8/12, gpt-oss 3/12, muse 6/12,
+     gemma4-e4b 3/12 and gemma4-26b-a4b 7/12.
+   - Per-profile cause counts reproduce. The aggregate reproduces: 36 proposals, 27 edit refusals, 1 format refusal,
+     2 incomplete, 2 length and 4 transport timeouts, 72 in total.
+   - Token counts from reply `timings` (`cache_n` 0 everywhere, `usage` agrees) reproduce every cell:
+     79390/17492 (12/12), 69842/19624 (12/12), 64770/211965 (12/12), 41277/64923 (8/12), 79342/20266 (12/12) and
+     79390/20369 (12/12).
+   - Muse coverage is 8/12. Its counts are unchanged from checkpoint 60: no counters were added for dev-011 or
+     dev-012 and none were estimated.
+   - Request seconds reproduce: 931.887, 680.432, 1315.775, 2846.207, 694.012 and 738.464.
+   - GPU minutes reproduce: 23.168, 15.521, 24.494, 53.819, 13.782 and 18.750.
+   - The rendered-input and output-budget ranges, and the response-field counts, all match.
+   - Controller wall from launch to exit UTC is 1883.751 s. The prior sum 8243.224 + 1883.751 = 10126.975 s, which
+     matches the published sum.
+7. The twelve new attempts (`-10` jobs):
+   - All six batch reports show `completed`, first 10, count 2, settings revoked and held-out "not loaded or
+     executed".
+   - Each job had memory.max 16 GiB and cpu.max 4 CPUs.
+   - Peak sampled GPU was at most 20850 MiB, under the 22528 MiB guard.
+8. Muse dev-011 and dev-012 timeouts, checked against raw logs:
+   - Both records are `generation-refused` with `chat.transport.timeout`, at 300.014 s and 300.012 s.
+   - The `-10` job has only `upstream-request-00/01.json` and no upstream response file.
+   - In `muse-10/backend-slice.log`, task 0 (dev-011) launched at 0:22.647. It was still generating at
+     5:33.194 (n_gen 12314) and was cancelled at 5:33.670.
+   - The dev-011 per-attempt slice ends at 5:21.126. The dev-012 slice begins with task-0 lines at 5:24.134.
+     So the client deadline fell at about 5:22.66, and about 11.0 s of uncancelled dev-011 generation ran inside
+     dev-012's window.
+   - Task 11912 (dev-012) launched at 5:33.688 and was last logged at 10:21.639, giving about 289 s of backend
+     processing.
+   - The published 11 s and 289 s figures are therefore measured, not copied from the dev-007/dev-008 case.
+   - The cancel-time line `stop processing: n_tokens = 17575` is a slot position, not a completion counter. It is
+     correctly not counted as coverage. Both attempts remain counted failures.
+9. Preservation of the prior 60 attempts:
+   - `diff -rq` of `campaign` against the checkpoint-60 bundle differs only by the new `-10` jobs, the `-10`
+     reservation logs and the dev-011/dev-012 candidate directories.
+   - `work/source.tar` is byte-identical to checkpoint 60's.
+   - `inputs/preceding-checkpoint-manifest.json` is identical to the checkpoint-60 manifest. Its SHA-256,
+     `fd7cd764…d17248cb`, is the value the verifier asserts.
+10. Script immutability against the checkpoint-60 bundle:
+    - Byte-identical: `campaign/{batch,collect,controller}.py`, `policy.json`, `frozen-inputs.json`,
+      `output-format.json`, `work/launch.py`, `inspect-snapshot.py` and `audit.py`.
+    - `cleanup.py`, `preserve.py`, `checks.sh`, `pack.py`, `verify.py` (both copies identical), `render.mjs`,
+      `write-report.py` and `finalize.py` differ only in parameters: base SHA, counts 60→72 and 120→108, 10→12,
+      pairs 30→36, `-08`→`-10`, paths, and the preceding manifest and metrics sources.
+    - `write-report.py` and `finalize.py` also add the disclosure of the new timeouts.
+    - `timeout_evidence.py` adds only (muse, dev-011) and (muse, dev-012) to `MISSING_RESPONSE`. This is recorded in
+      `work/reporting-adaptations.json`. The existing exact checks still apply: a single own launch, no
+      eval-time line and no own `stop processing` line. Both slices satisfy them.
+    - No assertion was removed or weakened.
+11. Reporting gates used Node v24.15.0 from `/lane/reviews/42612ca9787f-a4b-node`. Its SHA-256 matches
+    (`d1de76d8…c932c`). I ran it through a symlink under `/lane/state/tmp/r72/bin`.
+    - `local_agent_fast_gate.py --base 88a4b05a… --timeout 600`: FAST GATE PASS. The private path check, licence
+      policy and markdownlint (0 issues, 3 files) all passed.
+    - `node …/work/render.mjs`: PASS, 0 issues, 3 files rendered.
+    - `private_host_paths.py --base 88a4b05a…`: PASS.
+    - `license_policy.py`: PASS.
+12. The preceding source gate is not rerun. It stays disclosed as FAIL (1045 passed, 53 inherited failures,
+    11 ignored) and is not waived, as before.
+13. Secrets and cleanup:
+    - `work/cleanup.json` shows status PASS, 36 completed pairs, API and models reaped, keys and sockets absent,
+      no foreign signal and receipts persisted before unlink.
+    - The twelve `-10` token receipts hold digests only.
+    - There are no `*.sock`, `*.token` or `api-key*` files in the bundle.
+    - Every `Bearer ` string is a code template (`Bearer {token}`, `Bearer {self.token}`) in repository source copies
+      or the candidate projections; none is a credential.
+    - The host paths in the batch reports and in `launch.json` are in the private bundle, not in committed files.
+14. Privacy and naming:
+    - The added lines contain no home path, username, email, private sibling project, other agent product or
+      trademark branding.
+    - The model profile names are the same as in earlier accepted checkpoints.
+15. Evaluation integrity:
+    - Only dev-001 to dev-012 appear.
+    - "held-out" and "hidden" occur in the added lines only in "no … hidden or held-out execution" statements.
+    - No tuning happened between checkpoints: the policy and the campaign scripts are byte-identical.
+    - Failures are counted, not dropped: all 72 attempts are present, including all four muse timeouts.
+
+## Findings
+
+No critical, high, medium or new low findings.
+
+The lows accepted in earlier reviews remain T-309 backlog as disclosed:
+
+- per-pair wrapper provenance;
+- the earlier campaign inventory not reverified in full;
+- review-request wording;
+- campaign-specific policy descriptions and building helpers directly from the frozen commit;
+- backend cancellation on client timeout (now seen twice, dev-007→dev-008 and dev-011→dev-012).
+
+## Per-row result
+
+- T-303/T-306, non-closing frozen development measurement, checkpoint 72 at `c12c05aa`: PASS for this reporting
+  increment.
+  - 72/180 attempted, 108 remaining. 36 strict ungraded proposals, which are not solved tasks.
+  - Task passes, feedback and retries are unavailable, not zero.
+  - Every published number matches my recomputation from raw records, using an independent counter source.
+  - The overlap disclosure for the new muse timeouts is measured from the backend log.
+  - The MEASURE FIRST scoreboard line is present and states the context and output budgets. "Does not fit" is
+    counted apart (0 for every profile).
+  - No production source change, no tuning, no held-out execution and no candidate execution.
+  - The rows remain OPEN as stated, and nothing closes.
+
+Verdict: PASS

@@ -1,0 +1,166 @@
+Commit: 88a4b05a9fda63eb2999ab6e7bc10d48b3d92d62
+Scope: original-address-development-checkpoint60
+
+# Independent core review: frozen original-address development checkpoint 60
+
+Reviewer: Claude Opus 5.5, separate session, read-only. I worked in the pinned checkout `/lane/review-checkout`
+with `CARGO_TARGET_DIR=/lane/state/review-target`. Heavy commands ran through `/tools/build-slot` at low priority.
+I did not use the GPU and did not modify the repository. The only file I wrote is this review. I also created
+scratch logs and a temporary node symlink under my own `/lane/state/tmp`, outside the sealed bundle.
+
+Row: T-303/T-306, non-closing development measurement. Frozen source `7821274ab5caa56573d8b68aa7a2121c71fc4b2b`.
+Reporting parent `6fe83726f54d5b8560489743f32721de4497c4d7`.
+
+## Methods
+
+I read the commit diff, the new evidence file, the TASKS.md and scoreboard additions, and the retained prior review.
+I inspected the sealed bundle `/lane/reviews/original-address-development-checkpoint60-20261121`:
+
+- the campaign scripts, policy, audit method and reporting adaptations;
+- the raw per-task records, events, checked outputs, backend slices and batch reports;
+- the upstream requests and replies, cleanup receipts and token retirement receipts;
+- the published metrics and the review state.
+
+I compared every script with the checkpoint-48 bundle. I then recomputed every published table cell myself. For
+tokens I used a different raw source from the builder's audit: the HTTP response `timings`, cross-checked against
+`usage`, not backend-log parsing.
+
+## Commands and results (all in `/lane/review-checkout`)
+
+1. Commit and tree state:
+   - `git rev-parse HEAD` printed `88a4b05a9fda63eb2999ab6e7bc10d48b3d92d62`.
+   - `git status --porcelain` was empty before and after my runs.
+   - `git diff --check 6fe83726…` exited 0.
+2. Files changed against the parent:
+   - TASKS.md, `docs/evidence/coding-scoreboard.md`, the new
+     `docs/evidence/t303-original-address-checkpoint60-2026-11-21.md`, and
+     `docs/reviews/6fe83726f54d-original-address-development-checkpoint48.txt`.
+   - `git diff --name-only 7821274a HEAD` shows only TASKS.md, `docs/evidence/` and `docs/reviews/` files since the
+     frozen source. There are no production source changes.
+   - The TASKS.md and scoreboard diffs are additions only, with 0 removed scoreboard lines. The scoreboard prefix
+     is exact; the verifier also asserts this.
+3. Digests match the request:
+   - manifest `fd7cd764…d17248cb`;
+   - bindings `c89942c7…0c06e4`;
+   - `work/audit.json` `5e75d140…8b1`, which is also cited in the evidence file;
+   - post-commit JSON `5fb2981b…124cf4`.
+
+   The bundle's `public/` copies of all four changed files are byte-identical to the commit.
+4. `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B …/verify.py --require-postcommit` printed PASS:
+   - complete_files 44860, source_files 9893;
+   - repository_inputs 2425, private_inputs 111;
+   - contexts 30, attempts 60, task_passes null;
+   - candidate_execution false, postcommit_checked true.
+
+   The builder's post-commit verification log shows the same result.
+5. Retained prior review:
+   - `docs/reviews/6fe83726f54d-…-checkpoint48.txt` is byte-identical (`cmp`) to
+     `/lane/reviews/6fe83726f54d-original-address-development-checkpoint48.md`. Its SHA-256 is `24963ed8…1d15`.
+   - That review's header names `6fe83726…` and it ends `Verdict: PASS`.
+   - `work/review-state.json` records `available: true` with the same digest. The TASKS.md and evidence wording
+     ("returns Verdict: PASS", "retained unchanged") is accurate.
+6. Independent recomputation over all 60 records (jobs `-00` to `-08` for each profile):
+   - Each profile has exactly dev-001 to dev-010, in order.
+   - Every record has `retries == 0`, `graded` and `native_coding_harness` false, and `api_usage` null.
+   - Every `requested_output_tokens` equals `min(32768, 32768 - rendered input - 32)`.
+   - Cause counts reproduce: gemma4-31b 7/10, qwen35-27b 7/10, gpt-oss 3/10, muse 6/10, gemma4-e4b 3/10 and
+     gemma4-26b-a4b 7/10. The aggregate also reproduces: 33 proposals, 21 edit refusals, 1 format refusal,
+     2 incomplete, 1 length and 2 transport timeouts, 60 in total.
+   - Input/output tokens summed from response `timings` (`cache_n` is 0 everywhere, and `usage` agrees) reproduce
+     every cell:
+
+     | Profile | Input / output tokens (coverage) |
+     | --- | --- |
+     | gemma4-31b | 69978 / 13418 (10/10) |
+     | qwen35-27b | 61308 / 11917 (10/10) |
+     | gpt-oss | 56732 / 165554 (10/10) |
+     | muse | 41277 / 64923 (8/10) |
+     | gemma4-e4b | 69938 / 17345 (10/10) |
+     | gemma4-26b-a4b | 69978 / 13002 (10/10) |
+
+   - Request seconds reproduce: 782.895, 483.505, 1038.486, 2246.180, 578.716 and 594.725.
+   - GPU minutes reproduce: 19.993, 11.809, 19.500, 43.007, 11.394 and 15.421.
+   - The rendered-input and requested-output ranges match, as do the response-field counts.
+   - Controller wall: 7004.311 s (prior sum) + 1238.913 s = 8243.224 s, matching the published sum.
+   - `candidate_is_base_fallback` is true exactly when the cause is not `ungraded-proposal`, for all 60 records.
+7. The twelve new attempts (`-08` jobs):
+   - All six batch reports show `completed`, first 8, settings revoked and held-out not executed.
+   - Peak sampled GPU stayed at or below 20155 MiB, under the 22528 MiB guard.
+   - No new attempt reached the deadline. The longest was muse dev-010 at 184.3 s. So there is no new timeout and
+     no carry-over of the dev-007/dev-008 kind.
+8. Prior-48 preservation:
+   - `diff -r` of `campaign/jobs` against the checkpoint-48 bundle differs only by the new `-08` directories.
+   - `campaign/candidates` differs only by the added dev-009 and dev-010 entries.
+   - `work/source.tar` is byte-identical to checkpoint 48's.
+   - The prior manifest hash asserted by the verifier, `f9e99fa2…297ad`, equals the SHA-256 of the checkpoint-48
+     manifest.
+9. Script immutability against the checkpoint-48 bundle:
+   - Byte-identical: `campaign/{batch,collect,controller}.py`, `policy.json`, `frozen-inputs.json`,
+     `output-format.json`, `work/launch.py`, `inspect-snapshot.py`, `audit.py` and `timeout_evidence.py`.
+   - `cleanup.py`, `preserve.py`, `checks.sh`, `pack.py`, `verify.py` (both copies identical), `render.mjs`,
+     `write-report.py` and `finalize.py` differ only in parameters: base SHA, counts 48→60 and 132→120, 8→10,
+     pairs 24→30, `-06`→`-08`, paths, and the prior manifest and metrics sources.
+   - `write-report.py` and `finalize.py` also add the dev-007/dev-008 carry-over disclosure and the T-309
+     cancellation backlog note, which the preceding review requested as its L1 fix.
+   - No assertion was removed or weakened.
+10. Prior L1 resolved: the evidence file and the scoreboard paragraph now say:
+    - about 11 s of uncancelled dev-007 backend generation ran inside dev-008's window;
+    - about 289 s were left for dev-008's backend processing;
+    - both attempts remain counted failures;
+    - backend cancellation on client timeout remains T-309 backlog.
+
+    The 11 s and 289 s figures match my checkpoint-48 measurement from `muse-06/backend-slice.log`.
+11. Reporting gates used Node v24.15.0 from `/lane/reviews/42612ca9787f-a4b-node`. Its SHA-256 matches
+    (`d1de76d8…c932c`). I ran it through a symlink outside the bundle.
+    - `local_agent_fast_gate.py --base 6fe83726… --timeout 600`: FAST GATE PASS. The private path check, licence
+      policy, review lint and markdownlint (0 issues, 3 files) all passed.
+    - `node …/work/render.mjs`: PASS, 0 issues, 3 files rendered.
+    - `private_host_paths.py --base 6fe83726…`: PASS.
+    - `license_policy.py`: PASS.
+12. Disclosed preceding source gate:
+    - `preparation/gate-comparison.json` records 1045 passed, 53 failed, 11 ignored, 0 filtered and 31 targets.
+    - All 53 failures are inherited, with no additional and no absent failure names.
+    - The log ends `FAST GATE: FAIL`. It is disclosed as FAIL and not waived.
+13. Secrets and cleanup:
+    - `work/cleanup.json` shows status PASS, 30 completed pairs, API and models reaped, no live owned processes,
+      no foreign signal, keys and sockets absent, and receipts persisted before unlink.
+    - The twelve `-08` token receipts hold digests only.
+    - No `*.sock`, `*.token` or `api-key` file is in the bundle.
+    - The only `Bearer` strings are two placeholder test fixtures inside the unchanged repository `source.tar`.
+14. Privacy and naming:
+    - The added lines contain no home path, username, email, private sibling project, other agent product or
+      trademark branding.
+    - The only `/lane/...` strings are in the byte-identical retained review, as in the accepted earlier
+      checkpoints.
+15. Evaluation integrity:
+    - Only dev-001 to dev-010 appear.
+    - "held-out" and "hidden" occur in the diff only in "no … hidden or held-out execution" statements.
+    - No tuning happened between checkpoints: the policy and the campaign scripts are byte-identical.
+    - Failures are counted, not dropped: all 60 attempts are present, including both muse timeouts.
+
+## Findings
+
+No critical, high, medium or new low findings.
+
+The lows accepted in earlier reviews remain T-309 backlog as disclosed:
+
+- per-pair wrapper provenance;
+- the earlier campaign inventory not reverified in full;
+- review-request wording;
+- campaign-specific policy descriptions and building helpers directly from the frozen commit;
+- backend cancellation on client timeout.
+
+## Per-row result
+
+- T-303/T-306, non-closing frozen development measurement, checkpoint 60 at `88a4b05a`: PASS for this reporting
+  increment.
+  - 60/180 attempted, 120 remaining. 33 strict ungraded proposals, which are not solved tasks.
+  - Task passes, feedback and retries are unavailable, not zero.
+  - Every published number matches my recomputation from raw records, using an independent counter source.
+  - The MEASURE FIRST scoreboard line is present and states the context and output budgets. "Does not fit" is
+    counted apart (0 for every profile).
+  - The preceding L1 disclosure is fixed.
+  - No production source change, no tuning, no held-out execution and no candidate execution.
+  - The rows remain OPEN as stated, and nothing closes.
+
+Verdict: PASS
