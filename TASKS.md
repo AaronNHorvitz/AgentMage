@@ -2,6 +2,15 @@
 
 ## Active queue: local agent mission
 
+The [frozen original-address ninety-six-attempt checkpoint](docs/evidence/t303-original-address-checkpoint96-2026-11-21.md)
+adds dev-015/dev-016 on all six profiles: **96/180 attempted, 84 remaining**.
+Cumulative strict ungraded proposals: gemma4-31b 12/16; qwen35-27b 11/16; gpt-oss 3/16; muse 9/16; gemma4-e4b 4/16; gemma4-26b-a4b 9/16. These are not solved tasks.
+Resume dev-017/dev-018 with the same frozen source and settings. Complete all
+30 tasks per profile before more tuning or capability work. Task passes,
+feedback and retries remain unavailable; T-303/T-306 stay open. No row closes.
+The [preceding independent core review](docs/reviews/9bbb28abfe08-original-address-development-checkpoint84.txt) returns **Verdict: PASS** for exact `9bbb28abfe082a46494a9da10858992e65d5cf2a`; its report is retained unchanged. No row closes.
+Existing T-309 lows remain deferred during this frozen repeat. No row closes.
+
 The [frozen original-address eighty-four-attempt checkpoint](docs/evidence/t303-original-address-checkpoint84-2026-11-21.md)
 adds dev-013/dev-014 on all six profiles: **84/180 attempted, 96 remaining**.
 Cumulative strict ungraded proposals: gemma4-31b 10/14; qwen35-27b 9/14; gpt-oss 3/14; muse 8/14; gemma4-e4b 3/14; gemma4-26b-a4b 9/14. These are not solved tasks.
