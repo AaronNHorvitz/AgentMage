@@ -2,12 +2,20 @@
 
 ## Active queue: local agent mission
 
+The [frozen unique-anchor forty-eight-attempt checkpoint](docs/evidence/t303-unique-anchor-checkpoint48-2026-11-21.md)
+adds dev-007/dev-008 on all six profiles: **48/180 attempted, 132 remaining**.
+Cumulative strict ungraded proposals: gemma4-31b 6/8; qwen35-27b 5/8; gpt-oss 2/8; muse 3/8; gemma4-e4b 3/8; gemma4-26b-a4b 5/8. These are not solved tasks.
+Resume dev-009/dev-010 with the same frozen source and settings. Complete all
+30 tasks per profile before more tuning or capability work. Task passes,
+feedback and retries remain unavailable; T-303/T-306 stay open.
+The [preceding independent core review](docs/reviews/371487527d5a-unique-anchor-development-checkpoint36.txt) returns **Verdict: PASS** for exact `371487527d5a19a33cd8904c05441251493ed034`; its report is retained unchanged. No row closes.
+
 The [frozen unique-anchor thirty-six-attempt checkpoint](docs/evidence/t303-unique-anchor-checkpoint36-2026-11-21.md)
 adds dev-005/dev-006 on all six profiles: **36/180 attempted, 144 remaining**.
 Cumulative strict ungraded proposals: gemma4-31b 4/6; qwen35-27b 4/6; gpt-oss 2/6; muse 3/6; gemma4-e4b 2/6; gemma4-26b-a4b 5/6. These are not solved tasks.
 Resume dev-007/dev-008 with the same frozen source and settings. Complete all
 30 tasks per profile before more tuning or capability work. Task passes,
-feedback and retries remain unavailable; T-303/T-306 stay open. No row closes.
+feedback and retries remain unavailable; T-303/T-306 stay open.
 The [preceding independent core review](docs/reviews/42c87425e179-unique-anchor-development-checkpoint24.txt) returns **Verdict: PASS** for exact `42c87425e17916b0fb2e325a0ddc16c9a88ef337`; its report is retained unchanged. No row closes.
 
 The [frozen unique-anchor twenty-four-attempt checkpoint](docs/evidence/t303-unique-anchor-checkpoint24-2026-11-21.md)
