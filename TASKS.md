@@ -2,6 +2,18 @@
 
 ## Active queue: local agent mission
 
+The [frozen unique-anchor one-hundred-fifty-six-attempt checkpoint](docs/evidence/t303-unique-anchor-checkpoint156-2026-11-21.md)
+adds dev-025/dev-026 on all six profiles: **156/180 attempted, 24 remaining**.
+Cumulative strict ungraded proposals: gemma4-31b 22/26; qwen35-27b 20/26; gpt-oss 9/26; muse 17/26; gemma4-e4b 10/26; gemma4-26b-a4b 20/26. These are not solved tasks.
+The preceding GPU headroom interruption remains counted; its pair stays
+failed. The continuation skips only that exact pinned failure; no replay.
+Resume dev-027/dev-028 with the same frozen source and settings. Complete all
+30 tasks per profile before more tuning or capability work. Task passes,
+feedback and retries remain unavailable; T-303/T-306 stay open.
+The [preceding independent core review](docs/reviews/f33aab477185-unique-anchor-development-checkpoint144.txt) returns **Verdict: PASS** for exact `f33aab477185cc0f3e556ee6a20d6352a7e63f50`; its report is retained unchanged. No row closes.
+Earlier sampled-GPU-guard observations and reporting-count templating remain
+T-309 backlog.
+
 The [frozen unique-anchor one-hundred-forty-four-attempt checkpoint](docs/evidence/t303-unique-anchor-checkpoint144-2026-11-21.md)
 adds dev-023/dev-024 on all six profiles: **144/180 attempted, 36 remaining**.
 Cumulative strict ungraded proposals: gemma4-31b 20/24; qwen35-27b 19/24; gpt-oss 7/24; muse 15/24; gemma4-e4b 10/24; gemma4-26b-a4b 18/24. These are not solved tasks.

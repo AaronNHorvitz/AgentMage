@@ -1,0 +1,111 @@
+Commit: f33aab477185cc0f3e556ee6a20d6352a7e63f50
+Scope: unique-anchor-development-checkpoint144
+
+# Independent core review: frozen unique-anchor development checkpoint 144
+
+Reviewer: Claude Opus 5.5 at extra-high effort, separate session. I had read-only access and worked in the pinned
+checkout `/lane/review-checkout`. I did not use the GPU or modify the repository.
+
+Row: T-303/T-306, a non-closing frozen development measurement. Reporting parent
+`e2df12f861ce37bf1f161c38fd09ae5d566217b7`; frozen source `6ee61e63298e0aca1e1e8896278d24ab72262a61`.
+
+## Methods and commands (all run in /lane/review-checkout)
+
+1. `git rev-parse HEAD` gave `f33aab477185cc0f3e556ee6a20d6352a7e63f50`. `git status --porcelain` was empty, before and
+   after all runs. `git diff --check e2df12f8…` exited 0. `git log e2df12f8..HEAD` shows exactly one commit. It touches
+   exactly four files: TASKS.md (+12), docs/evidence/coding-scoreboard.md (+49, append only), the new evidence page
+   docs/evidence/t303-unique-anchor-checkpoint144-2026-11-21.md, and the retained prior review
+   docs/reviews/e2df12f861ce-unique-anchor-development-checkpoint132.txt. The commit makes no source change.
+2. `sha256sum manifest.json bindings.json` returned d0ccf29b…608e and cce057cf…0574. The postcommit envelope is
+   83861a3d…5de9. All three match the request.
+3. `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B …/verify.py --require-postcommit` exited 0 in about 109 s:
+   `{"status":"PASS","complete_files":97284,"source_files":9858,"repository_inputs":2390,"private_inputs":94,"contexts":30,"attempts":144,"task_passes":null,"candidate_execution":false,"postcommit_checked":true}`.
+   I read all of verify.py (198 lines). It authenticates every capsule file and rejects symlinks. It reproduces all
+   9,858 source blobs against the Git tree, and re-runs the effect-free helper on all 30 payloads to reproduce the
+   contexts. It runs audit.py in verify mode. It checks that every earlier `campaign/jobs/` and `campaign/candidates/`
+   entry is byte-equal to the checkpoint132 manifest, and derives each published table row from the recomputed audit.
+   It proves the continuation controller equals the frozen controller with exactly one replaced block, and it asserts
+   `resource_gate_status == FAIL` with `failed_resource_jobs == ['gpt-oss-18']`.
+4. I recounted independently from the raw `campaign/jobs/*/collection/*/record.json`, `checked.json` and
+   `backend-slice.log` files and the batch reports, without using the builder's audit:
+   - There are 144 records: 24 per profile, tasks dev-001…dev-024, each unique, all with retries=0 and graded=false.
+   - Strict ungraded proposals: gemma4-31b 20, qwen35-27b 19, gpt-oss 7, muse 15, gemma4-e4b 10, gemma4-26b-a4b 18.
+     These match TASKS.md, the scoreboard and the evidence page.
+   - Per-profile cause splits match the published dictionaries, for example gpt-oss: 8 strict-edit refusals and 9
+     generation refusals (1 length, 7 incomplete, 1 resource-guard).
+   - The twelve new attempts, jobs `*-22`, are dev-023 and dev-024 only. They split into 6 ungraded proposals, 5
+     strict-edit refusals (qwen dev-024, gpt-oss ×2, e4b ×2) and 1 length refusal (a4b dev-024), exactly as published.
+   - Summed generation_seconds per profile (1658.195 / 1159.523 / 2393.671 / 5595.995 / 1220.497 / 1704.749) match.
+   - Backend input/output tokens and coverage match (24, 24, 23, 18, 24, 24; 137/144 in total).
+   - Reserved-job GPU minutes from `reserved_work_seconds` match (39.997 / 27.235 / 44.811 / 101.101 / 23.650 / 39.250).
+   - Muse new request times are 268.274 and 80.567 s.
+   - Controller wall: 1421.649 s, plus the preceding summed 17170.828 s, gives 18592.478 s.
+5. Resource gate:
+   - gpt-oss-18 is the only non-completed report: status failed, "GPU desktop headroom exceeded", sampled peak 22682 MiB
+     against the 22528 MiB ceiling. Its batch-report SHA-256 is 9e5ff12e…, equal to `REPORT_SHA` pinned in the unchanged
+     `resource_abort_evidence.py`.
+   - All six new `*-22` jobs completed with sampled peaks of 20169, 18114, 14058, 17979, 5446 and 19901 MiB, all under
+     the unchanged ceiling, with settings revoked.
+   - `work/continue-controller.py` is byte-identical to the checkpoint132 capsule's copy. `campaign/controller.py`,
+     batch.py, collect.py, policy.json, output-format.json and every profile file are byte-identical to checkpoint132.
+     launch.py is unchanged, and launch.json shows nice 19, low priority, memory.max 16 GiB and cpu.max 4 CPUs.
+   - The skip in the controller is limited to directory name gpt-oss-18, the exact report hash, failed status, the
+     peak and limit, the exit code and the task pair. Any partial directory still stops the controller.
+6. Reporting correction: `work/independent-metrics.log` retains the failing assertion (`==24682`).
+   `repair-reporting-constant.py` restores `==22682` in independent-metrics.py only and records
+   `reporting-constant-correction.json`. That file records `raw_attempts_changed: false` and
+   `inference_controls_changed: false`, and it bounds the substitution regex in advance-reporting.py. No raw record,
+   candidate or inference control differs from checkpoint132 (point 7). The retry log passes with new causes
+   {ungraded 6, strict-edit 5, length 1}.
+7. Manifest diff against the checkpoint132 capsule: 50 changed entries, all reporting or work files (audit, metrics,
+   cleanup, launch.json, the public copies, verify.py). The 10 missing entries are earlier one-off reporting helpers and
+   public copies. No `campaign/jobs/` or `campaign/candidates/` entry changed or disappeared.
+8. Cleanup: cleanup.json records PASS, 71 completed, 1 failed and 72 observed pairs, resource gate FAIL, no live owned
+   processes, and 12 token receipts persisted before unlink. `/lane/state/ua1/*-22/auth` does not exist. `pgrep` found
+   no agentmage-local-api, llama-server or controller process; the only match was this review's own sandbox command
+   line.
+9. Requested reporting checks, with a temporary symlink `/tmp/rvnode/node` pointing to the retained Node binary
+   (SHA-256 d1de76d8…c932c, v24.15.0), outside the bundle:
+   - `python3 -B scripts/local_agent_fast_gate.py --base e2df12f8… --timeout 600`: FAST GATE PASS, markdownlint 0
+     issues in 3 files.
+   - `node …/work/render.mjs`: PASS, 0 issues, 3 files rendered.
+   - `python3 -B scripts/private_host_paths.py --base e2df12f8…`: PRIVATE PATH CHECK PASS.
+   - `python3 -B scripts/license_policy.py`: LICENCE POLICY PASS.
+   - The full source gate was not rerun. It remains the inherited FAIL (1,044 passed, 53 failures, 11 ignored), as the
+     page states; nothing is waived.
+10. Manual scan of the committed diff for home paths, user or host names, e-mail addresses, credentials and other
+    agent-product names: none found.
+    - The retained review file is byte-identical (`cmp`) to `/lane/reviews/e2df12f861ce-unique-anchor-development-checkpoint132.md`
+      and ends with `Verdict: PASS`.
+    - verify.py also asserts that the 512 TASKS.md table rows, README, inventory, status model, Decision 0051,
+      supply-chain files, the preserved private-path-exception files and the prior scoreboard prefix are unchanged.
+
+## Evaluation integrity and measure-first
+
+- The new batches contain only dev-023 and dev-024. The collector policy records held-out as "not loaded or executed",
+  and launch.json records `hidden_or_held_out: false` and `candidate_execution: false`.
+- No retries, feedback, task-pass or qualification claims are made, and failures are counted, not dropped: all 9
+  gpt-oss generation refusals and all 6 muse timeouts are in the denominators.
+- The scoreboard has a dated line for this batch. It states the context and output budgets, counts "Does not fit: 0"
+  separately per profile, traces every number to raw logs (point 4), and labels strict proposals as not solved tasks.
+- No tuning or input change occurred between batches (point 5).
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (backlog):
+- L1. `TASKS.md:9-15` (new block) says twice, in near-identical wording, that the continuation skips only the exact
+  pinned failure. This is cosmetic; drop the second sentence at the next reporting edit.
+- L2. `work/advance-reporting.py` in the capsule advances counts by plain-text substitution of number strings. That
+  method produced the 22682→24682 slip. The repair bounds only keys beginning with `==`, so other numeric keys can still
+  match a prefix of a longer constant. The independent cross-check caught it this time. Suggested fix: generate the
+  reporting constants from the audit instead of rewriting the prior script's text.
+- Existing T-309 lows remain unchanged, including the sampled GPU guard and per-pair wrapper provenance.
+
+## Per-row result
+
+- T-303/T-306, non-closing development checkpoint at 144/180 attempts: PASS for this measurement increment. Accounting
+  and evidence are reproduced, the resource gate is honestly reported as FAIL, and no row closes.
+
+Verdict: PASS
