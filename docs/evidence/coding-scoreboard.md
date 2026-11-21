@@ -7362,3 +7362,63 @@ Reserved-job body time excludes queues. Complete all 30 tasks on all six
 profiles before further tuning or capability work. No parent row closes.
 
 [Raw-evidence description](t303-original-address-checkpoint60-2026-11-21.md).
+
+## Frozen original-address repeat: seventy-two-attempt checkpoint, 2026-11-21
+
+Frozen source: `7821274ab5caa56573d8b68aa7a2121c71fc4b2b`. Reporting parent: `88a4b05a9fda63eb2999ab6e7bc10d48b3d92d62`.
+Changed variable remains Decision 0216's fixed instruction and resulting
+budget-dependent excerpts, frozen before inference. No new changed variable.
+Adds dev-011/dev-012 on all six profiles: **72/180 attempted, 108 remaining**.
+Table values are cumulative over twelve tasks per profile.
+
+| Date | Profile | Context / output tokens | Attempts | Strict ungraded proposals | First-attempt / within-budget task passes | Observed backend input / output tokens (coverage) | Request and strict-check seconds | Reserved-job GPU minutes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-21 | gemma4-31b | 32768 / min(32768, 32768 - rendered input - 32) | 12/30 | 9/12 | Unavailable / unavailable | 79390 / 17492 (12/12) | 931.887 | 23.168 |
+| 2026-11-21 | qwen35-27b | 32768 / min(32768, 32768 - rendered input - 32) | 12/30 | 8/12 | Unavailable / unavailable | 69842 / 19624 (12/12) | 680.432 | 15.521 |
+| 2026-11-21 | gpt-oss | 32768 / min(32768, 32768 - rendered input - 32) | 12/30 | 3/12 | Unavailable / unavailable | 64770 / 211965 (12/12) | 1315.775 | 24.494 |
+| 2026-11-21 | muse | 32768 / min(32768, 32768 - rendered input - 32) | 12/30 | 6/12 | Unavailable / unavailable | 41277 / 64923 (8/12) | 2846.207 | 53.819 |
+| 2026-11-21 | gemma4-e4b | 32768 / min(32768, 32768 - rendered input - 32) | 12/30 | 3/12 | Unavailable / unavailable | 79342 / 20266 (12/12) | 694.012 | 13.782 |
+| 2026-11-21 | gemma4-26b-a4b | 32768 / min(32768, 32768 - rendered input - 32) | 12/30 | 7/12 | Unavailable / unavailable | 79390 / 20369 (12/12) | 738.464 | 18.750 |
+
+gemma4-31b: causes `{"strict-edit-refused:code.proposal.edit": 3, "ungraded-proposal": 9}`; backend terminations `{"stopped-below-token-limits": 12}`; response fields `{"content:nonempty": 12, "reasoning:absent-or-empty": 12, "reasoning_content:absent-or-empty": 12}`. Does not fit: 0.
+
+qwen35-27b: causes `{"strict-edit-refused:code.proposal.edit": 4, "ungraded-proposal": 8}`; backend terminations `{"stopped-below-token-limits": 12}`; response fields `{"content:nonempty": 12, "reasoning:absent-or-empty": 12, "reasoning_content:absent-or-empty": 12}`. Does not fit: 0.
+
+gpt-oss: causes `{"generation-refused:complete:length": 2, "generation-refused:error:chat.response.incomplete": 2, "strict-edit-refused:code.proposal.edit": 5, "ungraded-proposal": 3}`; backend terminations `{"output-cap": 4, "stopped-below-token-limits": 8}`; response fields `{"content:absent-or-empty": 2, "content:nonempty": 10, "reasoning:absent-or-empty": 12, "reasoning_content:nonempty": 12}`. Does not fit: 0.
+
+muse: causes `{"generation-refused:error:chat.transport.timeout": 4, "strict-edit-refused:code.proposal.edit": 1, "strict-edit-refused:code.proposal.format": 1, "ungraded-proposal": 6}`; backend terminations `{"stopped-below-token-limits": 8, "transport-timeout-no-terminal-counters": 4}`; response fields `{"content:nonempty": 8, "reasoning:absent-or-empty": 8, "reasoning_content:nonempty": 8}`. Does not fit: 0.
+
+gemma4-e4b: causes `{"strict-edit-refused:code.proposal.edit": 9, "ungraded-proposal": 3}`; backend terminations `{"stopped-below-token-limits": 12}`; response fields `{"content:nonempty": 12, "reasoning:absent-or-empty": 12, "reasoning_content:absent-or-empty": 12}`. Does not fit: 0.
+
+gemma4-26b-a4b: causes `{"strict-edit-refused:code.proposal.edit": 5, "ungraded-proposal": 7}`; backend terminations `{"stopped-below-token-limits": 12}`; response fields `{"content:nonempty": 12, "reasoning:absent-or-empty": 12, "reasoning_content:absent-or-empty": 12}`. Does not fit: 0.
+
+Muse dev-007 and dev-008 reached the unchanged 300-second transport deadline.
+No upstream response or terminal token counters were captured for either;
+both remain failed base-fallback attempts, with zero retries. Missing counters
+are unavailable and are not estimated.
+The preceding independent review observed about 11 seconds of uncancelled
+dev-007 backend generation inside dev-008's transport window, leaving about
+289 seconds for its backend processing. Both remain counted failures. Backend
+cancellation on client timeout remains T-309 backlog; no timing or inference
+variable changes during this repeat.
+
+Muse dev-011 and dev-012 also reached the same 300-second transport deadline
+in this increment, without a captured upstream response or terminal token
+counters. Both remain failed base-fallback attempts with zero retries. About
+11 seconds of uncancelled dev-011 backend generation overlapped dev-012's
+request window, leaving about 289 seconds for its backend processing.
+No missing token counters are estimated; cancellation remains T-309 backlog.
+
+Strict ungraded proposals are not solved tasks. Original native executable
+admission and grading controls remain unavailable; no candidate, project test,
+hidden or held-out execution, feedback or retries. Only Rust retrieval,
+credential-owning chat HTTP transport, inference and strict checking run.
+No model is admitted or selected for a role. Backend counters have explicit
+coverage; missing observations stay unavailable. API usage is not requested.
+Thinking remains requested disabled, without a claim about internal reasoning.
+This controller wall including queues/pauses: 1883.751 seconds; summed
+controller wall: 10126.975 seconds, excluding the session gap.
+Reserved-job body time excludes queues. Complete all 30 tasks on all six
+profiles before further tuning or capability work. No parent row closes.
+
+[Raw-evidence description](t303-original-address-checkpoint72-2026-11-21.md).
