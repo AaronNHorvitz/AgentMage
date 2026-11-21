@@ -1,0 +1,136 @@
+Commit: 1b5abc207032d7893ba467594e9340ed38a0b361
+Scope: original-address-development-checkpoint120
+
+Reviewer: Claude Opus 5.5, separate session, read-only. I worked in the pinned checkout `/lane/review-checkout`
+with `CARGO_TARGET_DIR=/lane/state/review-target`. Heavy commands ran through `/tools/build-slot` at low priority.
+Outside this file, I wrote only a temporary node symlink, file lists, checksums and a recomputation script under
+`/lane/state/tmp/r120`, outside the sealed bundle. I did not use the GPU, did not modify the repository and did not
+approve anything in it.
+
+## Methods
+
+The commit is a non-closing T-303/T-306 development measurement: twelve new first generations (dev-019/dev-020
+on six profiles) from frozen source `7821274ab5caa56573d8b68aa7a2121c71fc4b2b`. I re-ran the requested commands.
+I also recomputed every published number from the raw per-attempt records and upstream responses with my own
+script, without relying on the builder's `audit.py`. I checked that the earlier 108 attempts are byte-identical to
+the previous sealed bundle. I inspected launch limits, request settings, cleanup, credential retirement and the
+backend listen addresses.
+
+## Commands and results
+
+1. `git rev-parse HEAD` gives `1b5abc207032d7893ba467594e9340ed38a0b361`, with tree `b09e7e6b…` and parent
+   `53c6655d…`. `git status --porcelain` is empty before and after my runs.
+   `git diff --check 53c6655d498f30d3d9bb1afef692c07bb6aec92c` exits 0.
+   - The diff touches four files only: `TASKS.md` (one queue paragraph prepended),
+     `docs/evidence/coding-scoreboard.md` (append only),
+     `docs/evidence/t303-original-address-checkpoint120-2026-11-21.md` (new) and
+     `docs/reviews/53c6655d498f-original-address-development-checkpoint108.txt` (new).
+   - `git diff --name-only 7821274a HEAD` lists no file outside `TASKS.md`, `docs/evidence/` and `docs/reviews/`,
+     so there are no production source changes.
+2. All four digests match the request:
+   - manifest `a55e5a73…f4e976`
+   - bindings `76a1e159…d8da2`
+   - `work/audit.json` `4095bfd1…7f7af`
+   - postcommit `78d5a5df…10fbc`
+
+   The postcommit file binds this commit, its parent and tree `b09e7e6b…`.
+3. `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B …checkpoint120-20261121/verify.py --require-postcommit`
+   exits 0 and prints:
+   `{"status": "PASS", "complete_files": 79950, "source_files": 9893, "repository_inputs": 2425,
+   "private_inputs": 111, "contexts": 30, "attempts": 120, "task_passes": null, "candidate_execution": false,
+   "postcommit_checked": true}`.
+4. The Node binary `/lane/reviews/42612ca9787f-a4b-node` has SHA-256 `d1de76d8…c74bd932c` and reports `v24.15.0`.
+   Its licence file is present. I put it on PATH through a symlink in `/lane/state/tmp/r120/bin`.
+   - `scripts/local_agent_fast_gate.py --base 53c6655d… --timeout 600` gives `FAST GATE: PASS`: private paths
+     PASS, licence PASS, review lint exit 0, and markdownlint 0 issues in 3 files.
+   - `node …/work/render.mjs` gives `{"status":"PASS","issues":0,…}` for the three rendered files.
+   - `scripts/private_host_paths.py --base 53c6655d…` gives `PRIVATE PATH CHECK: PASS`.
+   - `scripts/license_policy.py` gives `LICENCE POLICY: PASS`.
+5. Prior review copy: `/lane/reviews/53c6655d498f-original-address-development-checkpoint108.md` and
+   `docs/reviews/53c6655d498f-original-address-development-checkpoint108.txt` are byte-identical (SHA-256
+   `5e675ac3…cdbc`), and the file ends `Verdict: PASS`.
+   - `work/review-state.json` records the review as available with that digest.
+   - TASKS.md and the evidence document report that verdict accurately and close no row.
+   - `work/start-REVIEW-IN-FLIGHT.md` is the checkpoint108 request.
+
+## Independent recomputation from raw evidence
+
+- **Records.** My script checked all 120 `campaign/jobs/*/collection/dev-*/record.json`:
+  - Every logged file's SHA-256 matches.
+  - Each (model, task) pair appears once.
+  - Every record has `retries == 0`, `graded == false` and `native_coding_harness == false`.
+  - Every record has `requested_output_tokens == min(32768, 32768 - preflight - 32)`.
+  - The base-fallback flag holds exactly for the non-proposal causes.
+  - I derived the cause subtype from the `checked.json` error or from the final `events.ndjson` event.
+- **Causes.** The increment is `{"strict-edit-refused:code.proposal.edit": 2, "ungraded-proposal": 10}`. Both
+  refusals are gemma4-e4b dev-019 and dev-020.
+  - Strict counts per profile are 16, 12+2=14, 6, 12, 5 and 11 out of 20.
+  - The per-profile cause dictionaries and the aggregate (`…edit: 46, …format: 1, ungraded-proposal: 64`, plus
+    2 length, 3 incomplete and 4 timeout) match the evidence document and the scoreboard exactly.
+  - All twelve new attempts finished with `stop`. The longest was muse dev-020 at 159.4 s, well under the 300 s
+    deadline, so "no new transport timeout" holds.
+- **Token ranges.** The min–max preflight input and requested output ranges reproduce every
+  "Rendered input / requested output" cell.
+- **Counters.** For every `upstream-response-*.bin` I checked that the length and SHA-256 equal the capture record,
+  that `timings` agrees with `usage`, and then summed the usage.
+  - The sums reproduce every observed input/output and coverage cell. For example, gpt-oss is 113400 / 308392
+    (20/20) and muse is 89511 / 134219 (16/20).
+  - The four muse timeouts have no response, which matches "no upstream response captured".
+- **Terminations and response fields.** The `finish_reason` counts (gpt-oss: 15 stop and 5 length, which is
+  "output-cap") and the per-field content/reasoning/reasoning_content emptiness counts reproduce every published
+  dictionary.
+- **Seconds.** Summed `generation_seconds` reproduces every request and strict-check cell.
+- **GPU minutes.** Summed `reserved_work_seconds` from the reservation logs, divided by 60, reproduces every
+  cell: 34.225, 22.649, 36.219, 85.505, 20.589 and 27.943.
+- **Controller wall.** The `controller-exit.json` UTC minus the `launch.json` UTC is
+  15:19:58.054934 − 15:01:24.299196 = 1113.756 s. The prior cumulative 14359.461 s plus 1113.756 s gives the
+  published 15473.217 s.
+- **Measure first.** The scoreboard has a line for this batch. It states the context and output budgets, reports
+  "Does not fit: 0" separately from model failures, and shows missing counters as coverage without estimating
+  them. The verifier asserts the scoreboard prefix byte for byte, and the git diff confirms the change is append
+  only.
+
+## Preservation of the earlier attempts
+
+I listed every file under `campaign/jobs` and `campaign/candidates` in the previous sealed bundle
+(`…checkpoint108-20261121-v2`): 69,970 files. I then checked their SHA-256 sums against the new bundle with
+`sha256sum -c`, and every file matched. Every file added in the new bundle is under an `*-18` job or a
+dev-019/dev-020 candidate.
+
+## Safety and confinement of the run
+
+- **Launch.** `launch.json` records nice 19 and low priority. Its limits are `memory.max` 16 GiB and `cpu.max`
+  400000/100000. It records `candidate_execution: false`, `hidden_or_held_out: false`, the source commit
+  `7821274a…` and 9893 snapshot files.
+- **Requests.** Apart from `messages` and `max_tokens`, every upstream request in all 60 jobs has a single
+  identical settings object per profile. This covers the strict JSON schema, `stream: false` and the sampling
+  fields, so nothing was tuned in this batch.
+- **Cleanup.** `cleanup.json` reports 60 completed pairs, no live owned processes, no foreign signal, API and
+  model reaped, keys and sockets absent, and receipts persisted before unlink.
+- **Credentials.** The 12 token retirement receipts cover the client and control tokens of the six new `-18` jobs.
+  `/lane/state/oa1/*-18/auth` no longer exists, and the bundle contains no token or socket file.
+- **Listen addresses.** All six new model servers log only `listening on unix:///run/agentmage/model.sock`.
+- **Scope of execution.** No candidate, project test, hidden or held-out task ran. The development tasks dev-019 and
+  dev-020 use contexts frozen before inference.
+- **Privacy.** I searched the added lines of the four committed files for home paths, the local username, email,
+  key or credential patterns. The only hit is the word "hostname" in the copied prior review's own privacy
+  statement. The path check passes.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (backlog, carried over and already disclosed): on client timeout the backend is not cancelled. As a result,
+muse dev-007 overlapped into dev-008 and dev-011 into dev-012. This remains on the T-309 backlog and is stated
+accurately in both documents. This batch had no new timeout.
+
+## Per-row result
+
+- T-303 / T-306 (non-closing development measurement): the evidence supports every claim this batch makes. The
+  twelve new attempts and all cumulative tables trace to raw logs, and the earlier 108 attempts are preserved
+  byte for byte.
+  - Strict ungraded proposals are labelled as not solved tasks.
+  - Task passes, feedback, retries and model admission are reported as unavailable.
+  - Both rows stay OPEN as stated, and nothing closes.
+
+Verdict: PASS
