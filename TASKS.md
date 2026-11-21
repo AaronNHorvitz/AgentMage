@@ -2,6 +2,20 @@
 
 ## Active queue: local agent mission
 
+The [frozen unique-anchor one-hundred-eighty-attempt checkpoint](docs/evidence/t303-unique-anchor-checkpoint180-2026-11-21.md)
+adds dev-029/dev-rust-001 on all six profiles: **180/180 attempted, 0 remaining**.
+Cumulative strict ungraded proposals: gemma4-31b 25/30; qwen35-27b 24/30; gpt-oss 10/30; muse 20/30; gemma4-e4b 12/30; gemma4-26b-a4b 23/30. These are not solved tasks.
+The preceding GPU headroom interruption remains counted; its pair stays
+failed. The continuation skips only that exact pinned failure; no replay.
+All 30 tasks per profile are now attempted. The complete measured failure
+breakdown determines the next work under MEASURE FIRST. Task passes,
+feedback and retries remain unavailable; T-303/T-306 stay open.
+The [preceding independent core review](docs/reviews/93d051951ae1-unique-anchor-development-checkpoint168.txt) returns **Verdict: PASS** for exact `93d051951ae1388bbb9b757078ff87d60c52e912`; its report is retained unchanged. No row closes.
+Earlier sampled-GPU-guard observations and reporting-count templating remain
+T-309 backlog.
+
+Among measured inference and strict-check failures, the largest cause is `strict-edit-refused:code.proposal.edit` (43 attempts). This selects the next read-only refusal diagnosis under MEASURE FIRST. Native-execution and grading blockers still prevent task outcomes from being measured; they are not resolved by this repeat.
+
 The [frozen unique-anchor one-hundred-sixty-eight-attempt checkpoint](docs/evidence/t303-unique-anchor-checkpoint168-2026-11-21.md)
 adds dev-027/dev-028 on all six profiles: **168/180 attempted, 12 remaining**.
 Cumulative strict ungraded proposals: gemma4-31b 23/28; qwen35-27b 22/28; gpt-oss 9/28; muse 18/28; gemma4-e4b 11/28; gemma4-26b-a4b 22/28. These are not solved tasks.

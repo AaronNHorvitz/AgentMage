@@ -1,0 +1,105 @@
+Commit: 93d051951ae1388bbb9b757078ff87d60c52e912
+Scope: unique-anchor-development-checkpoint168
+
+# Independent core review: frozen unique-anchor checkpoint, 168/180 attempts
+
+Reviewer: Claude Opus 5.5 at extra-high effort, separate session, read-only. All commands ran in
+/lane/review-checkout (the pinned checkout) with `CARGO_TARGET_DIR=/lane/state/review-target`. I used no
+GPU and modified nothing in the repository.
+
+## Commit and scope
+
+- `git rev-parse HEAD` = `93d051951ae1388bbb9b757078ff87d60c52e912`; tree `4fd93cfefcf6da6eedf9e1701c6cce9bb180b957`;
+  parent `77ca42a268decf47b5f9b4c9b5eea5ee94274034`. `git status --porcelain` empty.
+- `git diff --check 77ca42a2…` produced no output (exit 0).
+- Diff versus the parent touches four files only: TASKS.md (+12 lines of prose, no table rows),
+  docs/evidence/coding-scoreboard.md (+49, append only), the new
+  docs/evidence/t303-unique-anchor-checkpoint168-2026-11-21.md, and
+  docs/reviews/77ca42a268de-unique-anchor-development-checkpoint156.txt. No source, test, controller, policy or
+  licence file changes.
+- The committed review copy is byte-identical (`cmp`) to my preceding review
+  /lane/reviews/77ca42a268de-unique-anchor-development-checkpoint156.md (Verdict: PASS).
+- Hashes match the request: manifest.json `837f0e34…c8c9`, bindings.json `f6bb42a9…10a3`, post-commit envelope
+  `365c2277…e484`. The envelope names this commit, the parent and this tree.
+
+## Commands and results
+
+1. `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B /lane/reviews/unique-anchor-development-checkpoint168-20261121/verify.py --require-postcommit`
+   → exit 0, `{"status":"PASS","complete_files":114646,"source_files":9858,"repository_inputs":2390,"private_inputs":94,"contexts":30,"attempts":168,"task_passes":null,"candidate_execution":false,"postcommit_checked":true}`.
+   I read verify.py in full (198 lines). It authenticates every capsule file and rejects symlinks. It
+   reproduces the 9,858-file source snapshot against Git blob ids and modes, re-runs the effect-free helper
+   for all 30 contexts and re-runs audit.py for wire traffic, strict checks, candidates, counters and totals.
+   It also checks that the earlier campaign/jobs and campaign/candidates bytes match the checkpoint156
+   manifest (`d4e0d954…f253`), derives every published table cell from the fresh audit, checks the summed
+   wall time, and checks that the continue-controller equals the frozen controller with exactly one stated
+   replacement. Finally it checks the 512 TASKS rows, README, inventory, status model, Decision 0051,
+   supply-chain and the scoreboard prefix.
+2. With a temporary symlink /tmp/rv168-bin/node pointing to the retained Node at
+   /lane/reviews/42612ca9787f-a4b-node (SHA-256 `d1de76d8…c932c`, v24.15.0, licence file present), placed
+   on PATH outside the bundle:
+   - `python3 -B scripts/local_agent_fast_gate.py --base 77ca42a2… --timeout 600` → `FAST GATE: PASS`
+     (privacy PASS, licence PASS, review lint PASS, markdownlint 0 issues in 3 files).
+   - `node …/work/render.mjs` → `{"status":"PASS","issues":0,…}` for the three changed Markdown files.
+   - `python3 -B scripts/private_host_paths.py --base 77ca42a2…` → `PRIVATE PATH CHECK: PASS`.
+   - `python3 -B scripts/license_policy.py` → `LICENCE POLICY: PASS`.
+   - `git status --porcelain` was still empty afterwards.
+3. I did not rerun the full source gate, as the request says. The evidence reports it as an inherited
+   FAIL (1,044 passed, 53 failed, 11 ignored, 31 targets) and does not claim otherwise.
+
+## Independent checks (my own code, not the builder's audit)
+
+- **Tally of raw records.** I parsed all 168 `campaign/jobs/*/collection/dev-*/record.json` and
+  `checked.json` files directly. Each profile has 28 attempts on 28 distinct tasks. Strict ungraded
+  proposals: gemma4-31b 23, qwen35-27b 22, gpt-oss 9, muse 18, gemma4-e4b 11, gemma4-26b-a4b 22. These
+  equal the published numbers. Strict-refusal subcodes per profile match the published cause maps. The
+  gpt-oss count of 11 generation refusals equals 1 length + 9 incomplete + 1 resource-guard interruption.
+  Every record has `retries` = 0 and `graded` = false.
+- **The 12 new attempts (jobs `*-26`):** 7 ungraded proposals, 3 strict refusals and 2 generation refusals.
+  The strict refusals are gemma4-31b dev-028, gemma4-e4b dev-027 and muse dev-028; the generation refusals
+  are gpt-oss dev-027 and dev-028. This matches the evidence page. The muse generation times in the records
+  are 226.529 and 283.568 seconds, also as published.
+- **Coverage.** Cumulative backend counter coverage is 28+28+27+22+28+28 = 161/168, as published.
+- **Wall time.** Launch is 07:40:48.365606Z and exit is 08:04:15.611184Z, so 1407.246 s. Adding the
+  previous sum of 19787.510 s gives 21194.756 s, as published.
+- **Controller bytes.** `campaign/controller.py` and `work/continue-controller.py` are byte-identical to
+  the checkpoint156 capsule copies. The diff between them is only the exact-failure skip, which calls
+  `resource_abort_evidence.validate_job`. resource_abort_evidence.py, audit.py and timeout_evidence.py are
+  unchanged from checkpoint156; the verifier asserts this. launch.py ran `continue-controller.py` from its
+  own directory under bwrap with a read-only source snapshot, nice 19, priority low, memory.max 16 GiB and
+  cpu.max 4 CPUs, all as recorded.
+- **Resource gate.** The `gpt-oss-18` batch report still says `failed`. success-only-audit.py is
+  byte-identical to the checkpoint156 copy and still exits 1 on `report['status']=='completed'`.
+  audit.json and cleanup.json both report `resource_gate_status: FAIL`. Nothing is relabelled.
+- **Reporting-script diffs.** I read all 13 `work/*.diff` files. Each changes only the base sha, the
+  checkpoint directory, the job suffix (-24 to -26), task ids and counts (26 to 28, 156 to 168, 78 to 84
+  reports). No check is removed or weakened.
+- **Cleanup.** cleanup.json records 84 observed pairs (83 completed, 1 failed), empty
+  `live_owned_processes` and 12 retired tokens for `-26` jobs only. `/lane/state/ua1/*-26/auth` no longer
+  exists, and no `*.token` file or socket is left under /lane/state/ua1. My sandbox has its own process
+  namespace, so I cannot see the builder's processes directly; for those I rely on the recorded receipts.
+- **Privacy and product names.** I searched the diff for home paths, the local user name, credential
+  words and agent-product or benchmark names: no matches. The capsule's launch.json contains a private home
+  path, but the capsule is not committed and the path check passes on the commit.
+- **Evaluation integrity.** Only dev-xxx tasks appear. No held-out or hidden content is in the diff, and
+  `hidden_or_held_out` and `candidate_execution` are false. All 30 contexts were frozen before inference and
+  are reproduced from the recorded payloads, which match the frozen task bases in Git. No answer is
+  repaired or retried. The scoreboard has a dated line for this batch, states the context and output
+  budgets, gives "Does not fit: 0" separately from model failures, and calls every count an ungraded
+  proposal, not a pass. The order of work (finish all 30 tasks before tuning) is unchanged, consistent with
+  MEASURE FIRST.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (existing T-309 backlog, unchanged and disclosed): reporting-count templating, the sampled GPU guard,
+and per-pair wrapper provenance. Nothing new.
+
+## Per-row result
+
+- T-303/T-306, non-closing development checkpoint at 168/180 attempts: PASS for this measurement
+  increment. The accounting and published numbers reproduce from raw records, the resource gate is honestly
+  kept at FAIL, the controller continuation is exactly the preserved one, and no row closes. The full source
+  gate remains an inherited FAIL; it was not rerun and is not waived.
+
+Verdict: PASS
