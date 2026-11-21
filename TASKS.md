@@ -2,6 +2,18 @@
 
 ## Active queue: local agent mission
 
+The [completed unique-anchor refusal diagnosis](docs/evidence/t303-unique-anchor-refusal-diagnosis-2026-11-21.md)
+reproduces 158 complete-reply checks and classifies 157 typed edit results.
+The largest individual refusal is invalid line order (17/180), followed by
+repeated originals (15/180). Next: improve original line-address selection,
+including insertion anchors, while preserving all strict checks; freeze and
+measure any model-visible change across all six profiles. The 114 accepted
+proposals remain ungraded. Native admission, task passes, feedback and retries
+remain unavailable. T-303/T-306 stay open. Independent core review is required.
+The [preceding exact-commit core PASS](docs/reviews/6254a671eee3-unique-anchor-development-checkpoint180.txt)
+is retained unchanged; its reporting-templating low remains T-309 backlog.
+No row closes.
+
 The [frozen unique-anchor one-hundred-eighty-attempt checkpoint](docs/evidence/t303-unique-anchor-checkpoint180-2026-11-21.md)
 adds dev-029/dev-rust-001 on all six profiles: **180/180 attempted, 0 remaining**.
 Cumulative strict ungraded proposals: gemma4-31b 25/30; qwen35-27b 24/30; gpt-oss 10/30; muse 20/30; gemma4-e4b 12/30; gemma4-26b-a4b 23/30. These are not solved tasks.

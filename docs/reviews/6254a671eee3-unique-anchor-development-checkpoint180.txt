@@ -1,0 +1,143 @@
+Commit: 6254a671eee35a0c4521e7e53d38fef828cf6202
+Scope: unique-anchor-development-checkpoint180
+
+# Independent core review: frozen unique-anchor checkpoint, 180/180 attempts
+
+Reviewer: Claude Opus 5.5 at extra-high effort, in a separate read-only session. All commands ran in
+/lane/review-checkout (the pinned checkout) with `CARGO_TARGET_DIR=/lane/state/review-target`. I used no
+GPU and changed nothing in the repository.
+
+## Commit and scope
+
+- `git rev-parse HEAD` returns `6254a671eee35a0c4521e7e53d38fef828cf6202` with tree
+  `d8d8d7bbf27cbbfd975322ba8d69076b6effa5cd`. Its parent is `93d051951ae1388bbb9b757078ff87d60c52e912`.
+  `git status --porcelain` is empty before and after my runs.
+- `git diff --check 93d051951ae1388bbb9b757078ff87d60c52e912` produced no output (exit 0).
+- `git diff --numstat` against the parent adds lines to four files and deletes none:
+  - TASKS.md: +14 lines of prose at the top of the active queue, with no table rows.
+  - docs/evidence/coding-scoreboard.md: +52 lines, appended at the end.
+  - docs/evidence/t303-unique-anchor-checkpoint180-2026-11-21.md: new, +144 lines.
+  - docs/reviews/93d051951ae1-unique-anchor-development-checkpoint168.txt: new, +105 lines.
+
+  No source, test, controller, policy, licence or manifest file changes.
+- The committed review copy is byte-identical (`cmp`) to my preceding review
+  /lane/reviews/93d051951ae1-unique-anchor-development-checkpoint168.md (Verdict: PASS).
+- The capsule hashes match the request:
+  - manifest.json: `22529e3c…9e869`
+  - bindings.json: `70fb90a6…c6b`
+  - post-commit envelope: `2c52b9b9…a0d6a0a66`
+
+  The envelope names this commit, the parent and tree `d8d8d7bb…`, which is the commit's actual tree.
+
+## Commands and results
+
+1. `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B /lane/reviews/unique-anchor-development-checkpoint180-20261121/verify.py --require-postcommit`
+   exited 0 after waiting in the build-slot queue (2 min 10 s run time). Output:
+   `{"status":"PASS","complete_files":119294,"source_files":9858,"repository_inputs":2390,"private_inputs":94,"contexts":30,"attempts":180,"task_passes":null,"candidate_execution":false,"postcommit_checked":true}`.
+2. I put a temporary symlink /tmp/rv180-bin/node on PATH, outside the bundle. It points to the retained
+   Node at /lane/reviews/42612ca9787f-a4b-node (SHA-256 `d1de76d8…c932c`, `node --version` v24.15.0); the
+   licence file is present.
+   - `python3 -B scripts/local_agent_fast_gate.py --base 93d051951ae1388bbb9b757078ff87d60c52e912 --timeout 600`
+     printed `FAST GATE: PASS`: private paths PASS, licence PASS, review lint of the committed review copy
+     exit 0, and markdownlint-cli2 found 0 issues in the 3 changed Markdown files.
+   - `node /lane/reviews/unique-anchor-development-checkpoint180-20261121/work/render.mjs` printed
+     `{"status":"PASS","issues":0,...}` for TASKS.md, the scoreboard and the new evidence page.
+   - `python3 -B scripts/private_host_paths.py --base 93d05195…` printed `PRIVATE PATH CHECK: PASS`.
+   - `python3 -B scripts/license_policy.py` printed `LICENCE POLICY: PASS`.
+3. I did not rerun the full source gate, as the request asks. The evidence and TASKS.md report it as the
+   inherited FAIL (1,044 passed, 53 failed, 11 ignored, 0 filtered, 31 targets). It is neither waived nor
+   called a pass.
+
+## Independent checks (my own code, run on the sealed capsule rather than through the builder's audit)
+
+- **Tally of raw records.** I parsed all 180 `campaign/jobs/*/collection/dev-*/record.json` files.
+  - Each profile has 30 attempts on 30 distinct tasks (dev-001…dev-029 and dev-rust-001). Every record has
+    `retries`=0 and `graded`=false.
+  - Strict ungraded proposals (cause `ungraded-proposal`): gemma4-31b 25, qwen35-27b 24, gpt-oss 10,
+    muse 20, gemma4-e4b 12, gemma4-26b-a4b 23. These equal the published counts.
+  - Aggregate causes: 114 ungraded proposals, 44 strict refusals and 22 generation refusals, for 180 in
+    total. The refusals come from `checked.json` `error` (43 `code.proposal.edit`, 1
+    `code.proposal.format`) and from the terminal events (5 length, 10 incomplete, 6 transport timeout,
+    1 HTTP error). The HTTP error is gpt-oss-18 dev-020, which is relabelled as the resource-guard
+    interruption, as before. The published per-profile and aggregate cause maps match exactly.
+  - So 43 strict-edit refusals is indeed the largest failure cause.
+- **The 12 new attempts (jobs `*-28`):**
+  - 9 ungraded proposals.
+  - 2 strict-edit refusals: gemma4-e4b dev-029 and gemma4-26b-a4b dev-029.
+  - 1 generation refusal: gpt-oss dev-rust-001, `error:chat.response.incomplete`, with no candidate and a
+    base fallback recorded.
+
+  This matches the evidence page. The muse request times are 155.750 and 244.664 seconds, as published.
+- **Counters, budgets and times.** I re-parsed each backend-slice.log after its `slot launch_slot_`
+  marker and recomputed every table cell for all six profiles:
+  - observed input/output tokens and their coverage;
+  - summed request-and-check seconds;
+  - reserved-job minutes from the `reserved_work_seconds` of the batch reports;
+  - rendered-input and requested-output ranges.
+
+  All of them equal the published values. Cumulative coverage is 173/180. Every record satisfies
+  `requested_output_tokens == min(32768, 32768 - rendered_input - 32)`. "Does not fit: 0" is stated apart
+  from model failures.
+- **Wall time.** launch.json gives 08:16:54.171954Z and controller-exit.json gives 08:42:08.764672Z
+  (exit 0), which is 1514.593 s. The prior summed wall in the checkpoint168 capsule's published-metrics.json
+  is 21194.756 s, and 21194.756 + 1514.593 = 22709.349 s, as published.
+- **Preservation of earlier attempts.** I ran `diff -rq` on the checkpoint168 campaign against the
+  checkpoint180 campaign. No file differs. The only differences are the six new `-28` job directories and
+  the new dev-029/dev-rust-001 candidate directories. `inputs/preceding-checkpoint-manifest.json` is
+  byte-identical to the checkpoint168 manifest.
+- **Controller bytes.** These files are byte-identical (SHA-256) to the checkpoint168 capsule copies:
+  `campaign/controller.py`, `work/continue-controller.py`, `audit.py`, `resource_abort_evidence.py`,
+  `success-only-audit.py` and `timeout_evidence.py`. continue-controller.diff still contains only the
+  exact-failure skip through `resource_abort_evidence.validate_job`. The launch ran nice 19 at low priority
+  with memory.max 16 GiB and cpu.max 4 CPUs, with `candidate_execution` and `hidden_or_held_out` false.
+- **Resource gate.** The gpt-oss-18 batch report is still `failed` (sampled peak 22,682 MiB).
+  success-only-audit-exit.json records exit 1 and `FAIL`, and audit.json carries
+  `resource_gate_status: FAIL`. Nothing is relabelled or replayed.
+- **Reporting-script diffs.** I read all 15 `work/*.diff` files. Most change only the base sha, the
+  checkpoint directory, the job suffix (-26 to -28), task ids and counts (28 to 30, 168 to 180, 84 to 90
+  reports). write-report.py adds a computed "largest failure cause" sentence, and request-review.py changes
+  its next-work prose. No check is removed or weakened.
+- **Cleanup.**
+  - cleanup.json records 90 observed pairs (89 completed, 1 failed), `live_owned_processes` empty,
+    settings revoked, and receipts persisted before unlink.
+  - There are 12 token-retirement receipts, all for the `-28` jobs.
+  - `/lane/state/ua1/*-28/auth` does not exist, and no `*.token` file or socket remains under
+    /lane/state/ua1.
+  - My sandbox has its own process namespace, so for the builder's processes I rely on the recorded
+    receipts.
+- **Privacy and names.** I searched the diff for home paths, the local user name, credential words, and
+  agent-product and benchmark names: no matches. The path check passes.
+- **Evaluation integrity.** Only development tasks appear, and no held-out or hidden content is in the
+  diff or the run. The 30 contexts were frozen before inference and are reproduced by the verifier. No
+  answer is repaired or retried. Every count is called an ungraded proposal, never a pass, and task
+  passes stay `null`/"Unavailable".
+- **MEASURE FIRST.**
+  - The scoreboard has a dated line for this batch. It states the context and output budgets, records no
+    changed variable beyond the frozen Decision 0215, and lists failures by cause.
+  - The next work it names is the largest measured failure cause, as item 4 requires. It also says
+    plainly that native execution and grading remain unavailable.
+  - No order of work is changed beyond that, and nothing is claimed built.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (backlog, part of the existing T-309 reporting-templating low):
+`work/write-report.py` builds the `nextwork` sentence from the computed largest cause. However, the phrase
+"This selects the next read-only refusal diagnosis" is fixed text. If a later checkpoint's largest cause
+were not a refusal, the sentence would be wrong. The text is correct for this commit. Fix: derive the noun
+from the cause, or assert that the cause starts with `strict-edit-refused`.
+
+Existing T-309 lows are unchanged and disclosed: reporting-count templating, the sampled GPU guard, and
+per-pair wrapper provenance.
+
+## Per-row result
+
+- T-303/T-306, non-closing frozen development checkpoint at 180/180 attempts: PASS for this measurement
+  increment.
+  - Every published number reproduces from the raw records.
+  - The earlier 168 attempts are untouched.
+  - The resource gate honestly stays FAIL, and the controller continuation is exactly the preserved one.
+  - No row closes. The full source gate remains an inherited FAIL; it was not rerun and is not waived.
+
+Verdict: PASS

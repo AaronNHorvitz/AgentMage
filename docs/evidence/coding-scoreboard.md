@@ -7073,3 +7073,45 @@ No parent row closes.
 Among measured inference and strict-check failures, the largest cause is `strict-edit-refused:code.proposal.edit` (43 attempts). This selects the next read-only refusal diagnosis under MEASURE FIRST. Native-execution and grading blockers still prevent task outcomes from being measured; they are not resolved by this repeat.
 
 [Raw-evidence description](t303-unique-anchor-checkpoint180-2026-11-21.md).
+
+## Completed unique-anchor repeat: refusal diagnosis, 2026-11-21
+
+Reporting base: `6254a671eee35a0c4521e7e53d38fef828cf6202`. Frozen measured source:
+`6ee61e63298e0aca1e1e8896278d24ab72262a61`. Read-only analysis of the same
+180 development attempts; no new inference, changed variable, context/output
+budget, token count or GPU time. First-attempt and within-budget task passes
+remain unavailable. No candidate, hidden or held-out execution, feedback or retries.
+
+| Diagnostic condition or retained outcome | Attempts |
+| --- | ---: |
+| Invalid line order | 17 |
+| Repeated original text | 15 |
+| Incomplete response terminal | 10 |
+| Transport timeout | 6 |
+| Original not fully visible in one excerpt | 6 |
+| Length termination | 5 |
+| Overlapping edits | 3 |
+| Line range outside the source | 1 |
+| Resource guard interruption | 1 |
+| Format refusal | 1 |
+| Unchanged edit | 1 |
+| Strict ungraded proposal | 114 |
+
+The frozen helper reproduces 158 complete-reply checks; diagnostic acceptance
+agrees on all 157 typed replies. Invalid order is the largest individual refusal:
+17 reversed ranges, seven adjacent-reversed and nine starts beyond source bounds.
+Repeated originals: 15 attempts, 13 one-line, six whitespace-only, 14 addressed
+ranges visible. The 114 accepted proposals remain ungraded. The original resource
+gate remains FAIL; its interruption remains separately counted. Terminal-event
+labels do not independently attribute an output cap. No attempt is repaired.
+
+Next: improve original line-address selection, including insertion anchors,
+while preserving nonempty inclusive ranges and every strict check; freeze and
+measure any model-visible change on all six profiles. Native admission/grading
+remain unavailable and are not reconstructed. No row closes. The preceding
+checkpoint review, in flight at preparation, now has an exact-commit PASS
+[retained unchanged](../reviews/6254a671eee3-unique-anchor-development-checkpoint180.txt).
+Its reporting-templating low remains T-309 backlog; independent core review
+is required for this diagnosis.
+
+[Diagnosis and raw-evidence description](t303-unique-anchor-refusal-diagnosis-2026-11-21.md).
