@@ -2,6 +2,14 @@
 
 ## Active queue: local agent mission
 
+The [frozen unique-anchor one-hundred-eight-attempt checkpoint](docs/evidence/t303-unique-anchor-checkpoint108-2026-11-21.md)
+adds dev-017/dev-018 on all six profiles: **108/180 attempted, 72 remaining**.
+Cumulative strict ungraded proposals: gemma4-31b 14/18; qwen35-27b 14/18; gpt-oss 7/18; muse 9/18; gemma4-e4b 7/18; gemma4-26b-a4b 13/18. These are not solved tasks.
+Resume dev-019/dev-020 with the same frozen source and settings. Complete all
+30 tasks per profile before more tuning or capability work. Task passes,
+feedback and retries remain unavailable; T-303/T-306 stay open.
+The [preceding independent core review](docs/reviews/1f167fe8c89b-unique-anchor-development-checkpoint96.txt) returns **Verdict: PASS** for exact `1f167fe8c89b77b1ee8ac98121fedbdcb54f03a2`; its report is retained unchanged. No row closes.
+
 The [frozen unique-anchor ninety-six-attempt checkpoint](docs/evidence/t303-unique-anchor-checkpoint96-2026-11-21.md)
 adds dev-015/dev-016 on all six profiles: **96/180 attempted, 84 remaining**.
 Cumulative strict ungraded proposals: gemma4-31b 12/16; qwen35-27b 12/16; gpt-oss 6/16; muse 8/16; gemma4-e4b 6/16; gemma4-26b-a4b 11/16. These are not solved tasks.

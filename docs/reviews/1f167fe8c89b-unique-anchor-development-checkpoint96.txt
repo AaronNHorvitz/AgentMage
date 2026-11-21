@@ -1,0 +1,121 @@
+Commit: 1f167fe8c89b77b1ee8ac98121fedbdcb54f03a2
+Scope: unique-anchor-development-checkpoint96
+
+# Independent core review: frozen unique-anchor development checkpoint 96
+
+Reviewer: Claude Opus 5.5 (extra-high effort), separate session, read-only. I worked in the pinned
+checkout /lane/review-checkout. I ran no model, used no GPU, executed no candidate and modified
+nothing in the repository. Row under review: T-303/T-306, a frozen development measurement that
+closes no row. Reporting parent: 01307e6f81033536feb2dc6cdd88407cb10cbb94. Frozen source:
+6ee61e63298e0aca1e1e8896278d24ab72262a61.
+
+## Methods, commands and results
+
+1. Commit identity and diff hygiene
+   - `git rev-parse HEAD` returns 1f167fe8c89b77b1ee8ac98121fedbdcb54f03a2. The tree is
+     e29a40b46a91e6bc5962cc03da812a19b6993fda, which matches the post-commit envelope.
+     `git status --porcelain` is empty.
+   - `git diff --check 01307e6f…` exits 0.
+   - `git diff --numstat` against the parent shows additions only (0 lines removed) in four files:
+     TASKS.md (+8), docs/evidence/coding-scoreboard.md (+43, appended, so the prior bytes are an exact
+     prefix), docs/evidence/t303-unique-anchor-checkpoint96-2026-11-21.md (new) and
+     docs/reviews/01307e6f8103-unique-anchor-development-checkpoint84.txt (new).
+   - `git diff --name-only 6ee61e63… HEAD` lists no file outside TASKS.md, docs/evidence/ and
+     docs/reviews/. 6ee61e63 is an ancestor of HEAD. No production source has changed since the freeze.
+   - The retained review is byte-identical (`cmp`) to
+     /lane/reviews/01307e6f8103-unique-anchor-development-checkpoint84.md.
+2. Bundle integrity
+   - sha256 of manifest.json is 741075a9…b518b7, of bindings.json is 1cfbca7e…c104fda, and of the
+     post-commit envelope is 580c8db7…a47a3. All three match the request.
+   - `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B …/verify.py --require-postcommit`
+     exits 0 with `{"status": "PASS", "complete_files": 62590, "source_files": 9858,
+     "repository_inputs": 2390, "private_inputs": 94, "contexts": 30, "attempts": 96,
+     "task_passes": null, "candidate_execution": false, "postcommit_checked": true}` (103 s).
+3. Reporting gates, with the retained Node v24.15.0 (sha256 d1de76d8…c932c) symlinked from a temp
+   directory outside the bundle
+   - `python3 -B scripts/local_agent_fast_gate.py --base 01307e6f… --timeout 600`: FAST GATE PASS.
+     This covers private-path, licence and review lint, and markdownlint with 0 issues in 3 files.
+   - `node …/work/render.mjs`: PASS, 0 issues, 3 files rendered.
+   - `python3 -B scripts/private_host_paths.py --base 01307e6f…`: PASS.
+   - `python3 -B scripts/license_policy.py`: PASS.
+   - The full source gate was not rerun because no source changed. It remains the disclosed inherited
+     FAIL (1044 passed, 53 failed, 11 ignored) and nothing is waived.
+4. Independent derivation from the raw data, written by me (/tmp/rv96agg.py, outside the repository)
+   - I walked every `campaign/jobs/<profile>-NN/collection/dev-*/record.json` and `checked.json`. From
+     each per-task `backend-slice.log` I took the terminal llama.cpp `prompt eval` and `eval` token
+     counts.
+   - Each profile has 16 distinct tasks, dev-001 through dev-016. Cumulative causes for each profile
+     match the evidence and scoreboard exactly:
+     - gemma4-31b: 12 proposals, 4 edit refusals.
+     - qwen35-27b: 12 proposals, 4 edit refusals.
+     - gpt-oss: 6 proposals, 3 edit refusals, 7 generation refusals.
+     - muse: 8 proposals, 1 edit refusal, 1 format refusal, 6 generation refusals.
+     - gemma4-e4b: 6 proposals, 9 edit refusals, 1 generation refusal.
+     - gemma4-26b-a4b: 11 proposals, 3 edit refusals, 2 generation refusals.
+   - Totals: 55 proposals, 24 edit refusals, 1 format refusal and 16 generation refusals. The 16 split
+     as 4 length + 6 incomplete (10 output-cap) and 6 transport timeouts.
+   - Backend input/output token sums and coverage match every table cell, for example 113994 / 29069
+     (16/16) and muse 54796 / 87948 (10/16). Cumulative coverage is 90/96.
+   - The rendered-input and requested-output ranges match all six rows. Every record satisfies
+     `requested_output_tokens == min(32768, 32768 - rendered - 32)`, `retries == 0`,
+     `graded == false` and `native_coding_harness == false`.
+   - The 12 new attempts (`*-14` jobs) match the prose. The four `code.proposal.edit` refusals are
+     gpt-oss dev-015, muse dev-015, a4b dev-015 and e4b dev-016. The other eight are proposals. All
+     twelve finish `stop` with terminal counters and `truncated = 0`. Muse generation times are
+     160.078 s and 212.851 s.
+   - All 96 upstream requests have the same key set, `n=1`, `chat_template_kwargs
+     {"enable_thinking": false}` and one identical json_schema response format. Every endpoint is
+     `http://127.0.0.1:<port>/v1` (loopback only).
+5. Preservation against the checkpoint-84 bundle
+   - sha256 of every file under `campaign/jobs` from checkpoint 84 (42 jobs) equals this bundle's
+     files outside `*-14`.
+   - The candidate trees differ only by the new dev-015 and dev-016 directories.
+   - batch.py, collect.py, controller.py, policy.json, output-format.json, frozen-inputs.json, bin/,
+     wrappers/ and preparation/ are byte-identical.
+   - inputs/preceding-checkpoint-manifest.json and preceding-published-metrics.json are byte-identical
+     to the checkpoint-84 originals.
+   - Diffs of verify.py, adapt-reporting.py, write-report.py, cleanup.py, preserve.py, pack.py,
+     checks.sh and render.mjs change only checkpoint parameters: base sha, counts 84→96 and 14→16,
+     pairs 42→48, auth job -12→-14, paths and the preceding-manifest hash. No assertion is removed or
+     weakened.
+6. Timing and cleanup
+   - The controller wall is 1253.933073 s. Prior summed 11683.453 + 1253.933 = 12937.386, which
+     matches.
+   - cleanup.json: status PASS, completed_pairs 48, live_owned_processes [], and settings_revoked,
+     api_and_model_reaped, keys_and_sockets_absent, receipts_persisted_before_unlink and
+     no_foreign_signal are all true. There are 12 retirement receipts.
+   - `pgrep` shows no llama-server running.
+   - A grep for bearer or `sk-` style secrets in the new jobs found nothing.
+7. Public-repository and integrity checks on the added lines
+   - No private home path, hostname or credential. The `/lane/...` strings are lane sandbox paths in
+     the retained prior review, a pattern accepted at earlier checkpoints, and the path check passes.
+   - No other agent product, private project or branding is named. Model profile names are those
+     already in use.
+   - "held-out" appears only in statements that nothing held-out executes. No task passes are
+     claimed; first-attempt and within-budget passes are reported as "Unavailable", not zero.
+     "Does not fit: 0" is counted apart from model failures.
+   - The scoreboard line required by MEASURE FIRST is present with the context and output budgets
+     stated.
+   - The new work is not split into sub-rows and nothing claims to be built.
+
+Confinement: this increment changes no tool, sandbox or permission code. Inference ran against a
+loopback endpoint. Candidates are retained as data and never executed, and model output is only
+parsed by the frozen strict checker. There is no new confinement surface to attack, so I made no
+escape attempts.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low findings (backlog, unchanged and already accepted under T-309): hand-written prose for the new
+attempts, per-pair wrapper provenance, incomplete re-verification of the earlier million-file
+inventory, and backend cancellation on client timeout. No new low findings.
+
+## Per-row result
+
+T-303/T-306 (non-closing frozen development measurement, checkpoint 96): PASS for this reporting
+increment. The claims are supported by raw data I re-derived myself and evaluation integrity is
+intact. The row stays open as stated: 84 attempts remain, and there are no task passes, held-out
+runs, feedback or retries.
+
+Verdict: PASS
