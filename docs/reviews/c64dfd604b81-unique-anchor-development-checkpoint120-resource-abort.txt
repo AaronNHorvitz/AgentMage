@@ -1,0 +1,139 @@
+Commit: c64dfd604b8111b8757291bb5692f1dbd47d66d8
+Scope: unique-anchor-development-checkpoint120-resource-abort
+
+# Independent core review: frozen unique-anchor checkpoint 120 with resource abort
+
+Reviewer: Claude Opus 5.5, separate session, read-only. Pinned checkout /lane/review-checkout.
+Row: T-303/T-306 non-closing frozen development measurement. Reporting parent
+3b58ea39f2ac9b600a05a1ef0a30ddfd7c99061a; frozen source 6ee61e63298e0aca1e1e8896278d24ab72262a61.
+
+## Methods
+
+- Confirmed the commit, a clean worktree and the scope of the diff from the parent. Read the full diff
+  of the four changed files: TASKS.md (top block only), coding-scoreboard.md (pure append),
+  the new evidence page and the retained preceding review.
+- Read resource-audit.diff, resource_abort_evidence.py, all six `*.resource.diff`, launch-remaining.py,
+  the frozen campaign controller.py, launch.json, launch-remaining.json, both controller exit receipts,
+  success-only-audit-exit.json, both controller logs, and the raw gpt-oss-18 job (batch report,
+  api-exit, dev-019/dev-020 records, events and backend slices).
+- Ran the sealed verifier and the reporting gates myself.
+- Recomputed all cumulative per-profile metrics from the raw job directories with my own script, which
+  does not use the builder's audit, metrics or report code.
+
+## Commands and results
+
+1. `git rev-parse HEAD` gave c64dfd604b8111b8757291bb5692f1dbd47d66d8. `git status --porcelain` was empty
+   before and after all runs. `git diff --check 3b58ea39…` exited 0.
+   Files changed: TASKS.md, docs/evidence/coding-scoreboard.md,
+   docs/evidence/t303-unique-anchor-checkpoint120-2026-11-21.md and
+   docs/reviews/3b58ea39f2ac-unique-anchor-development-checkpoint108.txt. There are no source, script,
+   README, licence, NOTICE, supply-chain or decision changes; a diff of those paths printed nothing.
+2. Hashes: manifest.json 2573141b…0944, bindings.json 7d5b0d4e…480e and the post-commit envelope
+   526c8fc2…2153a18 all match the request.
+3. `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B …/verify.py --require-postcommit` printed
+   `{"status": "PASS", "complete_files": 79969, "source_files": 9858, "repository_inputs": 2390,
+   "private_inputs": 94, "contexts": 30, "attempts": 120, "task_passes": null,
+   "candidate_execution": false, "postcommit_checked": true}` and exited 0.
+4. With Node v24.15.0 (sha256 d1de76d8…932c, licence file present) symlinked at /tmp/rvnode, outside
+   the bundle:
+   - `local_agent_fast_gate.py --base 3b58… --timeout 600`: FAST GATE PASS; markdownlint found 0 issues
+     in 3 files.
+   - `render.mjs`: PASS, 0 issues.
+   - `private_host_paths.py --base 3b58…`: PASS.
+   - `license_policy.py`: PASS.
+   - A grep of the new evidence page and the retained review for home paths or the user name found
+     nothing.
+5. The retained review docs/reviews/3b58ea39f2ac-…checkpoint108.txt is byte-identical (`cmp`) to
+   /lane/reviews/3b58ea39f2ac-unique-anchor-development-checkpoint108.md and ends `Verdict: PASS`.
+6. My independent recomputation from campaign/jobs over pairs 00–18 matches every table value exactly:
+   - attempts, proposals and causes;
+   - request/check seconds;
+   - reserved GPU minutes;
+   - backend input/output tokens and coverage.
+
+   | Profile | Proposals | Request/check s | GPU min | Backend input / output (coverage) |
+   | --- | --- | --- | --- | --- |
+   | gemma4-31b | 16/20 | 1433.616 | 34.182 | 138991 / 30509 (20) |
+   | qwen35-27b | 16/20 | 1000.713 | 23.278 | 122805 / 28116 (20) |
+   | gpt-oss | 7/20 | 2054.130 | 38.338 | 106604 / 323093 (19) |
+   | muse | 11/20 | 4687.952 | 84.880 | 75047 / 117204 (14) |
+   | gemma4-e4b | 8/20 | 1102.769 | 21.100 | 138911 / 78866 (20) |
+   | gemma4-26b-a4b | 15/20 | 1335.688 | 31.314 | 138991 / 75171 (20) |
+
+   The new pair-18 attempts are 9 proposals, 2 `code.proposal.edit` refusals (gpt-oss dev-019,
+   e4b dev-019) and 1 gpt-oss dev-020 `chat.transport.http` at 184.731 s. Muse took 219.747 and
+   208.555 s. Relabelling the single interrupted attempt as `resource-guard-interrupted` gives the
+   published aggregate.
+7. Wall time:
+   - First controller: 04:52:54.595599 to 05:04:42.679408, 708.084 s.
+   - Second controller: 05:06:02.767340 to 05:20:54.823640, 892.056 s.
+   - Sum: 1600.140 s. Adding the previous published 14074.296 s gives 15674.436 s. Both match.
+   - Four 30-second pauses match the frozen controller logic: 2 + 2, with no pause after the failure
+     or after the final pair.
+
+## Resource-abort assessment
+
+- The guard behaved as frozen. gpt-oss-18 batch-report.json records:
+  - status `failed` and error/resource_guard_error `GPU desktop headroom exceeded`;
+  - peak 22682 MiB against the profile ceiling of 22528;
+  - server exit −15, api-exit `{"exit": -15, "reaped": true}`, settings_revoked true.
+
+  Its sha256 is 9e5ff12e…3af5 and the dev-020 record's is 1969c302…cfba; both equal the constants
+  pinned in resource_abort_evidence.py. dev-020 has one error event (`chat.transport.http`,
+  partial), no upstream-response-01, and no answer or checked file. The last progress sample is
+  `n_gen = 24214`; there are no terminal eval counters. The candidate is the base fallback with
+  retries 0.
+- No relaxation for other jobs. Every extension to audit, cleanup, pack, independent metrics and verify
+  is keyed to the single directory gpt-oss-18 (and task dev-020). That exact failure is validated
+  against hash-pinned bytes, and every other job keeps its original `status=='completed'`, guard-null
+  and peak ≤ 22528 assertions. success-only-audit.py is the original audit, and its retained exit
+  receipt is 1, labelled FAIL. The audit and cleanup outputs carry `resource_gate_status: FAIL`, which
+  verify.py asserts.
+- The recovery is honest. launch-remaining.py checks before launching:
+  - controller exit 1, a clean HEAD at the parent and no STOP file;
+  - the gpt-oss-18 failure is retained;
+  - wrapper hashes and frozen repository/private input hashes are unchanged;
+  - no key, socket or owned process is live;
+  - the three remaining profiles have no pair-18 directory.
+
+  It reuses the frozen argv, changing only `--pairs 3 --models …`; the frozen controller already
+  accepts `--models`. Nothing is replayed and no settings or limits change.
+- Labelling is correct. The interruption is counted in the attempt denominator but listed under its
+  own cause and termination, separate from model failures. "Does not fit" stays 0. The scoreboard,
+  evidence page and TASKS.md all state **Resource gate: FAIL**, and none claims a task pass,
+  qualification or row closure.
+- MEASURE FIRST: the batch has a scoreboard line with context and output budgets stated, and every
+  number traces to raw logs, verified independently above. No held-out, hidden or candidate execution
+  occurred (verifier `candidate_execution: false`). Since no production source changed, no
+  confinement boundary is touched.
+
+## Findings
+
+No critical, high or medium findings.
+
+- Low (backlog, next batch):
+  - **Where:** campaign/controller.py, lines 25–27 of the frozen controller:
+    `if report.exists(): assert json.loads(report.read_text())['status']=='completed'`.
+  - **Problem:** the frozen controller cannot advance any profile list that includes gpt-oss past
+    pair 18. A run over all six profiles for dev-021/dev-022 will stop at the retained failed report,
+    which is the intended behaviour and must not be "fixed" by editing that report. Running gpt-oss's
+    remaining pairs therefore needs a new, reviewed launcher or controller variant that skips exactly
+    gpt-oss-18 by hash, like resource_abort_evidence.py.
+  - **Fix:** state the chosen mechanism in the next evidence page. Do not mark the pair completed.
+- Low (backlog, existing behaviour): the GPU headroom guard is sampled. It tripped only after total use
+  passed the ceiling by 154 MiB (22682 versus 22528). This is disclosed and unchanged, and the evidence
+  page states the sampled nature.
+- Lows inherited from T-309 remain backlog and are not reopened:
+  - per-pair wrapper provenance;
+  - the earlier million-file inventory is not fully reverified;
+  - backend cancellation;
+  - hand-written prose.
+
+## Per-row result
+
+T-303/T-306 (non-closing frozen development measurement, checkpoint 120 with a retained resource
+abort): the accounting and reporting increment PASSES review. The resource gate itself remains FAIL, as
+the commit states, and this PASS does not change that. No row closes; the full source gate is still the
+inherited FAIL and was not rerun, as stated.
+
+Verdict: PASS
