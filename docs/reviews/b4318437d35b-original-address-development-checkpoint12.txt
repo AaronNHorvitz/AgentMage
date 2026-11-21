@@ -1,0 +1,149 @@
+Commit: b4318437d35be35a7440417cba5c0ca3492ec644
+Scope: original-address-development-checkpoint12
+
+Reviewer: Claude Opus 5.5, separate session, read-only. I worked in the pinned checkout `/lane/review-checkout`
+with `CARGO_TARGET_DIR=/lane/state/review-target`, and ran heavy commands through `/tools/build-slot` at low
+priority. I did not use the GPU and did not modify the repository.
+
+## What I reviewed
+
+- Commit `b4318437…` (tree `de466de1…`). Its parent is `7821274ab5caa56573d8b68aa7a2121c71fc4b2b`.
+- The diff from the parent touches four files, all reporting files with additions only: `TASKS.md` (one
+  paragraph at the top of the active queue), `docs/evidence/coding-scoreboard.md` (one section appended at the
+  end), the new `docs/evidence/t303-original-address-checkpoint12-2026-11-21.md`, and
+  `docs/reviews/7821274ab5ca-original-address-instruction.txt`. No production source, held-out or hidden-test
+  file changes.
+- The sealed bundle `/lane/reviews/original-address-development-checkpoint12-20261121`, including:
+  - `verify.py` and `work/audit.py`;
+  - `reporting-adaptations.json` (namespace and base renames only);
+  - the helper build provenance and preflight;
+  - the launch, controller, exit and cleanup records, and the token-retirement receipts;
+  - the raw upstream requests and replies, collection records, contexts, answers and check results.
+
+## Commands and results (all run in `/lane/review-checkout`)
+
+1. `git rev-parse HEAD`: `b4318437d35be35a7440417cba5c0ca3492ec644`. `git status --porcelain` printed
+   nothing. `git diff --check 7821274ab5ca…` exited 0.
+2. `sha256sum` of the bundle files matches every hash in the request:
+   - `manifest.json` = `65a71995…`
+   - `bindings.json` = `c3c08ef9…`
+   - the post-commit envelope = `58bb8cf4…`
+   - `work/audit.json` = `3f79975a…` (this is the Audit SHA-256 quoted in the evidence)
+
+   The envelope's commit, parent and tree match the checkout.
+3. `BUILD_SLOT_PRIORITY=low bash /tools/build-slot python3 -B …/verify.py --require-postcommit`: exit 0,
+   `{"status": "PASS", "complete_files": 9950, "source_files": 9893, "repository_inputs": 2425,
+   "private_inputs": 111, "contexts": 30, "attempts": 12, "task_passes": null, "candidate_execution": false,
+   "postcommit_checked": true}`.
+4. Node `/lane/reviews/42612ca9787f-a4b-node` has SHA-256 `d1de76d8…`, as stated, and reports v24.15.0. I put a
+   temporary symlink to it on PATH outside the bundle, then ran:
+   - `local_agent_fast_gate.py --base 7821274ab5ca… --timeout 600`: **FAST GATE: PASS**. Licence policy,
+     review lint and markdownlint all passed (0 issues in 3 files).
+   - `node …/work/render.mjs`: PASS, 0 issues across the 3 rendered files.
+   - `scripts/private_host_paths.py --base 7821274ab5ca…`: PASS.
+   - `scripts/license_policy.py`: PASS.
+5. `cmp docs/reviews/7821274ab5ca-original-address-instruction.txt
+   /lane/reviews/7821274ab5ca-original-address-instruction.md`: identical. The retained preceding review is
+   byte-for-byte that review, and it ends `Verdict: PASS`.
+6. **Independent helper rebuild from the frozen checkout.** I copied the sealed helper's `main.rs` and
+   `Cargo.toml` into `/tmp/rv-helper` and pointed the path dependency at
+   `/lane/review-checkout/capabilities/repository-map`. I built it with
+   `cargo build --offline --manifest-path /tmp/rv-helper/Cargo.toml` through build-slot. Results with my own
+   script (`/tmp/rv-replay.py`):
+   - All 30 `work/payloads/*.json` produce exactly `work/contexts/*.json`.
+   - All 12 collection `context.json` files carry the frozen context messages.
+   - Each of the 12 `answer.txt` files, checked against its task payload, produces exactly its `checked.json`:
+     8 accepted single-file changes and 4 `code.proposal.edit` refusals.
+   - My binary's hash differs from the sealed one (`468037c2…` against `cb237dc7…`), which I expect from
+     different build paths. Its behaviour matches. This shows the checker results come from the frozen commit's
+     code, and not only from the sealed binary.
+7. **Independent recount from the raw replies (`/tmp/rv-an.py`).** For every job I read
+   `upstream-request-0{0,1}.json` and `upstream-response-0{0,1}.bin`. Everything matches the published tables:
+   - Backend input and output token sums (`timings.prompt_n`/`predicted_n`, equal to `usage`):
+     - gemma4-31b: 18887/2016
+     - qwen35-27b: 16469/1841
+     - gpt-oss: 15154/32561
+     - muse: 15185/17704
+     - gemma4-e4b: 18879/2700
+     - gemma4-26b-a4b: 18887/2565
+   - Every `max_tokens` equals `32768 − prompt_tokens − 32`, so the stated rendered-input and output-budget
+     ranges match. Every reply has `finish_reason` `stop`, so "does not fit: 0" holds and no reply hit the
+     length limit.
+   - Every request carries `enable_thinking: false`. Only gpt-oss and muse return a nonempty
+     `reasoning_content`, as stated.
+   - The strict ungraded proposal counts are 2/2, 1/2, 1/2, 2/2, 1/2 and 1/2, as published.
+   - Summing `generation_seconds` in the records gives exactly the published request-and-strict-check seconds.
+     GPU minutes equal reserved-job seconds divided by 60.
+   - Launch to controller exit (UTC) is 1612.3986 s, which matches the published 1612.399.
+8. **Ordering and confinement.** The failed preparation scripts (03:25:40) and the helper rebuild (03:26:30)
+   come before the helper preflight (03:27:50) and the launch (03:27:54). The first model request is at
+   03:28:58.
+   - The launch limits are `memory.max` 16 GiB, `cpu.max` 400000/100000 (four CPUs), nice 19 and low priority.
+   - The cleanup record reports 6 completed pairs, no live owned processes, keys and sockets absent, and
+     receipts persisted before unlinking. There are 12 token receipts.
+   - No `/lane/state/oa1/*/auth` directory, token, socket or API key is visible to me. A search of the bundle
+     for bearer tokens or API-key literals found nothing.
+   - The transport binary `bin/agentmage-local-api` (`f13a12ca…`) is identical to the one in the two preceding
+     reviewed checkpoints.
+9. **Evaluation integrity.**
+   - The payloads cover only the 30 development tasks.
+   - The collection summary records `held_out_executed: false`, and the audit records
+     `hidden_or_held_out: false` and `candidate_execution: false`.
+   - None of the 2,536 frozen input names is held-out or hidden-test material. The only matches for "hidden"
+     are the unrelated network-surface scripts.
+   - The commit changes no held-out or hidden file.
+   - Failures are counted, not dropped: 4 refusals appear in the causes.
+   - Task passes stay `null`/unavailable, and accepted edits are labelled "not solved tasks". I saw one
+     accepted candidate (gemma4-26b-a4b dev-001) whose edit visibly breaks the source structure. This confirms
+     that the ungraded label is necessary and is applied.
+10. **Preservation.** `verify.py` checks, and I confirmed from the diff, that:
+    - the 512 TASKS.md table lines are unchanged;
+    - the earlier scoreboard bytes are an exact prefix (the hunk is appended at line 7135);
+    - README, the historical inventory and the status model are unchanged;
+    - `supply-chain` and Decision 0051 have no diff;
+    - the preserved private-path files keep their hashes.
+
+## Checks against the brief
+
+- **Honest labelling.** Proposals are called edit-acceptance counts, not task passes. Disabled thinking is
+  described as a request only, with no claim about internal reasoning. Counter coverage is explicit, and the
+  timing scopes are stated (controller wall time includes queues and pauses, reserved-job body time excludes
+  queues). The unchanged failing full source gate (1,045 passed, 53 inherited failures, 11 ignored) is
+  disclosed and not waived.
+- **Measure first.** The scoreboard has a dated line for this batch. It states the changed variable (Decision
+  0216 wording and excerpts) and the context and output budgets, and it reports tasks that do not fit (0)
+  separately from model failures. Every number traces to the raw logs (items 6 and 7).
+- **Delivery.** There is no new sub-row and no reordering. Next step: resume dev-003/dev-004 with the same
+  frozen source before any tuning. No row closes, and none is claimed to.
+- **Public-repository hygiene.**
+  - The added text names no private host path, username, sibling project or other agent product.
+  - The only `/lane/...` strings come from the byte-identical retained review and are shared lab paths.
+  - Model profile names (gemma4-*, qwen35-27b, gpt-oss, muse) are used as model identities, not as branding.
+- **Owner notes (engine, memory linking).** Not touched by this reporting commit.
+
+## Findings
+
+No critical, high or medium findings.
+
+Low (backlog, T-309):
+
+- L1. `campaign/policy.json` is sealed and private, not published. It carries stale labels from earlier
+  campaigns:
+  - `"private_namespace_correction": "Fresh short ua1 namespace…"`, although this run uses `oa1`;
+  - `"model_selection": "…First pair A4B checks real schema encoding…"`, although A4B ran last here;
+  - `"additional_model_status": "Four copied previous preflight receipts…"`.
+
+  None of these reaches a published number. Fix: generate these descriptive fields for each campaign, or drop
+  them.
+- L2. This is the existing backlog item that the preceding review already noted. `work/build-helper/Cargo.toml`
+  depends on the builder's live working tree, not a checkout of the frozen commit, so the binary is bound to the
+  frozen source only indirectly. My rebuild from the frozen checkout (item 6) reproduces every context and check
+  result, so this run is not affected. Fix: build from `git worktree`/`git archive` of the frozen commit and
+  record that path in the build provenance.
+
+## Per-row result
+
+- T-303/T-306, non-closing development measurement (checkpoint 12/180): the evidence supports every published
+  claim. The rows remain OPEN as stated, and nothing closes.
+
+Verdict: PASS
